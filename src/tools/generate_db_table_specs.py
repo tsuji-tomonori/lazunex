@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -120,6 +121,10 @@ def parse_comments(
     return table_comments, column_comments
 
 
+def uncomment_comment_on_statements(sql: str) -> str:
+    return re.sub(r"^\s*--\s+(COMMENT ON .*)$", r"\1", sql, flags=re.MULTILINE)
+
+
 def table_like_source(schema: exp.Schema) -> str | None:
     for expression in schema.expressions:
         if isinstance(expression, exp.LikeProperty):
@@ -150,7 +155,12 @@ def parse_create_table(statement: exp.Create) -> tuple[str, list[Column], list[s
 
 def parse_tables(sql: str) -> dict[str, Table]:
     expressions = [expression for expression in sqlglot.parse(sql, read="postgres") if expression]
-    table_comments, column_comments = parse_comments(expressions)
+    comment_expressions = [
+        expression
+        for expression in sqlglot.parse(uncomment_comment_on_statements(sql), read="postgres")
+        if expression
+    ]
+    table_comments, column_comments = parse_comments(comment_expressions)
     tables: dict[str, Table] = {}
 
     for statement in expressions:

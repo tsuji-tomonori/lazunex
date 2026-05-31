@@ -16,21 +16,20 @@ INSERT INTO project_api_keys (
     updated_by,
     row_version
 ) VALUES (
-    :project_api_key_id,
-    :project_id,
-    :aws_account_id,
-    :aws_region,
-    :apigw_api_key_id,
-    :apigw_api_key_name,
-    :api_key_value_hash,
-    :api_key_hash_key_version,
-    :api_key_last4,
-    :observed_enabled,
-    :now,
-    :now,
-    :actor_principal_id,
-    :now,
-    :actor_principal_id,
+    @project_api_key_id,
+    @project_id,
+    @aws_account_id,
+    @aws_region,
+    @apigw_api_key_id,
+    @apigw_api_key_name,
+    @api_key_value_hash,
+    @api_key_hash_key_version,
+    @api_key_last4,
+    @observed_enabled,
+    @now,
+    @now,
+    @actor_principal_id,
+    @now,
+    @actor_principal_id,
     1
-)
-RETURNING project_api_key_id;
+);

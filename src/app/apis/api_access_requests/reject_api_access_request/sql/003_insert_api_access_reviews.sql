@@ -12,17 +12,16 @@ INSERT INTO api_access_reviews (
     updated_by,
     row_version
 ) VALUES (
-    :access_review_id,
-    :access_request_id,
+    @access_review_id,
+    @access_request_id,
     'REJECTED',
     NULL,
-    :actor_principal_id,
-    :review_comment,
-    :now,
-    :now,
-    :actor_principal_id,
-    :now,
-    :actor_principal_id,
+    @actor_principal_id,
+    @review_comment,
+    @now,
+    @now,
+    @actor_principal_id,
+    @now,
+    @actor_principal_id,
     1
-)
-RETURNING access_review_id;
+);

@@ -76,7 +76,7 @@ def test_type_helpers() -> None:
 
 
 def test_placeholder_names_preserves_first_seen_order() -> None:
-    assert placeholder_names(":project_id, :name, :project_id") == ["project_id", "name"]
+    assert placeholder_names("@project_id, @name, @project_id") == ["project_id", "name"]
 
 
 def test_parse_query_spec_infers_select_params_and_rows(tmp_path: Path) -> None:
@@ -85,7 +85,7 @@ def test_parse_query_spec_infers_select_params_and_rows(tmp_path: Path) -> None:
         """
         SELECT project_id, project_code, description
         FROM projects
-        WHERE project_code = :project_code;
+        WHERE project_code = @project_code;
         """,
         encoding="utf-8",
     )
@@ -115,7 +115,7 @@ def test_parse_query_spec_infers_qualified_alias_and_expression_rows(tmp_path: P
             COUNT(*) AS total_count,
             p.project_code
         FROM projects AS p
-        WHERE p.project_id = :project_id;
+        WHERE p.project_id = @project_id;
         """,
         encoding="utf-8",
     )
@@ -137,12 +137,12 @@ def test_operation_from_statements_detects_statement_kind() -> None:
     )
     assert (
         operation_from_statements(
-            [parse_one("INSERT INTO projects (project_id) VALUES (:project_id)", read="postgres")]
+            [parse_one("INSERT INTO projects (project_id) VALUES (@project_id)", read="postgres")]
         )
         == "insert"
     )
     assert (
-        operation_from_statements([parse_one("UPDATE projects SET name = :name", read="postgres")])
+        operation_from_statements([parse_one("UPDATE projects SET name = @name", read="postgres")])
         == "update"
     )
     assert (
@@ -163,11 +163,11 @@ def test_parse_query_spec_infers_insert_params_and_returning_rows(tmp_path: Path
             created_at,
             row_version
         ) VALUES (
-            :project_id,
-            :project_code,
-            :name,
-            :description,
-            :now,
+            @project_id,
+            @project_code,
+            @name,
+            @description,
+            @now,
             1
         )
         RETURNING project_id, row_version;
@@ -195,9 +195,9 @@ def test_parse_query_spec_infers_update_params_and_returning_rows(tmp_path: Path
     sql_path.write_text(
         """
         UPDATE projects
-        SET name = :name,
+        SET name = @name,
             row_version = row_version + 1
-        WHERE project_id = :project_id
+        WHERE project_id = @project_id
         RETURNING project_id, row_version;
         """,
         encoding="utf-8",
@@ -257,9 +257,9 @@ def test_render_queries_py_includes_required_imports_and_empty_params(tmp_path: 
             aggregate_id,
             event_payload
         ) VALUES (
-            :event_id,
-            :aggregate_id,
-            CAST(:event_payload AS json)
+            @event_id,
+            @aggregate_id,
+            CAST(@event_payload AS json)
         );
         """,
         encoding="utf-8",
@@ -323,7 +323,7 @@ def test_render_query_function_uses_fetch_one_for_mutation_returning(tmp_path: P
     sql_path.write_text(
         """
         INSERT INTO projects (project_id, project_code, name, created_at, row_version)
-        VALUES (:project_id, :project_code, :name, :now, 1)
+        VALUES (@project_id, @project_code, @name, @now, 1)
         RETURNING project_id;
         """,
         encoding="utf-8",
@@ -343,12 +343,12 @@ def test_render_queries_py_imports_multiple_query_helpers(tmp_path: Path) -> Non
     select_sql.write_text("SELECT project_id FROM projects;", encoding="utf-8")
     insert_sql = tmp_path / "002_insert_projects.sql"
     insert_sql.write_text(
-        "INSERT INTO projects (project_id) VALUES (:project_id) RETURNING project_id;",
+        "INSERT INTO projects (project_id) VALUES (@project_id) RETURNING project_id;",
         encoding="utf-8",
     )
     execute_sql = tmp_path / "003_insert_project_events.sql"
     execute_sql.write_text(
-        "INSERT INTO project_events (event_id, aggregate_id) VALUES (:event_id, :aggregate_id);",
+        "INSERT INTO project_events (event_id, aggregate_id) VALUES (@event_id, @aggregate_id);",
         encoding="utf-8",
     )
     tables = parse_tables(DDL)
@@ -380,7 +380,7 @@ def test_output_field_falls_back_for_unknown_column_and_plain_expression() -> No
 
 
 def test_infer_row_fields_returns_empty_when_no_select_or_returning() -> None:
-    statement = parse_one("DELETE FROM projects WHERE project_id = :project_id", read="postgres")
+    statement = parse_one("DELETE FROM projects WHERE project_id = @project_id", read="postgres")
 
     assert infer_row_fields([statement], parse_tables(DDL)) == []
 
@@ -399,7 +399,7 @@ def test_generate_queries_writes_each_api_queries_file(tmp_path: Path) -> None:
     sql_dir = api_root / "projects" / "create_project" / "sql"
     sql_dir.mkdir(parents=True)
     (sql_dir / "001_select_projects.sql").write_text(
-        "SELECT project_id FROM projects WHERE project_code = :project_code;",
+        "SELECT project_id FROM projects WHERE project_code = @project_code;",
         encoding="utf-8",
     )
     ddl_path = tmp_path / "ddl.sql"
@@ -462,7 +462,7 @@ def test_generate_queries_handles_api_without_sql(tmp_path: Path) -> None:
 def test_unknown_placeholder_type_falls_back_to_any(tmp_path: Path) -> None:
     sql_path = tmp_path / "001_select_projects.sql"
     sql_path.write_text(
-        "SELECT project_id FROM projects WHERE :unknown_value IS NULL;", encoding="utf-8"
+        "SELECT project_id FROM projects WHERE @unknown_value IS NULL;", encoding="utf-8"
     )
 
     spec = parse_query_spec(sql_path, parse_tables(DDL))
@@ -473,7 +473,7 @@ def test_unknown_placeholder_type_falls_back_to_any(tmp_path: Path) -> None:
 def test_comparison_placeholder_can_be_on_left_side(tmp_path: Path) -> None:
     sql_path = tmp_path / "001_select_projects.sql"
     sql_path.write_text(
-        "SELECT project_id FROM projects WHERE :project_code = project_code;", encoding="utf-8"
+        "SELECT project_id FROM projects WHERE @project_code = project_code;", encoding="utf-8"
     )
 
     spec = parse_query_spec(sql_path, parse_tables(DDL))

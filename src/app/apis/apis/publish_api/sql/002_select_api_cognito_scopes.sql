@@ -6,4 +6,4 @@ SELECT
     scope_name,
     scope_full_name
 FROM api_cognito_scopes
-WHERE scope_full_name = :scope_full_name;
+WHERE scope_full_name = @scope_full_name;

@@ -11,16 +11,15 @@ INSERT INTO projects (
     updated_by,
     row_version
 ) VALUES (
-    :project_id,
-    :project_code,
-    :name,
-    :description,
-    :owner_principal_id,
-    :department_code,
-    :now,
-    :actor_principal_id,
-    :now,
-    :actor_principal_id,
+    @project_id,
+    @project_code,
+    @name,
+    @description,
+    @owner_principal_id,
+    @department_code,
+    @now,
+    @actor_principal_id,
+    @now,
+    @actor_principal_id,
     1
-)
-RETURNING project_id;
+);

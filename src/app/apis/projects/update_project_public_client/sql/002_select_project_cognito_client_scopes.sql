@@ -6,5 +6,5 @@ SELECT
     pcs.scope_full_name,
     pcs.granted_at
 FROM project_cognito_client_scopes AS pcs
-WHERE pcs.project_cognito_client_id = :project_cognito_client_id
+WHERE pcs.project_cognito_client_id = @project_cognito_client_id
 ORDER BY pcs.scope_full_name;

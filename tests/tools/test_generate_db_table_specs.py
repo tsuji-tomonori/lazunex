@@ -21,6 +21,7 @@ from tools.generate_db_table_specs import (
     reference_label,
     render_table_markdown,
     table_name,
+    uncomment_comment_on_statements,
     unescape_sql_comment,
 )
 
@@ -99,6 +100,22 @@ def test_parse_tables_supports_comments_and_like_tables() -> None:
     ]
     assert tables["api_events"].columns[0].comment == "イベントID。"
     assert tables["api_events"].table_constraints == ["UNIQUE (aggregate_id, event_id)"]
+
+
+def test_parse_tables_supports_commented_out_comment_on_metadata() -> None:
+    sql = """
+    CREATE TABLE api_events (
+        event_id uuid PRIMARY KEY
+    );
+    -- COMMENT ON TABLE api_events IS 'APIイベント。';
+    -- COMMENT ON COLUMN api_events.event_id IS 'イベントID。';
+    """
+
+    tables = parse_tables(sql)
+
+    assert uncomment_comment_on_statements(sql).count("COMMENT ON") == 2
+    assert tables["api_events"].comment == "APIイベント。"
+    assert tables["api_events"].columns[0].comment == "イベントID。"
 
 
 def test_parse_tables_raises_for_missing_like_source() -> None:

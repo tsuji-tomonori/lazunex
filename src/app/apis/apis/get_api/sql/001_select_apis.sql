@@ -40,8 +40,8 @@ LEFT JOIN api_documents AS d
     ON d.api_id = a.api_id
 LEFT JOIN api_reviewers AS r
     ON r.api_id = a.api_id
-WHERE a.api_id = :api_id
+WHERE a.api_id = @api_id
 ORDER BY
-    s.created_at,
+    s.created_at ASC,
     d.uploaded_at DESC,
-    r.reviewer_role;
+    r.reviewer_role ASC;

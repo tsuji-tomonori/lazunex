@@ -11,20 +11,19 @@ INSERT INTO provisioning_step_events (
     idempotency_key,
     event_payload
 ) VALUES (
-    :event_id,
-    :operation_step_id,
+    @event_id,
+    @operation_step_id,
     COALESCE((
         SELECT MAX(event_seq) + 1
         FROM provisioning_step_events
-        WHERE aggregate_id = :operation_step_id
+        WHERE aggregate_id = @operation_step_id
     ), 1),
-    :event_name,
-    :actor_principal_id,
-    :actor_type,
-    :now,
-    :reason,
-    :correlation_id,
-    :idempotency_key,
-    CAST(:event_payload AS json)
-)
-RETURNING event_id;
+    @event_name,
+    @actor_principal_id,
+    @actor_type,
+    @now,
+    @reason,
+    @correlation_id,
+    @idempotency_key,
+    CAST(@event_payload AS json)
+);

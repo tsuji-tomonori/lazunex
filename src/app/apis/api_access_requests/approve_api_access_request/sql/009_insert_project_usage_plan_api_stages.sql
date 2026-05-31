@@ -13,18 +13,17 @@ INSERT INTO project_usage_plan_api_stages (
     updated_by,
     row_version
 ) VALUES (
-    :usage_plan_api_stage_id,
-    :project_id,
-    :project_usage_plan_id,
-    :subscription_id,
-    :api_stage_id,
-    :apigw_rest_api_id,
-    :apigw_stage_name,
-    :now,
-    :now,
-    :actor_principal_id,
-    :now,
-    :actor_principal_id,
+    @usage_plan_api_stage_id,
+    @project_id,
+    @project_usage_plan_id,
+    @subscription_id,
+    @api_stage_id,
+    @apigw_rest_api_id,
+    @apigw_stage_name,
+    @now,
+    @now,
+    @actor_principal_id,
+    @now,
+    @actor_principal_id,
     1
-)
-RETURNING usage_plan_api_stage_id;
+);

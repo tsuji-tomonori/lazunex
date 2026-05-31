@@ -1,3 +1,4 @@
+import re
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
@@ -6,9 +7,12 @@ from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+MYSQL_VARIABLE_RE = re.compile(r"(?<![\w@])@(?P<name>[A-Za-z_][A-Za-z0-9_]*)")
+
 
 def load_sql(sql_path: Path) -> str:
-    return sql_path.read_text(encoding="utf-8")
+    sql = sql_path.read_text(encoding="utf-8")
+    return MYSQL_VARIABLE_RE.sub(r":\g<name>", sql)
 
 
 def model_parameters(params: BaseModel | Mapping[str, Any] | None) -> dict[str, Any]:

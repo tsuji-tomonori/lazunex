@@ -7,8 +7,8 @@ SELECT
     ar.requested_by,
     ar.requested_at
 FROM api_access_requests AS ar
-WHERE ar.project_id = :project_id
-  AND ar.api_stage_id = :api_stage_id
+WHERE ar.project_id = @project_id
+  AND ar.api_stage_id = @api_stage_id
   AND NOT EXISTS (
       SELECT 1
       FROM api_access_reviews AS rv

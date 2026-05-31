@@ -10,9 +10,9 @@ SELECT
     a.api_code,
     a.name AS api_name
 FROM api_access_requests AS ar
-JOIN apis AS a
+INNER JOIN apis AS a
     ON a.api_id = ar.api_id
-WHERE ar.access_request_id = :access_request_id
+WHERE ar.access_request_id = @access_request_id
   AND NOT EXISTS (
       SELECT 1
       FROM api_access_reviews AS rv

@@ -4,4 +4,4 @@ SELECT
     name,
     owner_principal_id
 FROM projects
-WHERE project_code = :project_code;
+WHERE project_code = @project_code;

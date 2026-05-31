@@ -13,18 +13,17 @@ INSERT INTO provisioning_operations (
     updated_by,
     row_version
 ) VALUES (
-    :operation_id,
-    :idempotency_key,
+    @operation_id,
+    @idempotency_key,
     'PUBLISH_API',
     'API',
-    :api_id,
-    CAST(:request_payload AS json),
+    @api_id,
+    CAST(@request_payload AS json),
     NULL,
     0,
-    :now,
-    :actor_principal_id,
-    :now,
-    :actor_principal_id,
+    @now,
+    @actor_principal_id,
+    @now,
+    @actor_principal_id,
     1
-)
-RETURNING operation_id;
+);

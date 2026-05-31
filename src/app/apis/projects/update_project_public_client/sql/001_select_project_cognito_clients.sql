@@ -18,14 +18,14 @@ SELECT
     c.enable_token_revocation,
     c.row_version
 FROM project_cognito_clients AS c
-JOIN projects AS p
+INNER JOIN projects AS p
     ON p.project_id = c.project_id
 LEFT JOIN project_members AS pm
     ON pm.project_id = p.project_id
-    AND pm.member_principal_id = :actor_principal_id
-WHERE c.project_id = :project_id
+    AND pm.member_principal_id = @actor_principal_id
+WHERE c.project_id = @project_id
   AND c.client_type = 'PUBLIC_PKCE'
   AND (
-      p.owner_principal_id = :actor_principal_id
+      p.owner_principal_id = @actor_principal_id
       OR pm.member_role IN ('OWNER', 'ADMIN')
   );

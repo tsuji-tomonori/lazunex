@@ -14,19 +14,18 @@ INSERT INTO api_documents (
     updated_by,
     row_version
 ) VALUES (
-    :api_document_id,
-    :api_id,
-    :document_type,
-    :version_label,
-    :s3_uri,
-    :sha256,
-    :source_filename,
-    :actor_principal_id,
-    :now,
-    :now,
-    :actor_principal_id,
-    :now,
-    :actor_principal_id,
+    @api_document_id,
+    @api_id,
+    @document_type,
+    @version_label,
+    @s3_uri,
+    @sha256,
+    @source_filename,
+    @actor_principal_id,
+    @now,
+    @now,
+    @actor_principal_id,
+    @now,
+    @actor_principal_id,
     1
-)
-RETURNING api_document_id;
+);

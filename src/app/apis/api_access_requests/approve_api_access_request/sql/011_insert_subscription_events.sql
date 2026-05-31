@@ -11,20 +11,19 @@ INSERT INTO subscription_events (
     idempotency_key,
     event_payload
 ) VALUES (
-    :event_id,
-    :subscription_id,
+    @event_id,
+    @subscription_id,
     COALESCE((
         SELECT MAX(event_seq) + 1
         FROM subscription_events
-        WHERE aggregate_id = :subscription_id
+        WHERE aggregate_id = @subscription_id
     ), 1),
-    :event_name,
-    :actor_principal_id,
-    :actor_type,
-    :now,
-    :reason,
-    :correlation_id,
-    :idempotency_key,
-    CAST(:event_payload AS json)
-)
-RETURNING event_id;
+    @event_name,
+    @actor_principal_id,
+    @actor_type,
+    @now,
+    @reason,
+    @correlation_id,
+    @idempotency_key,
+    CAST(@event_payload AS json)
+);

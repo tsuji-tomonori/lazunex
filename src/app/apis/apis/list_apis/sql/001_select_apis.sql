@@ -22,8 +22,12 @@ LEFT JOIN api_cognito_scopes AS c
 LEFT JOIN api_reviewers AS r
     ON r.api_id = a.api_id
     AND r.reviewer_role = 'PRIMARY'
-WHERE (:visibility IS NULL OR a.visibility = :visibility)
-  AND (:keyword IS NULL OR a.name ILIKE :keyword OR a.api_code ILIKE :keyword)
-  AND (:after_api_code IS NULL OR a.api_code > :after_api_code)
+WHERE (@visibility IS NULL OR a.visibility = @visibility)
+  AND (
+      @keyword IS NULL
+      OR LOWER(a.name) LIKE LOWER(@keyword)
+      OR LOWER(a.api_code) LIKE LOWER(@keyword)
+  )
+  AND (@after_api_code IS NULL OR a.api_code > @after_api_code)
 ORDER BY a.api_code
-LIMIT :limit;
+LIMIT @limit;

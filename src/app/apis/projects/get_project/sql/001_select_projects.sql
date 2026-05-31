@@ -51,11 +51,11 @@ LEFT JOIN project_cognito_client_urls AS u
     ON u.project_cognito_client_id = c.project_cognito_client_id
 LEFT JOIN project_members AS pm
     ON pm.project_id = p.project_id
-    AND pm.member_principal_id = :actor_principal_id
-WHERE p.project_id = :project_id
+    AND pm.member_principal_id = @actor_principal_id
+WHERE p.project_id = @project_id
   AND (
-      p.owner_principal_id = :actor_principal_id
+      p.owner_principal_id = @actor_principal_id
       OR pm.project_member_id IS NOT NULL
-      OR :is_hub_admin = TRUE
+      OR @is_hub_admin = TRUE
   )
 ORDER BY c.client_type, u.url_type, u.url;

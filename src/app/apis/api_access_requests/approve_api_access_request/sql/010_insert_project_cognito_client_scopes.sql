@@ -12,17 +12,16 @@ INSERT INTO project_cognito_client_scopes (
     updated_by,
     row_version
 ) VALUES (
-    :project_cognito_client_scope_id,
-    :project_id,
-    :project_cognito_client_id,
-    :api_scope_id,
-    :subscription_id,
-    :scope_full_name,
-    :now,
-    :now,
-    :actor_principal_id,
-    :now,
-    :actor_principal_id,
+    @project_cognito_client_scope_id,
+    @project_id,
+    @project_cognito_client_id,
+    @api_scope_id,
+    @subscription_id,
+    @scope_full_name,
+    @now,
+    @now,
+    @actor_principal_id,
+    @now,
+    @actor_principal_id,
     1
-)
-RETURNING project_cognito_client_scope_id;
+);

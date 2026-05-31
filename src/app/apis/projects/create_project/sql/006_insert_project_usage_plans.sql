@@ -16,21 +16,20 @@ INSERT INTO project_usage_plans (
     updated_by,
     row_version
 ) VALUES (
-    :project_usage_plan_id,
-    :project_id,
-    :aws_account_id,
-    :aws_region,
-    :apigw_usage_plan_id,
-    :usage_plan_name,
-    :default_rate_limit,
-    :default_burst_limit,
-    :default_quota_limit,
-    :default_quota_period,
-    :now,
-    :now,
-    :actor_principal_id,
-    :now,
-    :actor_principal_id,
+    @project_usage_plan_id,
+    @project_id,
+    @aws_account_id,
+    @aws_region,
+    @apigw_usage_plan_id,
+    @usage_plan_name,
+    @default_rate_limit,
+    @default_burst_limit,
+    @default_quota_limit,
+    @default_quota_period,
+    @now,
+    @now,
+    @actor_principal_id,
+    @now,
+    @actor_principal_id,
     1
-)
-RETURNING project_usage_plan_id;
+);

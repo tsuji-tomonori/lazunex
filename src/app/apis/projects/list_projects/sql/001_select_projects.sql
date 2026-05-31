@@ -25,12 +25,12 @@ LEFT JOIN project_cognito_clients AS conf
     AND conf.client_type = 'CONFIDENTIAL_CLIENT_CREDENTIALS'
 LEFT JOIN project_members AS pm
     ON pm.project_id = p.project_id
-    AND pm.member_principal_id = :actor_principal_id
+    AND pm.member_principal_id = @actor_principal_id
 WHERE (
-    p.owner_principal_id = :actor_principal_id
+    p.owner_principal_id = @actor_principal_id
     OR pm.project_member_id IS NOT NULL
-    OR :is_hub_admin = TRUE
+    OR @is_hub_admin = TRUE
 )
-  AND (:after_project_code IS NULL OR p.project_code > :after_project_code)
+  AND (@after_project_code IS NULL OR p.project_code > @after_project_code)
 ORDER BY p.project_code
-LIMIT :limit;
+LIMIT @limit;

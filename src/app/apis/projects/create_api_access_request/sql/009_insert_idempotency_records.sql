@@ -11,16 +11,15 @@ INSERT INTO idempotency_records (
     updated_by,
     row_version
 ) VALUES (
-    :idempotency_record_id,
-    :idempotency_key,
-    :request_hash,
+    @idempotency_record_id,
+    @idempotency_key,
+    @request_hash,
     NULL,
-    CAST(:response_payload AS json),
-    :expires_at,
-    :now,
-    :actor_principal_id,
-    :now,
-    :actor_principal_id,
+    CAST(@response_payload AS json),
+    @expires_at,
+    @now,
+    @actor_principal_id,
+    @now,
+    @actor_principal_id,
     1
-)
-RETURNING idempotency_record_id;
+);

@@ -4,4 +4,4 @@ SELECT
     name,
     default_api_stage_id
 FROM apis
-WHERE api_code = :api_code;
+WHERE api_code = @api_code;

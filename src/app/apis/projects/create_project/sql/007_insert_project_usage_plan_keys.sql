@@ -13,18 +13,17 @@ INSERT INTO project_usage_plan_keys (
     updated_by,
     row_version
 ) VALUES (
-    :project_usage_plan_key_id,
-    :project_id,
-    :project_usage_plan_id,
-    :project_api_key_id,
-    :apigw_usage_plan_key_id,
-    :apigw_usage_plan_id,
-    :apigw_api_key_id,
-    :now,
-    :now,
-    :actor_principal_id,
-    :now,
-    :actor_principal_id,
+    @project_usage_plan_key_id,
+    @project_id,
+    @project_usage_plan_id,
+    @project_api_key_id,
+    @apigw_usage_plan_key_id,
+    @apigw_usage_plan_id,
+    @apigw_api_key_id,
+    @now,
+    @now,
+    @actor_principal_id,
+    @now,
+    @actor_principal_id,
     1
-)
-RETURNING project_usage_plan_key_id;
+);

@@ -10,7 +10,7 @@ from sqlglot import exp
 
 from tools.generate_db_table_specs import Column, Table, parse_tables, table_name
 
-PLACEHOLDER_RE = re.compile(r":(?P<name>[a-zA-Z_][a-zA-Z0-9_]*)")
+PLACEHOLDER_RE = re.compile(r"@(?P<name>[a-zA-Z_][a-zA-Z0-9_]*)")
 SQL_PREFIX_RE = re.compile(r"^\d+_")
 
 
@@ -210,6 +210,14 @@ def placeholder_names(sql: str) -> list[str]:
     return names
 
 
+def parameter_name(expression: Any) -> str | None:
+    if isinstance(expression, exp.Placeholder):
+        return expression.name
+    if isinstance(expression, exp.Parameter):
+        return expression.name
+    return None
+
+
 def collect_insert_param_columns(
     statement: exp.Insert, columns: dict[str, dict[str, Column]]
 ) -> dict[str, Column]:
@@ -229,9 +237,13 @@ def collect_insert_param_columns(
 
     param_columns: dict[str, Column] = {}
     for column_name, value in zip(insert_columns, first_tuple.expressions, strict=False):
-        placeholders = list(value.find_all(exp.Placeholder))
-        if len(placeholders) == 1 and column_name in target_columns:
-            param_columns[placeholders[0].name] = target_columns[column_name]
+        parameters = [
+            name
+            for placeholder in value.find_all(exp.Placeholder, exp.Parameter)
+            if (name := parameter_name(placeholder)) is not None
+        ]
+        if len(parameters) == 1 and column_name in target_columns:
+            param_columns[parameters[0]] = target_columns[column_name]
     return param_columns
 
 
@@ -244,10 +256,14 @@ def collect_update_param_columns(
     for assignment in statement.expressions:
         if not isinstance(assignment, exp.EQ) or not isinstance(assignment.this, exp.Column):
             continue
-        placeholders = list(assignment.expression.find_all(exp.Placeholder))
+        parameters = [
+            name
+            for placeholder in assignment.expression.find_all(exp.Placeholder, exp.Parameter)
+            if (name := parameter_name(placeholder)) is not None
+        ]
         column = target_columns.get(assignment.this.name)
-        if len(placeholders) == 1 and column is not None:
-            param_columns[placeholders[0].name] = column
+        if len(parameters) == 1 and column is not None:
+            param_columns[parameters[0]] = column
     return param_columns
 
 
@@ -259,14 +275,16 @@ def collect_comparison_param_columns(
     for comparison in statement.find_all(exp.EQ):
         left = comparison.this
         right = comparison.expression
-        if isinstance(left, exp.Column) and isinstance(right, exp.Placeholder):
+        right_parameter = parameter_name(right)
+        left_parameter = parameter_name(left)
+        if isinstance(left, exp.Column) and right_parameter is not None:
             column = resolve_column(left, aliases, columns)
             if column is not None:
-                param_columns[right.name] = column
-        elif isinstance(right, exp.Column) and isinstance(left, exp.Placeholder):
+                param_columns[right_parameter] = column
+        elif isinstance(right, exp.Column) and left_parameter is not None:
             column = resolve_column(right, aliases, columns)
             if column is not None:
-                param_columns[left.name] = column
+                param_columns[left_parameter] = column
     return param_columns
 
 
@@ -308,7 +326,7 @@ def infer_row_fields(statements: list[Any], tables: dict[str, Table]) -> list[Fi
 def parse_query_spec(sql_path: Path, tables: dict[str, Table]) -> QuerySpec:
     sql = sql_path.read_text(encoding="utf-8")
     statements = [
-        statement for statement in sqlglot.parse(sql, read="postgres") if statement is not None
+        statement for statement in sqlglot.parse(sql, read="mysql") if statement is not None
     ]
     return QuerySpec(
         sql_filename=sql_path.name,
