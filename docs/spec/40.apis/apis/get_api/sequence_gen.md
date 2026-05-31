@@ -7,12 +7,12 @@ sequenceDiagram
   autonumber
   participant API as API: getApi
   participant DB as DB
-  API->>API: 呼び出し元の role、group、scope を取得する。(戻り値: CallerIdentity)
-  API->>API: API ID を検証する。(引数: api_id: ResourceId; 戻り値: ResourceId)
-  API->>API: API 詳細レスポンスに必要な情報を取得する。(引数: api_id: ResourceId; 戻り値: GetApiResponse)
+  API->>API: 呼び出し元の role、group、scope を取得する。(戻り値 CallerIdentity)
+  API->>API: API ID を検証する。(引数 api_id ResourceId; 戻り値 ResourceId)
+  API->>API: API 詳細レスポンスに必要な情報を取得する。(引数 api_id ResourceId; 戻り値 GetApiResponse)
   alt 対象 API が呼び出し元から参照可能かを判定する。
-    API->>API: 対象 API が呼び出し元から参照可能かを判定する。(引数: api: GetApiResponse, caller: CallerIdentity; 戻り値: bool)
+    API->>API: 対象 API が呼び出し元から参照可能かを判定する。(引数 api GetApiResponse, caller CallerIdentity; 戻り値 bool)
   end
-  API->>API: API 詳細レスポンスを組み立てる。(引数: api: GetApiResponse; 戻り値: GetApiResponse)
-  API->>DB: DBを参照する(SQL: 001_select_apis.sql; テーブル: apis, api_gateway_stages, api_cognito_scopes, api_reviewers)
+  API->>API: API 詳細レスポンスを組み立てる。(引数 api GetApiResponse; 戻り値 GetApiResponse)
+  API->>DB: DBを参照する(SQL 001_select_apis.sql; テーブル apis, api_gateway_stages, api_cognito_scopes, api_reviewers)
 ```

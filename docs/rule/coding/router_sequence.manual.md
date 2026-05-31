@@ -67,4 +67,5 @@ continue
 
 - `uv run python -m tools.check_api_function_names`
 - `uv run python -m tools.generate_api_sequences --check`
+- `uv run python -m tools.check_api_mermaid_sequences`
 - `uv run pytest tests/tools/test_generate_api_sequences.py`

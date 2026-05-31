@@ -109,21 +109,21 @@ async def build_project_detail_response(project: ProjectRef) -> GetProjectRespon
             "get_project",
             "project",
             "プロジェクト情報を取得する。",
-            ("project_id: ResourceId",),
+            ("project_id ResourceId",),
             "ProjectRef",
         ),
         SequenceStep(
             "has_project_view_permission",
             "project_view_permission",
             "プロジェクトを参照できるかを判定する。",
-            ("project: ProjectRef", "caller"),
+            ("project ProjectRef", "caller"),
             "bool",
         ),
         SequenceStep(
             "build_project_detail_response",
             "project_detail_response",
             "プロジェクト詳細レスポンスを組み立てる。",
-            ("project: ProjectRef",),
+            ("project ProjectRef",),
             "GetProjectResponse",
         ),
     ]
@@ -145,28 +145,28 @@ def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
                     "get_project",
                     "project",
                     "プロジェクト情報を取得する。",
-                    ("project_id: ResourceId",),
+                    ("project_id ResourceId",),
                     "ProjectRef",
                 ),
                 SequenceStep(
                     "create_api_gateway_api_key",
                     "api_gateway_api_key",
                     "API keyを作成する。",
-                    ("project: ProjectRef",),
+                    ("project ProjectRef",),
                     "ApiGatewayApiKeyRef",
                 ),
                 SequenceStep(
                     "has_project_view_permission",
                     "project_view_permission",
                     "プロジェクトを参照できるかを判定する。",
-                    ("project: ProjectRef", "caller: CallerIdentity"),
+                    ("project ProjectRef", "caller CallerIdentity"),
                     "bool",
                 ),
                 SequenceStep(
                     "build_project_detail_response",
                     "project_detail_response",
                     "プロジェクト詳細レスポンスを組み立てる。",
-                    ("project: ProjectRef",),
+                    ("project ProjectRef",),
                     "GetProjectResponse",
                 ),
             ],
@@ -186,13 +186,13 @@ def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
     assert "participant T_projects" not in markdown
     assert "  autonumber" in markdown
     assert "API->>API: プロジェクト情報を取得する。" in markdown
-    assert "引数: project_id: ResourceId" in markdown
-    assert "戻り値: ProjectRef" in markdown
+    assert "引数 project_id ResourceId" in markdown
+    assert "戻り値 ProjectRef" in markdown
     assert "API->>R_api_gateway: API keyを作成する。" in markdown
     assert "alt プロジェクトを参照できるかを判定する。" in markdown
     assert (
         "API->>DB: DBを参照する"
-        "(SQL: 001_select_projects.sql; テーブル: projects, project_members)"
+        "(SQL 001_select_projects.sql; テーブル projects, project_members)"
         in markdown
     )
 
@@ -329,8 +329,8 @@ async def _internal_helper(value: str) -> str:
 
     assert metadata["get_project"].description == "プロジェクト情報を取得する。"
     assert metadata["get_project"].arguments == (
-        "project_id: ResourceId",
-        "caller: CallerIdentity",
+        "project_id ResourceId",
+        "caller CallerIdentity",
     )
     assert metadata["get_project"].return_type == "ProjectRef"
     assert "_internal_helper" not in metadata

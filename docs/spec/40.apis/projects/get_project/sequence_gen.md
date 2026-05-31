@@ -7,12 +7,12 @@ sequenceDiagram
   autonumber
   participant API as API: getProject
   participant DB as DB
-  API->>API: 呼び出し元の sub、group、scope を取得する。(戻り値: CallerIdentity)
-  API->>API: Project ID を検証する。(引数: project_id: ResourceId; 戻り値: ResourceId)
-  API->>API: Project 詳細レスポンスに必要な情報を取得する。(引数: project_id: ResourceId; 戻り値: GetProjectResponse)
+  API->>API: 呼び出し元の sub、group、scope を取得する。(戻り値 CallerIdentity)
+  API->>API: Project ID を検証する。(引数 project_id ResourceId; 戻り値 ResourceId)
+  API->>API: Project 詳細レスポンスに必要な情報を取得する。(引数 project_id ResourceId; 戻り値 GetProjectResponse)
   alt 呼び出し元が Project 詳細を参照できるかを判定する。
-    API->>API: 呼び出し元が Project 詳細を参照できるかを判定する。(引数: project: GetProjectResponse, caller: CallerIdentity; 戻り値: bool)
+    API->>API: 呼び出し元が Project 詳細を参照できるかを判定する。(引数 project GetProjectResponse, caller CallerIdentity; 戻り値 bool)
   end
-  API->>API: secret 値を含めずに Project 詳細レスポンスを組み立てる。(引数: project: GetProjectResponse; 戻り値: GetProjectResponse)
-  API->>DB: DBを参照する(SQL: 001_select_projects.sql; テーブル: projects, project_api_keys, project_usage_plans, project_cognito_clients, project_cognito_client_urls, project_members)
+  API->>API: secret 値を含めずに Project 詳細レスポンスを組み立てる。(引数 project GetProjectResponse; 戻り値 GetProjectResponse)
+  API->>DB: DBを参照する(SQL 001_select_projects.sql; テーブル projects, project_api_keys, project_usage_plans, project_cognito_clients, project_cognito_client_urls, project_members)
 ```

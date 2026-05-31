@@ -143,18 +143,18 @@ def function_arguments(function: ast.AsyncFunctionDef | ast.FunctionDef) -> tupl
         *function.args.kwonlyargs,
     ]:
         annotation = annotation_text(arg.annotation)
-        arguments.append(f"{arg.arg}: {annotation}" if annotation else arg.arg)
+        arguments.append(f"{arg.arg} {annotation}" if annotation else arg.arg)
     if function.args.vararg is not None:
         annotation = annotation_text(function.args.vararg.annotation)
         arguments.append(
-            f"*{function.args.vararg.arg}: {annotation}"
+            f"*{function.args.vararg.arg} {annotation}"
             if annotation
             else f"*{function.args.vararg.arg}"
         )
     if function.args.kwarg is not None:
         annotation = annotation_text(function.args.kwarg.annotation)
         arguments.append(
-            f"**{function.args.kwarg.arg}: {annotation}"
+            f"**{function.args.kwarg.arg} {annotation}"
             if annotation
             else f"**{function.args.kwarg.arg}"
         )
@@ -187,9 +187,9 @@ def function_metadata(functions_path: Path) -> dict[str, FunctionMetadata]:
 def sequence_label(step: SequenceStep) -> str:
     details: list[str] = []
     if step.arguments:
-        details.append(f"引数: {', '.join(step.arguments)}")
+        details.append(f"引数 {', '.join(step.arguments)}")
     if step.return_type:
-        details.append(f"戻り値: {step.return_type}")
+        details.append(f"戻り値 {step.return_type}")
     if not details:
         return step.description
     return f"{step.description}({'; '.join(details)})"
@@ -366,7 +366,7 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
         tables = ", ".join(sql_step.tables)
         lines.append(
             f"  API->>DB: DBを{sql_step.action}する"
-            f"(SQL: {sql_step.filename}; テーブル: {tables})"
+            f"(SQL {sql_step.filename}; テーブル {tables})"
         )
 
     lines.extend(["```", ""])
