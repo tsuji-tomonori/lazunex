@@ -1,3 +1,4 @@
+import ast
 from pathlib import Path
 from typing import Any, cast
 
@@ -8,7 +9,10 @@ from tools.generate_openapi_if_specs import (
     build_arg_parser,
     enum_comment_descriptions,
     generate_from_openapi,
+    implementation_operation_paths,
     iter_operations,
+    keyword_value,
+    literal_string,
     load_fastapi_openapi,
     main,
     object_field_rows,
@@ -21,6 +25,7 @@ from tools.generate_openapi_if_specs import (
     request_body_rows,
     response_media,
     response_summary_rows,
+    router_operation_id,
     schema_components,
     schema_constraints,
     schema_type,
@@ -354,6 +359,95 @@ def test_operation_output_path_falls_back_to_default() -> None:
     )
 
 
+def test_implementation_operation_paths_reads_router_operation_ids(tmp_path: Path) -> None:
+    api_root = tmp_path / "apis"
+    router_path = api_root / "projects/create_api_access_request/router.py"
+    cached_router_path = api_root / "projects/__pycache__/router.py"
+    no_operation_router_path = api_root / "projects/no_operation/router.py"
+    router_path.parent.mkdir(parents=True, exist_ok=True)
+    cached_router_path.parent.mkdir(parents=True, exist_ok=True)
+    no_operation_router_path.parent.mkdir(parents=True, exist_ok=True)
+    source = """
+from fastapi import APIRouter
+router = APIRouter()
+
+@router.post('/projects/{projectId}/api-access-requests', operation_id='createApiAccessRequest')
+async def create_api_access_request():
+    return {}
+"""
+    router_path.write_text(source, encoding="utf-8")
+    cached_router_path.write_text(
+        """
+from fastapi import APIRouter
+router = APIRouter()
+
+@router.get('/cached', operation_id='cachedOperation')
+async def cached():
+    return {}
+""",
+        encoding="utf-8",
+    )
+    no_operation_router_path.write_text(
+        """
+from fastapi import APIRouter
+router = APIRouter()
+
+@router.get('/no-operation')
+async def no_operation():
+    return {}
+""",
+        encoding="utf-8",
+    )
+
+    assert router_operation_id(source, router_path) == "createApiAccessRequest"
+    assert implementation_operation_paths(api_root) == {
+        "createApiAccessRequest": Path("projects/create_api_access_request")
+    }
+
+
+def test_router_operation_helpers_handle_non_matches(tmp_path: Path) -> None:
+    api_root = tmp_path / "apis"
+    router_path = api_root / "projects/bad/router.py"
+    router_path.parent.mkdir(parents=True, exist_ok=True)
+    source = """
+from fastapi import APIRouter
+router = APIRouter()
+
+@router.get('/bad')
+async def bad():
+    return {}
+"""
+    router_path.write_text(source, encoding="utf-8")
+
+    call = ast.parse("router.get('/bad')", mode="eval").body
+    assert isinstance(call, ast.Call)
+    assert literal_string(ast.parse("value", mode="eval").body) is None
+    assert literal_string(None) is None
+    assert keyword_value(call, "operation_id") is None
+    assert router_operation_id(source, router_path) is None
+    assert router_operation_id(
+        """
+@decorator
+async def bad():
+    return {}
+""",
+        router_path,
+    ) is None
+    assert router_operation_id(
+        """
+from fastapi import APIRouter
+router = APIRouter()
+
+@router.get('/bad', operation_id='')
+async def bad():
+    return {}
+""",
+        router_path,
+    ) is None
+    assert router_operation_id("VALUE = 'not a function'", router_path) is None
+    assert implementation_operation_paths(api_root) == {}
+
+
 def test_iter_operations_and_output_path() -> None:
     operations = iter_operations(OPENAPI)
     assert len(operations) == 1
@@ -362,12 +456,21 @@ def test_iter_operations_and_output_path() -> None:
     assert operation_output_path(Path("docs/spec/40.apis"), operation) == (
         Path("docs/spec/40.apis/admin_users/delete_admin_user/if_gen.md")
     )
+    assert operation_output_path(
+        Path("docs/spec/40.apis"),
+        operation,
+        {"deleteAdminUser": Path("admin/delete_user")},
+    ) == Path("docs/spec/40.apis/admin/delete_user/if_gen.md")
 
 
 def test_generate_from_openapi_writes_files(tmp_path: Path) -> None:
-    written = generate_from_openapi(OPENAPI, tmp_path)
+    written = generate_from_openapi(
+        OPENAPI,
+        tmp_path,
+        {"deleteAdminUser": Path("admin/delete_user")},
+    )
 
-    assert written == [tmp_path / "admin_users" / "delete_admin_user" / "if_gen.md"]
+    assert written == [tmp_path / "admin" / "delete_user" / "if_gen.md"]
     assert written[0].read_text(encoding="utf-8").startswith("# DELETE /admin/users/{userId}")
 
 
@@ -378,8 +481,16 @@ def test_arg_parser_defaults_and_main_output(
 ) -> None:
     default_args = build_arg_parser().parse_args([])
     assert default_args.output_dir.as_posix() == "docs/spec/40.apis"
+    assert default_args.api_root.as_posix() == "src/app/apis"
+
+    def operation_paths(_api_root: Path) -> dict[str, Path]:
+        return {"deleteAdminUser": Path("admin/delete_user")}
 
     monkeypatch.setattr("tools.generate_openapi_if_specs.load_fastapi_openapi", lambda: OPENAPI)
+    monkeypatch.setattr(
+        "tools.generate_openapi_if_specs.implementation_operation_paths",
+        operation_paths,
+    )
     monkeypatch.setattr(
         "sys.argv",
         ["generate_openapi_if_specs", "--output-dir", str(tmp_path)],
@@ -388,7 +499,7 @@ def test_arg_parser_defaults_and_main_output(
     main()
 
     assert capsys.readouterr().out == "Generated 1 IF spec files.\n"
-    assert (tmp_path / "admin_users" / "delete_admin_user" / "if_gen.md").exists()
+    assert (tmp_path / "admin" / "delete_user" / "if_gen.md").exists()
 
 
 def test_load_fastapi_openapi_returns_schema() -> None:

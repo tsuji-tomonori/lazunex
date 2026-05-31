@@ -27,6 +27,7 @@ PARAMETER_DESCRIPTION_OVERRIDES = {
     ),
 }
 DEFAULT_API_COMMON_PATH = Path(__file__).resolve().parents[1] / "app/apis"
+DEFAULT_API_ROOT = Path("src/app/apis")
 
 
 @dataclass(frozen=True)
@@ -439,10 +440,58 @@ def render_operation_markdown(
     return "\n".join(lines)
 
 
-def operation_output_path(output_dir: Path, operation: JsonObject) -> Path:
+def literal_string(node: ast.AST | None) -> str | None:
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    return None
+
+
+def keyword_value(call: ast.Call, name: str) -> ast.AST | None:
+    for keyword in call.keywords:
+        if keyword.arg == name:
+            return keyword.value
+    return None
+
+
+def router_operation_id(source: str, router_path: Path) -> str | None:
+    tree = ast.parse(source, filename=str(router_path))
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.AsyncFunctionDef | ast.FunctionDef):
+            continue
+        for decorator in node.decorator_list:
+            if not isinstance(decorator, ast.Call):
+                continue
+            operation_id = literal_string(keyword_value(decorator, "operation_id"))
+            if operation_id:
+                return operation_id
+    return None
+
+
+def implementation_operation_paths(api_root: Path) -> dict[str, Path]:
+    paths: dict[str, Path] = {}
+    for router_path in sorted(api_root.glob("*/*/router.py")):
+        if "__pycache__" in router_path.parts:
+            continue
+        operation_id = router_operation_id(
+            router_path.read_text(encoding="utf-8"),
+            router_path,
+        )
+        if operation_id is None:
+            continue
+        paths[operation_id] = router_path.parent.relative_to(api_root)
+    return paths
+
+
+def operation_output_path(
+    output_dir: Path,
+    operation: JsonObject,
+    operation_paths: dict[str, Path] | None = None,
+) -> Path:
+    operation_id = str(operation.get("operationId") or operation.get("summary") or "api")
+    if operation_paths is not None and operation_id in operation_paths:
+        return output_dir / operation_paths[operation_id] / "if_gen.md"
     tags = as_list(operation.get("tags"))
     tag = str(tags[0]) if tags else "default"
-    operation_id = str(operation.get("operationId") or operation.get("summary") or "api")
     return output_dir / snake_case(tag) / snake_case(operation_id) / "if_gen.md"
 
 
@@ -462,11 +511,15 @@ def iter_operations(openapi: JsonObject) -> list[tuple[str, str, JsonObject]]:
     return operations
 
 
-def generate_from_openapi(openapi: JsonObject, output_dir: Path) -> list[Path]:
+def generate_from_openapi(
+    openapi: JsonObject,
+    output_dir: Path,
+    operation_paths: dict[str, Path] | None = None,
+) -> list[Path]:
     components = schema_components(openapi)
     written: list[Path] = []
     for path, method, operation in iter_operations(openapi):
-        output_path = operation_output_path(output_dir, operation)
+        output_path = operation_output_path(output_dir, operation, operation_paths)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(
             render_operation_markdown(path, method, operation, components),
@@ -480,19 +533,24 @@ def load_fastapi_openapi() -> JsonObject:
     return create_app().openapi()
 
 
-def generate(output_dir: Path) -> list[Path]:
-    return generate_from_openapi(load_fastapi_openapi(), output_dir)
+def generate(output_dir: Path, api_root: Path = DEFAULT_API_ROOT) -> list[Path]:
+    return generate_from_openapi(
+        load_fastapi_openapi(),
+        output_dir,
+        implementation_operation_paths(api_root),
+    )
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Generate IF specs from FastAPI OpenAPI.")
     parser.add_argument("--output-dir", type=Path, default=Path("docs/spec/40.apis"))
+    parser.add_argument("--api-root", type=Path, default=DEFAULT_API_ROOT)
     return parser
 
 
 def main() -> None:
     args = build_arg_parser().parse_args()
-    written = generate(args.output_dir)
+    written = generate(args.output_dir, args.api_root)
     print(f"Generated {len(written)} IF spec files.")
 
 

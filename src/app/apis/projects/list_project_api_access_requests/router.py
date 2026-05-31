@@ -36,7 +36,7 @@ router = APIRouter()
             status.HTTP_500_INTERNAL_SERVER_ERROR,
         ),
     },
-    tags=["api-access-requests"],
+    tags=["projects"],
 )
 async def list_project_api_access_requests(
     project_id: Annotated[
