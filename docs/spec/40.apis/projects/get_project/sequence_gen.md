@@ -7,11 +7,7 @@ sequenceDiagram
   participant API as API: getProject
   participant R_caller_identity as Resource: caller identity
   participant R_project_id as Resource: project id
-  participant R_project as Resource: project
-  participant R_project_view_permission as Resource: project view permission
-  participant R_project_api_key_metadata as Resource: project api key metadata
-  participant R_project_usage_plan_metadata as Resource: project usage plan metadata
-  participant R_project_client_metadata as Resource: project client metadata
+  participant R_project_detail as Resource: project detail
   participant R_project_detail_response as Resource: project detail response
   participant T_projects as Table: projects
   participant T_project_api_keys as Table: project_api_keys
@@ -23,16 +19,11 @@ sequenceDiagram
   R_caller_identity-->>API: caller_identity
   API->>R_project_id: validate_project_id
   R_project_id-->>API: project_id
-  API->>R_project: get_project
-  R_project-->>API: project
-  API->>R_project_view_permission: has_project_view_permission
-  R_project_view_permission-->>API: project_view_permission
-  API->>R_project_api_key_metadata: get_project_api_key_metadata
-  R_project_api_key_metadata-->>API: project_api_key_metadata
-  API->>R_project_usage_plan_metadata: get_project_usage_plan_metadata
-  R_project_usage_plan_metadata-->>API: project_usage_plan_metadata
-  API->>R_project_client_metadata: get_project_client_metadata
-  R_project_client_metadata-->>API: project_client_metadata
+  API->>R_project_detail: get_project_detail
+  R_project_detail-->>API: project_detail
+  alt project_view_permission
+    API->>API: has_project_view_permission
+  end
   API->>R_project_detail_response: build_project_detail_response
   R_project_detail_response-->>API: project_detail_response
   API->>T_projects: 参照 001_select_projects.sql

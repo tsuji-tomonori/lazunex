@@ -45,14 +45,6 @@ async def get_project(
 ) -> GetProjectResponse:
     caller = await api_functions.get_caller_identity()
     validated_project_id = await api_functions.validate_project_id(project_id)
-    project = await api_functions.get_project(validated_project_id)
+    project = await api_functions.get_project_detail(validated_project_id)
     await api_functions.has_project_view_permission(project, caller)
-    api_key = await api_functions.get_project_api_key_metadata(project)
-    usage_plan = await api_functions.get_project_usage_plan_metadata(project)
-    cognito = await api_functions.get_project_client_metadata(project)
-    return await api_functions.build_project_detail_response(
-        project,
-        api_key,
-        usage_plan,
-        cognito,
-    )
+    return await api_functions.build_project_detail_response(project)

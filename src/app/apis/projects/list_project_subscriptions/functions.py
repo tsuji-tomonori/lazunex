@@ -2,10 +2,6 @@ from __future__ import annotations
 
 from typing import NoReturn
 
-from app.apis.projects.get_project.schemas import (
-    ProjectApiKeyResponse,
-    ProjectCognitoClientsResponse,
-)
 from app.apis.projects.list_project_subscriptions.schemas import (
     ListProjectSubscriptionsQuery,
     ListProjectSubscriptionsResponse,
@@ -44,35 +40,24 @@ async def has_project_subscription_view_permission(
     return _sequence_placeholder("has_project_subscription_view_permission")
 
 
-async def get_active_subscriptions(
+async def get_project_subscriptions(
     project: ProjectRef,
     query: ListProjectSubscriptionsQuery,
 ) -> SequencePage[ProjectSubscriptionItemResponse]:
     """Project の active subscription を検索する。"""
-    return _sequence_placeholder("get_active_subscriptions")
+    return _sequence_placeholder("get_project_subscriptions")
 
 
-async def get_subscription_api_metadata(
+async def apply_pagination(
     page: SequencePage[ProjectSubscriptionItemResponse],
+    query: ListProjectSubscriptionsQuery,
 ) -> SequencePage[ProjectSubscriptionItemResponse]:
-    """subscription 一覧に必要な API metadata、stage、scope を取得する。"""
-    return _sequence_placeholder("get_subscription_api_metadata")
-
-
-async def get_project_api_key_metadata(project: ProjectRef) -> ProjectApiKeyResponse:
-    """Project の API key metadata を取得する。"""
-    return _sequence_placeholder("get_project_api_key_metadata")
-
-
-async def get_project_client_metadata(project: ProjectRef) -> ProjectCognitoClientsResponse:
-    """Project の Cognito App Client metadata を取得する。"""
-    return _sequence_placeholder("get_project_client_metadata")
+    """一覧取得結果に limit と nextToken を適用する。"""
+    return _sequence_placeholder("apply_pagination")
 
 
 async def build_project_subscription_list_response(
     page: SequencePage[ProjectSubscriptionItemResponse],
-    api_key: ProjectApiKeyResponse,
-    cognito: ProjectCognitoClientsResponse,
 ) -> ListProjectSubscriptionsResponse:
     """secret 値を含めずに Project subscription 一覧レスポンスを組み立てる。"""
     return _sequence_placeholder("build_project_subscription_list_response")

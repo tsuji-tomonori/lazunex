@@ -8,11 +8,7 @@ sequenceDiagram
   participant R_caller_identity as Resource: caller identity
   participant R_create_access_request_request as Resource: create access request request
   participant R_project as Resource: project
-  participant R_project_owner_permission as Resource: project owner permission
-  participant R_published_api as Resource: published api
   participant R_api_reviewer as Resource: api reviewer
-  participant R_active_subscription as Resource: active subscription
-  participant R_pending_access_request_for_project_api as Resource: pending access request for project api
   participant R_api_access_request as Resource: api access request
   participant R_idempotency_record as Resource: idempotency record
   participant R_access_request_created_event as Resource: access request created event
@@ -37,16 +33,20 @@ sequenceDiagram
   R_create_access_request_request-->>API: create_access_request_request
   API->>R_project: get_project
   R_project-->>API: project
-  API->>R_project_owner_permission: has_project_owner_permission
-  R_project_owner_permission-->>API: project_owner_permission
-  API->>R_published_api: is_published_api
-  R_published_api-->>API: published_api
+  alt project_owner_permission
+    API->>API: has_project_owner_permission
+  end
+  alt published_api
+    API->>API: is_published_api
+  end
   API->>R_api_reviewer: get_api_reviewer
   R_api_reviewer-->>API: api_reviewer
-  API->>R_active_subscription: has_active_subscription
-  R_active_subscription-->>API: active_subscription
-  API->>R_pending_access_request_for_project_api: has_pending_access_request_for_project_api
-  R_pending_access_request_for_project_api-->>API: pending_access_request_for_project_api
+  alt active_subscription
+    API->>API: has_active_subscription
+  end
+  alt pending_access_request_for_project_api
+    API->>API: has_pending_access_request_for_project_api
+  end
   API->>R_api_access_request: save_api_access_request
   R_api_access_request-->>API: api_access_request
   API->>R_idempotency_record: get_idempotency_record

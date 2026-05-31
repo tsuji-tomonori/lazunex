@@ -37,20 +37,6 @@ async def get_viewable_projects(
     return _sequence_placeholder("get_viewable_projects")
 
 
-async def get_project_member_metadata(
-    page: SequencePage[ProjectListItemResponse],
-) -> SequencePage[ProjectListItemResponse]:
-    """Project owner/member metadata を取得する。"""
-    return _sequence_placeholder("get_project_member_metadata")
-
-
-async def get_project_resource_metadata(
-    page: SequencePage[ProjectListItemResponse],
-) -> SequencePage[ProjectListItemResponse]:
-    """Project 一覧用の AWS resource metadata 概要を取得する。"""
-    return _sequence_placeholder("get_project_resource_metadata")
-
-
 async def apply_pagination(
     page: SequencePage[ProjectListItemResponse],
     query: ListProjectsQuery,

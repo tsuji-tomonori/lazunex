@@ -7,41 +7,29 @@ sequenceDiagram
   participant API as API: listProjects
   participant R_project_list_query as Resource: project list query
   participant R_caller_identity as Resource: caller identity
-  participant R_project_list_permission as Resource: project list permission
   participant R_viewable_projects as Resource: viewable projects
-  participant R_project_member_metadata as Resource: project member metadata
-  participant R_project_resource_metadata as Resource: project resource metadata
   participant R_pagination as Resource: pagination
   participant R_project_list_response as Resource: project list response
   participant T_projects as Table: projects
-  participant T_project_api_keys as Table: project_api_keys
-  participant T_project_usage_plans as Table: project_usage_plans
-  participant T_project_cognito_clients as Table: project_cognito_clients
   participant T_project_members as Table: project_members
+  participant T_project_api_subscriptions as Table: project_api_subscriptions
   API->>R_project_list_query: validate_project_list_query
   R_project_list_query-->>API: project_list_query
   API->>R_caller_identity: get_caller_identity
   R_caller_identity-->>API: caller_identity
-  API->>R_project_list_permission: has_project_list_permission
-  R_project_list_permission-->>API: project_list_permission
+  alt project_list_permission
+    API->>API: has_project_list_permission
+  end
   API->>R_viewable_projects: get_viewable_projects
   R_viewable_projects-->>API: viewable_projects
-  API->>R_project_member_metadata: get_project_member_metadata
-  R_project_member_metadata-->>API: project_member_metadata
-  API->>R_project_resource_metadata: get_project_resource_metadata
-  R_project_resource_metadata-->>API: project_resource_metadata
   API->>R_pagination: apply_pagination
   R_pagination-->>API: pagination
   API->>R_project_list_response: build_project_list_response
   R_project_list_response-->>API: project_list_response
   API->>T_projects: 参照 001_select_projects.sql
   T_projects-->>API: projects
-  API->>T_project_api_keys: 参照 001_select_projects.sql
-  T_project_api_keys-->>API: project_api_keys
-  API->>T_project_usage_plans: 参照 001_select_projects.sql
-  T_project_usage_plans-->>API: project_usage_plans
-  API->>T_project_cognito_clients: 参照 001_select_projects.sql
-  T_project_cognito_clients-->>API: project_cognito_clients
   API->>T_project_members: 参照 001_select_projects.sql
   T_project_members-->>API: project_members
+  API->>T_project_api_subscriptions: 参照 001_select_projects.sql
+  T_project_api_subscriptions-->>API: project_api_subscriptions
 ```

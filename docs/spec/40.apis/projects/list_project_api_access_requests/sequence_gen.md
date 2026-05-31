@@ -8,7 +8,6 @@ sequenceDiagram
   participant R_caller_identity as Resource: caller identity
   participant R_project_access_request_list_query as Resource: project access request list query
   participant R_project as Resource: project
-  participant R_project_access_request_view_permission as Resource: project access request view permission
   participant R_project_access_requests as Resource: project access requests
   participant R_pagination as Resource: pagination
   participant R_project_access_request_list_response as Resource: project access request list response
@@ -25,8 +24,9 @@ sequenceDiagram
   R_project_access_request_list_query-->>API: project_access_request_list_query
   API->>R_project: get_project
   R_project-->>API: project
-  API->>R_project_access_request_view_permission: has_project_access_request_view_permission
-  R_project_access_request_view_permission-->>API: project_access_request_view_permission
+  alt project_access_request_view_permission
+    API->>API: has_project_access_request_view_permission
+  end
   API->>R_project_access_requests: get_project_access_requests
   R_project_access_requests-->>API: project_access_requests
   API->>R_pagination: apply_pagination

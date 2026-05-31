@@ -51,12 +51,6 @@ async def list_project_subscriptions(
     validated_query = await api_functions.validate_project_subscription_list_query(query)
     project = await api_functions.get_project(project_id)
     await api_functions.has_project_subscription_view_permission(project, caller)
-    subscriptions = await api_functions.get_active_subscriptions(project, validated_query)
-    subscriptions_with_api = await api_functions.get_subscription_api_metadata(subscriptions)
-    api_key = await api_functions.get_project_api_key_metadata(project)
-    cognito = await api_functions.get_project_client_metadata(project)
-    return await api_functions.build_project_subscription_list_response(
-        subscriptions_with_api,
-        api_key,
-        cognito,
-    )
+    subscriptions = await api_functions.get_project_subscriptions(project, validated_query)
+    page = await api_functions.apply_pagination(subscriptions, validated_query)
+    return await api_functions.build_project_subscription_list_response(page)

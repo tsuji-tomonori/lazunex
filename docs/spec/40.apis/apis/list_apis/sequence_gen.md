@@ -7,20 +7,19 @@ sequenceDiagram
   participant API as API: listApis
   participant R_api_list_query as Resource: api list query
   participant R_caller_identity as Resource: caller identity
-  participant R_api_list_permission as Resource: api list permission
   participant R_viewable_apis as Resource: viewable apis
   participant R_pagination as Resource: pagination
   participant R_api_list_response as Resource: api list response
   participant T_apis as Table: apis
   participant T_api_gateway_stages as Table: api_gateway_stages
   participant T_api_cognito_scopes as Table: api_cognito_scopes
-  participant T_api_reviewers as Table: api_reviewers
   API->>R_api_list_query: validate_api_list_query
   R_api_list_query-->>API: api_list_query
   API->>R_caller_identity: get_caller_identity
   R_caller_identity-->>API: caller_identity
-  API->>R_api_list_permission: has_api_list_permission
-  R_api_list_permission-->>API: api_list_permission
+  alt api_list_permission
+    API->>API: has_api_list_permission
+  end
   API->>R_viewable_apis: get_viewable_apis
   R_viewable_apis-->>API: viewable_apis
   API->>R_pagination: apply_pagination
@@ -33,6 +32,4 @@ sequenceDiagram
   T_api_gateway_stages-->>API: api_gateway_stages
   API->>T_api_cognito_scopes: 参照 001_select_apis.sql
   T_api_cognito_scopes-->>API: api_cognito_scopes
-  API->>T_api_reviewers: 参照 001_select_apis.sql
-  T_api_reviewers-->>API: api_reviewers
 ```

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 from pathlib import Path
 
 from _pytest.capture import CaptureFixture
@@ -10,10 +11,16 @@ from tools.generate_api_sequences import (
     SqlStep,
     api_dirs,
     api_sequence_from_dir,
+    awaited_api_function_name,
     build_arg_parser,
     changed_outputs,
+    endpoint_function,
+    endpoint_operation_id,
     function_target,
     generate_sequences,
+    is_predicate_function,
+    is_router_decorator,
+    literal_string,
     main,
     render_sequence_markdown,
     sql_sequence_steps,
@@ -43,6 +50,8 @@ def test_function_target_accepts_action_and_predicate_names() -> None:
     assert function_target("get_project") == "project"
     assert function_target("has_project_owner_permission") == "project_owner_permission"
     assert function_target("is_pending_access_request") == "pending_access_request"
+    assert not is_predicate_function("get_project")
+    assert is_predicate_function("has_project_owner_permission")
 
 
 def test_api_sequence_from_dir_reads_router_calls_and_sql(tmp_path: Path) -> None:
@@ -93,16 +102,23 @@ def test_render_sequence_markdown_contains_api_resource_and_table_participants()
             operation_id="getProject",
             steps=[
                 SequenceStep("get_project", "project"),
+                SequenceStep("get_project", "project"),
+                SequenceStep("has_project_view_permission", "project_view_permission"),
                 SequenceStep("build_project_detail_response", "project_detail_response"),
             ],
-            sql_steps=[SqlStep("001_select_projects.sql", "参照", "projects")],
+            sql_steps=[
+                SqlStep("001_select_projects.sql", "参照", "projects"),
+                SqlStep("002_select_projects.sql", "参照", "projects"),
+            ],
         )
     )
 
     assert "participant API as API: getProject" in markdown
-    assert "participant R_project as Resource: project" in markdown
-    assert "participant T_projects as Table: projects" in markdown
+    assert markdown.count("participant R_project as Resource: project") == 1
+    assert "participant R_project_view_permission" not in markdown
+    assert markdown.count("participant T_projects as Table: projects") == 1
     assert "API->>R_project: get_project" in markdown
+    assert "alt project_view_permission" in markdown
     assert "API->>T_projects: 参照 001_select_projects.sql" in markdown
 
 
@@ -163,3 +179,69 @@ async def list_apis():
         SqlStep("001_insert_audit_events.sql", "追加", "audit_events")
     ]
     assert build_arg_parser().parse_args([]).docs_root == Path("docs/spec/40.apis")
+
+
+def test_ast_helpers_handle_non_matches_and_fallbacks() -> None:
+    assert literal_string(ast.parse("value", mode="eval").body) is None
+    assert not is_router_decorator(ast.parse("router.get", mode="eval").body)
+    assert not is_router_decorator(ast.parse("other.get('/apis')", mode="eval").body)
+
+    tree = ast.parse(
+        """
+def helper():
+    return None
+"""
+    )
+    try:
+        endpoint_function(tree)
+    except ValueError as error:
+        assert str(error) == "router endpoint function is not found"
+    else:
+        raise AssertionError("endpoint_function should reject modules without router endpoints")
+
+    router_tree = ast.parse(
+        """
+from fastapi import APIRouter
+router = APIRouter()
+
+@router.get('/apis')
+async def list_apis():
+    return []
+"""
+    )
+    assert endpoint_operation_id(endpoint_function(router_tree)) == "list_apis"
+
+
+def test_awaited_api_function_name_rejects_unrelated_awaits() -> None:
+    tree = ast.parse(
+        """
+async def endpoint():
+    value
+    await value
+    await other_functions.get_project()
+    await api_functions()
+    await api_functions.get_project()
+"""
+    )
+    expressions = [
+        node.value
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Expr)
+    ]
+
+    assert [awaited_api_function_name(expression) for expression in expressions] == [
+        None,
+        None,
+        None,
+        None,
+        "get_project",
+    ]
+
+
+def test_sql_sequence_steps_ignores_missing_or_unparseable_sql(tmp_path: Path) -> None:
+    assert sql_sequence_steps(tmp_path / "missing") == []
+
+    sql_dir = tmp_path / "sql"
+    write_file(sql_dir, "001_select_literal.sql", "SELECT 1;")
+
+    assert sql_sequence_steps(sql_dir) == []

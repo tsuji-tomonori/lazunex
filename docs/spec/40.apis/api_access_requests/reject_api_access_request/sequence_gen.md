@@ -7,8 +7,6 @@ sequenceDiagram
   participant API as API: rejectApiAccessRequest
   participant R_caller_identity as Resource: caller identity
   participant R_access_request as Resource: access request
-  participant R_pending_access_request as Resource: pending access request
-  participant R_api_reviewer_permission as Resource: api reviewer permission
   participant R_rejection_reason as Resource: rejection reason
   participant R_access_request_rejecting_event as Resource: access request rejecting event
   participant R_api_access_review as Resource: api access review
@@ -28,10 +26,12 @@ sequenceDiagram
   R_caller_identity-->>API: caller_identity
   API->>R_access_request: get_access_request
   R_access_request-->>API: access_request
-  API->>R_pending_access_request: is_pending_access_request
-  R_pending_access_request-->>API: pending_access_request
-  API->>R_api_reviewer_permission: has_api_reviewer_permission
-  R_api_reviewer_permission-->>API: api_reviewer_permission
+  alt pending_access_request
+    API->>API: is_pending_access_request
+  end
+  alt api_reviewer_permission
+    API->>API: has_api_reviewer_permission
+  end
   API->>R_rejection_reason: validate_rejection_reason
   R_rejection_reason-->>API: rejection_reason
   API->>R_access_request_rejecting_event: append_access_request_rejecting_event

@@ -123,6 +123,11 @@ def function_target(function_name: str) -> str:
     return tail
 
 
+def is_predicate_function(function_name: str) -> bool:
+    head, _separator, _tail = function_name.partition("_")
+    return head in PREDICATES
+
+
 def endpoint_sequence_steps(function: ast.AsyncFunctionDef | ast.FunctionDef) -> list[SequenceStep]:
     steps: list[SequenceStep] = []
     for node in ast.walk(function):
@@ -192,6 +197,8 @@ def api_dirs(api_root: Path) -> list[Path]:
 def render_sequence_markdown(sequence: ApiSequence) -> str:
     resource_targets: list[str] = []
     for step in sequence.steps:
+        if is_predicate_function(step.function_name):
+            continue
         if step.target not in resource_targets:
             resource_targets.append(step.target)
     table_names: list[str] = []
@@ -216,6 +223,11 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
         lines.append(f"  participant {participant_id('T', table)} as Table: {table}")
 
     for step in sequence.steps:
+        if is_predicate_function(step.function_name):
+            lines.append(f"  alt {step.target}")
+            lines.append(f"    API->>API: {step.function_name}")
+            lines.append("  end")
+            continue
         resource_id = participant_id("R", step.target)
         lines.append(f"  API->>{resource_id}: {step.function_name}")
         lines.append(f"  {resource_id}-->>API: {step.target}")

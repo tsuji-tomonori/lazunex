@@ -8,18 +8,14 @@ sequenceDiagram
   participant R_caller_identity as Resource: caller identity
   participant R_project_subscription_list_query as Resource: project subscription list query
   participant R_project as Resource: project
-  participant R_project_subscription_view_permission as Resource: project subscription view permission
-  participant R_active_subscriptions as Resource: active subscriptions
-  participant R_subscription_api_metadata as Resource: subscription api metadata
-  participant R_project_api_key_metadata as Resource: project api key metadata
-  participant R_project_client_metadata as Resource: project client metadata
+  participant R_project_subscriptions as Resource: project subscriptions
+  participant R_pagination as Resource: pagination
   participant R_project_subscription_list_response as Resource: project subscription list response
   participant T_project_api_subscriptions as Table: project_api_subscriptions
   participant T_projects as Table: projects
   participant T_apis as Table: apis
   participant T_api_gateway_stages as Table: api_gateway_stages
   participant T_api_cognito_scopes as Table: api_cognito_scopes
-  participant T_project_api_keys as Table: project_api_keys
   participant T_project_cognito_client_scopes as Table: project_cognito_client_scopes
   participant T_project_cognito_clients as Table: project_cognito_clients
   participant T_project_members as Table: project_members
@@ -29,16 +25,13 @@ sequenceDiagram
   R_project_subscription_list_query-->>API: project_subscription_list_query
   API->>R_project: get_project
   R_project-->>API: project
-  API->>R_project_subscription_view_permission: has_project_subscription_view_permission
-  R_project_subscription_view_permission-->>API: project_subscription_view_permission
-  API->>R_active_subscriptions: get_active_subscriptions
-  R_active_subscriptions-->>API: active_subscriptions
-  API->>R_subscription_api_metadata: get_subscription_api_metadata
-  R_subscription_api_metadata-->>API: subscription_api_metadata
-  API->>R_project_api_key_metadata: get_project_api_key_metadata
-  R_project_api_key_metadata-->>API: project_api_key_metadata
-  API->>R_project_client_metadata: get_project_client_metadata
-  R_project_client_metadata-->>API: project_client_metadata
+  alt project_subscription_view_permission
+    API->>API: has_project_subscription_view_permission
+  end
+  API->>R_project_subscriptions: get_project_subscriptions
+  R_project_subscriptions-->>API: project_subscriptions
+  API->>R_pagination: apply_pagination
+  R_pagination-->>API: pagination
   API->>R_project_subscription_list_response: build_project_subscription_list_response
   R_project_subscription_list_response-->>API: project_subscription_list_response
   API->>T_project_api_subscriptions: 参照 001_select_subscriptions.sql
@@ -51,8 +44,6 @@ sequenceDiagram
   T_api_gateway_stages-->>API: api_gateway_stages
   API->>T_api_cognito_scopes: 参照 001_select_subscriptions.sql
   T_api_cognito_scopes-->>API: api_cognito_scopes
-  API->>T_project_api_keys: 参照 001_select_subscriptions.sql
-  T_project_api_keys-->>API: project_api_keys
   API->>T_project_cognito_client_scopes: 参照 001_select_subscriptions.sql
   T_project_cognito_client_scopes-->>API: project_cognito_client_scopes
   API->>T_project_cognito_clients: 参照 001_select_subscriptions.sql

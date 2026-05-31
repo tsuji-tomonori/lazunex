@@ -8,7 +8,6 @@ sequenceDiagram
   participant R_caller_identity as Resource: caller identity
   participant R_public_client_update_request as Resource: public client update request
   participant R_project as Resource: project
-  participant R_project_owner_permission as Resource: project owner permission
   participant R_public_app_client_metadata as Resource: public app client metadata
   participant R_idempotency_record as Resource: idempotency record
   participant R_provisioning_operation as Resource: provisioning operation
@@ -36,8 +35,9 @@ sequenceDiagram
   R_public_client_update_request-->>API: public_client_update_request
   API->>R_project: get_project
   R_project-->>API: project
-  API->>R_project_owner_permission: has_project_owner_permission
-  R_project_owner_permission-->>API: project_owner_permission
+  alt project_owner_permission
+    API->>API: has_project_owner_permission
+  end
   API->>R_public_app_client_metadata: get_public_app_client_metadata
   R_public_app_client_metadata-->>API: public_app_client_metadata
   API->>R_idempotency_record: get_idempotency_record

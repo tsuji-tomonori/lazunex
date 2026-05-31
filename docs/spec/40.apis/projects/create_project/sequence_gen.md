@@ -7,7 +7,6 @@ sequenceDiagram
   participant API as API: createProject
   participant R_caller_identity as Resource: caller identity
   participant R_create_project_request as Resource: create project request
-  participant R_project_creation_permission as Resource: project creation permission
   participant R_idempotency_record as Resource: idempotency record
   participant R_project_provisioning_operation as Resource: project provisioning operation
   participant R_api_gateway_api_key as Resource: api gateway api key
@@ -42,8 +41,9 @@ sequenceDiagram
   R_caller_identity-->>API: caller_identity
   API->>R_create_project_request: validate_create_project_request
   R_create_project_request-->>API: create_project_request
-  API->>R_project_creation_permission: has_project_creation_permission
-  R_project_creation_permission-->>API: project_creation_permission
+  alt project_creation_permission
+    API->>API: has_project_creation_permission
+  end
   API->>R_idempotency_record: get_idempotency_record
   R_idempotency_record-->>API: idempotency_record
   API->>R_project_provisioning_operation: create_project_provisioning_operation

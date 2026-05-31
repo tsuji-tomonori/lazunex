@@ -7,34 +7,21 @@ sequenceDiagram
   participant API as API: getApi
   participant R_caller_identity as Resource: caller identity
   participant R_api_id as Resource: api id
-  participant R_api_catalog_metadata as Resource: api catalog metadata
-  participant R_viewable_api as Resource: viewable api
-  participant R_api_gateway_stage as Resource: api gateway stage
-  participant R_api_scope as Resource: api scope
-  participant R_api_reviewer as Resource: api reviewer
-  participant R_openapi_metadata as Resource: openapi metadata
+  participant R_api_detail as Resource: api detail
   participant R_api_detail_response as Resource: api detail response
   participant T_apis as Table: apis
   participant T_api_gateway_stages as Table: api_gateway_stages
   participant T_api_cognito_scopes as Table: api_cognito_scopes
-  participant T_api_documents as Table: api_documents
   participant T_api_reviewers as Table: api_reviewers
   API->>R_caller_identity: get_caller_identity
   R_caller_identity-->>API: caller_identity
   API->>R_api_id: validate_api_id
   R_api_id-->>API: api_id
-  API->>R_api_catalog_metadata: get_api_catalog_metadata
-  R_api_catalog_metadata-->>API: api_catalog_metadata
-  API->>R_viewable_api: is_viewable_api
-  R_viewable_api-->>API: viewable_api
-  API->>R_api_gateway_stage: get_api_gateway_stage
-  R_api_gateway_stage-->>API: api_gateway_stage
-  API->>R_api_scope: get_api_scope
-  R_api_scope-->>API: api_scope
-  API->>R_api_reviewer: get_api_reviewer
-  R_api_reviewer-->>API: api_reviewer
-  API->>R_openapi_metadata: get_openapi_metadata
-  R_openapi_metadata-->>API: openapi_metadata
+  API->>R_api_detail: get_api_detail
+  R_api_detail-->>API: api_detail
+  alt viewable_api
+    API->>API: is_viewable_api
+  end
   API->>R_api_detail_response: build_api_detail_response
   R_api_detail_response-->>API: api_detail_response
   API->>T_apis: 参照 001_select_apis.sql
@@ -43,8 +30,6 @@ sequenceDiagram
   T_api_gateway_stages-->>API: api_gateway_stages
   API->>T_api_cognito_scopes: 参照 001_select_apis.sql
   T_api_cognito_scopes-->>API: api_cognito_scopes
-  API->>T_api_documents: 参照 001_select_apis.sql
-  T_api_documents-->>API: api_documents
   API->>T_api_reviewers: 参照 001_select_apis.sql
   T_api_reviewers-->>API: api_reviewers
 ```

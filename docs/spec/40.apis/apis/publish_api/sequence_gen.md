@@ -7,10 +7,8 @@ sequenceDiagram
   participant API as API: publishApi
   participant R_caller_identity as Resource: caller identity
   participant R_api_publish_request as Resource: api publish request
-  participant R_api_publish_permission as Resource: api publish permission
   participant R_idempotency_record as Resource: idempotency record
   participant R_api_gateway_stage_registration as Resource: api gateway stage registration
-  participant R_registered_api as Resource: registered api
   participant R_provisioning_operation as Resource: provisioning operation
   participant R_cognito_custom_scope as Resource: cognito custom scope
   participant R_api_catalog_metadata as Resource: api catalog metadata
@@ -37,14 +35,16 @@ sequenceDiagram
   R_caller_identity-->>API: caller_identity
   API->>R_api_publish_request: validate_api_publish_request
   R_api_publish_request-->>API: api_publish_request
-  API->>R_api_publish_permission: has_api_publish_permission
-  R_api_publish_permission-->>API: api_publish_permission
+  alt api_publish_permission
+    API->>API: has_api_publish_permission
+  end
   API->>R_idempotency_record: get_idempotency_record
   R_idempotency_record-->>API: idempotency_record
   API->>R_api_gateway_stage_registration: verify_api_gateway_stage_registration
   R_api_gateway_stage_registration-->>API: api_gateway_stage_registration
-  API->>R_registered_api: has_registered_api
-  R_registered_api-->>API: registered_api
+  alt registered_api
+    API->>API: has_registered_api
+  end
   API->>R_provisioning_operation: create_provisioning_operation
   R_provisioning_operation-->>API: provisioning_operation
   API->>R_idempotency_record: create_idempotency_record

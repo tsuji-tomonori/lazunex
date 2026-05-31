@@ -50,7 +50,7 @@ continue
 - router endpoint 名を sequence の API participant とする。
 - `api_functions.{function_name}` の `function_name` を message label とする。
 - `{action}_{target}` の `target` をリソース participant とする。
-- `{is|has}_{condition}` の `condition` を条件リソース participant とする。
+- `{is|has}_{condition}` は resource participant にせず、Mermaid の `alt` 条件として出す。
 - `src/app/apis/{domain}/{api}/sql/*.sql` に出現する table 名を table participant とする。
 - table participant は、関数呼び出し順の中で SQL ファイル名の順に補助 message として出す。
 

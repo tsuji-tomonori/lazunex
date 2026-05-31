@@ -7,10 +7,6 @@ sequenceDiagram
   participant API as API: approveApiAccessRequest
   participant R_caller_identity as Resource: caller identity
   participant R_access_request as Resource: access request
-  participant R_pending_access_request as Resource: pending access request
-  participant R_api_reviewer_permission as Resource: api reviewer permission
-  participant R_available_project_api_stage as Resource: available project api stage
-  participant R_active_subscription as Resource: active subscription
   participant R_access_request_approving_event as Resource: access request approving event
   participant R_provisioning_operation as Resource: provisioning operation
   participant R_idempotency_record as Resource: idempotency record
@@ -51,14 +47,18 @@ sequenceDiagram
   R_caller_identity-->>API: caller_identity
   API->>R_access_request: get_access_request
   R_access_request-->>API: access_request
-  API->>R_pending_access_request: is_pending_access_request
-  R_pending_access_request-->>API: pending_access_request
-  API->>R_api_reviewer_permission: has_api_reviewer_permission
-  R_api_reviewer_permission-->>API: api_reviewer_permission
-  API->>R_available_project_api_stage: is_available_project_api_stage
-  R_available_project_api_stage-->>API: available_project_api_stage
-  API->>R_active_subscription: has_active_subscription
-  R_active_subscription-->>API: active_subscription
+  alt pending_access_request
+    API->>API: is_pending_access_request
+  end
+  alt api_reviewer_permission
+    API->>API: has_api_reviewer_permission
+  end
+  alt available_project_api_stage
+    API->>API: is_available_project_api_stage
+  end
+  alt active_subscription
+    API->>API: has_active_subscription
+  end
   API->>R_access_request_approving_event: append_access_request_approving_event
   R_access_request_approving_event-->>API: access_request_approving_event
   API->>R_provisioning_operation: create_provisioning_operation
