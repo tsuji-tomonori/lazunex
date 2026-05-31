@@ -282,6 +282,20 @@ def test_render_queries_py_includes_required_imports_and_empty_params(tmp_path: 
     assert 'SQL_DIR / "003_insert_project_events.sql"' in rendered
 
 
+def test_render_queries_py_uses_two_blank_lines_between_top_level_blocks(
+    tmp_path: Path,
+) -> None:
+    sql_path = tmp_path / "001_select_projects.sql"
+    sql_path.write_text("SELECT project_id FROM projects;", encoding="utf-8")
+    spec = parse_query_spec(sql_path, parse_tables(DDL))
+
+    rendered = render_queries_py([spec])
+
+    assert 'SQL_DIR = Path(__file__).with_name("sql")\n\n\nclass SelectProjectsParams' in rendered
+    assert "    pass\n\n\nclass SelectProjectsRow" in rendered
+    assert "    project_id: UUID\n\n\nasync def select_projects(" in rendered
+
+
 def test_render_queries_py_includes_empty_params_and_date_decimal_imports(tmp_path: Path) -> None:
     sql_path = tmp_path / "001_select_metrics.sql"
     sql_path.write_text(

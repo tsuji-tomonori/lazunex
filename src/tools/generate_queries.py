@@ -426,16 +426,20 @@ def render_queries_py(specs: list[QuerySpec]) -> str:
             "",
             'SQL_DIR = Path(__file__).with_name("sql")',
             "",
+            "",
         ]
     )
 
     for index, spec in enumerate(specs):
         if index > 0:
             lines.append("")
+            lines.append("")
         lines.extend(render_model_class(f"{spec.class_prefix}Params", spec.params))
         if spec.rows:
             lines.append("")
+            lines.append("")
             lines.extend(render_model_class(f"{spec.class_prefix}Row", spec.rows))
+        lines.append("")
         lines.append("")
         lines.extend(render_query_function(spec))
 
