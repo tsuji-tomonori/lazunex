@@ -1,0 +1,32 @@
+INSERT INTO apis (
+    api_id,
+    api_code,
+    name,
+    description,
+    provider_name,
+    provider_contact,
+    owner_principal_id,
+    visibility,
+    default_api_stage_id,
+    created_at,
+    created_by,
+    updated_at,
+    updated_by,
+    row_version
+) VALUES (
+    :api_id,
+    :api_code,
+    :name,
+    :description,
+    :provider_name,
+    :provider_contact,
+    :owner_principal_id,
+    :visibility,
+    :api_stage_id,
+    :now,
+    :actor_principal_id,
+    :now,
+    :actor_principal_id,
+    1
+)
+RETURNING api_id;

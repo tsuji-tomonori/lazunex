@@ -1,0 +1,38 @@
+INSERT INTO api_gateway_stages (
+    api_stage_id,
+    api_id,
+    aws_account_id,
+    aws_region,
+    apigw_rest_api_id,
+    apigw_stage_name,
+    invoke_url,
+    custom_domain_url,
+    deployment_id,
+    authorizer_id,
+    api_key_required_observed,
+    scope_config_observed,
+    created_at,
+    created_by,
+    updated_at,
+    updated_by,
+    row_version
+) VALUES (
+    :api_stage_id,
+    :api_id,
+    :aws_account_id,
+    :aws_region,
+    :apigw_rest_api_id,
+    :apigw_stage_name,
+    :invoke_url,
+    :custom_domain_url,
+    :deployment_id,
+    :authorizer_id,
+    :api_key_required_observed,
+    :scope_config_observed,
+    :now,
+    :actor_principal_id,
+    :now,
+    :actor_principal_id,
+    1
+)
+RETURNING api_stage_id;
