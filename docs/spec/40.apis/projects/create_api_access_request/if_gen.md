@@ -169,3 +169,32 @@ Media type: `application/json`
 | `error.details[].field` | `string` | yes | 入力検証エラーが発生したリクエスト項目です。 | minLength=1, maxLength=256 |
 | `error.details[].reason` | `string` | yes | 入力検証エラーになった具体的な理由です。 | minLength=1 |
 | `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
+
+## Samples
+
+### In
+
+```bash
+curl -X POST 'https://api.example.com/projects/cb62b5f6-0000-0000-0000-000000000001/api-access-requests' \
+  -H 'Idempotency-Key: <Idempotency-Key>' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "apiId": "7b0d4a98-0000-0000-0000-000000000001",
+  "apiStageId": "7b0d4a98-0000-0000-0000-000000000101",
+  "requestedAuthMode": "BOTH",
+  "requestedReason": "決済画面から請求情報を参照するため"
+}'
+```
+
+### Out
+
+```json
+{
+  "accessRequestId": "e540d3e8-0000-0000-0000-000000000001",
+  "projectId": "cb62b5f6-0000-0000-0000-000000000001",
+  "apiId": "7b0d4a98-0000-0000-0000-000000000001",
+  "apiStageId": "7b0d4a98-0000-0000-0000-000000000101",
+  "requestedAuthMode": "BOTH",
+  "derivedState": "PENDING"
+}
+```

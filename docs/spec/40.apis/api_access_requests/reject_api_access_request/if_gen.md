@@ -163,3 +163,26 @@ Media type: `application/json`
 | `error.details[].field` | `string` | yes | 入力検証エラーが発生したリクエスト項目です。 | minLength=1, maxLength=256 |
 | `error.details[].reason` | `string` | yes | 入力検証エラーになった具体的な理由です。 | minLength=1 |
 | `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
+
+## Samples
+
+### In
+
+```bash
+curl -X POST 'https://api.example.com/api-access-requests/e540d3e8-0000-0000-0000-000000000001/reject' \
+  -H 'Idempotency-Key: <Idempotency-Key>' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "reviewComment": "利用目的が不明確なため却下"
+}'
+```
+
+### Out
+
+```json
+{
+  "accessRequestId": "e540d3e8-0000-0000-0000-000000000001",
+  "derivedState": "REJECTED",
+  "reviewedAt": "2026-05-30T04:00:00Z"
+}
+```

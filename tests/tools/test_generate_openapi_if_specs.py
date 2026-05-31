@@ -1,31 +1,40 @@
 import ast
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 from _pytest.capture import CaptureFixture
 from _pytest.monkeypatch import MonkeyPatch
 
 from tools.generate_openapi_if_specs import (
+    OperationSamples,
     build_arg_parser,
     enum_comment_descriptions,
     generate_from_openapi,
     implementation_operation_paths,
+    implementation_operation_samples,
     iter_operations,
     keyword_value,
     literal_string,
     load_fastapi_openapi,
+    load_operation_sample,
     main,
+    module_sample,
     object_field_rows,
     operation_output_path,
+    parameter_default,
     parameter_rows,
+    render_curl_sample,
     render_field_table,
+    render_json,
     render_operation_markdown,
     render_response_details,
     render_response_summary,
+    render_samples_section,
     request_body_rows,
     response_media,
     response_summary_rows,
     router_operation_id,
+    sample_module_name,
     schema_components,
     schema_constraints,
     schema_type,
@@ -148,7 +157,11 @@ OPENAPI: dict[str, Any] = {
                         "in": "path",
                         "required": True,
                         "description": "対象ユーザーID。",
-                        "schema": {"type": "string", "minLength": 1},
+                        "schema": {
+                            "type": "string",
+                            "minLength": 1,
+                            "default": "user-1",
+                        },
                     },
                     {
                         "name": "force",
@@ -302,6 +315,10 @@ def test_response_summary_and_render_markdown() -> None:
         "delete",
         operation,
         schemas,
+        OperationSamples(
+            request={"reason": "退職に伴う削除", "notify": True},
+            response={"userId": "user-1", "email": "user@example.com"},
+        ),
     )
 
     assert summary_rows[0] == ["200", "成功。", "application/json", "10 field(s)"]
@@ -312,6 +329,11 @@ def test_response_summary_and_render_markdown() -> None:
     assert "## Query Parameters" in rendered
     assert "## Data" in rendered
     assert "## Responses" in rendered
+    assert "## Samples" in rendered
+    assert "curl -X DELETE 'https://api.example.com/admin/users/user-1?force=<force>'" in rendered
+    assert "-H 'Authorization: <Authorization>'" in rendered
+    assert '"reason": "退職に伴う削除"' in rendered
+    assert '"email": "user@example.com"' in rendered
     assert (
         "| `status` | `string(active, deleted)` | yes | 状態。 | "
         "active=列挙値として指定可能な値です。"
@@ -350,6 +372,27 @@ def test_render_operation_markdown_handles_missing_description() -> None:
 
     assert "Summary: -" in rendered
     assert "## Responses" in rendered
+    assert "### Out\n\n_なし_" in rendered
+
+
+def test_sample_renderers_format_curl_and_json() -> None:
+    operation = delete_operation()
+
+    assert parameter_default(operation, "path", "userId") == "user-1"
+    assert parameter_default(operation, "path", "missing") is None
+    assert render_json({"message": "成功"}) == '{\n  "message": "成功"\n}'
+    assert "curl -X DELETE" in render_curl_sample(
+        "/admin/users/{userId}",
+        "delete",
+        operation,
+        {"reason": "不要"},
+    )
+    assert render_samples_section(
+        "/admin/users/{userId}",
+        "delete",
+        operation,
+        OperationSamples(request=None, response=None),
+    )[-2] == "_なし_"
 
 
 def test_operation_output_path_falls_back_to_default() -> None:
@@ -403,6 +446,29 @@ async def no_operation():
     assert implementation_operation_paths(api_root) == {
         "createApiAccessRequest": Path("projects/create_api_access_request")
     }
+
+
+def test_operation_samples_are_loaded_from_samples_module() -> None:
+    api_path = Path("projects/create_api_access_request")
+
+    assert sample_module_name(api_path) == "app.apis.projects.create_api_access_request.samples"
+    sample = load_operation_sample(api_path)
+    assert sample is not None
+    assert sample.request is not None
+    assert sample.response is not None
+    assert sample.request["requestedReason"] == "決済画面から請求情報を参照するため"
+    assert sample.response["derivedState"] == "PENDING"
+    assert implementation_operation_samples({"createApiAccessRequest": api_path})[
+        "createApiAccessRequest"
+    ] == sample
+    assert load_operation_sample(Path("missing/api")) is None
+
+
+def test_module_sample_handles_missing_suffix() -> None:
+    class SampleModule:
+        VALUE: ClassVar[dict[str, int]] = {"x": 1}
+
+    assert module_sample(SampleModule, "_REQUEST_SAMPLE") is None
 
 
 def test_router_operation_helpers_handle_non_matches(tmp_path: Path) -> None:
@@ -468,10 +534,19 @@ def test_generate_from_openapi_writes_files(tmp_path: Path) -> None:
         OPENAPI,
         tmp_path,
         {"deleteAdminUser": Path("admin/delete_user")},
+        {
+            "deleteAdminUser": OperationSamples(
+                request={"reason": "不要", "notify": False},
+                response={"userId": "user-1"},
+            )
+        },
     )
 
     assert written == [tmp_path / "admin" / "delete_user" / "if_gen.md"]
-    assert written[0].read_text(encoding="utf-8").startswith("# DELETE /admin/users/{userId}")
+    content = written[0].read_text(encoding="utf-8")
+    assert content.startswith("# DELETE /admin/users/{userId}")
+    assert '"reason": "不要"' in content
+    assert '"userId": "user-1"' in content
 
 
 def test_arg_parser_defaults_and_main_output(
@@ -486,10 +561,17 @@ def test_arg_parser_defaults_and_main_output(
     def operation_paths(_api_root: Path) -> dict[str, Path]:
         return {"deleteAdminUser": Path("admin/delete_user")}
 
+    def operation_samples(_operation_paths: dict[str, Path]) -> dict[str, OperationSamples]:
+        return {"deleteAdminUser": OperationSamples(request=None, response={"ok": True})}
+
     monkeypatch.setattr("tools.generate_openapi_if_specs.load_fastapi_openapi", lambda: OPENAPI)
     monkeypatch.setattr(
         "tools.generate_openapi_if_specs.implementation_operation_paths",
         operation_paths,
+    )
+    monkeypatch.setattr(
+        "tools.generate_openapi_if_specs.implementation_operation_samples",
+        operation_samples,
     )
     monkeypatch.setattr(
         "sys.argv",
@@ -500,6 +582,9 @@ def test_arg_parser_defaults_and_main_output(
 
     assert capsys.readouterr().out == "Generated 1 IF spec files.\n"
     assert (tmp_path / "admin" / "delete_user" / "if_gen.md").exists()
+    assert '"ok": true' in (tmp_path / "admin" / "delete_user" / "if_gen.md").read_text(
+        encoding="utf-8"
+    )
 
 
 def test_load_fastapi_openapi_returns_schema() -> None:

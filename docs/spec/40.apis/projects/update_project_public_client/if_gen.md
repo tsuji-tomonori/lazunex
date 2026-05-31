@@ -212,3 +212,56 @@ Media type: `application/json`
 | `error.details[].field` | `string` | yes | 入力検証エラーが発生したリクエスト項目です。 | minLength=1, maxLength=256 |
 | `error.details[].reason` | `string` | yes | 入力検証エラーになった具体的な理由です。 | minLength=1 |
 | `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
+
+## Samples
+
+### In
+
+```bash
+curl -X PATCH 'https://api.example.com/projects/cb62b5f6-0000-0000-0000-000000000001/public-client' \
+  -H 'Idempotency-Key: <Idempotency-Key>' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "callbackUrls": [
+    "https://payment.example.internal/callback",
+    "https://payment-stg.example.internal/callback"
+  ],
+  "logoutUrls": [
+    "https://payment.example.internal/logout"
+  ],
+  "accessTokenValidity": 15,
+  "accessTokenUnit": "minutes",
+  "idTokenValidity": 15,
+  "idTokenUnit": "minutes",
+  "refreshTokenValidity": 1,
+  "refreshTokenUnit": "days",
+  "refreshTokenRotationEnabled": true,
+  "retryGracePeriodSeconds": 10,
+  "expectedRowVersion": 3
+}'
+```
+
+### Out
+
+```json
+{
+  "projectId": "cb62b5f6-0000-0000-0000-000000000001",
+  "publicClient": {
+    "appClientId": "public-client-id",
+    "callbackUrls": [
+      "https://payment.example.internal/callback",
+      "https://payment-stg.example.internal/callback"
+    ],
+    "logoutUrls": [
+      "https://payment.example.internal/logout"
+    ],
+    "accessTokenValidity": 15,
+    "accessTokenUnit": "minutes",
+    "refreshTokenValidity": 1,
+    "refreshTokenUnit": "days",
+    "refreshTokenRotationEnabled": true,
+    "rowVersion": 4
+  },
+  "operationId": "62f6d4b2-0000-0000-0000-000000000001"
+}
+```

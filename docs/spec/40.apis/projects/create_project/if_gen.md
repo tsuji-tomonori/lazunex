@@ -213,3 +213,75 @@ Media type: `application/json`
 | `error.details[].field` | `string` | yes | 入力検証エラーが発生したリクエスト項目です。 | minLength=1, maxLength=256 |
 | `error.details[].reason` | `string` | yes | 入力検証エラーになった具体的な理由です。 | minLength=1 |
 | `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
+
+## Samples
+
+### In
+
+```bash
+curl -X POST 'https://api.example.com/projects' \
+  -H 'Idempotency-Key: <Idempotency-Key>' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "projectCode": "payment-frontend",
+  "name": "Payment Frontend",
+  "description": "決済画面プロジェクト",
+  "ownerPrincipalId": "user-12345",
+  "departmentCode": "FIN",
+  "usagePlan": {
+    "defaultRateLimit": 100,
+    "defaultBurstLimit": 200,
+    "defaultQuotaLimit": 100000,
+    "defaultQuotaPeriod": "MONTH"
+  },
+  "publicClient": {
+    "callbackUrls": [
+      "https://payment.example.internal/callback"
+    ],
+    "logoutUrls": [
+      "https://payment.example.internal/logout"
+    ],
+    "accessTokenValidity": 15,
+    "accessTokenUnit": "minutes",
+    "idTokenValidity": 15,
+    "idTokenUnit": "minutes",
+    "refreshTokenValidity": 1,
+    "refreshTokenUnit": "days",
+    "refreshTokenRotationEnabled": true,
+    "retryGracePeriodSeconds": 10
+  },
+  "confidentialClient": {
+    "accessTokenValidity": 15,
+    "accessTokenUnit": "minutes"
+  }
+}'
+```
+
+### Out
+
+```json
+{
+  "projectId": "cb62b5f6-0000-0000-0000-000000000001",
+  "projectCode": "payment-frontend",
+  "derivedState": "ACTIVE",
+  "apiKey": {
+    "apigwApiKeyId": "api-key-id",
+    "apiKeyValue": "initial-value-only",
+    "apiKeyLast4": "abcd"
+  },
+  "usagePlan": {
+    "apigwUsagePlanId": "usage-plan-id"
+  },
+  "cognito": {
+    "publicClient": {
+      "appClientId": "public-client-id"
+    },
+    "confidentialClient": {
+      "appClientId": "confidential-client-id",
+      "clientSecret": "initial-value-only",
+      "clientSecretLast4": "wxyz"
+    }
+  },
+  "operationId": "8f5a1f0a-0000-0000-0000-000000000001"
+}
+```

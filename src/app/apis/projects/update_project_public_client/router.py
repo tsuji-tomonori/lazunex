@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Header, Path, status
 
-from app.apis.base import sample_value
+from app.apis.base import sample_path_value, sample_value
 from app.apis.projects.update_project_public_client import functions as api_functions
 from app.apis.projects.update_project_public_client.samples import (
     UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE,
@@ -48,7 +48,14 @@ async def update_project_public_client(
     project_id: Annotated[
         ResourceId,
         Path(
-            alias="projectId", description="API利用単位となるプロジェクトを一意に識別するIDです。"
+            alias="projectId",
+            description="API利用単位となるプロジェクトを一意に識別するIDです。",
+            json_schema_extra={
+                "default": sample_path_value(
+                    UPDATE_PROJECT_PUBLIC_CLIENT_RESPONSE_SAMPLE,
+                    "projectId",
+                )
+            },
         ),
     ],
     request: Annotated[

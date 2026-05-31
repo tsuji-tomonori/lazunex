@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Header, Path, status
 
-from app.apis.base import sample_value
+from app.apis.base import sample_path_value, sample_value
 from app.apis.projects.create_api_access_request import functions as api_functions
 from app.apis.projects.create_api_access_request.samples import (
     CREATE_API_ACCESS_REQUEST_REQUEST_SAMPLE,
@@ -47,7 +47,14 @@ async def create_api_access_request(
     project_id: Annotated[
         ResourceId,
         Path(
-            alias="projectId", description="API利用単位となるプロジェクトを一意に識別するIDです。"
+            alias="projectId",
+            description="API利用単位となるプロジェクトを一意に識別するIDです。",
+            json_schema_extra={
+                "default": sample_path_value(
+                    CREATE_API_ACCESS_REQUEST_RESPONSE_SAMPLE,
+                    "projectId",
+                )
+            },
         ),
     ],
     request: Annotated[

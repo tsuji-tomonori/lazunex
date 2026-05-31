@@ -5,6 +5,7 @@ from fastapi import APIRouter, Path, status
 from app.apis.apis.get_api import functions as api_functions
 from app.apis.apis.get_api.samples import GET_API_RESPONSE_SAMPLE
 from app.apis.apis.get_api.schemas import GetApiResponse
+from app.apis.base import sample_path_value
 from app.apis.responses import (
     error_responses,
     success_response,
@@ -36,7 +37,13 @@ router = APIRouter()
 async def get_api(
     api_id: Annotated[
         ResourceId,
-        Path(alias="apiId", description="APIカタログ上のAPIを一意に識別するIDです。"),
+        Path(
+            alias="apiId",
+            description="APIカタログ上のAPIを一意に識別するIDです。",
+            json_schema_extra={
+                "default": sample_path_value(GET_API_RESPONSE_SAMPLE, "apiId")
+            },
+        ),
     ],
 ) -> GetApiResponse:
     caller = await api_functions.get_caller_identity()

@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Path, status
 
+from app.apis.base import sample_path_value
 from app.apis.projects.get_project import functions as api_functions
 from app.apis.projects.get_project.samples import GET_PROJECT_RESPONSE_SAMPLE
 from app.apis.projects.get_project.schemas import GetProjectResponse
@@ -39,7 +40,11 @@ async def get_project(
     project_id: Annotated[
         ResourceId,
         Path(
-            alias="projectId", description="API利用単位となるプロジェクトを一意に識別するIDです。"
+            alias="projectId",
+            description="API利用単位となるプロジェクトを一意に識別するIDです。",
+            json_schema_extra={
+                "default": sample_path_value(GET_PROJECT_RESPONSE_SAMPLE, "projectId")
+            },
         ),
     ],
 ) -> GetProjectResponse:

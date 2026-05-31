@@ -5,13 +5,14 @@ from pydantic import ValidationError
 
 from app.apis.apis.get_api.samples import GET_API_RESPONSE_SAMPLE
 from app.apis.apis.publish_api.schemas import OpenApiDocumentRequest, PublishApiGatewayRequest
-from app.apis.base import sample_value
+from app.apis.base import sample_path_value, sample_value
 from app.apis.projects.create_api_access_request.schemas import CreateApiAccessRequestRequest
 from app.apis.projects.create_project.schemas import CreateProjectRequest
 from app.apis.projects.list_project_api_access_requests.samples import (
     LIST_PROJECT_API_ACCESS_REQUESTS_RESPONSE_SAMPLE,
 )
 from app.apis.projects.update_project_public_client.schemas import UpdateProjectPublicClientRequest
+from app.main import create_app
 
 
 def test_uuid_and_datetime_samples_are_serialized_for_openapi_examples() -> None:
@@ -21,6 +22,25 @@ def test_uuid_and_datetime_samples_are_serialized_for_openapi_examples() -> None
 
     assert api_sample["apiId"] == "7b0d4a98-0000-0000-0000-000000000001"
     assert access_request_items[0]["requestedAt"] == "2026-05-30T03:00:00Z"
+    assert sample_path_value(GET_API_RESPONSE_SAMPLE, "apiId") == (
+        "7b0d4a98-0000-0000-0000-000000000001"
+    )
+    assert sample_path_value(LIST_PROJECT_API_ACCESS_REQUESTS_RESPONSE_SAMPLE, "projectId") == (
+        "cb62b5f6-0000-0000-0000-000000000001"
+    )
+
+
+def test_openapi_path_parameters_include_sample_defaults() -> None:
+    openapi = create_app().openapi()
+    get_api = openapi["paths"]["/apis/{apiId}"]["get"]
+    create_access_request = openapi["paths"]["/projects/{projectId}/api-access-requests"]["post"]
+
+    assert get_api["parameters"][0]["schema"]["default"] == (
+        "7b0d4a98-0000-0000-0000-000000000001"
+    )
+    assert create_access_request["parameters"][0]["schema"]["default"] == (
+        "cb62b5f6-0000-0000-0000-000000000001"
+    )
 
 
 def test_publish_api_gateway_request_validates_db_backed_lengths() -> None:

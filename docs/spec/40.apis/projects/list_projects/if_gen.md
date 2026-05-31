@@ -125,3 +125,31 @@ Media type: `application/json`
 | `error.details[].field` | `string` | yes | 入力検証エラーが発生したリクエスト項目です。 | minLength=1, maxLength=256 |
 | `error.details[].reason` | `string` | yes | 入力検証エラーになった具体的な理由です。 | minLength=1 |
 | `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
+
+## Samples
+
+### In
+
+```bash
+curl -X GET 'https://api.example.com/projects?limit=<limit>&nextToken=<nextToken>&derivedState=<derivedState>&keyword=<keyword>&ownerPrincipalId=<ownerPrincipalId>'
+```
+
+### Out
+
+```json
+{
+  "items": [
+    {
+      "projectId": "cb62b5f6-0000-0000-0000-000000000001",
+      "projectCode": "payment-frontend",
+      "name": "Payment Frontend",
+      "description": "決済画面プロジェクト",
+      "ownerPrincipalId": "user-12345",
+      "departmentCode": "FIN",
+      "derivedState": "ACTIVE",
+      "subscriptionCount": 3
+    }
+  ],
+  "nextToken": null
+}
+```

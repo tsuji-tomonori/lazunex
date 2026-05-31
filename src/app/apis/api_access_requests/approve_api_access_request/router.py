@@ -11,7 +11,7 @@ from app.apis.api_access_requests.approve_api_access_request.schemas import (
     ApproveApiAccessRequestRequest,
     ApproveApiAccessRequestResponse,
 )
-from app.apis.base import sample_value
+from app.apis.base import sample_path_value, sample_value
 from app.apis.responses import (
     error_responses,
     success_response,
@@ -47,7 +47,16 @@ router = APIRouter()
 async def approve_api_access_request(
     access_request_id: Annotated[
         ResourceId,
-        Path(alias="accessRequestId", description="API利用申請を一意に識別するIDです。"),
+        Path(
+            alias="accessRequestId",
+            description="API利用申請を一意に識別するIDです。",
+            json_schema_extra={
+                "default": sample_path_value(
+                    APPROVE_API_ACCESS_REQUEST_RESPONSE_SAMPLE,
+                    "accessRequestId",
+                )
+            },
+        ),
     ],
     request: Annotated[
         ApproveApiAccessRequestRequest,

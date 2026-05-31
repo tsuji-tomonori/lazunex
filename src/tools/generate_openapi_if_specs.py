@@ -1,5 +1,7 @@
 import argparse
 import ast
+import importlib
+import json
 import re
 from dataclasses import dataclass
 from functools import lru_cache
@@ -39,6 +41,12 @@ class FieldRow:
     constraints: str
 
 
+@dataclass(frozen=True)
+class OperationSamples:
+    request: JsonObject | None
+    response: JsonObject | None
+
+
 def snake_case(value: str) -> str:
     value = re.sub(r"(.)([A-Z][a-z]+)", r"\1_\2", value)
     value = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", value)
@@ -56,6 +64,19 @@ def as_object(value: Any) -> JsonObject:
 
 def as_list(value: Any) -> list[Any]:
     return cast(list[Any], value) if isinstance(value, list) else []  # type: ignore[redundant-cast]
+
+
+def json_sample(value: Any) -> JsonObject | None:
+    if value is None:
+        return None
+    if hasattr(value, "model_dump"):
+        dumped = value.model_dump(mode="json", by_alias=True)
+        return as_object(dumped)
+    return as_object(value)
+
+
+def render_json(value: JsonObject) -> str:
+    return json.dumps(value, ensure_ascii=False, indent=2)
 
 
 def schema_components(openapi: JsonObject) -> JsonObject:
@@ -394,11 +415,80 @@ def render_response_details(operation: JsonObject, components: JsonObject) -> li
     return lines
 
 
+def sample_url(path: str, operation: JsonObject) -> str:
+    url = f"https://api.example.com{path}"
+    for row in parameter_rows(operation, "path", {}):
+        placeholder = "{" + row.name + "}"
+        default = parameter_default(operation, "path", row.name)
+        url = url.replace(placeholder, default or f"<{row.name}>")
+    query_parts: list[str] = []
+    for row in parameter_rows(operation, "query", {}):
+        query_parts.append(f"{row.name}=<{row.name}>")
+    if query_parts:
+        return f"{url}?{'&'.join(query_parts)}"
+    return url
+
+
+def parameter_default(operation: JsonObject, location: str, name: str) -> str | None:
+    for parameter in as_list(operation.get("parameters", [])):
+        parameter_object = as_object(parameter)
+        if parameter_object.get("in") != location or parameter_object.get("name") != name:
+            continue
+        schema = as_object(parameter_object.get("schema", {}))
+        default = schema.get("default")
+        if default is not None:
+            return str(default)
+    return None
+
+
+def render_curl_sample(
+    path: str,
+    method: str,
+    operation: JsonObject,
+    sample: JsonObject | None,
+) -> str:
+    lines = [f"curl -X {method.upper()} '{sample_url(path, operation)}'"]
+    for row in parameter_rows(operation, "header", {}):
+        lines.append(f"  -H '{row.name}: <{row.name}>'")
+    if sample is not None:
+        lines.append("  -H 'Content-Type: application/json'")
+        lines.append(f"  -d '{render_json(sample)}'")
+    return " \\\n".join(lines)
+
+
+def render_samples_section(
+    path: str,
+    method: str,
+    operation: JsonObject,
+    samples: OperationSamples | None,
+) -> list[str]:
+    request_sample = samples.request if samples is not None else None
+    response_sample = samples.response if samples is not None else None
+    lines = [
+        "## Samples",
+        "",
+        "### In",
+        "",
+        "```bash",
+        render_curl_sample(path, method, operation, request_sample),
+        "```",
+        "",
+        "### Out",
+        "",
+    ]
+    if response_sample is None:
+        lines.extend(["_なし_", ""])
+        return lines
+    lines.extend(["```json", render_json(response_sample), "```", ""])
+    return lines
+
+
 def render_operation_markdown(
     path: str,
     method: str,
     operation: JsonObject,
     components: JsonObject,
+    samples: OperationSamples | None = None,
 ) -> str:
     summary = str(operation.get("summary") or "")
     description = str(operation.get("description") or "")
@@ -436,8 +526,9 @@ def render_operation_markdown(
         ["## Responses", "", *render_response_summary(response_summary_rows(operation, components))]
     )
     lines.extend(render_response_details(operation, components))
-    lines.append("")
-    return "\n".join(lines)
+    lines.extend(["", *render_samples_section(path, method, operation, samples)])
+    content = "\n".join(lines).rstrip()
+    return f"{content}\n"
 
 
 def literal_string(node: ast.AST | None) -> str | None:
@@ -482,6 +573,39 @@ def implementation_operation_paths(api_root: Path) -> dict[str, Path]:
     return paths
 
 
+def sample_module_name(api_path: Path) -> str:
+    return ".".join(("app", "apis", *api_path.parts, "samples"))
+
+
+def module_sample(module: Any, suffix: str) -> JsonObject | None:
+    for name in sorted(dir(module)):
+        if name.endswith(suffix):
+            return json_sample(getattr(module, name))
+    return None
+
+
+def load_operation_sample(api_path: Path) -> OperationSamples | None:
+    try:
+        module = importlib.import_module(sample_module_name(api_path))
+    except ModuleNotFoundError:
+        return None
+    return OperationSamples(
+        request=module_sample(module, "_REQUEST_SAMPLE"),
+        response=module_sample(module, "_RESPONSE_SAMPLE"),
+    )
+
+
+def implementation_operation_samples(
+    operation_paths: dict[str, Path],
+) -> dict[str, OperationSamples]:
+    samples: dict[str, OperationSamples] = {}
+    for operation_id, api_path in operation_paths.items():
+        sample = load_operation_sample(api_path)
+        if sample is not None:
+            samples[operation_id] = sample
+    return samples
+
+
 def operation_output_path(
     output_dir: Path,
     operation: JsonObject,
@@ -515,14 +639,22 @@ def generate_from_openapi(
     openapi: JsonObject,
     output_dir: Path,
     operation_paths: dict[str, Path] | None = None,
+    operation_samples: dict[str, OperationSamples] | None = None,
 ) -> list[Path]:
     components = schema_components(openapi)
     written: list[Path] = []
     for path, method, operation in iter_operations(openapi):
+        operation_id = str(operation.get("operationId") or operation.get("summary") or "api")
         output_path = operation_output_path(output_dir, operation, operation_paths)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(
-            render_operation_markdown(path, method, operation, components),
+            render_operation_markdown(
+                path,
+                method,
+                operation,
+                components,
+                (operation_samples or {}).get(operation_id),
+            ),
             encoding="utf-8",
         )
         written.append(output_path)
@@ -534,10 +666,12 @@ def load_fastapi_openapi() -> JsonObject:
 
 
 def generate(output_dir: Path, api_root: Path = DEFAULT_API_ROOT) -> list[Path]:
+    operation_paths = implementation_operation_paths(api_root)
     return generate_from_openapi(
         load_fastapi_openapi(),
         output_dir,
-        implementation_operation_paths(api_root),
+        operation_paths,
+        implementation_operation_samples(operation_paths),
     )
 
 

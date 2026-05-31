@@ -25,3 +25,15 @@ _なし_
 | Status | 説明 | Media type | Body |
 | --- | --- | --- | --- |
 | `200` | Successful Response | `application/json` | - |
+
+## Samples
+
+### In
+
+```bash
+curl -X GET 'https://api.example.com/health'
+```
+
+### Out
+
+_なし_

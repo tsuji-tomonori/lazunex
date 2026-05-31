@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Path, Query, status
 
+from app.apis.base import sample_path_value
 from app.apis.projects.list_project_api_access_requests import functions as api_functions
 from app.apis.projects.list_project_api_access_requests.samples import (
     LIST_PROJECT_API_ACCESS_REQUESTS_RESPONSE_SAMPLE,
@@ -42,7 +43,14 @@ async def list_project_api_access_requests(
     project_id: Annotated[
         ResourceId,
         Path(
-            alias="projectId", description="API利用単位となるプロジェクトを一意に識別するIDです。"
+            alias="projectId",
+            description="API利用単位となるプロジェクトを一意に識別するIDです。",
+            json_schema_extra={
+                "default": sample_path_value(
+                    LIST_PROJECT_API_ACCESS_REQUESTS_RESPONSE_SAMPLE,
+                    "projectId",
+                )
+            },
         ),
     ],
     query: Annotated[ListProjectApiAccessRequestsQuery, Query()],

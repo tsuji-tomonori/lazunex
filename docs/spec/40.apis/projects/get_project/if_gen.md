@@ -154,3 +154,55 @@ Media type: `application/json`
 | `error.details[].field` | `string` | yes | 入力検証エラーが発生したリクエスト項目です。 | minLength=1, maxLength=256 |
 | `error.details[].reason` | `string` | yes | 入力検証エラーになった具体的な理由です。 | minLength=1 |
 | `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
+
+## Samples
+
+### In
+
+```bash
+curl -X GET 'https://api.example.com/projects/cb62b5f6-0000-0000-0000-000000000001'
+```
+
+### Out
+
+```json
+{
+  "projectId": "cb62b5f6-0000-0000-0000-000000000001",
+  "projectCode": "payment-frontend",
+  "name": "Payment Frontend",
+  "description": "決済画面プロジェクト",
+  "ownerPrincipalId": "user-12345",
+  "departmentCode": "FIN",
+  "derivedState": "ACTIVE",
+  "apiKey": {
+    "apigwApiKeyId": "api-key-id",
+    "apiKeyLast4": "abcd",
+    "observedEnabled": true
+  },
+  "usagePlan": {
+    "apigwUsagePlanId": "usage-plan-id",
+    "defaultRateLimit": 100,
+    "defaultBurstLimit": 200,
+    "defaultQuotaLimit": 100000,
+    "defaultQuotaPeriod": "MONTH"
+  },
+  "cognito": {
+    "publicClient": {
+      "appClientId": "public-client-id",
+      "callbackUrls": [
+        "https://payment.example.internal/callback"
+      ],
+      "logoutUrls": [
+        "https://payment.example.internal/logout"
+      ],
+      "accessTokenValidity": 15,
+      "accessTokenUnit": "minutes",
+      "refreshTokenRotationEnabled": true
+    },
+    "confidentialClient": {
+      "appClientId": "confidential-client-id",
+      "hasClientSecret": true
+    }
+  }
+}
+```

@@ -151,3 +151,48 @@ Media type: `application/json`
 | `error.details[].field` | `string` | yes | 入力検証エラーが発生したリクエスト項目です。 | minLength=1, maxLength=256 |
 | `error.details[].reason` | `string` | yes | 入力検証エラーになった具体的な理由です。 | minLength=1 |
 | `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
+
+## Samples
+
+### In
+
+```bash
+curl -X GET 'https://api.example.com/apis/7b0d4a98-0000-0000-0000-000000000001'
+```
+
+### Out
+
+```json
+{
+  "apiId": "7b0d4a98-0000-0000-0000-000000000001",
+  "apiCode": "billing-api-v1",
+  "name": "Billing API",
+  "description": "社内請求API",
+  "providerName": "Finance Platform Team",
+  "providerContact": "finance-platform@example.com",
+  "ownerPrincipalId": "user-12345",
+  "visibility": "INTERNAL",
+  "derivedState": "PUBLISHED",
+  "stage": {
+    "apiStageId": "7b0d4a98-0000-0000-0000-000000000101",
+    "awsAccountId": "123456789012",
+    "awsRegion": "ap-northeast-1",
+    "restApiId": "abc123def4",
+    "stageName": "prod",
+    "invokeUrl": "https://abc123def4.execute-api.ap-northeast-1.amazonaws.com/prod",
+    "customDomainUrl": "https://billing-api.internal.example.com",
+    "apiKeyRequiredObserved": true,
+    "scopeConfigObserved": "VERIFIED"
+  },
+  "scope": {
+    "scopeName": "api:7b0d4a98-0000-0000-0000-000000000001:invoke",
+    "scopeFullName": "api-hub/api:7b0d4a98-0000-0000-0000-000000000001:invoke"
+  },
+  "reviewers": [
+    {
+      "reviewerPrincipalId": "reviewer-001",
+      "reviewerRole": "PRIMARY"
+    }
+  ]
+}
+```
