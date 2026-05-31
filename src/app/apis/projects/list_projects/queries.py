@@ -1,10 +1,16 @@
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.db.query import fetch_all
 
 # This file is generated from SQL files in the sibling sql directory.
 # Do not edit generated models by hand.
+
+SQL_DIR = Path(__file__).with_name("sql")
 
 
 class SelectProjectsParams(BaseModel):
@@ -30,3 +36,15 @@ class SelectProjectsRow(BaseModel):
     apigw_usage_plan_id: str
     public_app_client_id: str
     confidential_app_client_id: str
+
+
+async def select_projects(
+    session: AsyncSession,
+    params: SelectProjectsParams,
+) -> list[SelectProjectsRow]:
+    return await fetch_all(
+        session,
+        SQL_DIR / "001_select_projects.sql",
+        params,
+        SelectProjectsRow,
+    )

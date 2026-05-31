@@ -1,11 +1,17 @@
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.db.query import fetch_all, fetch_one
 
 # This file is generated from SQL files in the sibling sql directory.
 # Do not edit generated models by hand.
+
+SQL_DIR = Path(__file__).with_name("sql")
 
 
 class SelectApiAccessRequestsParams(BaseModel):
@@ -27,6 +33,18 @@ class SelectApiAccessRequestsRow(BaseModel):
     api_name: str
 
 
+async def select_api_access_requests(
+    session: AsyncSession,
+    params: SelectApiAccessRequestsParams,
+) -> list[SelectApiAccessRequestsRow]:
+    return await fetch_all(
+        session,
+        SQL_DIR / "001_select_api_access_requests.sql",
+        params,
+        SelectApiAccessRequestsRow,
+    )
+
+
 class SelectApiReviewersParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     api_id: UUID
@@ -42,6 +60,18 @@ class SelectApiReviewersRow(BaseModel):
     reviewer_role: str
 
 
+async def select_api_reviewers(
+    session: AsyncSession,
+    params: SelectApiReviewersParams,
+) -> list[SelectApiReviewersRow]:
+    return await fetch_all(
+        session,
+        SQL_DIR / "002_select_api_reviewers.sql",
+        params,
+        SelectApiReviewersRow,
+    )
+
+
 class InsertApiAccessReviewsParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     access_review_id: UUID
@@ -54,6 +84,18 @@ class InsertApiAccessReviewsParams(BaseModel):
 class InsertApiAccessReviewsRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
     access_review_id: UUID
+
+
+async def insert_api_access_reviews(
+    session: AsyncSession,
+    params: InsertApiAccessReviewsParams,
+) -> InsertApiAccessReviewsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "003_insert_api_access_reviews.sql",
+        params,
+        InsertApiAccessReviewsRow,
+    )
 
 
 class InsertAccessRequestEventsParams(BaseModel):
@@ -75,6 +117,18 @@ class InsertAccessRequestEventsRow(BaseModel):
     event_id: UUID
 
 
+async def insert_access_request_events(
+    session: AsyncSession,
+    params: InsertAccessRequestEventsParams,
+) -> InsertAccessRequestEventsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "004_insert_access_request_events.sql",
+        params,
+        InsertAccessRequestEventsRow,
+    )
+
+
 class InsertAuditEventsParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     audit_event_id: UUID
@@ -91,6 +145,18 @@ class InsertAuditEventsRow(BaseModel):
     audit_event_id: UUID
 
 
+async def insert_audit_events(
+    session: AsyncSession,
+    params: InsertAuditEventsParams,
+) -> InsertAuditEventsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "005_insert_audit_events.sql",
+        params,
+        InsertAuditEventsRow,
+    )
+
+
 class InsertIdempotencyRecordsParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     idempotency_record_id: UUID
@@ -105,3 +171,15 @@ class InsertIdempotencyRecordsParams(BaseModel):
 class InsertIdempotencyRecordsRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
     idempotency_record_id: UUID
+
+
+async def insert_idempotency_records(
+    session: AsyncSession,
+    params: InsertIdempotencyRecordsParams,
+) -> InsertIdempotencyRecordsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "006_insert_idempotency_records.sql",
+        params,
+        InsertIdempotencyRecordsRow,
+    )

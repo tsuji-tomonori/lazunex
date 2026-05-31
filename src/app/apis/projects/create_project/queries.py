@@ -1,11 +1,17 @@
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.db.query import fetch_all, fetch_one
 
 # This file is generated from SQL files in the sibling sql directory.
 # Do not edit generated models by hand.
+
+SQL_DIR = Path(__file__).with_name("sql")
 
 
 class SelectProjectsParams(BaseModel):
@@ -19,6 +25,18 @@ class SelectProjectsRow(BaseModel):
     project_code: str
     name: str
     owner_principal_id: str
+
+
+async def select_projects(
+    session: AsyncSession,
+    params: SelectProjectsParams,
+) -> list[SelectProjectsRow]:
+    return await fetch_all(
+        session,
+        SQL_DIR / "001_select_projects.sql",
+        params,
+        SelectProjectsRow,
+    )
 
 
 class InsertProjectsParams(BaseModel):
@@ -36,6 +54,18 @@ class InsertProjectsParams(BaseModel):
 class InsertProjectsRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
     project_id: UUID
+
+
+async def insert_projects(
+    session: AsyncSession,
+    params: InsertProjectsParams,
+) -> InsertProjectsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "002_insert_projects.sql",
+        params,
+        InsertProjectsRow,
+    )
 
 
 class InsertProjectEventsParams(BaseModel):
@@ -57,6 +87,18 @@ class InsertProjectEventsRow(BaseModel):
     event_id: UUID
 
 
+async def insert_project_events(
+    session: AsyncSession,
+    params: InsertProjectEventsParams,
+) -> InsertProjectEventsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "003_insert_project_events.sql",
+        params,
+        InsertProjectEventsRow,
+    )
+
+
 class InsertProvisioningOperationsParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     operation_id: UUID
@@ -70,6 +112,18 @@ class InsertProvisioningOperationsParams(BaseModel):
 class InsertProvisioningOperationsRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
     operation_id: UUID
+
+
+async def insert_provisioning_operations(
+    session: AsyncSession,
+    params: InsertProvisioningOperationsParams,
+) -> InsertProvisioningOperationsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "004_insert_provisioning_operations.sql",
+        params,
+        InsertProvisioningOperationsRow,
+    )
 
 
 class InsertProjectApiKeysParams(BaseModel):
@@ -93,6 +147,18 @@ class InsertProjectApiKeysRow(BaseModel):
     project_api_key_id: UUID
 
 
+async def insert_project_api_keys(
+    session: AsyncSession,
+    params: InsertProjectApiKeysParams,
+) -> InsertProjectApiKeysRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "005_insert_project_api_keys.sql",
+        params,
+        InsertProjectApiKeysRow,
+    )
+
+
 class InsertProjectUsagePlansParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     project_usage_plan_id: UUID
@@ -114,6 +180,18 @@ class InsertProjectUsagePlansRow(BaseModel):
     project_usage_plan_id: UUID
 
 
+async def insert_project_usage_plans(
+    session: AsyncSession,
+    params: InsertProjectUsagePlansParams,
+) -> InsertProjectUsagePlansRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "006_insert_project_usage_plans.sql",
+        params,
+        InsertProjectUsagePlansRow,
+    )
+
+
 class InsertProjectUsagePlanKeysParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     project_usage_plan_key_id: UUID
@@ -130,6 +208,18 @@ class InsertProjectUsagePlanKeysParams(BaseModel):
 class InsertProjectUsagePlanKeysRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
     project_usage_plan_key_id: UUID
+
+
+async def insert_project_usage_plan_keys(
+    session: AsyncSession,
+    params: InsertProjectUsagePlanKeysParams,
+) -> InsertProjectUsagePlanKeysRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "007_insert_project_usage_plan_keys.sql",
+        params,
+        InsertProjectUsagePlanKeysRow,
+    )
 
 
 class InsertProjectCognitoClientsParams(BaseModel):
@@ -164,6 +254,18 @@ class InsertProjectCognitoClientsRow(BaseModel):
     project_cognito_client_id: UUID
 
 
+async def insert_project_cognito_clients(
+    session: AsyncSession,
+    params: InsertProjectCognitoClientsParams,
+) -> InsertProjectCognitoClientsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "008_insert_project_cognito_clients.sql",
+        params,
+        InsertProjectCognitoClientsRow,
+    )
+
+
 class InsertProjectCognitoClientUrlsParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     client_url_id: UUID
@@ -177,6 +279,18 @@ class InsertProjectCognitoClientUrlsParams(BaseModel):
 class InsertProjectCognitoClientUrlsRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
     client_url_id: UUID
+
+
+async def insert_project_cognito_client_urls(
+    session: AsyncSession,
+    params: InsertProjectCognitoClientUrlsParams,
+) -> InsertProjectCognitoClientUrlsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "009_insert_project_cognito_client_urls.sql",
+        params,
+        InsertProjectCognitoClientUrlsRow,
+    )
 
 
 class InsertProjectMembersParams(BaseModel):
@@ -194,6 +308,18 @@ class InsertProjectMembersRow(BaseModel):
     project_member_id: UUID
 
 
+async def insert_project_members(
+    session: AsyncSession,
+    params: InsertProjectMembersParams,
+) -> InsertProjectMembersRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "010_insert_project_members.sql",
+        params,
+        InsertProjectMembersRow,
+    )
+
+
 class InsertIdempotencyRecordsParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     idempotency_record_id: UUID
@@ -209,6 +335,18 @@ class InsertIdempotencyRecordsParams(BaseModel):
 class InsertIdempotencyRecordsRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
     idempotency_record_id: UUID
+
+
+async def insert_idempotency_records(
+    session: AsyncSession,
+    params: InsertIdempotencyRecordsParams,
+) -> InsertIdempotencyRecordsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "011_insert_idempotency_records.sql",
+        params,
+        InsertIdempotencyRecordsRow,
+    )
 
 
 class InsertProvisioningStepsParams(BaseModel):
@@ -234,6 +372,18 @@ class InsertProvisioningStepsRow(BaseModel):
     operation_step_id: UUID
 
 
+async def insert_provisioning_steps(
+    session: AsyncSession,
+    params: InsertProvisioningStepsParams,
+) -> InsertProvisioningStepsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "012_insert_provisioning_steps.sql",
+        params,
+        InsertProvisioningStepsRow,
+    )
+
+
 class InsertProjectMemberEventsParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     event_id: UUID
@@ -251,6 +401,18 @@ class InsertProjectMemberEventsParams(BaseModel):
 class InsertProjectMemberEventsRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
     event_id: UUID
+
+
+async def insert_project_member_events(
+    session: AsyncSession,
+    params: InsertProjectMemberEventsParams,
+) -> InsertProjectMemberEventsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "013_insert_project_member_events.sql",
+        params,
+        InsertProjectMemberEventsRow,
+    )
 
 
 class InsertProjectApiKeyEventsParams(BaseModel):
@@ -272,6 +434,18 @@ class InsertProjectApiKeyEventsRow(BaseModel):
     event_id: UUID
 
 
+async def insert_project_api_key_events(
+    session: AsyncSession,
+    params: InsertProjectApiKeyEventsParams,
+) -> InsertProjectApiKeyEventsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "014_insert_project_api_key_events.sql",
+        params,
+        InsertProjectApiKeyEventsRow,
+    )
+
+
 class InsertProjectUsagePlanEventsParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     event_id: UUID
@@ -289,6 +463,18 @@ class InsertProjectUsagePlanEventsParams(BaseModel):
 class InsertProjectUsagePlanEventsRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
     event_id: UUID
+
+
+async def insert_project_usage_plan_events(
+    session: AsyncSession,
+    params: InsertProjectUsagePlanEventsParams,
+) -> InsertProjectUsagePlanEventsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "015_insert_project_usage_plan_events.sql",
+        params,
+        InsertProjectUsagePlanEventsRow,
+    )
 
 
 class InsertProjectUsagePlanKeyEventsParams(BaseModel):
@@ -310,6 +496,18 @@ class InsertProjectUsagePlanKeyEventsRow(BaseModel):
     event_id: UUID
 
 
+async def insert_project_usage_plan_key_events(
+    session: AsyncSession,
+    params: InsertProjectUsagePlanKeyEventsParams,
+) -> InsertProjectUsagePlanKeyEventsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "016_insert_project_usage_plan_key_events.sql",
+        params,
+        InsertProjectUsagePlanKeyEventsRow,
+    )
+
+
 class InsertProvisioningOperationEventsParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     event_id: UUID
@@ -329,6 +527,18 @@ class InsertProvisioningOperationEventsRow(BaseModel):
     event_id: UUID
 
 
+async def insert_provisioning_operation_events(
+    session: AsyncSession,
+    params: InsertProvisioningOperationEventsParams,
+) -> InsertProvisioningOperationEventsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "017_insert_provisioning_operation_events.sql",
+        params,
+        InsertProvisioningOperationEventsRow,
+    )
+
+
 class InsertProvisioningStepEventsParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     event_id: UUID
@@ -346,3 +556,15 @@ class InsertProvisioningStepEventsParams(BaseModel):
 class InsertProvisioningStepEventsRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
     event_id: UUID
+
+
+async def insert_provisioning_step_events(
+    session: AsyncSession,
+    params: InsertProvisioningStepEventsParams,
+) -> InsertProvisioningStepEventsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "018_insert_provisioning_step_events.sql",
+        params,
+        InsertProvisioningStepEventsRow,
+    )

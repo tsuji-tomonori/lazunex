@@ -1,9 +1,15 @@
+from pathlib import Path
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.db.query import fetch_all
 
 # This file is generated from SQL files in the sibling sql directory.
 # Do not edit generated models by hand.
+
+SQL_DIR = Path(__file__).with_name("sql")
 
 
 class SelectApisParams(BaseModel):
@@ -45,3 +51,15 @@ class SelectApisRow(BaseModel):
     api_reviewer_id: UUID
     reviewer_principal_id: str
     reviewer_role: str
+
+
+async def select_apis(
+    session: AsyncSession,
+    params: SelectApisParams,
+) -> list[SelectApisRow]:
+    return await fetch_all(
+        session,
+        SQL_DIR / "001_select_apis.sql",
+        params,
+        SelectApisRow,
+    )

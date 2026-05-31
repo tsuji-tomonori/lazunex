@@ -7,23 +7,26 @@ from _pytest.monkeypatch import MonkeyPatch
 from sqlglot import exp, parse_one
 
 from tools.generate_db_table_specs import parse_tables
-from tools.generate_query_models import (
+from tools.generate_queries import (
     base_type_from_sql,
     build_arg_parser,
     class_prefix_from_sql_path,
     collect_insert_param_columns,
     collect_update_param_columns,
+    function_name_from_sql_path,
     generate_queries,
     infer_row_fields,
     main,
     model_type,
     mutation_target_table,
+    operation_from_statements,
     output_field,
     parse_query_spec,
     pascal_case,
     placeholder_names,
     python_identifier,
     render_queries_py,
+    render_query_function,
     required_imports,
     returning_output_fields,
 )
@@ -55,6 +58,7 @@ def test_name_helpers() -> None:
     assert python_identifier("!!!") == "value"
     assert pascal_case("001_select-projects") == "Field001SelectProjects"
     assert class_prefix_from_sql_path(Path("001_select_projects.sql")) == "SelectProjects"
+    assert function_name_from_sql_path(Path("001_select_projects.sql")) == "select_projects"
 
 
 def test_type_helpers() -> None:
@@ -89,6 +93,9 @@ def test_parse_query_spec_infers_select_params_and_rows(tmp_path: Path) -> None:
     spec = parse_query_spec(sql_path, parse_tables(DDL))
 
     assert spec.class_prefix == "SelectProjects"
+    assert spec.function_name == "select_projects"
+    assert spec.operation == "select"
+    assert spec.sql_filename == "001_select_projects.sql"
     assert [(field.name, field.type_hint, field.nullable) for field in spec.params] == [
         ("project_code", "str", False)
     ]
@@ -121,6 +128,27 @@ def test_parse_query_spec_infers_qualified_alias_and_expression_rows(tmp_path: P
         ("total_count", "Any"),
         ("project_code", "str"),
     ]
+
+
+def test_operation_from_statements_detects_statement_kind() -> None:
+    assert (
+        operation_from_statements([parse_one("SELECT project_id FROM projects", read="postgres")])
+        == "select"
+    )
+    assert (
+        operation_from_statements(
+            [parse_one("INSERT INTO projects (project_id) VALUES (:project_id)", read="postgres")]
+        )
+        == "insert"
+    )
+    assert (
+        operation_from_statements([parse_one("UPDATE projects SET name = :name", read="postgres")])
+        == "update"
+    )
+    assert (
+        operation_from_statements([parse_one("DELETE FROM projects", read="postgres")]) == "delete"
+    )
+    assert operation_from_statements([]) == "execute"
 
 
 def test_parse_query_spec_infers_insert_params_and_returning_rows(tmp_path: Path) -> None:
@@ -240,11 +268,18 @@ def test_render_queries_py_includes_required_imports_and_empty_params(tmp_path: 
 
     rendered = render_queries_py([spec])
 
+    assert "from pathlib import Path" in rendered
+    assert "from sqlalchemy.ext.asyncio import AsyncSession" in rendered
+    assert "from app.db.query import execute_sql" in rendered
+    assert 'SQL_DIR = Path(__file__).with_name("sql")' in rendered
     assert "from typing import Any" in rendered
     assert "from uuid import UUID" in rendered
     assert "class InsertProjectEventsParams(BaseModel):" in rendered
     assert "event_payload: dict[str, Any]" in rendered
     assert "class InsertProjectEventsRow" not in rendered
+    assert "async def insert_project_events(" in rendered
+    assert "await execute_sql(" in rendered
+    assert 'SQL_DIR / "003_insert_project_events.sql"' in rendered
 
 
 def test_render_queries_py_includes_empty_params_and_date_decimal_imports(tmp_path: Path) -> None:
@@ -259,10 +294,60 @@ def test_render_queries_py_includes_empty_params_and_date_decimal_imports(tmp_pa
 
     assert "from datetime import date" in rendered
     assert "from decimal import Decimal" in rendered
+    assert "from app.db.query import fetch_all" in rendered
     assert "class SelectMetricsParams(BaseModel):" in rendered
     assert "    pass" in rendered
     assert "measured_on: date" in rendered
     assert "amount: Decimal" in rendered
+    assert "async def select_metrics(" in rendered
+    assert "return await fetch_all(" in rendered
+    assert 'SQL_DIR / "001_select_metrics.sql"' in rendered
+
+
+def test_render_query_function_uses_fetch_one_for_mutation_returning(tmp_path: Path) -> None:
+    sql_path = tmp_path / "002_insert_projects.sql"
+    sql_path.write_text(
+        """
+        INSERT INTO projects (project_id, project_code, name, created_at, row_version)
+        VALUES (:project_id, :project_code, :name, :now, 1)
+        RETURNING project_id;
+        """,
+        encoding="utf-8",
+    )
+    spec = parse_query_spec(sql_path, parse_tables(DDL))
+
+    rendered = "\n".join(render_query_function(spec))
+
+    assert "async def insert_projects(" in rendered
+    assert ") -> InsertProjectsRow | None:" in rendered
+    assert "return await fetch_one(" in rendered
+    assert 'SQL_DIR / "002_insert_projects.sql"' in rendered
+
+
+def test_render_queries_py_imports_multiple_query_helpers(tmp_path: Path) -> None:
+    select_sql = tmp_path / "001_select_projects.sql"
+    select_sql.write_text("SELECT project_id FROM projects;", encoding="utf-8")
+    insert_sql = tmp_path / "002_insert_projects.sql"
+    insert_sql.write_text(
+        "INSERT INTO projects (project_id) VALUES (:project_id) RETURNING project_id;",
+        encoding="utf-8",
+    )
+    execute_sql = tmp_path / "003_insert_project_events.sql"
+    execute_sql.write_text(
+        "INSERT INTO project_events (event_id, aggregate_id) VALUES (:event_id, :aggregate_id);",
+        encoding="utf-8",
+    )
+    tables = parse_tables(DDL)
+
+    rendered = render_queries_py(
+        [
+            parse_query_spec(select_sql, tables),
+            parse_query_spec(insert_sql, tables),
+            parse_query_spec(execute_sql, tables),
+        ]
+    )
+
+    assert "from app.db.query import execute_sql, fetch_all, fetch_one" in rendered
 
 
 def test_output_field_falls_back_for_unknown_column_and_plain_expression() -> None:
@@ -288,6 +373,7 @@ def test_infer_row_fields_returns_empty_when_no_select_or_returning() -> None:
 
 def test_required_imports_handles_minimal_specs() -> None:
     assert required_imports([]) == [
+        "from pathlib import Path",
         "",
         "from pydantic import BaseModel, ConfigDict",
         "",
@@ -312,6 +398,7 @@ def test_generate_queries_writes_each_api_queries_file(tmp_path: Path) -> None:
     assert "class SelectProjectsParams(BaseModel):" in content
     assert "project_code: str" in content
     assert "class SelectProjectsRow(BaseModel):" in content
+    assert "async def select_projects(" in content
 
 
 def test_arg_parser_defaults_and_main_output(
@@ -335,7 +422,7 @@ def test_arg_parser_defaults_and_main_output(
     monkeypatch.setattr(
         "sys.argv",
         [
-            "generate_query_models",
+            "generate_queries",
             "--api-root",
             str(api_root),
             "--ddl",

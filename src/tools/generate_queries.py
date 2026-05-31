@@ -23,7 +23,10 @@ class FieldSpec:
 
 @dataclass(frozen=True)
 class QuerySpec:
+    sql_filename: str
     class_prefix: str
+    function_name: str
+    operation: str
     params: list[FieldSpec]
     rows: list[FieldSpec]
 
@@ -44,6 +47,23 @@ def pascal_case(value: str) -> str:
 def class_prefix_from_sql_path(sql_path: Path) -> str:
     stem = SQL_PREFIX_RE.sub("", sql_path.stem)
     return pascal_case(stem)
+
+
+def function_name_from_sql_path(sql_path: Path) -> str:
+    return python_identifier(SQL_PREFIX_RE.sub("", sql_path.stem))
+
+
+def operation_from_statements(statements: list[Any]) -> str:
+    for statement in statements:
+        if isinstance(statement, exp.Select):
+            return "select"
+        if isinstance(statement, exp.Insert):
+            return "insert"
+        if isinstance(statement, exp.Update):
+            return "update"
+        if isinstance(statement, exp.Delete):
+            return "delete"
+    return "execute"
 
 
 def base_type_from_sql(data_type: str) -> str:
@@ -291,7 +311,10 @@ def parse_query_spec(sql_path: Path, tables: dict[str, Table]) -> QuerySpec:
         statement for statement in sqlglot.parse(sql, read="postgres") if statement is not None
     ]
     return QuerySpec(
+        sql_filename=sql_path.name,
         class_prefix=class_prefix_from_sql_path(sql_path),
+        function_name=function_name_from_sql_path(sql_path),
+        operation=operation_from_statements(statements),
         params=infer_param_fields(sql, statements, tables),
         rows=infer_row_fields(statements, tables),
     )
@@ -318,18 +341,80 @@ def render_model_class(name: str, fields: list[FieldSpec]) -> list[str]:
 
 def required_imports(specs: list[QuerySpec]) -> list[str]:
     type_hints = {field.type_hint for spec in specs for field in [*spec.params, *spec.rows]}
+    query_helpers: list[str] = []
+    if any(not spec.rows for spec in specs):
+        query_helpers.append("execute_sql")
+    if any(spec.rows and spec.operation == "select" for spec in specs):
+        query_helpers.append("fetch_all")
+    if any(spec.rows and spec.operation != "select" for spec in specs):
+        query_helpers.append("fetch_one")
+
     imports: list[str] = []
     datetime_imports = [name for name in ("date", "datetime") if name in type_hints]
     if datetime_imports:
         imports.append(f"from datetime import {', '.join(datetime_imports)}")
     if "Decimal" in type_hints:
         imports.append("from decimal import Decimal")
+    imports.append("from pathlib import Path")
     if "Any" in type_hints or "dict[str, Any]" in type_hints:
         imports.append("from typing import Any")
     if "UUID" in type_hints:
         imports.append("from uuid import UUID")
-    imports.extend(["", "from pydantic import BaseModel, ConfigDict", ""])
+    imports.extend(["", "from pydantic import BaseModel, ConfigDict"])
+    if query_helpers:
+        imports.extend(
+            [
+                "from sqlalchemy.ext.asyncio import AsyncSession",
+                "",
+                f"from app.db.query import {', '.join(query_helpers)}",
+            ]
+        )
+    imports.append("")
     return imports
+
+
+def render_query_function(spec: QuerySpec) -> list[str]:
+    params_class = f"{spec.class_prefix}Params"
+    sql_path = f'SQL_DIR / "{spec.sql_filename}"'
+    if spec.rows:
+        row_class = f"{spec.class_prefix}Row"
+        if spec.operation == "select":
+            return [
+                f"async def {spec.function_name}(",
+                "    session: AsyncSession,",
+                f"    params: {params_class},",
+                f") -> list[{row_class}]:",
+                "    return await fetch_all(",
+                "        session,",
+                f"        {sql_path},",
+                "        params,",
+                f"        {row_class},",
+                "    )",
+            ]
+        return [
+            f"async def {spec.function_name}(",
+            "    session: AsyncSession,",
+            f"    params: {params_class},",
+            f") -> {row_class} | None:",
+            "    return await fetch_one(",
+            "        session,",
+            f"        {sql_path},",
+            "        params,",
+            f"        {row_class},",
+            "    )",
+        ]
+
+    return [
+        f"async def {spec.function_name}(",
+        "    session: AsyncSession,",
+        f"    params: {params_class},",
+        ") -> None:",
+        "    await execute_sql(",
+        "        session,",
+        f"        {sql_path},",
+        "        params,",
+        "    )",
+    ]
 
 
 def render_queries_py(specs: list[QuerySpec]) -> str:
@@ -338,6 +423,8 @@ def render_queries_py(specs: list[QuerySpec]) -> str:
         [
             "# This file is generated from SQL files in the sibling sql directory.",
             "# Do not edit generated models by hand.",
+            "",
+            'SQL_DIR = Path(__file__).with_name("sql")',
             "",
         ]
     )
@@ -349,6 +436,8 @@ def render_queries_py(specs: list[QuerySpec]) -> str:
         if spec.rows:
             lines.append("")
             lines.extend(render_model_class(f"{spec.class_prefix}Row", spec.rows))
+        lines.append("")
+        lines.extend(render_query_function(spec))
 
     lines.append("")
     return "\n".join(lines)
@@ -369,7 +458,7 @@ def generate_queries(api_root: Path, ddl_path: Path) -> list[Path]:
 
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Generate Pydantic query models from API SQL files."
+        description="Generate Pydantic query models and execution functions from API SQL files."
     )
     parser.add_argument("--api-root", type=Path, default=Path("src/app/apis"))
     parser.add_argument("--ddl", type=Path, default=Path("src/db/ddl.sql"))

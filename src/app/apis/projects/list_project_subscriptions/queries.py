@@ -1,11 +1,17 @@
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.db.query import fetch_all
 
 # This file is generated from SQL files in the sibling sql directory.
 # Do not edit generated models by hand.
+
+SQL_DIR = Path(__file__).with_name("sql")
 
 
 class SelectSubscriptionsParams(BaseModel):
@@ -41,3 +47,15 @@ class SelectSubscriptionsRow(BaseModel):
     api_key_last4: str
     app_client_id: str
     client_type: str
+
+
+async def select_subscriptions(
+    session: AsyncSession,
+    params: SelectSubscriptionsParams,
+) -> list[SelectSubscriptionsRow]:
+    return await fetch_all(
+        session,
+        SQL_DIR / "001_select_subscriptions.sql",
+        params,
+        SelectSubscriptionsRow,
+    )

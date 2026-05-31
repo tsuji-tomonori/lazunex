@@ -1,11 +1,17 @@
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.db.query import fetch_all, fetch_one
 
 # This file is generated from SQL files in the sibling sql directory.
 # Do not edit generated models by hand.
+
+SQL_DIR = Path(__file__).with_name("sql")
 
 
 class SelectApisParams(BaseModel):
@@ -19,6 +25,18 @@ class SelectApisRow(BaseModel):
     api_code: str
     name: str
     default_api_stage_id: UUID | None = None
+
+
+async def select_apis(
+    session: AsyncSession,
+    params: SelectApisParams,
+) -> list[SelectApisRow]:
+    return await fetch_all(
+        session,
+        SQL_DIR / "001_select_apis.sql",
+        params,
+        SelectApisRow,
+    )
 
 
 class SelectApiCognitoScopesParams(BaseModel):
@@ -36,6 +54,18 @@ class SelectApiCognitoScopesRow(BaseModel):
     scope_full_name: str
 
 
+async def select_api_cognito_scopes(
+    session: AsyncSession,
+    params: SelectApiCognitoScopesParams,
+) -> list[SelectApiCognitoScopesRow]:
+    return await fetch_all(
+        session,
+        SQL_DIR / "002_select_api_cognito_scopes.sql",
+        params,
+        SelectApiCognitoScopesRow,
+    )
+
+
 class InsertProvisioningOperationsParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     operation_id: UUID
@@ -49,6 +79,18 @@ class InsertProvisioningOperationsParams(BaseModel):
 class InsertProvisioningOperationsRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
     operation_id: UUID
+
+
+async def insert_provisioning_operations(
+    session: AsyncSession,
+    params: InsertProvisioningOperationsParams,
+) -> InsertProvisioningOperationsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "003_insert_provisioning_operations.sql",
+        params,
+        InsertProvisioningOperationsRow,
+    )
 
 
 class InsertApisParams(BaseModel):
@@ -69,6 +111,18 @@ class InsertApisParams(BaseModel):
 class InsertApisRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
     api_id: UUID
+
+
+async def insert_apis(
+    session: AsyncSession,
+    params: InsertApisParams,
+) -> InsertApisRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "004_insert_apis.sql",
+        params,
+        InsertApisRow,
+    )
 
 
 class InsertApiGatewayStagesParams(BaseModel):
@@ -94,6 +148,18 @@ class InsertApiGatewayStagesRow(BaseModel):
     api_stage_id: UUID
 
 
+async def insert_api_gateway_stages(
+    session: AsyncSession,
+    params: InsertApiGatewayStagesParams,
+) -> InsertApiGatewayStagesRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "005_insert_api_gateway_stages.sql",
+        params,
+        InsertApiGatewayStagesRow,
+    )
+
+
 class InsertApiCognitoScopesParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     api_scope_id: UUID
@@ -110,6 +176,18 @@ class InsertApiCognitoScopesParams(BaseModel):
 class InsertApiCognitoScopesRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
     api_scope_id: UUID
+
+
+async def insert_api_cognito_scopes(
+    session: AsyncSession,
+    params: InsertApiCognitoScopesParams,
+) -> InsertApiCognitoScopesRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "006_insert_api_cognito_scopes.sql",
+        params,
+        InsertApiCognitoScopesRow,
+    )
 
 
 class InsertApiDocumentsParams(BaseModel):
@@ -130,6 +208,18 @@ class InsertApiDocumentsRow(BaseModel):
     api_document_id: UUID
 
 
+async def insert_api_documents(
+    session: AsyncSession,
+    params: InsertApiDocumentsParams,
+) -> InsertApiDocumentsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "007_insert_api_documents.sql",
+        params,
+        InsertApiDocumentsRow,
+    )
+
+
 class InsertApiReviewersParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     api_reviewer_id: UUID
@@ -143,6 +233,18 @@ class InsertApiReviewersParams(BaseModel):
 class InsertApiReviewersRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
     api_reviewer_id: UUID
+
+
+async def insert_api_reviewers(
+    session: AsyncSession,
+    params: InsertApiReviewersParams,
+) -> InsertApiReviewersRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "008_insert_api_reviewers.sql",
+        params,
+        InsertApiReviewersRow,
+    )
 
 
 class InsertApiEventsParams(BaseModel):
@@ -164,6 +266,18 @@ class InsertApiEventsRow(BaseModel):
     event_id: UUID
 
 
+async def insert_api_events(
+    session: AsyncSession,
+    params: InsertApiEventsParams,
+) -> InsertApiEventsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "009_insert_api_events.sql",
+        params,
+        InsertApiEventsRow,
+    )
+
+
 class InsertAuditEventsParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     audit_event_id: UUID
@@ -181,6 +295,18 @@ class InsertAuditEventsRow(BaseModel):
     audit_event_id: UUID
 
 
+async def insert_audit_events(
+    session: AsyncSession,
+    params: InsertAuditEventsParams,
+) -> InsertAuditEventsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "010_insert_audit_events.sql",
+        params,
+        InsertAuditEventsRow,
+    )
+
+
 class InsertIdempotencyRecordsParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     idempotency_record_id: UUID
@@ -196,6 +322,18 @@ class InsertIdempotencyRecordsParams(BaseModel):
 class InsertIdempotencyRecordsRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
     idempotency_record_id: UUID
+
+
+async def insert_idempotency_records(
+    session: AsyncSession,
+    params: InsertIdempotencyRecordsParams,
+) -> InsertIdempotencyRecordsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "011_insert_idempotency_records.sql",
+        params,
+        InsertIdempotencyRecordsRow,
+    )
 
 
 class InsertProvisioningStepsParams(BaseModel):
@@ -221,6 +359,18 @@ class InsertProvisioningStepsRow(BaseModel):
     operation_step_id: UUID
 
 
+async def insert_provisioning_steps(
+    session: AsyncSession,
+    params: InsertProvisioningStepsParams,
+) -> InsertProvisioningStepsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "012_insert_provisioning_steps.sql",
+        params,
+        InsertProvisioningStepsRow,
+    )
+
+
 class InsertApiStageEventsParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     event_id: UUID
@@ -238,6 +388,18 @@ class InsertApiStageEventsParams(BaseModel):
 class InsertApiStageEventsRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
     event_id: UUID
+
+
+async def insert_api_stage_events(
+    session: AsyncSession,
+    params: InsertApiStageEventsParams,
+) -> InsertApiStageEventsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "013_insert_api_stage_events.sql",
+        params,
+        InsertApiStageEventsRow,
+    )
 
 
 class InsertApiScopeEventsParams(BaseModel):
@@ -259,6 +421,18 @@ class InsertApiScopeEventsRow(BaseModel):
     event_id: UUID
 
 
+async def insert_api_scope_events(
+    session: AsyncSession,
+    params: InsertApiScopeEventsParams,
+) -> InsertApiScopeEventsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "014_insert_api_scope_events.sql",
+        params,
+        InsertApiScopeEventsRow,
+    )
+
+
 class InsertApiReviewerEventsParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     event_id: UUID
@@ -276,6 +450,18 @@ class InsertApiReviewerEventsParams(BaseModel):
 class InsertApiReviewerEventsRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
     event_id: UUID
+
+
+async def insert_api_reviewer_events(
+    session: AsyncSession,
+    params: InsertApiReviewerEventsParams,
+) -> InsertApiReviewerEventsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "015_insert_api_reviewer_events.sql",
+        params,
+        InsertApiReviewerEventsRow,
+    )
 
 
 class InsertProvisioningOperationEventsParams(BaseModel):
@@ -297,6 +483,18 @@ class InsertProvisioningOperationEventsRow(BaseModel):
     event_id: UUID
 
 
+async def insert_provisioning_operation_events(
+    session: AsyncSession,
+    params: InsertProvisioningOperationEventsParams,
+) -> InsertProvisioningOperationEventsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "016_insert_provisioning_operation_events.sql",
+        params,
+        InsertProvisioningOperationEventsRow,
+    )
+
+
 class InsertProvisioningStepEventsParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
     event_id: UUID
@@ -314,3 +512,15 @@ class InsertProvisioningStepEventsParams(BaseModel):
 class InsertProvisioningStepEventsRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
     event_id: UUID
+
+
+async def insert_provisioning_step_events(
+    session: AsyncSession,
+    params: InsertProvisioningStepEventsParams,
+) -> InsertProvisioningStepEventsRow | None:
+    return await fetch_one(
+        session,
+        SQL_DIR / "017_insert_provisioning_step_events.sql",
+        params,
+        InsertProvisioningStepEventsRow,
+    )
