@@ -18,6 +18,63 @@ PARAMETER_DESCRIPTION_OVERRIDES = {
         "同じキーで再送された場合、サーバーは同一リクエストとして扱います。"
     ),
 }
+ENUM_VALUE_DESCRIPTIONS = {
+    "AccessRequestDerivedState": {
+        "PENDING": "審査待ちのAPI利用申請です。",
+        "APPROVED": "承認済みのAPI利用申請です。",
+        "REJECTED": "否認済みのAPI利用申請です。",
+    },
+    "ApiDerivedState": {
+        "PUBLISHED": "APIカタログへ公開済みのAPIです。",
+    },
+    "ApiVisibility": {
+        "INTERNAL": "組織内の利用者へ公開するAPIです。",
+        "RESTRICTED": "許可された利用者またはプロジェクトに限定して公開するAPIです。",
+    },
+    "AuthMode": {
+        "PUBLIC_PKCE": "PKCEを使うpublic clientでの認証を許可します。",
+        "CLIENT_CREDENTIALS": "client credentialsを使うconfidential clientでの認証を許可します。",
+        "BOTH": "public clientとconfidential clientの両方の認証方式を許可します。",
+    },
+    "ProjectDerivedState": {
+        "ACTIVE": "利用可能なプロジェクトです。",
+    },
+    "QuotaPeriod": {
+        "DAY": "1日単位で利用量上限を集計します。",
+        "WEEK": "1週間単位で利用量上限を集計します。",
+        "MONTH": "1か月単位で利用量上限を集計します。",
+    },
+    "ReviewerRole": {
+        "PRIMARY": "主担当の審査者です。",
+        "BACKUP": "副担当の審査者です。",
+        "ADMIN": "管理者権限を持つ審査者です。",
+    },
+    "ScopeAttachmentMode": {
+        "VERIFY_ONLY": "API Gateway methodのscope設定を検証のみ行います。",
+        "PATCH_ALL_METHODS": "API Gateway methodへscope設定を反映します。",
+    },
+    "ScopeConfigObserved": {
+        "VERIFIED": "期待するscope設定が検出されています。",
+        "NOT_CONFIGURED": "scope設定が検出されていません。",
+        "UNKNOWN": "scope設定の検出状態が不明です。",
+    },
+    "SubscriptionDerivedState": {
+        "ACTIVE": "利用可能なAPI利用権です。",
+    },
+    "TokenValidityUnit": {
+        "minutes": "分単位の有効期間です。",
+        "hours": "時間単位の有効期間です。",
+        "days": "日単位の有効期間です。",
+    },
+    "UserStatus": {
+        "active": "有効なユーザーです。",
+        "deleted": "削除済みのユーザーです。",
+    },
+}
+ENUM_VALUE_DESCRIPTION_FALLBACKS = {
+    "active": "有効な状態です。",
+    "deleted": "削除済みの状態です。",
+}
 
 
 @dataclass(frozen=True)
@@ -81,14 +138,35 @@ def unwrap_nullable(schema: JsonObject, components: JsonObject) -> tuple[JsonObj
     return schema, False
 
 
+def enum_values(schema: JsonObject) -> list[str]:
+    return [str(value) for value in as_list(schema.get("enum"))]
+
+
+def enum_type(schema: JsonObject) -> str:
+    values = enum_values(schema)
+    base_type = str(schema.get("type") or "string")
+    return f"{base_type}({', '.join(values)})"
+
+
+def enum_value_description(schema: JsonObject, value: str) -> str:
+    schema_name = str(schema.get("title") or "")
+    descriptions = ENUM_VALUE_DESCRIPTIONS.get(schema_name, {})
+    return (
+        descriptions.get(value)
+        or ENUM_VALUE_DESCRIPTION_FALLBACKS.get(value)
+        or "列挙値として指定可能な値です。"
+    )
+
+
 def schema_type(schema: JsonObject, components: JsonObject) -> str:
     if "$ref" in schema:
+        resolved = resolve_schema(schema, components)
+        if enum_values(resolved):
+            return enum_type(resolved)
         return ref_name(str(schema["$ref"]))
     schema, nullable = unwrap_nullable(schema, components)
-    enum_values = as_list(schema.get("enum"))
-    if enum_values:
-        values = " | ".join(str(value) for value in enum_values)
-        type_name = f"enum({values})"
+    if enum_values(schema):
+        type_name = enum_type(schema)
     elif schema.get("type") == "array":
         items = as_object(schema.get("items", {}))
         item_type = schema_type(items, components)
@@ -120,9 +198,9 @@ def schema_constraints(schema: JsonObject, components: JsonObject) -> str:
     ):
         if key in schema:
             constraints.append(f"{key}={schema[key]}")
-    enum_values = as_list(schema.get("enum"))
-    if enum_values:
-        constraints.append("enum=" + ", ".join(str(value) for value in enum_values))
+    values = enum_values(schema)
+    if values:
+        constraints.extend(f"{value}={enum_value_description(schema, value)}" for value in values)
     return ", ".join(constraints) if constraints else "-"
 
 
@@ -131,7 +209,22 @@ def schema_description(schema: JsonObject, fallback: str = "") -> str:
     return str(description or fallback or "-")
 
 
-def object_field_rows(schema: JsonObject, components: JsonObject) -> list[FieldRow]:
+def nested_object_schema(schema: JsonObject, components: JsonObject) -> JsonObject:
+    schema = resolve_schema(schema, components)
+    if schema.get("type") == "object" and as_object(schema.get("properties")):
+        return schema
+    if schema.get("type") == "array":
+        return nested_object_schema(as_object(schema.get("items")), components)
+    return {}
+
+
+def object_field_rows(
+    schema: JsonObject,
+    components: JsonObject,
+    *,
+    prefix: str = "",
+    seen_refs: frozenset[str] = frozenset(),
+) -> list[FieldRow]:
     schema = resolve_schema(schema, components)
     required = set(str(item) for item in as_list(schema.get("required", [])))
     properties = as_object(schema.get("properties", {}))
@@ -144,15 +237,34 @@ def object_field_rows(schema: JsonObject, components: JsonObject) -> list[FieldR
             continue
         property_schema_object = cast(JsonObject, property_schema)
         resolved = resolve_schema(property_schema_object, components)
+        name = str(name)
+        field_name = f"{prefix}.{name}" if prefix else name
         rows.append(
             FieldRow(
-                name=str(name),
+                name=field_name,
                 type_name=schema_type(property_schema_object, components),
-                required=str(name) in required,
+                required=name in required,
                 description=schema_description(resolved, f"`{name}` の値。"),
                 constraints=schema_constraints(property_schema_object, components),
             )
         )
+        child_schema = nested_object_schema(property_schema_object, components)
+        ref = str(
+            property_schema_object.get("$ref")
+            or as_object(property_schema_object.get("items")).get("$ref")
+        )
+        if child_schema and ref not in seen_refs:
+            child_prefix = (
+                f"{field_name}[]" if property_schema_object.get("type") == "array" else field_name
+            )
+            rows.extend(
+                object_field_rows(
+                    child_schema,
+                    components,
+                    prefix=child_prefix,
+                    seen_refs=seen_refs | frozenset([ref]) if ref else seen_refs,
+                )
+            )
     return rows
 
 

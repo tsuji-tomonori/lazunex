@@ -28,17 +28,13 @@ _なし_
 
 | Status | 説明 | Media type | Body |
 | --- | --- | --- | --- |
-| `200` | Successful Response | `application/json` | 12 field(s) |
-| `400` | Bad Request | `application/json` | 1 field(s) |
-| `401` | Unauthorized | `application/json` | 1 field(s) |
-| `403` | Forbidden | `application/json` | 1 field(s) |
-| `404` | Not Found | `application/json` | 1 field(s) |
-| `409` | Conflict | `application/json` | 1 field(s) |
-| `422` | Unprocessable Content | `application/json` | 1 field(s) |
-| `429` | Too Many Requests | `application/json` | 1 field(s) |
-| `500` | Internal Server Error | `application/json` | 1 field(s) |
-| `502` | Bad Gateway | `application/json` | 1 field(s) |
-| `503` | Service Unavailable | `application/json` | 1 field(s) |
+| `200` | Successful Response | `application/json` | 25 field(s) |
+| `401` | 認証情報が未指定、期限切れ、または検証できない場合に返します。 | `application/json` | 7 field(s) |
+| `403` | 認証済みの主体に対象リソースや操作への権限がない場合に返します。 | `application/json` | 7 field(s) |
+| `404` | 指定されたAPI、プロジェクト、利用申請などの対象リソースが存在しない場合に返します。 | `application/json` | 7 field(s) |
+| `422` | path、query、header、bodyがOpenAPIスキーマの型や制約に一致しない場合に返します。 | `application/json` | 7 field(s) |
+| `429` | 呼び出し頻度が許可された上限を超えた場合に返します。 | `application/json` | 7 field(s) |
+| `500` | Lazunex内部で想定外のエラーが発生した場合に返します。 | `application/json` | 7 field(s) |
 
 ##### `200` Successful Response
 
@@ -53,88 +49,105 @@ Media type: `application/json`
 | `providerName` | `string` | yes | API提供者として表示する組織名またはチーム名です。 | minLength=1, maxLength=200 |
 | `providerContact` | `string` | yes | API提供者への問い合わせ先です。 | minLength=1, maxLength=320 |
 | `ownerPrincipalId` | `string` | yes | プロジェクトまたはAPIの所有者を表す認証主体IDです。 | minLength=1, maxLength=256 |
-| `visibility` | `ApiVisibility` | yes | APIカタログの公開範囲を表す列挙値です。 | enum=INTERNAL, RESTRICTED |
-| `derivedState` | `ApiDerivedState` | yes | APIカタログの現在状態を表す列挙値です。 | enum=PUBLISHED |
+| `visibility` | `string(INTERNAL, RESTRICTED)` | yes | APIカタログの公開範囲を表す列挙値です。 | INTERNAL=組織内の利用者へ公開するAPIです。, RESTRICTED=許可された利用者またはプロジェクトに限定して公開するAPIです。 |
+| `derivedState` | `string(PUBLISHED)` | yes | APIカタログの現在状態を表す列挙値です。 | PUBLISHED=APIカタログへ公開済みのAPIです。 |
 | `stage` | `ApiDetailStageResponse` | yes | API詳細で返却するAPI Gateway stageの接続情報です。 | - |
+| `stage.apiStageId` | `string` | yes | API Gateway stageに対応するLazunex内のstage IDです。 | - |
+| `stage.awsAccountId` | `string` | yes | 対象API Gateway REST APIが存在するAWSアカウントIDです。 | minLength=12, maxLength=12, pattern=^\d{12}$ |
+| `stage.awsRegion` | `string` | yes | 対象API Gateway REST APIが存在するAWSリージョンです。 | minLength=1, maxLength=32 |
+| `stage.restApiId` | `string` | yes | AWS API Gateway REST APIのIDです。 | minLength=1, maxLength=128 |
+| `stage.stageName` | `string` | yes | API Gatewayにデプロイされているstage名です。 | minLength=1, maxLength=128 |
+| `stage.invokeUrl` | `string` | yes | 対象API Gateway stageを呼び出すためのベースURLです。 | minLength=1 |
+| `stage.customDomainUrl` | `string \| null` | no | API Gateway stageに紐づく任意のcustom domain URLです。 | minLength=1 |
+| `stage.apiKeyRequiredObserved` | `boolean` | yes | API Gateway stageでAPI key必須設定が検出されたかどうかです。 | - |
+| `stage.scopeConfigObserved` | `string(VERIFIED, NOT_CONFIGURED, UNKNOWN)` | yes | API Gateway stageで検出したCognito scope設定状態を表す列挙値です。 | VERIFIED=期待するscope設定が検出されています。, NOT_CONFIGURED=scope設定が検出されていません。, UNKNOWN=scope設定の検出状態が不明です。 |
 | `scope` | `app__apis__apis__get_api__schemas__ApiScopeResponse` | yes | API呼び出し認可に利用するCognito custom scope情報です。 | - |
+| `scope.scopeName` | `string` | yes | Cognito resource serverに登録するAPI呼び出し用scope名です。 | minLength=1, maxLength=256 |
+| `scope.scopeFullName` | `string` | yes | Cognito access tokenに要求されるresource server付きの完全なscope名です。 | minLength=1, maxLength=600 |
 | `reviewers` | `array<ApiReviewerResponse>` | yes | API利用申請を審査できる担当者一覧です。 | - |
+| `reviewers[].reviewerPrincipalId` | `string` | yes | API利用申請を審査できる認証主体IDです。 | minLength=1, maxLength=256 |
+| `reviewers[].reviewerRole` | `string(PRIMARY, BACKUP, ADMIN)` | yes | API利用申請を審査する担当者の役割を表す列挙値です。 | PRIMARY=主担当の審査者です。, BACKUP=副担当の審査者です。, ADMIN=管理者権限を持つ審査者です。 |
 
-##### `400` Bad Request
-
-Media type: `application/json`
-
-| 項目 | 型 | 必須 | 説明 | 制約 |
-| --- | --- | --- | --- | --- |
-| `error` | `ErrorBody` | yes | エラーコード、メッセージ、追跡IDを含む共通エラー本文です。 | - |
-
-##### `401` Unauthorized
+##### `401` 認証情報が未指定、期限切れ、または検証できない場合に返します。
 
 Media type: `application/json`
 
 | 項目 | 型 | 必須 | 説明 | 制約 |
 | --- | --- | --- | --- | --- |
 | `error` | `ErrorBody` | yes | エラーコード、メッセージ、追跡IDを含む共通エラー本文です。 | - |
+| `error.code` | `string` | yes | エラー種別を機械的に判定するためのコードです。 | minLength=1, maxLength=100 |
+| `error.message` | `string` | yes | 利用者または運用者に表示するエラーメッセージです。 | minLength=1 |
+| `error.details` | `array<ValidationErrorDetail>` | no | 入力検証エラーの詳細一覧です。 | - |
+| `error.details[].field` | `string` | yes | 入力検証エラーが発生したリクエスト項目です。 | minLength=1, maxLength=256 |
+| `error.details[].reason` | `string` | yes | 入力検証エラーになった具体的な理由です。 | minLength=1 |
+| `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
 
-##### `403` Forbidden
-
-Media type: `application/json`
-
-| 項目 | 型 | 必須 | 説明 | 制約 |
-| --- | --- | --- | --- | --- |
-| `error` | `ErrorBody` | yes | エラーコード、メッセージ、追跡IDを含む共通エラー本文です。 | - |
-
-##### `404` Not Found
+##### `403` 認証済みの主体に対象リソースや操作への権限がない場合に返します。
 
 Media type: `application/json`
 
 | 項目 | 型 | 必須 | 説明 | 制約 |
 | --- | --- | --- | --- | --- |
 | `error` | `ErrorBody` | yes | エラーコード、メッセージ、追跡IDを含む共通エラー本文です。 | - |
+| `error.code` | `string` | yes | エラー種別を機械的に判定するためのコードです。 | minLength=1, maxLength=100 |
+| `error.message` | `string` | yes | 利用者または運用者に表示するエラーメッセージです。 | minLength=1 |
+| `error.details` | `array<ValidationErrorDetail>` | no | 入力検証エラーの詳細一覧です。 | - |
+| `error.details[].field` | `string` | yes | 入力検証エラーが発生したリクエスト項目です。 | minLength=1, maxLength=256 |
+| `error.details[].reason` | `string` | yes | 入力検証エラーになった具体的な理由です。 | minLength=1 |
+| `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
 
-##### `409` Conflict
-
-Media type: `application/json`
-
-| 項目 | 型 | 必須 | 説明 | 制約 |
-| --- | --- | --- | --- | --- |
-| `error` | `ErrorBody` | yes | エラーコード、メッセージ、追跡IDを含む共通エラー本文です。 | - |
-
-##### `422` Unprocessable Content
+##### `404` 指定されたAPI、プロジェクト、利用申請などの対象リソースが存在しない場合に返します。
 
 Media type: `application/json`
 
 | 項目 | 型 | 必須 | 説明 | 制約 |
 | --- | --- | --- | --- | --- |
 | `error` | `ErrorBody` | yes | エラーコード、メッセージ、追跡IDを含む共通エラー本文です。 | - |
+| `error.code` | `string` | yes | エラー種別を機械的に判定するためのコードです。 | minLength=1, maxLength=100 |
+| `error.message` | `string` | yes | 利用者または運用者に表示するエラーメッセージです。 | minLength=1 |
+| `error.details` | `array<ValidationErrorDetail>` | no | 入力検証エラーの詳細一覧です。 | - |
+| `error.details[].field` | `string` | yes | 入力検証エラーが発生したリクエスト項目です。 | minLength=1, maxLength=256 |
+| `error.details[].reason` | `string` | yes | 入力検証エラーになった具体的な理由です。 | minLength=1 |
+| `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
 
-##### `429` Too Many Requests
-
-Media type: `application/json`
-
-| 項目 | 型 | 必須 | 説明 | 制約 |
-| --- | --- | --- | --- | --- |
-| `error` | `ErrorBody` | yes | エラーコード、メッセージ、追跡IDを含む共通エラー本文です。 | - |
-
-##### `500` Internal Server Error
+##### `422` path、query、header、bodyがOpenAPIスキーマの型や制約に一致しない場合に返します。
 
 Media type: `application/json`
 
 | 項目 | 型 | 必須 | 説明 | 制約 |
 | --- | --- | --- | --- | --- |
 | `error` | `ErrorBody` | yes | エラーコード、メッセージ、追跡IDを含む共通エラー本文です。 | - |
+| `error.code` | `string` | yes | エラー種別を機械的に判定するためのコードです。 | minLength=1, maxLength=100 |
+| `error.message` | `string` | yes | 利用者または運用者に表示するエラーメッセージです。 | minLength=1 |
+| `error.details` | `array<ValidationErrorDetail>` | no | 入力検証エラーの詳細一覧です。 | - |
+| `error.details[].field` | `string` | yes | 入力検証エラーが発生したリクエスト項目です。 | minLength=1, maxLength=256 |
+| `error.details[].reason` | `string` | yes | 入力検証エラーになった具体的な理由です。 | minLength=1 |
+| `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
 
-##### `502` Bad Gateway
-
-Media type: `application/json`
-
-| 項目 | 型 | 必須 | 説明 | 制約 |
-| --- | --- | --- | --- | --- |
-| `error` | `ErrorBody` | yes | エラーコード、メッセージ、追跡IDを含む共通エラー本文です。 | - |
-
-##### `503` Service Unavailable
+##### `429` 呼び出し頻度が許可された上限を超えた場合に返します。
 
 Media type: `application/json`
 
 | 項目 | 型 | 必須 | 説明 | 制約 |
 | --- | --- | --- | --- | --- |
 | `error` | `ErrorBody` | yes | エラーコード、メッセージ、追跡IDを含む共通エラー本文です。 | - |
+| `error.code` | `string` | yes | エラー種別を機械的に判定するためのコードです。 | minLength=1, maxLength=100 |
+| `error.message` | `string` | yes | 利用者または運用者に表示するエラーメッセージです。 | minLength=1 |
+| `error.details` | `array<ValidationErrorDetail>` | no | 入力検証エラーの詳細一覧です。 | - |
+| `error.details[].field` | `string` | yes | 入力検証エラーが発生したリクエスト項目です。 | minLength=1, maxLength=256 |
+| `error.details[].reason` | `string` | yes | 入力検証エラーになった具体的な理由です。 | minLength=1 |
+| `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
+
+##### `500` Lazunex内部で想定外のエラーが発生した場合に返します。
+
+Media type: `application/json`
+
+| 項目 | 型 | 必須 | 説明 | 制約 |
+| --- | --- | --- | --- | --- |
+| `error` | `ErrorBody` | yes | エラーコード、メッセージ、追跡IDを含む共通エラー本文です。 | - |
+| `error.code` | `string` | yes | エラー種別を機械的に判定するためのコードです。 | minLength=1, maxLength=100 |
+| `error.message` | `string` | yes | 利用者または運用者に表示するエラーメッセージです。 | minLength=1 |
+| `error.details` | `array<ValidationErrorDetail>` | no | 入力検証エラーの詳細一覧です。 | - |
+| `error.details[].field` | `string` | yes | 入力検証エラーが発生したリクエスト項目です。 | minLength=1, maxLength=256 |
+| `error.details[].reason` | `string` | yes | 入力検証エラーになった具体的な理由です。 | minLength=1 |
+| `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |

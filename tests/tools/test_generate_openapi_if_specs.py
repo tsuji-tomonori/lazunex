@@ -47,13 +47,14 @@ OPENAPI: dict[str, Any] = {
             },
             "UserResponse": {
                 "type": "object",
-                "required": ["userId", "email", "status", "groups"],
+                "required": ["userId", "email", "status", "groups", "profile"],
                 "properties": {
                     "userId": {"type": "string", "description": "対象ユーザーID。"},
                     "email": {"type": "string", "description": "メールアドレス。"},
                     "status": {
                         "type": "string",
                         "enum": ["active", "deleted"],
+                        "title": "UserStatus",
                         "description": "状態。",
                     },
                     "groups": {
@@ -64,6 +65,40 @@ OPENAPI: dict[str, Any] = {
                     "details": {
                         "anyOf": [{"type": "object"}, {"type": "null"}],
                         "description": "補足。",
+                    },
+                    "profile": {
+                        "$ref": "#/components/schemas/UserProfileResponse",
+                    },
+                    "addresses": {
+                        "type": "array",
+                        "items": {"$ref": "#/components/schemas/UserAddressResponse"},
+                        "description": "住所一覧。",
+                    },
+                },
+            },
+            "UserProfileResponse": {
+                "type": "object",
+                "required": ["displayName"],
+                "description": "ユーザー表示情報です。",
+                "properties": {
+                    "displayName": {
+                        "type": "string",
+                        "description": "画面に表示するユーザー名。",
+                    },
+                    "department": {
+                        "type": "string",
+                        "description": "所属部署。",
+                    },
+                },
+            },
+            "UserAddressResponse": {
+                "type": "object",
+                "required": ["postalCode"],
+                "description": "ユーザー住所情報です。",
+                "properties": {
+                    "postalCode": {
+                        "type": "string",
+                        "description": "郵便番号。",
                     },
                 },
             },
@@ -176,9 +211,16 @@ def test_schema_type_and_constraints() -> None:
         {"type": "object", "additionalProperties": {"type": "integer"}}, schemas
     ) == ("object<string, integer>")
     assert schema_type({"type": "object", "additionalProperties": True}, schemas) == "object"
-    assert schema_constraints({"type": "string", "minLength": 1, "enum": ["a", "b"]}, schemas) == (
-        "minLength=1, enum=a, b"
+    assert (
+        schema_type(
+            {"type": "string", "enum": ["active", "deleted"], "title": "UserStatus"}, schemas
+        )
+        == "string(active, deleted)"
     )
+    assert schema_constraints(
+        {"type": "string", "minLength": 1, "enum": ["active", "deleted"], "title": "UserStatus"},
+        schemas,
+    ) == ("minLength=1, active=有効なユーザーです。, deleted=削除済みのユーザーです。")
     assert schema_components({"components": {"schemas": []}}) == {}
     assert schema_components({}) == {}
 
@@ -219,7 +261,7 @@ def test_response_summary_and_render_markdown() -> None:
         schemas,
     )
 
-    assert summary_rows[0] == ["200", "成功。", "application/json", "5 field(s)"]
+    assert summary_rows[0] == ["200", "成功。", "application/json", "10 field(s)"]
     assert summary_rows[2] == ["204", "bodyなし。", "-", "-"]
     assert "# DELETE /admin/users/{userId}" in rendered
     assert "## Headers" in rendered
@@ -228,9 +270,11 @@ def test_response_summary_and_render_markdown() -> None:
     assert "## Data" in rendered
     assert "## Responses" in rendered
     assert (
-        "| `status` | `enum(active \\| deleted)` | yes | 状態。 | enum=active, deleted |"
-        in rendered
+        "| `status` | `string(active, deleted)` | yes | 状態。 | "
+        "active=有効なユーザーです。, deleted=削除済みのユーザーです。 |" in rendered
     )
+    assert "| `profile.displayName` | `string` | yes | 画面に表示するユーザー名。 | - |" in rendered
+    assert "| `addresses[].postalCode` | `string` | yes | 郵便番号。 | - |" in rendered
     assert "##### `401` 認証が必要です。" in rendered
 
 
