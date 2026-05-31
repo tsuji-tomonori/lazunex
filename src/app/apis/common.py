@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated, Never
+from typing import Annotated, Any, Never
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -185,28 +185,73 @@ COMMON_ERROR_SAMPLE = ErrorResponse(
 )
 
 
-def sample_value(sample: BaseModel) -> dict[str, object]:
+def sample_value(sample: BaseModel) -> dict[str, Any]:
     return sample.model_dump(by_alias=True, mode="json")
 
 
-ERROR_RESPONSES: dict[int | str, dict[str, object]] = {
+ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
     400: {
         "model": ErrorResponse,
+        "description": (
+            "リクエスト本文やヘッダーの組み合わせが業務ルールに合わない場合、"
+            "または冪等性キーなどの必須入力が不正な場合に返します。"
+        ),
         "content": {"application/json": {"example": sample_value(COMMON_ERROR_SAMPLE)}},
     },
-    401: {"model": ErrorResponse},
-    403: {"model": ErrorResponse},
-    404: {"model": ErrorResponse},
-    409: {"model": ErrorResponse},
-    422: {"model": ErrorResponse},
-    429: {"model": ErrorResponse},
-    500: {"model": ErrorResponse},
-    502: {"model": ErrorResponse},
-    503: {"model": ErrorResponse},
+    401: {
+        "model": ErrorResponse,
+        "description": "認証情報が未指定、期限切れ、または検証できない場合に返します。",
+    },
+    403: {
+        "model": ErrorResponse,
+        "description": "認証済みの主体に対象リソースや操作への権限がない場合に返します。",
+    },
+    404: {
+        "model": ErrorResponse,
+        "description": (
+            "指定されたAPI、プロジェクト、利用申請などの対象リソースが存在しない場合に返します。"
+        ),
+    },
+    409: {
+        "model": ErrorResponse,
+        "description": (
+            "重複作成、状態遷移の競合、または楽観ロックのversion不一致が発生した場合に返します。"
+        ),
+    },
+    422: {
+        "model": ErrorResponse,
+        "description": (
+            "path、query、header、bodyがOpenAPIスキーマの型や制約に一致しない場合に返します。"
+        ),
+    },
+    429: {
+        "model": ErrorResponse,
+        "description": "呼び出し頻度が許可された上限を超えた場合に返します。",
+    },
+    500: {
+        "model": ErrorResponse,
+        "description": "Lazunex内部で想定外のエラーが発生した場合に返します。",
+    },
+    502: {
+        "model": ErrorResponse,
+        "description": (
+            "API GatewayやCognitoなど外部AWSサービスから失敗応答を受け取った場合に返します。"
+        ),
+    },
+    503: {
+        "model": ErrorResponse,
+        "description": (
+            "API GatewayやCognitoなど外部AWSサービスが一時的に利用できない場合に返します。"
+        ),
+    },
 }
 
 
-def success_response(sample: BaseModel) -> dict[str, object]:
+def error_responses(*status_codes: int) -> dict[int | str, dict[str, Any]]:
+    return {code: ERROR_RESPONSES[code] for code in status_codes}
+
+
+def success_response(sample: BaseModel) -> dict[str, Any]:
     return {"content": {"application/json": {"example": sample_value(sample)}}}
 
 

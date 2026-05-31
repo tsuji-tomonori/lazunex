@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Header, status
 
-from app.apis.common import ERROR_RESPONSES, not_implemented, sample_value, success_response
+from app.apis.common import error_responses, not_implemented, sample_value, success_response
 from app.apis.projects.create_project.samples import (
     CREATE_PROJECT_REQUEST_SAMPLE,
     CREATE_PROJECT_RESPONSE_SAMPLE,
@@ -23,7 +23,17 @@ router = APIRouter()
     status_code=status.HTTP_201_CREATED,
     responses={
         status.HTTP_201_CREATED: success_response(CREATE_PROJECT_RESPONSE_SAMPLE),
-        **ERROR_RESPONSES,
+        **error_responses(
+            status.HTTP_400_BAD_REQUEST,
+            status.HTTP_401_UNAUTHORIZED,
+            status.HTTP_403_FORBIDDEN,
+            status.HTTP_409_CONFLICT,
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status.HTTP_502_BAD_GATEWAY,
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+        ),
     },
     tags=["projects"],
 )

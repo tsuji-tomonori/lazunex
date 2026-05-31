@@ -4,7 +4,7 @@ from fastapi import APIRouter, Query, status
 
 from app.apis.apis.list_apis.samples import LIST_APIS_RESPONSE_SAMPLE
 from app.apis.apis.list_apis.schemas import ListApisQuery, ListApisResponse
-from app.apis.common import ERROR_RESPONSES, not_implemented, success_response
+from app.apis.common import error_responses, not_implemented, success_response
 
 router = APIRouter()
 
@@ -17,7 +17,13 @@ router = APIRouter()
     response_model=ListApisResponse,
     responses={
         status.HTTP_200_OK: success_response(LIST_APIS_RESPONSE_SAMPLE),
-        **ERROR_RESPONSES,
+        **error_responses(
+            status.HTTP_401_UNAUTHORIZED,
+            status.HTTP_403_FORBIDDEN,
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+        ),
     },
     tags=["apis"],
 )
