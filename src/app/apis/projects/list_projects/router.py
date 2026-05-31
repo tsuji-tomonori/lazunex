@@ -2,9 +2,13 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query, status
 
-from app.apis.common import error_responses, not_implemented, success_response
 from app.apis.projects.list_projects.samples import LIST_PROJECTS_RESPONSE_SAMPLE
 from app.apis.projects.list_projects.schemas import ListProjectsQuery, ListProjectsResponse
+from app.apis.responses import (
+    error_responses,
+    not_implemented,
+    success_response,
+)
 
 router = APIRouter()
 

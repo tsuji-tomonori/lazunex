@@ -1,7 +1,10 @@
 from datetime import datetime
 from uuid import UUID
 
-from app.apis.common import AccessRequestDerivedState, AuthMode
+from app.apis.api_access_requests.common import (
+    AccessRequestDerivedState,
+    AuthMode,
+)
 from app.apis.projects.list_project_api_access_requests.schemas import (
     ListProjectApiAccessRequestsResponse,
     ProjectApiAccessRequestItemResponse,

@@ -5,7 +5,7 @@ from pydantic import ValidationError
 
 from app.apis.apis.get_api.samples import GET_API_RESPONSE_SAMPLE
 from app.apis.apis.publish_api.schemas import OpenApiDocumentRequest, PublishApiGatewayRequest
-from app.apis.common import sample_value
+from app.apis.base import sample_value
 from app.apis.projects.create_api_access_request.schemas import CreateApiAccessRequestRequest
 from app.apis.projects.create_project.schemas import CreateProjectRequest
 from app.apis.projects.list_project_api_access_requests.samples import (

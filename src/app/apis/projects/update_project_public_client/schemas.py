@@ -1,15 +1,15 @@
 from pydantic import Field
 
-from app.apis.common import (
+from app.apis.base import ApiBaseModel
+from app.apis.projects.common import TokenValidityUnit
+from app.apis.types import (
     AccessTokenValidity,
-    ApiBaseModel,
     ApiGatewayId,
     IdTokenValidity,
     RefreshTokenValidity,
     ResourceId,
     RetryGracePeriodSeconds,
     RowVersion,
-    TokenValidityUnit,
     UrlText,
 )
 

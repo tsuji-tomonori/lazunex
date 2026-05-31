@@ -1,287 +1,113 @@
-from datetime import datetime
-from enum import StrEnum
-from typing import Annotated, Any, Never
-from uuid import UUID
-
-from fastapi import HTTPException, status
-from pydantic import BaseModel, ConfigDict, Field
-from pydantic.alias_generators import to_camel
-
-
-class ApiBaseModel(BaseModel):
-    """APIレスポンスでcamelCaseのJSONキーを生成する共通Pydanticモデルです。"""
-
-    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
-
-
-class ApiVisibility(StrEnum):
-    """APIカタログの公開範囲を表す列挙値です。"""
-
-    # 社内利用者に公開されるAPIです。
-    INTERNAL = "INTERNAL"
-    # 限定された利用者だけに公開されるAPIです。
-    RESTRICTED = "RESTRICTED"
-
-
-class ApiDerivedState(StrEnum):
-    """APIカタログの現在状態を表す列挙値です。"""
-
-    # APIカタログで公開済みの状態です。
-    PUBLISHED = "PUBLISHED"
-
-
-class ProjectDerivedState(StrEnum):
-    """プロジェクトの現在状態を表す列挙値です。"""
-
-    # プロジェクトが利用可能な状態です。
-    ACTIVE = "ACTIVE"
-
-
-class AccessRequestDerivedState(StrEnum):
-    """API利用申請の現在状態を表す列挙値です。"""
-
-    # API利用申請が審査待ちの状態です。
-    PENDING = "PENDING"
-    # API利用申請が承認された状態です。
-    APPROVED = "APPROVED"
-    # API利用申請が却下された状態です。
-    REJECTED = "REJECTED"
-
-
-class SubscriptionDerivedState(StrEnum):
-    """API利用権の現在状態を表す列挙値です。"""
-
-    # 承認済みのAPI利用権が有効な状態です。
-    ACTIVE = "ACTIVE"
-
-
-class AuthMode(StrEnum):
-    """API利用時に許可する認証方式を表す列挙値です。"""
-
-    # PKCEを利用するpublic client向けの認証方式です。
-    PUBLIC_PKCE = "PUBLIC_PKCE"
-    # client credentialsを利用するconfidential client向けの認証方式です。
-    CLIENT_CREDENTIALS = "CLIENT_CREDENTIALS"
-    # public clientとconfidential clientの両方を許可する認証方式です。
-    BOTH = "BOTH"
-
-
-class ReviewerRole(StrEnum):
-    """API利用申請を審査する担当者の役割を表す列挙値です。"""
-
-    # 主担当としてAPI利用申請を審査する役割です。
-    PRIMARY = "PRIMARY"
-    # 主担当の代替としてAPI利用申請を審査する役割です。
-    BACKUP = "BACKUP"
-    # 管理者としてAPI利用申請を審査できる役割です。
-    ADMIN = "ADMIN"
-
-
-class ScopeConfigObserved(StrEnum):
-    """API Gateway stageで検出したCognito scope設定状態を表す列挙値です。"""
-
-    # API Gateway methodに必要なCognito scope設定が確認済みです。
-    VERIFIED = "VERIFIED"
-    # API Gateway methodに必要なCognito scope設定がありません。
-    NOT_CONFIGURED = "NOT_CONFIGURED"
-    # API Gateway methodのCognito scope設定を確認できていない状態です。
-    UNKNOWN = "UNKNOWN"
-
-
-class ScopeAttachmentMode(StrEnum):
-    """API Gateway methodへのscope反映方法を表す列挙値です。"""
-
-    # scope設定を検証するだけでAPI Gateway methodには反映しません。
-    VERIFY_ONLY = "VERIFY_ONLY"
-    # API Gatewayの全methodへscope設定を反映します。
-    PATCH_ALL_METHODS = "PATCH_ALL_METHODS"
-
-
-class QuotaPeriod(StrEnum):
-    """API Gateway Usage Planのquota集計期間を表す列挙値です。"""
-
-    # quotaを1日単位で集計します。
-    DAY = "DAY"
-    # quotaを1週間単位で集計します。
-    WEEK = "WEEK"
-    # quotaを1か月単位で集計します。
-    MONTH = "MONTH"
-
-
-class TokenValidityUnit(StrEnum):
-    """Cognito app client token有効期間の単位を表す列挙値です。"""
-
-    # token有効期間を分単位で指定します。
-    MINUTES = "minutes"
-    # token有効期間を時間単位で指定します。
-    HOURS = "hours"
-    # token有効期間を日単位で指定します。
-    DAYS = "days"
-
-
-ResourceId = UUID
-Timestamp = datetime
-
-AccessTokenValidity = Annotated[int, Field(ge=1)]
-ApiCode = Annotated[str, Field(min_length=1, max_length=100)]
-ApiGatewayId = Annotated[str, Field(min_length=1, max_length=128)]
-ApiKeyLast4 = Annotated[str, Field(min_length=1, max_length=8)]
-AwsAccountId = Annotated[str, Field(min_length=12, max_length=12, pattern=r"^\d{12}$")]
-AwsRegion = Annotated[str, Field(min_length=1, max_length=32)]
-DepartmentCode = Annotated[str, Field(min_length=1, max_length=64)]
-DescriptionText = Annotated[str, Field(min_length=1)]
-DisplayName = Annotated[str, Field(min_length=1, max_length=200)]
-EmailLikeText = Annotated[str, Field(min_length=1, max_length=320)]
-IdTokenValidity = Annotated[int, Field(ge=1)]
-NonNegativeCount = Annotated[int, Field(ge=0)]
-PageToken = Annotated[str, Field(min_length=1)]
-PrincipalId = Annotated[str, Field(min_length=1, max_length=256)]
-ProjectCode = Annotated[str, Field(min_length=1, max_length=100)]
-RefreshTokenValidity = Annotated[int, Field(ge=1)]
-ResourceServerIdentifier = Annotated[str, Field(min_length=1, max_length=256)]
-RetryGracePeriodSeconds = Annotated[int, Field(ge=0)]
-RowVersion = Annotated[int, Field(ge=1)]
-ScopeFullName = Annotated[str, Field(min_length=1, max_length=600)]
-ScopeName = Annotated[str, Field(min_length=1, max_length=256)]
-SearchKeyword = Annotated[str, Field(min_length=1, max_length=200)]
-SecretLast4 = Annotated[str, Field(min_length=1, max_length=8)]
-SecretValue = Annotated[str, Field(min_length=1)]
-Sha256Hash = Annotated[str, Field(min_length=64, max_length=64, pattern=r"^[0-9a-fA-F]{64}$")]
-StageName = Annotated[str, Field(min_length=1, max_length=128)]
-UrlText = Annotated[str, Field(min_length=1)]
-
-
-class ValidationErrorDetail(ApiBaseModel):
-    """入力検証エラーの対象項目と理由を表します。"""
-
-    field: Annotated[str, Field(min_length=1, max_length=256)] = Field(
-        description="入力検証エラーが発生したリクエスト項目です。"
-    )
-    reason: Annotated[str, Field(min_length=1)] = Field(
-        description="入力検証エラーになった具体的な理由です。"
-    )
-
-
-def empty_error_details() -> list[ValidationErrorDetail]:
-    return []
-
-
-class ErrorBody(ApiBaseModel):
-    """エラーコード、メッセージ、追跡IDを含む共通エラー本文です。"""
-
-    code: Annotated[str, Field(min_length=1, max_length=100)] = Field(
-        description="エラー種別を機械的に判定するためのコードです。"
-    )
-    message: DescriptionText = Field(
-        description="利用者または運用者に表示するエラーメッセージです。"
-    )
-    details: list[ValidationErrorDetail] = Field(
-        default_factory=empty_error_details,
-        description="入力検証エラーの詳細一覧です。",
-    )
-    trace_id: Annotated[str, Field(min_length=1, max_length=128)] = Field(
-        description="障害調査でログとレスポンスを対応付ける追跡IDです。"
-    )
-
-
-class ErrorResponse(ApiBaseModel):
-    """APIエラー時に返却する共通レスポンスです。"""
-
-    error: ErrorBody = Field(description="APIエラーの内容をまとめた本文です。")
-
-
-class PageQuery(ApiBaseModel):
-    """一覧APIで使用するページサイズと継続tokenの条件です。"""
-
-    limit: int = Field(default=50, ge=1, le=100, description="一覧APIで1回に返却する最大件数です。")
-    next_token: PageToken | None = Field(
-        default=None,
-        description="次ページを取得するために前回レスポンスから受け取る継続tokenです。",
-    )
-
-
-COMMON_ERROR_SAMPLE = ErrorResponse(
-    error=ErrorBody(
-        code="VALIDATION_ERROR",
-        message="apiCode is required",
-        details=[ValidationErrorDetail(field="apiCode", reason="required")],
-        trace_id="trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S",
-    )
+from app.apis.api_access_requests.common import AccessRequestDerivedState, AuthMode
+from app.apis.apis.common import (
+    ApiDerivedState,
+    ApiVisibility,
+    ReviewerRole,
+    ScopeAttachmentMode,
+    ScopeConfigObserved,
+)
+from app.apis.base import ApiBaseModel, sample_value
+from app.apis.projects.common import (
+    ProjectDerivedState,
+    QuotaPeriod,
+    SubscriptionDerivedState,
+    TokenValidityUnit,
+)
+from app.apis.responses import (
+    COMMON_ERROR_SAMPLE,
+    ERROR_RESPONSES,
+    ErrorBody,
+    ErrorResponse,
+    PageQuery,
+    ValidationErrorDetail,
+    empty_error_details,
+    error_responses,
+    not_implemented,
+    success_response,
+)
+from app.apis.types import (
+    AccessTokenValidity,
+    ApiCode,
+    ApiGatewayId,
+    ApiKeyLast4,
+    AwsAccountId,
+    AwsRegion,
+    DepartmentCode,
+    DescriptionText,
+    DisplayName,
+    EmailLikeText,
+    IdTokenValidity,
+    NonNegativeCount,
+    PageToken,
+    PrincipalId,
+    ProjectCode,
+    RefreshTokenValidity,
+    ResourceId,
+    ResourceServerIdentifier,
+    RetryGracePeriodSeconds,
+    RowVersion,
+    ScopeFullName,
+    ScopeName,
+    SearchKeyword,
+    SecretLast4,
+    SecretValue,
+    Sha256Hash,
+    StageName,
+    Timestamp,
+    UrlText,
 )
 
-
-def sample_value(sample: BaseModel) -> dict[str, Any]:
-    return sample.model_dump(by_alias=True, mode="json")
-
-
-ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
-    400: {
-        "model": ErrorResponse,
-        "description": (
-            "リクエスト本文やヘッダーの組み合わせが業務ルールに合わない場合、"
-            "または冪等性キーなどの必須入力が不正な場合に返します。"
-        ),
-        "content": {"application/json": {"example": sample_value(COMMON_ERROR_SAMPLE)}},
-    },
-    401: {
-        "model": ErrorResponse,
-        "description": "認証情報が未指定、期限切れ、または検証できない場合に返します。",
-    },
-    403: {
-        "model": ErrorResponse,
-        "description": "認証済みの主体に対象リソースや操作への権限がない場合に返します。",
-    },
-    404: {
-        "model": ErrorResponse,
-        "description": (
-            "指定されたAPI、プロジェクト、利用申請などの対象リソースが存在しない場合に返します。"
-        ),
-    },
-    409: {
-        "model": ErrorResponse,
-        "description": (
-            "重複作成、状態遷移の競合、または楽観ロックのversion不一致が発生した場合に返します。"
-        ),
-    },
-    422: {
-        "model": ErrorResponse,
-        "description": (
-            "path、query、header、bodyがOpenAPIスキーマの型や制約に一致しない場合に返します。"
-        ),
-    },
-    429: {
-        "model": ErrorResponse,
-        "description": "呼び出し頻度が許可された上限を超えた場合に返します。",
-    },
-    500: {
-        "model": ErrorResponse,
-        "description": "Lazunex内部で想定外のエラーが発生した場合に返します。",
-    },
-    502: {
-        "model": ErrorResponse,
-        "description": (
-            "API GatewayやCognitoなど外部AWSサービスから失敗応答を受け取った場合に返します。"
-        ),
-    },
-    503: {
-        "model": ErrorResponse,
-        "description": (
-            "API GatewayやCognitoなど外部AWSサービスが一時的に利用できない場合に返します。"
-        ),
-    },
-}
-
-
-def error_responses(*status_codes: int) -> dict[int | str, dict[str, Any]]:
-    return {code: ERROR_RESPONSES[code] for code in status_codes}
-
-
-def success_response(sample: BaseModel) -> dict[str, Any]:
-    return {"content": {"application/json": {"example": sample_value(sample)}}}
-
-
-def not_implemented() -> Never:
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="This API resource is not implemented yet.",
-    )
+__all__ = [
+    "COMMON_ERROR_SAMPLE",
+    "ERROR_RESPONSES",
+    "AccessRequestDerivedState",
+    "AccessTokenValidity",
+    "ApiBaseModel",
+    "ApiCode",
+    "ApiDerivedState",
+    "ApiGatewayId",
+    "ApiKeyLast4",
+    "ApiVisibility",
+    "AuthMode",
+    "AwsAccountId",
+    "AwsRegion",
+    "DepartmentCode",
+    "DescriptionText",
+    "DisplayName",
+    "EmailLikeText",
+    "ErrorBody",
+    "ErrorResponse",
+    "IdTokenValidity",
+    "NonNegativeCount",
+    "PageQuery",
+    "PageToken",
+    "PrincipalId",
+    "ProjectCode",
+    "ProjectDerivedState",
+    "QuotaPeriod",
+    "RefreshTokenValidity",
+    "ResourceId",
+    "ResourceServerIdentifier",
+    "RetryGracePeriodSeconds",
+    "ReviewerRole",
+    "RowVersion",
+    "ScopeAttachmentMode",
+    "ScopeConfigObserved",
+    "ScopeFullName",
+    "ScopeName",
+    "SearchKeyword",
+    "SecretLast4",
+    "SecretValue",
+    "Sha256Hash",
+    "StageName",
+    "SubscriptionDerivedState",
+    "Timestamp",
+    "TokenValidityUnit",
+    "UrlText",
+    "ValidationErrorDetail",
+    "empty_error_details",
+    "error_responses",
+    "not_implemented",
+    "sample_value",
+    "success_response",
+]

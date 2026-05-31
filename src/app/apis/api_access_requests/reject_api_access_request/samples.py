@@ -1,11 +1,11 @@
 from datetime import datetime
 from uuid import UUID
 
+from app.apis.api_access_requests.common import AccessRequestDerivedState
 from app.apis.api_access_requests.reject_api_access_request.schemas import (
     RejectApiAccessRequestRequest,
     RejectApiAccessRequestResponse,
 )
-from app.apis.common import AccessRequestDerivedState
 
 REJECT_API_ACCESS_REQUEST_REQUEST_SAMPLE = RejectApiAccessRequestRequest(
     review_comment="利用目的が不明確なため却下"

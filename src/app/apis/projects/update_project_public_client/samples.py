@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from app.apis.common import TokenValidityUnit
+from app.apis.projects.common import TokenValidityUnit
 from app.apis.projects.update_project_public_client.schemas import (
     UpdatedPublicClientResponse,
     UpdateProjectPublicClientRequest,

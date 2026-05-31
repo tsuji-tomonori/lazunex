@@ -1,13 +1,15 @@
 from pydantic import Field
 
-from app.apis.common import (
+from app.apis.api_access_requests.common import (
     AccessRequestDerivedState,
-    ApiBaseModel,
-    ApiCode,
     AuthMode,
+)
+from app.apis.base import ApiBaseModel
+from app.apis.responses import PageQuery
+from app.apis.types import (
+    ApiCode,
     DescriptionText,
     DisplayName,
-    PageQuery,
     PageToken,
     PrincipalId,
     ResourceId,

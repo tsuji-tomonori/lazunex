@@ -2,13 +2,17 @@ from typing import Annotated
 
 from fastapi import APIRouter, Path, Query, status
 
-from app.apis.common import error_responses, not_implemented, success_response
 from app.apis.projects.list_project_api_access_requests.samples import (
     LIST_PROJECT_API_ACCESS_REQUESTS_RESPONSE_SAMPLE,
 )
 from app.apis.projects.list_project_api_access_requests.schemas import (
     ListProjectApiAccessRequestsQuery,
     ListProjectApiAccessRequestsResponse,
+)
+from app.apis.responses import (
+    error_responses,
+    not_implemented,
+    success_response,
 )
 
 router = APIRouter()

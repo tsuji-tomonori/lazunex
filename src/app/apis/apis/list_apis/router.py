@@ -4,7 +4,11 @@ from fastapi import APIRouter, Query, status
 
 from app.apis.apis.list_apis.samples import LIST_APIS_RESPONSE_SAMPLE
 from app.apis.apis.list_apis.schemas import ListApisQuery, ListApisResponse
-from app.apis.common import error_responses, not_implemented, success_response
+from app.apis.responses import (
+    error_responses,
+    not_implemented,
+    success_response,
+)
 
 router = APIRouter()
 

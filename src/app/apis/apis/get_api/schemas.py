@@ -1,11 +1,15 @@
 from pydantic import Field
 
-from app.apis.common import (
-    ApiBaseModel,
-    ApiCode,
+from app.apis.apis.common import (
     ApiDerivedState,
-    ApiGatewayId,
     ApiVisibility,
+    ReviewerRole,
+    ScopeConfigObserved,
+)
+from app.apis.base import ApiBaseModel
+from app.apis.types import (
+    ApiCode,
+    ApiGatewayId,
     AwsAccountId,
     AwsRegion,
     DescriptionText,
@@ -13,8 +17,6 @@ from app.apis.common import (
     EmailLikeText,
     PrincipalId,
     ResourceId,
-    ReviewerRole,
-    ScopeConfigObserved,
     ScopeFullName,
     ScopeName,
     StageName,

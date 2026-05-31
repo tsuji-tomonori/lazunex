@@ -1,7 +1,8 @@
 from datetime import datetime
 from uuid import UUID
 
-from app.apis.common import AuthMode, SubscriptionDerivedState
+from app.apis.api_access_requests.common import AuthMode
+from app.apis.projects.common import SubscriptionDerivedState
 from app.apis.projects.list_project_subscriptions.schemas import (
     ListProjectSubscriptionsResponse,
     ProjectSubscriptionItemResponse,

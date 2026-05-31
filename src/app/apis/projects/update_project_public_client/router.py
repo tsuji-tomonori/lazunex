@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Header, Path, status
 
-from app.apis.common import error_responses, not_implemented, sample_value, success_response
+from app.apis.base import sample_value
 from app.apis.projects.update_project_public_client.samples import (
     UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE,
     UPDATE_PROJECT_PUBLIC_CLIENT_RESPONSE_SAMPLE,
@@ -10,6 +10,11 @@ from app.apis.projects.update_project_public_client.samples import (
 from app.apis.projects.update_project_public_client.schemas import (
     UpdateProjectPublicClientRequest,
     UpdateProjectPublicClientResponse,
+)
+from app.apis.responses import (
+    error_responses,
+    not_implemented,
+    success_response,
 )
 
 router = APIRouter()

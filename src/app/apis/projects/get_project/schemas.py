@@ -1,8 +1,13 @@
 from pydantic import Field
 
-from app.apis.common import (
+from app.apis.base import ApiBaseModel
+from app.apis.projects.common import (
+    ProjectDerivedState,
+    QuotaPeriod,
+    TokenValidityUnit,
+)
+from app.apis.types import (
     AccessTokenValidity,
-    ApiBaseModel,
     ApiGatewayId,
     ApiKeyLast4,
     DepartmentCode,
@@ -11,10 +16,7 @@ from app.apis.common import (
     NonNegativeCount,
     PrincipalId,
     ProjectCode,
-    ProjectDerivedState,
-    QuotaPeriod,
     ResourceId,
-    TokenValidityUnit,
     UrlText,
 )
 

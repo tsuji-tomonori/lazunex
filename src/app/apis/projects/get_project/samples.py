@@ -1,6 +1,10 @@
 from uuid import UUID
 
-from app.apis.common import ProjectDerivedState, QuotaPeriod, TokenValidityUnit
+from app.apis.projects.common import (
+    ProjectDerivedState,
+    QuotaPeriod,
+    TokenValidityUnit,
+)
 from app.apis.projects.get_project.schemas import (
     GetProjectResponse,
     ProjectApiKeyResponse,

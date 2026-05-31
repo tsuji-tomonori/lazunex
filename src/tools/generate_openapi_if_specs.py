@@ -26,7 +26,7 @@ PARAMETER_DESCRIPTION_OVERRIDES = {
         "同じキーで再送された場合、サーバーは同一リクエストとして扱います。"
     ),
 }
-DEFAULT_API_COMMON_PATH = Path(__file__).resolve().parents[1] / "app/apis/common.py"
+DEFAULT_API_COMMON_PATH = Path(__file__).resolve().parents[1] / "app/apis"
 
 
 @dataclass(frozen=True)
@@ -100,27 +100,38 @@ def enum_type(schema: JsonObject) -> str:
     return f"{base_type}({', '.join(values)})"
 
 
+def enum_common_files(path: Path) -> list[Path]:
+    if not path.exists():
+        return []
+    if path.is_file():
+        return [path]
+    return sorted(
+        common_path
+        for common_path in path.rglob("common.py")
+        if "__pycache__" not in common_path.parts
+    )
+
+
 @lru_cache
 def enum_comment_descriptions(
     path: Path = DEFAULT_API_COMMON_PATH,
 ) -> dict[str, dict[str, str]]:
-    if not path.exists():
-        return {}
-    source = path.read_text(encoding="utf-8")
-    source_lines = source.splitlines()
-    tree = ast.parse(source, filename=str(path))
     descriptions: dict[str, dict[str, str]] = {}
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.ClassDef) or not is_str_enum_class(node):
-            continue
-        members = enum_members(node)
-        member_lines = enum_member_line_numbers(node)
-        value_descriptions: dict[str, str] = {}
-        for member_name, member_value in members.items():
-            description = enum_member_comment(source_lines, member_lines[member_name])
-            if description:
-                value_descriptions[member_value] = description
-        descriptions[node.name] = value_descriptions
+    for common_path in enum_common_files(path):
+        source = common_path.read_text(encoding="utf-8")
+        source_lines = source.splitlines()
+        tree = ast.parse(source, filename=str(common_path))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ClassDef) or not is_str_enum_class(node):
+                continue
+            members = enum_members(node)
+            member_lines = enum_member_line_numbers(node)
+            value_descriptions: dict[str, str] = {}
+            for member_name, member_value in members.items():
+                description = enum_member_comment(source_lines, member_lines[member_name])
+                if description:
+                    value_descriptions[member_value] = description
+            descriptions[node.name] = value_descriptions
     return descriptions
 
 

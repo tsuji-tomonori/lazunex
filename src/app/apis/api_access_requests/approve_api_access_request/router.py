@@ -10,7 +10,12 @@ from app.apis.api_access_requests.approve_api_access_request.schemas import (
     ApproveApiAccessRequestRequest,
     ApproveApiAccessRequestResponse,
 )
-from app.apis.common import error_responses, not_implemented, sample_value, success_response
+from app.apis.base import sample_value
+from app.apis.responses import (
+    error_responses,
+    not_implemented,
+    success_response,
+)
 
 router = APIRouter()
 

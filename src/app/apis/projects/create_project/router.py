@@ -2,12 +2,17 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Header, status
 
-from app.apis.common import error_responses, not_implemented, sample_value, success_response
+from app.apis.base import sample_value
 from app.apis.projects.create_project.samples import (
     CREATE_PROJECT_REQUEST_SAMPLE,
     CREATE_PROJECT_RESPONSE_SAMPLE,
 )
 from app.apis.projects.create_project.schemas import CreateProjectRequest, CreateProjectResponse
+from app.apis.responses import (
+    error_responses,
+    not_implemented,
+    success_response,
+)
 
 router = APIRouter()
 

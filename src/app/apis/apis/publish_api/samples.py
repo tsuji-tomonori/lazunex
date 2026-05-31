@@ -1,5 +1,11 @@
 from uuid import UUID
 
+from app.apis.apis.common import (
+    ApiDerivedState,
+    ApiVisibility,
+    ReviewerRole,
+    ScopeAttachmentMode,
+)
 from app.apis.apis.publish_api.schemas import (
     ApiScopeResponse,
     OpenApiDocumentRequest,
@@ -8,7 +14,6 @@ from app.apis.apis.publish_api.schemas import (
     PublishApiResponse,
     PublishApiReviewerRequest,
 )
-from app.apis.common import ApiDerivedState, ApiVisibility, ReviewerRole, ScopeAttachmentMode
 
 PUBLISH_API_REQUEST_SAMPLE = PublishApiRequest(
     api_code="billing-api-v1",

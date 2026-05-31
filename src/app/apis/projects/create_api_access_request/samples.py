@@ -1,6 +1,9 @@
 from uuid import UUID
 
-from app.apis.common import AccessRequestDerivedState, AuthMode
+from app.apis.api_access_requests.common import (
+    AccessRequestDerivedState,
+    AuthMode,
+)
 from app.apis.projects.create_api_access_request.schemas import (
     CreateApiAccessRequestRequest,
     CreateApiAccessRequestResponse,

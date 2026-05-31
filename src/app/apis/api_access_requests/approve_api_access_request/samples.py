@@ -4,7 +4,10 @@ from app.apis.api_access_requests.approve_api_access_request.schemas import (
     ApproveApiAccessRequestRequest,
     ApproveApiAccessRequestResponse,
 )
-from app.apis.common import AccessRequestDerivedState, AuthMode
+from app.apis.api_access_requests.common import (
+    AccessRequestDerivedState,
+    AuthMode,
+)
 
 APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE = ApproveApiAccessRequestRequest(
     approved_auth_mode=AuthMode.BOTH, review_comment="利用目的を確認済み"

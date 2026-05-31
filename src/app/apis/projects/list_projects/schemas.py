@@ -1,16 +1,16 @@
 from pydantic import Field
 
-from app.apis.common import (
-    ApiBaseModel,
+from app.apis.base import ApiBaseModel
+from app.apis.projects.common import ProjectDerivedState
+from app.apis.responses import PageQuery
+from app.apis.types import (
     DepartmentCode,
     DescriptionText,
     DisplayName,
     NonNegativeCount,
-    PageQuery,
     PageToken,
     PrincipalId,
     ProjectCode,
-    ProjectDerivedState,
     ResourceId,
     SearchKeyword,
 )

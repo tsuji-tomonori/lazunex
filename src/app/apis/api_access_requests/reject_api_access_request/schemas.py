@@ -1,8 +1,8 @@
 from pydantic import Field
 
-from app.apis.common import (
-    AccessRequestDerivedState,
-    ApiBaseModel,
+from app.apis.api_access_requests.common import AccessRequestDerivedState
+from app.apis.base import ApiBaseModel
+from app.apis.types import (
     DescriptionText,
     ResourceId,
     Timestamp,

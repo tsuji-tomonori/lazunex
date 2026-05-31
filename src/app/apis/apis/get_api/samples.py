@@ -1,12 +1,17 @@
 from uuid import UUID
 
+from app.apis.apis.common import (
+    ApiDerivedState,
+    ApiVisibility,
+    ReviewerRole,
+    ScopeConfigObserved,
+)
 from app.apis.apis.get_api.schemas import (
     ApiDetailStageResponse,
     ApiReviewerResponse,
     ApiScopeResponse,
     GetApiResponse,
 )
-from app.apis.common import ApiDerivedState, ApiVisibility, ReviewerRole, ScopeConfigObserved
 
 GET_API_RESPONSE_SAMPLE = GetApiResponse(
     api_id=UUID("7b0d4a98-0000-0000-0000-000000000001"),

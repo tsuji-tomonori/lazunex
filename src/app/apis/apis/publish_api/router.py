@@ -7,7 +7,12 @@ from app.apis.apis.publish_api.samples import (
     PUBLISH_API_RESPONSE_SAMPLE,
 )
 from app.apis.apis.publish_api.schemas import PublishApiRequest, PublishApiResponse
-from app.apis.common import error_responses, not_implemented, sample_value, success_response
+from app.apis.base import sample_value
+from app.apis.responses import (
+    error_responses,
+    not_implemented,
+    success_response,
+)
 
 router = APIRouter()
 

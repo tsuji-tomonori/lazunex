@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from app.apis.common import ProjectDerivedState
+from app.apis.projects.common import ProjectDerivedState
 from app.apis.projects.list_projects.schemas import ListProjectsResponse, ProjectListItemResponse
 
 LIST_PROJECTS_RESPONSE_SAMPLE = ListProjectsResponse(
