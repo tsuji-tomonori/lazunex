@@ -6,7 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.query import fetch_all, fetch_one
+from app.db.query import execute_sql, fetch_all
 
 # This file is generated from SQL files in the sibling sql directory.
 # Do not edit generated models by hand.
@@ -31,6 +31,7 @@ async def select_projects(
     session: AsyncSession,
     params: SelectProjectsParams,
 ) -> list[SelectProjectsRow]:
+    """申請元Projectと呼び出し元の権限を確認するため、Projectを取得する。"""
     return await fetch_all(
         session,
         SQL_DIR / "001_select_projects.sql",
@@ -63,6 +64,7 @@ async def select_apis(
     session: AsyncSession,
     params: SelectApisParams,
 ) -> list[SelectApisRow]:
+    """申請対象APIが利用申請可能か確認するため、API catalog情報を取得する。"""
     return await fetch_all(
         session,
         SQL_DIR / "002_select_apis.sql",
@@ -90,6 +92,7 @@ async def select_project_cognito_clients(
     session: AsyncSession,
     params: SelectProjectCognitoClientsParams,
 ) -> list[SelectProjectCognitoClientsRow]:
+    """申請認証方式とProject client構成を照合するため、Project Cognito clientを取得する。"""
     return await fetch_all(
         session,
         SQL_DIR / "003_select_project_cognito_clients.sql",
@@ -119,6 +122,7 @@ async def select_subscriptions(
     session: AsyncSession,
     params: SelectSubscriptionsParams,
 ) -> list[SelectSubscriptionsRow]:
+    """既に利用可能なAPIへの重複申請を防ぐため、active subscriptionを取得する。"""
     return await fetch_all(
         session,
         SQL_DIR / "004_select_subscriptions.sql",
@@ -148,6 +152,7 @@ async def select_api_access_requests(
     session: AsyncSession,
     params: SelectApiAccessRequestsParams,
 ) -> list[SelectApiAccessRequestsRow]:
+    """同一Project/APIの審査中申請を検出するため、利用申請を取得する。"""
     return await fetch_all(
         session,
         SQL_DIR / "005_select_api_access_requests.sql",
@@ -168,20 +173,15 @@ class InsertApiAccessRequestsParams(BaseModel):
     now: datetime
 
 
-class InsertApiAccessRequestsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    access_request_id: UUID
-
-
 async def insert_api_access_requests(
     session: AsyncSession,
     params: InsertApiAccessRequestsParams,
-) -> InsertApiAccessRequestsRow | None:
-    return await fetch_one(
+) -> None:
+    """審査待ちの利用申請を保持するため、利用申請を追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "006_insert_api_access_requests.sql",
         params,
-        InsertApiAccessRequestsRow,
     )
 
 
@@ -199,20 +199,15 @@ class InsertAccessRequestEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertAccessRequestEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_access_request_events(
     session: AsyncSession,
     params: InsertAccessRequestEventsParams,
-) -> InsertAccessRequestEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """利用申請作成を履歴化するため、利用申請イベントを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "007_insert_access_request_events.sql",
         params,
-        InsertAccessRequestEventsRow,
     )
 
 
@@ -227,20 +222,15 @@ class InsertAuditEventsParams(BaseModel):
     now: datetime
 
 
-class InsertAuditEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    audit_event_id: UUID
-
-
 async def insert_audit_events(
     session: AsyncSession,
     params: InsertAuditEventsParams,
-) -> InsertAuditEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """利用申請作成の処理結果として、監査イベントを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "008_insert_audit_events.sql",
         params,
-        InsertAuditEventsRow,
     )
 
 
@@ -255,18 +245,13 @@ class InsertIdempotencyRecordsParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertIdempotencyRecordsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    idempotency_record_id: UUID
-
-
 async def insert_idempotency_records(
     session: AsyncSession,
     params: InsertIdempotencyRecordsParams,
-) -> InsertIdempotencyRecordsRow | None:
-    return await fetch_one(
+) -> None:
+    """利用申請作成の処理結果として、冪等性レコードを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "009_insert_idempotency_records.sql",
         params,
-        InsertIdempotencyRecordsRow,
     )

@@ -1,3 +1,4 @@
+-- 利用申請作成を履歴化するため、利用申請イベントを追加する。
 INSERT INTO access_request_events (
     event_id,
     aggregate_id,

@@ -1,3 +1,4 @@
+-- 利用申請承認の処理結果として、subscriptionイベントを追加する。
 INSERT INTO subscription_events (
     event_id,
     aggregate_id,

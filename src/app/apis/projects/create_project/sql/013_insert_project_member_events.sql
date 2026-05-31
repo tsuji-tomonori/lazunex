@@ -1,3 +1,4 @@
+-- Project作成の処理結果として、Project memberイベントを追加する。
 INSERT INTO project_member_events (
     event_id,
     aggregate_id,

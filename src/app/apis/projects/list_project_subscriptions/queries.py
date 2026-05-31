@@ -27,32 +27,22 @@ class SelectSubscriptionsParams(BaseModel):
 class SelectSubscriptionsRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
     subscription_id: UUID
-    project_id: UUID
     api_id: UUID
     api_stage_id: UUID
-    access_request_id: UUID
     approved_auth_mode: str
-    approved_by: str
     approved_at: datetime
     api_code: str
     api_name: str
-    api_description: str
-    aws_region: str
-    apigw_rest_api_id: str
-    apigw_stage_name: str
+    stage_name: str
     invoke_url: str
-    custom_domain_url: str | None = None
     scope_full_name: str
-    apigw_api_key_id: str
-    api_key_last4: str
-    app_client_id: str
-    client_type: str
 
 
 async def select_subscriptions(
     session: AsyncSession,
     params: SelectSubscriptionsParams,
 ) -> list[SelectSubscriptionsRow]:
+    """Projectが利用可能なAPI一覧を返すため、承認済みsubscriptionを取得する。"""
     return await fetch_all(
         session,
         SQL_DIR / "001_select_subscriptions.sql",

@@ -1,3 +1,4 @@
+-- 申請認証方式とProject client構成を照合するため、Project Cognito clientを取得する。
 SELECT
     project_cognito_client_id,
     project_id,

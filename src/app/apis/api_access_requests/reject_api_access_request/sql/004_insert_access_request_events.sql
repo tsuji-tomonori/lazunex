@@ -1,3 +1,4 @@
+-- 却下処理の開始と完了を追跡するため、利用申請イベントを追加する。
 INSERT INTO access_request_events (
     event_id,
     aggregate_id,

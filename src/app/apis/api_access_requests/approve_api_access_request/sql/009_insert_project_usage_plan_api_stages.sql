@@ -1,3 +1,4 @@
+-- Usage Planから対象stageを利用可能にするため、Usage Plan stage紐づけを追加する。
 INSERT INTO project_usage_plan_api_stages (
     usage_plan_api_stage_id,
     project_id,

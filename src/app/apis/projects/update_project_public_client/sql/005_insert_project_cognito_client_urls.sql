@@ -1,3 +1,4 @@
+-- public clientのURL設定を最新化するため、既存のProject Cognito client URLを削除する。
 INSERT INTO project_cognito_client_urls (
     client_url_id,
     project_cognito_client_id,

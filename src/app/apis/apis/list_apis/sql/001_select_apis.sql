@@ -1,3 +1,4 @@
+-- 参照可能なAPI一覧を返すため、検索条件に合うAPI catalog情報を取得する。
 SELECT
     a.api_id,
     a.api_code,

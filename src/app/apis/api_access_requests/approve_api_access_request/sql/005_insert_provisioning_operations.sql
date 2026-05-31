@@ -1,3 +1,4 @@
+-- 承認後のAWS反映作業を追跡するため、provisioning operationを追加する。
 INSERT INTO provisioning_operations (
     operation_id,
     idempotency_key,

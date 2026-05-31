@@ -1,3 +1,4 @@
+-- API公開登録の処理結果として、provisioning stepを追加する。
 INSERT INTO provisioning_steps (
     operation_step_id,
     operation_id,

@@ -1,3 +1,4 @@
+-- 承認者が対象APIのreviewerか確認するため、API reviewerを取得する。
 SELECT
     api_reviewer_id,
     api_id,

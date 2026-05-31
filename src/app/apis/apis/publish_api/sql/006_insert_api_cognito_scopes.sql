@@ -1,3 +1,4 @@
+-- API実行認可に使うcustom scopeを管理するため、API Cognito scopeを追加する。
 INSERT INTO api_cognito_scopes (
     api_scope_id,
     api_id,

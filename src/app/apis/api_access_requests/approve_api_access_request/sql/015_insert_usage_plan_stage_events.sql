@@ -1,3 +1,4 @@
+-- 利用申請承認の処理結果として、Usage Plan stageイベントを追加する。
 INSERT INTO usage_plan_stage_events (
     event_id,
     aggregate_id,

@@ -28,22 +28,18 @@ class SelectApisRow(BaseModel):
     name: str
     description: str
     provider_name: str
-    provider_contact: str
     visibility: str
     api_stage_id: UUID
-    aws_region: str
-    apigw_rest_api_id: str
     apigw_stage_name: str
     invoke_url: str
-    custom_domain_url: str | None = None
     scope_full_name: str
-    reviewer_principal_id: str
 
 
 async def select_apis(
     session: AsyncSession,
     params: SelectApisParams,
 ) -> list[SelectApisRow]:
+    """参照可能なAPI一覧を返すため、検索条件に合うAPI catalog情報を取得する。"""
     return await fetch_all(
         session,
         SQL_DIR / "001_select_apis.sql",

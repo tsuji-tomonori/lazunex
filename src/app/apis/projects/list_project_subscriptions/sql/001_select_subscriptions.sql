@@ -1,3 +1,4 @@
+-- Projectが利用可能なAPI一覧を返すため、承認済みsubscriptionを取得する。
 SELECT
     sub.subscription_id,
     sub.api_id,

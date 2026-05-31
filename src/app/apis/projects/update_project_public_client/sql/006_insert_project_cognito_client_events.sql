@@ -1,3 +1,4 @@
+-- Project public client更新の処理結果として、Project Cognito clientイベントを追加する。
 INSERT INTO project_cognito_client_events (
     event_id,
     aggregate_id,

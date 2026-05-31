@@ -24,6 +24,7 @@ class FieldSpec:
 @dataclass(frozen=True)
 class QuerySpec:
     sql_filename: str
+    summary: str
     class_prefix: str
     function_name: str
     operation: str
@@ -64,6 +65,19 @@ def operation_from_statements(statements: list[Any]) -> str:
         if isinstance(statement, exp.Delete):
             return "delete"
     return "execute"
+
+
+def sql_summary(sql: str) -> str:
+    for line in sql.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if stripped.startswith("--"):
+            summary = stripped.removeprefix("--").strip()
+            if summary:
+                return summary
+        break
+    return "SQLで必要なデータを読み書きする。"
 
 
 def base_type_from_sql(data_type: str) -> str:
@@ -330,6 +344,7 @@ def parse_query_spec(sql_path: Path, tables: dict[str, Table]) -> QuerySpec:
     ]
     return QuerySpec(
         sql_filename=sql_path.name,
+        summary=sql_summary(sql),
         class_prefix=class_prefix_from_sql_path(sql_path),
         function_name=function_name_from_sql_path(sql_path),
         operation=operation_from_statements(statements),
@@ -402,6 +417,7 @@ def render_query_function(spec: QuerySpec) -> list[str]:
                 "    session: AsyncSession,",
                 f"    params: {params_class},",
                 f") -> list[{row_class}]:",
+                f'    """{spec.summary}"""',
                 "    return await fetch_all(",
                 "        session,",
                 f"        {sql_path},",
@@ -412,11 +428,12 @@ def render_query_function(spec: QuerySpec) -> list[str]:
         return [
             f"async def {spec.function_name}(",
             "    session: AsyncSession,",
-            f"    params: {params_class},",
-            f") -> {row_class} | None:",
-            "    return await fetch_one(",
-            "        session,",
-            f"        {sql_path},",
+                f"    params: {params_class},",
+                f") -> {row_class} | None:",
+                f'    """{spec.summary}"""',
+                "    return await fetch_one(",
+                "        session,",
+                f"        {sql_path},",
             "        params,",
             f"        {row_class},",
             "    )",
@@ -427,6 +444,7 @@ def render_query_function(spec: QuerySpec) -> list[str]:
         "    session: AsyncSession,",
         f"    params: {params_class},",
         ") -> None:",
+        f'    """{spec.summary}"""',
         "    await execute_sql(",
         "        session,",
         f"        {sql_path},",

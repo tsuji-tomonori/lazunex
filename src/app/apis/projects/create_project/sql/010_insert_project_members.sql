@@ -1,3 +1,4 @@
+-- Project owner/memberを管理するため、Project memberを追加する。
 INSERT INTO project_members (
     project_member_id,
     project_id,

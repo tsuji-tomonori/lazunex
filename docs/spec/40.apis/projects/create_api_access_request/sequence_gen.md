@@ -21,15 +21,15 @@ sequenceDiagram
           API->>API: 利用申請作成イベントを追記する。
           API->>API: 監査イベントを追記する。
           API->>API: 利用申請作成レスポンスを組み立てる。
-          API->>DB: レコードを参照する SQL 001_select_projects.sql<br/>テーブル projects, project_members
-          API->>DB: レコードを参照する SQL 002_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes, api_reviewers
-          API->>DB: レコードを参照する SQL 003_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients
-          API->>DB: レコードを参照する SQL 004_select_subscriptions.sql<br/>テーブル project_api_subscriptions
-          API->>DB: レコードを参照する SQL 005_select_api_access_requests.sql<br/>テーブル api_access_requests, api_access_reviews
-          API->>DB: レコードを追加する SQL 006_insert_api_access_requests.sql<br/>テーブル api_access_requests
-          API->>DB: レコードを追加する SQL 007_insert_access_request_events.sql<br/>テーブル access_request_events
-          API->>DB: レコードを追加する SQL 008_insert_audit_events.sql<br/>テーブル audit_events
-          API->>DB: レコードを追加する SQL 009_insert_idempotency_records.sql<br/>テーブル idempotency_records
+          API->>DB: 申請元Projectと呼び出し元の権限を確認するため、Projectを取得する。<br/>SQL 001_select_projects.sql<br/>テーブル projects, project_members
+          API->>DB: 申請対象APIが利用申請可能か確認するため、API catalog情報を取得する。<br/>SQL 002_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes, api_reviewers
+          API->>DB: 申請認証方式とProject client構成を照合するため、Project Cognito clientを取得する。<br/>SQL 003_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients
+          API->>DB: 既に利用可能なAPIへの重複申請を防ぐため、active subscriptionを取得する。<br/>SQL 004_select_subscriptions.sql<br/>テーブル project_api_subscriptions
+          API->>DB: 同一Project/APIの審査中申請を検出するため、利用申請を取得する。<br/>SQL 005_select_api_access_requests.sql<br/>テーブル api_access_requests, api_access_reviews
+          API->>DB: 審査待ちの利用申請を保持するため、利用申請を追加する。<br/>SQL 006_insert_api_access_requests.sql<br/>テーブル api_access_requests
+          API->>DB: 利用申請作成を履歴化するため、利用申請イベントを追加する。<br/>SQL 007_insert_access_request_events.sql<br/>テーブル access_request_events
+          API->>DB: 利用申請作成の処理結果として、監査イベントを追加する。<br/>SQL 008_insert_audit_events.sql<br/>テーブル audit_events
+          API->>DB: 利用申請作成の処理結果として、冪等性レコードを追加する。<br/>SQL 009_insert_idempotency_records.sql<br/>テーブル idempotency_records
         end
       end
     end

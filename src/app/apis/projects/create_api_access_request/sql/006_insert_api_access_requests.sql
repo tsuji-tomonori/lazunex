@@ -1,3 +1,4 @@
+-- 審査待ちの利用申請を保持するため、利用申請を追加する。
 INSERT INTO api_access_requests (
     access_request_id,
     project_id,

@@ -1,3 +1,4 @@
+-- 利用申請承認の処理結果として、provisioning stepを追加する。
 INSERT INTO provisioning_steps (
     operation_step_id,
     operation_id,

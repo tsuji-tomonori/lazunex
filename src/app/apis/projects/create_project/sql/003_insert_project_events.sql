@@ -1,3 +1,4 @@
+-- Project作成を履歴化するため、Projectイベントを追加する。
 INSERT INTO project_events (
     event_id,
     aggregate_id,

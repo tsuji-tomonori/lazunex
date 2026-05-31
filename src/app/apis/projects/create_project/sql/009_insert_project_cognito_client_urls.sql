@@ -1,3 +1,4 @@
+-- public clientのcallback/logout URLを保持するため、Project Cognito client URLを追加する。
 INSERT INTO project_cognito_client_urls (
     client_url_id,
     project_cognito_client_id,

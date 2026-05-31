@@ -1,3 +1,4 @@
+-- 参照可能なProject一覧を返すため、検索条件に合うProjectを取得する。
 SELECT
     p.project_id,
     p.project_code,

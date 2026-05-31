@@ -1,3 +1,4 @@
+-- 公開対象のAPI Gateway stageをLazunex上で参照するため、API Gateway stageを追加する。
 INSERT INTO api_gateway_stages (
     api_stage_id,
     api_id,

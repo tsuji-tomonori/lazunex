@@ -13,6 +13,6 @@ sequenceDiagram
     API->>API: 呼び出し元が参照可能な公開 API を検索する。
     API->>API: 一覧取得結果に limit と nextToken を適用する。
     API->>API: API 一覧レスポンスを組み立てる。
-    API->>DB: レコードを参照する SQL 001_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes
+    API->>DB: 参照可能なAPI一覧を返すため、検索条件に合うAPI catalog情報を取得する。<br/>SQL 001_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes
   end
 ```

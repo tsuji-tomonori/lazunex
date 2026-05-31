@@ -1,3 +1,4 @@
+-- API公開登録の処理結果として、provisioning step eventsを追加する。
 INSERT INTO provisioning_step_events (
     event_id,
     aggregate_id,

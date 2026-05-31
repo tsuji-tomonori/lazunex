@@ -29,6 +29,7 @@ from tools.generate_queries import (
     render_query_function,
     required_imports,
     returning_output_fields,
+    sql_summary,
 )
 
 DDL = """
@@ -83,6 +84,7 @@ def test_parse_query_spec_infers_select_params_and_rows(tmp_path: Path) -> None:
     sql_path = tmp_path / "001_select_projects.sql"
     sql_path.write_text(
         """
+        -- プロジェクトコードの重複確認に使う既存 Project を取得する。
         SELECT project_id, project_code, description
         FROM projects
         WHERE project_code = @project_code;
@@ -96,6 +98,7 @@ def test_parse_query_spec_infers_select_params_and_rows(tmp_path: Path) -> None:
     assert spec.function_name == "select_projects"
     assert spec.operation == "select"
     assert spec.sql_filename == "001_select_projects.sql"
+    assert spec.summary == "プロジェクトコードの重複確認に使う既存 Project を取得する。"
     assert [(field.name, field.type_hint, field.nullable) for field in spec.params] == [
         ("project_code", "str", False)
     ]
@@ -149,6 +152,11 @@ def test_operation_from_statements_detects_statement_kind() -> None:
         operation_from_statements([parse_one("DELETE FROM projects", read="postgres")]) == "delete"
     )
     assert operation_from_statements([]) == "execute"
+
+
+def test_sql_summary_reads_first_comment_or_falls_back() -> None:
+    assert sql_summary("\n-- 利用目的を説明する。\nSELECT 1;") == "利用目的を説明する。"
+    assert sql_summary("SELECT 1;") == "SQLで必要なデータを読み書きする。"
 
 
 def test_parse_query_spec_infers_insert_params_and_returning_rows(tmp_path: Path) -> None:
@@ -278,6 +286,7 @@ def test_render_queries_py_includes_required_imports_and_empty_params(tmp_path: 
     assert "event_payload: dict[str, Any]" in rendered
     assert "class InsertProjectEventsRow" not in rendered
     assert "async def insert_project_events(" in rendered
+    assert '"""SQLで必要なデータを読み書きする。"""' in rendered
     assert "await execute_sql(" in rendered
     assert 'SQL_DIR / "003_insert_project_events.sql"' in rendered
 

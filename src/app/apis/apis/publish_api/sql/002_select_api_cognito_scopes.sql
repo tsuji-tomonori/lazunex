@@ -1,3 +1,4 @@
+-- custom scopeの重複登録を防ぐため、既存API Cognito scopeを取得する。
 SELECT
     api_scope_id,
     api_id,

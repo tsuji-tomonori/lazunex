@@ -1,3 +1,4 @@
+-- 承認結果と承認コメントを保持するため、利用申請レビューを追加する。
 INSERT INTO api_access_reviews (
     access_review_id,
     access_request_id,

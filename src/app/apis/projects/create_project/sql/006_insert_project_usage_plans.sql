@@ -1,3 +1,4 @@
+-- Project用Usage Plan metadataを保持するため、Project Usage Planを追加する。
 INSERT INTO project_usage_plans (
     project_usage_plan_id,
     project_id,

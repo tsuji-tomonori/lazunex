@@ -1,3 +1,4 @@
+-- 利用申請の審査担当を管理するため、API reviewerを追加する。
 INSERT INTO api_reviewers (
     api_reviewer_id,
     api_id,

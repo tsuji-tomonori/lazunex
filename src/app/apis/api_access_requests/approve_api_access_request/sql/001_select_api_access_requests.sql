@@ -1,3 +1,4 @@
+-- 承認対象の利用申請と現在状態を確認するため、利用申請を取得する。
 SELECT
     ar.access_request_id,
     ar.project_id,

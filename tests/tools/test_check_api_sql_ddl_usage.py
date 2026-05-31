@@ -81,6 +81,39 @@ def test_compare_usage_to_ddl_reports_both_directions() -> None:
     assert report.ddl_only_columns == {"projects": {"ddl_only"}}
 
 
+def test_compare_usage_to_ddl_ignores_like_source_tables() -> None:
+    usage = parse_sql_usage(
+        "INSERT INTO api_events (event_id) VALUES (@event_id);",
+        path="sample.sql",
+    )
+    ddl = """
+    CREATE TABLE hub_user_events (
+        event_id uuid PRIMARY KEY
+    );
+    CREATE TABLE api_events LIKE hub_user_events;
+    """
+
+    report = compare_usage_to_ddl(usage, ddl)
+
+    assert report.ddl_only_tables == set()
+
+
+def test_compare_usage_to_ddl_ignores_hub_users_table() -> None:
+    report = compare_usage_to_ddl(
+        parse_sql_usage("SELECT p.project_id FROM projects AS p;", path="sample.sql"),
+        """
+        CREATE TABLE hub_users (
+            user_id uuid PRIMARY KEY
+        );
+        CREATE TABLE projects (
+            project_id uuid PRIMARY KEY
+        );
+        """,
+    )
+
+    assert report.ddl_only_tables == set()
+
+
 def test_parse_sql_usage_collects_single_table_unqualified_columns() -> None:
     usage = parse_sql_usage(
         """

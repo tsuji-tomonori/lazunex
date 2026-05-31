@@ -6,7 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.query import fetch_all, fetch_one
+from app.db.query import execute_sql, fetch_all
 
 # This file is generated from SQL files in the sibling sql directory.
 # Do not edit generated models by hand.
@@ -31,6 +31,7 @@ async def select_apis(
     session: AsyncSession,
     params: SelectApisParams,
 ) -> list[SelectApisRow]:
+    """API codeの重複登録を防ぐため、既存APIを取得する。"""
     return await fetch_all(
         session,
         SQL_DIR / "001_select_apis.sql",
@@ -58,6 +59,7 @@ async def select_api_cognito_scopes(
     session: AsyncSession,
     params: SelectApiCognitoScopesParams,
 ) -> list[SelectApiCognitoScopesRow]:
+    """custom scopeの重複登録を防ぐため、既存API Cognito scopeを取得する。"""
     return await fetch_all(
         session,
         SQL_DIR / "002_select_api_cognito_scopes.sql",
@@ -76,20 +78,15 @@ class InsertProvisioningOperationsParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertProvisioningOperationsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    operation_id: UUID
-
-
 async def insert_provisioning_operations(
     session: AsyncSession,
     params: InsertProvisioningOperationsParams,
-) -> InsertProvisioningOperationsRow | None:
-    return await fetch_one(
+) -> None:
+    """API公開登録の処理結果として、provisioning operationを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "003_insert_provisioning_operations.sql",
         params,
-        InsertProvisioningOperationsRow,
     )
 
 
@@ -108,20 +105,15 @@ class InsertApisParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertApisRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    api_id: UUID
-
-
 async def insert_apis(
     session: AsyncSession,
     params: InsertApisParams,
-) -> InsertApisRow | None:
-    return await fetch_one(
+) -> None:
+    """公開対象APIのcatalog metadataを保持するため、API catalogを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "004_insert_apis.sql",
         params,
-        InsertApisRow,
     )
 
 
@@ -143,20 +135,15 @@ class InsertApiGatewayStagesParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertApiGatewayStagesRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    api_stage_id: UUID
-
-
 async def insert_api_gateway_stages(
     session: AsyncSession,
     params: InsertApiGatewayStagesParams,
-) -> InsertApiGatewayStagesRow | None:
-    return await fetch_one(
+) -> None:
+    """公開対象のAPI Gateway stageをLazunex上で参照するため、API Gateway stageを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "005_insert_api_gateway_stages.sql",
         params,
-        InsertApiGatewayStagesRow,
     )
 
 
@@ -173,20 +160,15 @@ class InsertApiCognitoScopesParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertApiCognitoScopesRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    api_scope_id: UUID
-
-
 async def insert_api_cognito_scopes(
     session: AsyncSession,
     params: InsertApiCognitoScopesParams,
-) -> InsertApiCognitoScopesRow | None:
-    return await fetch_one(
+) -> None:
+    """API実行認可に使うcustom scopeを管理するため、API Cognito scopeを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "006_insert_api_cognito_scopes.sql",
         params,
-        InsertApiCognitoScopesRow,
     )
 
 
@@ -203,20 +185,15 @@ class InsertApiDocumentsParams(BaseModel):
     now: datetime
 
 
-class InsertApiDocumentsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    api_document_id: UUID
-
-
 async def insert_api_documents(
     session: AsyncSession,
     params: InsertApiDocumentsParams,
-) -> InsertApiDocumentsRow | None:
-    return await fetch_one(
+) -> None:
+    """公開APIのOpenAPI documentを保持するため、API documentを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "007_insert_api_documents.sql",
         params,
-        InsertApiDocumentsRow,
     )
 
 
@@ -230,20 +207,15 @@ class InsertApiReviewersParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertApiReviewersRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    api_reviewer_id: UUID
-
-
 async def insert_api_reviewers(
     session: AsyncSession,
     params: InsertApiReviewersParams,
-) -> InsertApiReviewersRow | None:
-    return await fetch_one(
+) -> None:
+    """利用申請の審査担当を管理するため、API reviewerを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "008_insert_api_reviewers.sql",
         params,
-        InsertApiReviewersRow,
     )
 
 
@@ -261,20 +233,15 @@ class InsertApiEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertApiEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_api_events(
     session: AsyncSession,
     params: InsertApiEventsParams,
-) -> InsertApiEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """API公開登録の処理結果として、APIイベントを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "009_insert_api_events.sql",
         params,
-        InsertApiEventsRow,
     )
 
 
@@ -290,20 +257,15 @@ class InsertAuditEventsParams(BaseModel):
     now: datetime
 
 
-class InsertAuditEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    audit_event_id: UUID
-
-
 async def insert_audit_events(
     session: AsyncSession,
     params: InsertAuditEventsParams,
-) -> InsertAuditEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """API公開登録の処理結果として、監査イベントを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "010_insert_audit_events.sql",
         params,
-        InsertAuditEventsRow,
     )
 
 
@@ -319,20 +281,15 @@ class InsertIdempotencyRecordsParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertIdempotencyRecordsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    idempotency_record_id: UUID
-
-
 async def insert_idempotency_records(
     session: AsyncSession,
     params: InsertIdempotencyRecordsParams,
-) -> InsertIdempotencyRecordsRow | None:
-    return await fetch_one(
+) -> None:
+    """API公開登録の処理結果として、冪等性レコードを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "011_insert_idempotency_records.sql",
         params,
-        InsertIdempotencyRecordsRow,
     )
 
 
@@ -354,20 +311,15 @@ class InsertProvisioningStepsParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertProvisioningStepsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    operation_step_id: UUID
-
-
 async def insert_provisioning_steps(
     session: AsyncSession,
     params: InsertProvisioningStepsParams,
-) -> InsertProvisioningStepsRow | None:
-    return await fetch_one(
+) -> None:
+    """API公開登録の処理結果として、provisioning stepを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "012_insert_provisioning_steps.sql",
         params,
-        InsertProvisioningStepsRow,
     )
 
 
@@ -385,20 +337,15 @@ class InsertApiStageEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertApiStageEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_api_stage_events(
     session: AsyncSession,
     params: InsertApiStageEventsParams,
-) -> InsertApiStageEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """API公開登録の処理結果として、API stageイベントを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "013_insert_api_stage_events.sql",
         params,
-        InsertApiStageEventsRow,
     )
 
 
@@ -416,20 +363,15 @@ class InsertApiScopeEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertApiScopeEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_api_scope_events(
     session: AsyncSession,
     params: InsertApiScopeEventsParams,
-) -> InsertApiScopeEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """API公開登録の処理結果として、API scopeイベントを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "014_insert_api_scope_events.sql",
         params,
-        InsertApiScopeEventsRow,
     )
 
 
@@ -447,20 +389,15 @@ class InsertApiReviewerEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertApiReviewerEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_api_reviewer_events(
     session: AsyncSession,
     params: InsertApiReviewerEventsParams,
-) -> InsertApiReviewerEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """API公開登録の処理結果として、API reviewerイベントを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "015_insert_api_reviewer_events.sql",
         params,
-        InsertApiReviewerEventsRow,
     )
 
 
@@ -478,20 +415,15 @@ class InsertProvisioningOperationEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertProvisioningOperationEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_provisioning_operation_events(
     session: AsyncSession,
     params: InsertProvisioningOperationEventsParams,
-) -> InsertProvisioningOperationEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """API公開登録の処理結果として、provisioning operation eventsを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "016_insert_provisioning_operation_events.sql",
         params,
-        InsertProvisioningOperationEventsRow,
     )
 
 
@@ -509,18 +441,13 @@ class InsertProvisioningStepEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertProvisioningStepEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_provisioning_step_events(
     session: AsyncSession,
     params: InsertProvisioningStepEventsParams,
-) -> InsertProvisioningStepEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """API公開登録の処理結果として、provisioning step eventsを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "017_insert_provisioning_step_events.sql",
         params,
-        InsertProvisioningStepEventsRow,
     )

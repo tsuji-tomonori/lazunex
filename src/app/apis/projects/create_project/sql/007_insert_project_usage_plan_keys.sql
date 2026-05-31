@@ -1,3 +1,4 @@
+-- ProjectのAPI keyとUsage Planの紐づきを保持するため、Project Usage Plan keyを追加する。
 INSERT INTO project_usage_plan_keys (
     project_usage_plan_key_id,
     project_id,

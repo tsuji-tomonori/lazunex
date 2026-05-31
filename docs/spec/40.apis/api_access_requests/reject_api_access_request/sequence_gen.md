@@ -20,12 +20,12 @@ sequenceDiagram
       API->>API: 利用申請却下済みイベントを追記する。
       API->>API: 監査イベントを追記する。
       API->>API: 利用申請却下レスポンスを組み立てる。
-      API->>DB: レコードを参照する SQL 001_select_api_access_requests.sql<br/>テーブル api_access_requests, apis, api_access_reviews
-      API->>DB: レコードを参照する SQL 002_select_api_reviewers.sql<br/>テーブル api_reviewers
-      API->>DB: レコードを追加する SQL 003_insert_api_access_reviews.sql<br/>テーブル api_access_reviews
-      API->>DB: レコードを追加する SQL 004_insert_access_request_events.sql<br/>テーブル access_request_events
-      API->>DB: レコードを追加する SQL 005_insert_audit_events.sql<br/>テーブル audit_events
-      API->>DB: レコードを追加する SQL 006_insert_idempotency_records.sql<br/>テーブル idempotency_records
+      API->>DB: 却下対象の利用申請と現在状態を確認するため、利用申請を取得する。<br/>SQL 001_select_api_access_requests.sql<br/>テーブル api_access_requests, apis, api_access_reviews
+      API->>DB: 却下者が対象APIのreviewerか確認するため、API reviewerを取得する。<br/>SQL 002_select_api_reviewers.sql<br/>テーブル api_reviewers
+      API->>DB: 却下結果と却下コメントを保持するため、利用申請レビューを追加する。<br/>SQL 003_insert_api_access_reviews.sql<br/>テーブル api_access_reviews
+      API->>DB: 却下処理の開始と完了を追跡するため、利用申請イベントを追加する。<br/>SQL 004_insert_access_request_events.sql<br/>テーブル access_request_events
+      API->>DB: 利用申請却下の処理結果として、監査イベントを追加する。<br/>SQL 005_insert_audit_events.sql<br/>テーブル audit_events
+      API->>DB: 利用申請却下の処理結果として、冪等性レコードを追加する。<br/>SQL 006_insert_idempotency_records.sql<br/>テーブル idempotency_records
     end
   end
 ```

@@ -1,3 +1,4 @@
+-- API公開登録の処理結果として、API scopeイベントを追加する。
 INSERT INTO api_scope_events (
     event_id,
     aggregate_id,

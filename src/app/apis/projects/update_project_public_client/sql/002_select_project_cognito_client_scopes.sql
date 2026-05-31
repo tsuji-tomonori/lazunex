@@ -1,3 +1,4 @@
+-- public client更新後も既存scopeを維持するため、Project Cognito client scopeを取得する。
 SELECT
     pcs.project_cognito_client_scope_id,
     pcs.project_cognito_client_id,

@@ -1,3 +1,4 @@
+-- 利用申請承認の処理結果として、client scopeイベントを追加する。
 INSERT INTO client_scope_events (
     event_id,
     aggregate_id,

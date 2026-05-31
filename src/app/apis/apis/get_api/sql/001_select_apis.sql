@@ -1,3 +1,4 @@
+-- API詳細レスポンスを組み立てるため、API catalog情報を取得する。
 SELECT
     a.api_id,
     a.api_code,

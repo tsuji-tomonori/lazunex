@@ -6,7 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.query import execute_sql, fetch_all, fetch_one
+from app.db.query import execute_sql, fetch_all
 
 # This file is generated from SQL files in the sibling sql directory.
 # Do not edit generated models by hand.
@@ -46,6 +46,7 @@ async def select_project_cognito_clients(
     session: AsyncSession,
     params: SelectProjectCognitoClientsParams,
 ) -> list[SelectProjectCognitoClientsRow]:
+    """更新対象のpublic clientと現在versionを確認するため、Project Cognito clientを取得する。"""
     return await fetch_all(
         session,
         SQL_DIR / "001_select_project_cognito_clients.sql",
@@ -73,6 +74,7 @@ async def select_project_cognito_client_scopes(
     session: AsyncSession,
     params: SelectProjectCognitoClientScopesParams,
 ) -> list[SelectProjectCognitoClientScopesRow]:
+    """public client更新後も既存scopeを維持するため、Project Cognito client scopeを取得する。"""
     return await fetch_all(
         session,
         SQL_DIR / "002_select_project_cognito_client_scopes.sql",
@@ -98,21 +100,15 @@ class UpdateProjectCognitoClientsParams(BaseModel):
     row_version: int
 
 
-class UpdateProjectCognitoClientsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    project_cognito_client_id: UUID
-    row_version: int
-
-
 async def update_project_cognito_clients(
     session: AsyncSession,
     params: UpdateProjectCognitoClientsParams,
-) -> UpdateProjectCognitoClientsRow | None:
-    return await fetch_one(
+) -> None:
+    """public client設定の更新内容とversionを反映するため、Project Cognito clientを更新する。"""
+    await execute_sql(
         session,
         SQL_DIR / "003_update_project_cognito_clients.sql",
         params,
-        UpdateProjectCognitoClientsRow,
     )
 
 
@@ -126,6 +122,7 @@ async def delete_project_cognito_client_urls(
     session: AsyncSession,
     params: DeleteProjectCognitoClientUrlsParams,
 ) -> None:
+    """public clientのURL設定を最新化するため、既存のProject Cognito client URLを削除する。"""
     await execute_sql(
         session,
         SQL_DIR / "004_delete_project_cognito_client_urls.sql",
@@ -143,20 +140,15 @@ class InsertProjectCognitoClientUrlsParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertProjectCognitoClientUrlsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    client_url_id: UUID
-
-
 async def insert_project_cognito_client_urls(
     session: AsyncSession,
     params: InsertProjectCognitoClientUrlsParams,
-) -> InsertProjectCognitoClientUrlsRow | None:
-    return await fetch_one(
+) -> None:
+    """public clientのURL設定を最新化するため、既存のProject Cognito client URLを削除する。"""
+    await execute_sql(
         session,
         SQL_DIR / "005_insert_project_cognito_client_urls.sql",
         params,
-        InsertProjectCognitoClientUrlsRow,
     )
 
 
@@ -174,20 +166,15 @@ class InsertProjectCognitoClientEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertProjectCognitoClientEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_project_cognito_client_events(
     session: AsyncSession,
     params: InsertProjectCognitoClientEventsParams,
-) -> InsertProjectCognitoClientEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """Project public client更新の処理結果として、Project Cognito clientイベントを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "006_insert_project_cognito_client_events.sql",
         params,
-        InsertProjectCognitoClientEventsRow,
     )
 
 
@@ -203,20 +190,15 @@ class InsertAuditEventsParams(BaseModel):
     now: datetime
 
 
-class InsertAuditEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    audit_event_id: UUID
-
-
 async def insert_audit_events(
     session: AsyncSession,
     params: InsertAuditEventsParams,
-) -> InsertAuditEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """Project public client更新の処理結果として、監査イベントを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "007_insert_audit_events.sql",
         params,
-        InsertAuditEventsRow,
     )
 
 
@@ -230,20 +212,15 @@ class InsertProvisioningOperationsParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertProvisioningOperationsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    operation_id: UUID
-
-
 async def insert_provisioning_operations(
     session: AsyncSession,
     params: InsertProvisioningOperationsParams,
-) -> InsertProvisioningOperationsRow | None:
-    return await fetch_one(
+) -> None:
+    """Project public client更新の処理結果として、provisioning operationを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "008_insert_provisioning_operations.sql",
         params,
-        InsertProvisioningOperationsRow,
     )
 
 
@@ -259,20 +236,15 @@ class InsertIdempotencyRecordsParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertIdempotencyRecordsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    idempotency_record_id: UUID
-
-
 async def insert_idempotency_records(
     session: AsyncSession,
     params: InsertIdempotencyRecordsParams,
-) -> InsertIdempotencyRecordsRow | None:
-    return await fetch_one(
+) -> None:
+    """Project public client更新の処理結果として、冪等性レコードを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "009_insert_idempotency_records.sql",
         params,
-        InsertIdempotencyRecordsRow,
     )
 
 
@@ -294,20 +266,15 @@ class InsertProvisioningStepsParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertProvisioningStepsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    operation_step_id: UUID
-
-
 async def insert_provisioning_steps(
     session: AsyncSession,
     params: InsertProvisioningStepsParams,
-) -> InsertProvisioningStepsRow | None:
-    return await fetch_one(
+) -> None:
+    """Project public client更新の処理結果として、provisioning stepを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "010_insert_provisioning_steps.sql",
         params,
-        InsertProvisioningStepsRow,
     )
 
 
@@ -325,20 +292,15 @@ class InsertProvisioningOperationEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertProvisioningOperationEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_provisioning_operation_events(
     session: AsyncSession,
     params: InsertProvisioningOperationEventsParams,
-) -> InsertProvisioningOperationEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """Project public client更新の処理結果として、provisioning operation eventsを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "011_insert_provisioning_operation_events.sql",
         params,
-        InsertProvisioningOperationEventsRow,
     )
 
 
@@ -356,18 +318,13 @@ class InsertProvisioningStepEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertProvisioningStepEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_provisioning_step_events(
     session: AsyncSession,
     params: InsertProvisioningStepEventsParams,
-) -> InsertProvisioningStepEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """Project public client更新の処理結果として、provisioning step eventsを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "012_insert_provisioning_step_events.sql",
         params,
-        InsertProvisioningStepEventsRow,
     )

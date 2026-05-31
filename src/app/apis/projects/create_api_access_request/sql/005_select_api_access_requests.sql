@@ -1,3 +1,4 @@
+-- 同一Project/APIの審査中申請を検出するため、利用申請を取得する。
 SELECT
     ar.access_request_id,
     ar.project_id,

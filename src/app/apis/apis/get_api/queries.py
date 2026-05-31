@@ -34,21 +34,10 @@ class SelectApisRow(BaseModel):
     apigw_stage_name: str
     invoke_url: str
     custom_domain_url: str | None = None
-    deployment_id: str | None = None
-    authorizer_id: str | None = None
     api_key_required_observed: bool
     scope_config_observed: str
-    api_scope_id: UUID
     scope_name: str
     scope_full_name: str
-    scope_description: str
-    api_document_id: UUID
-    document_type: str
-    version_label: str
-    s3_uri: str
-    sha256: str
-    source_filename: str
-    api_reviewer_id: UUID
     reviewer_principal_id: str
     reviewer_role: str
 
@@ -57,6 +46,7 @@ async def select_apis(
     session: AsyncSession,
     params: SelectApisParams,
 ) -> list[SelectApisRow]:
+    """API詳細レスポンスを組み立てるため、API catalog情報を取得する。"""
     return await fetch_all(
         session,
         SQL_DIR / "001_select_apis.sql",

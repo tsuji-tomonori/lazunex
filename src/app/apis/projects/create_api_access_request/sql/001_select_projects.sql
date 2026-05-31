@@ -1,3 +1,4 @@
+-- 申請元Projectと呼び出し元の権限を確認するため、Projectを取得する。
 SELECT
     p.project_id,
     p.project_code,

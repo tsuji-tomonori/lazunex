@@ -1,3 +1,4 @@
+-- 公開APIのOpenAPI documentを保持するため、API documentを追加する。
 INSERT INTO api_documents (
     api_document_id,
     api_id,

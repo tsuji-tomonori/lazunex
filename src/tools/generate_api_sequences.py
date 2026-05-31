@@ -45,6 +45,7 @@ class SqlStep:
     filename: str
     action: str
     tables: tuple[str, ...]
+    summary: str
 
 
 @dataclass(frozen=True)
@@ -278,15 +279,50 @@ def sql_tables(source: str) -> list[str]:
     return tables
 
 
-def sql_sequence_steps(sql_dir: Path) -> list[SqlStep]:
+def query_sql_filename(node: ast.AsyncFunctionDef | ast.FunctionDef) -> str | None:
+    for call in ast.walk(node):
+        if not isinstance(call, ast.BinOp):
+            continue
+        if not isinstance(call.op, ast.Div):
+            continue
+        if not isinstance(call.left, ast.Name) or call.left.id != "SQL_DIR":
+            continue
+        filename = literal_string(call.right)
+        if filename is not None:
+            return filename
+    return None
+
+
+def query_sql_summaries(queries_path: Path) -> dict[str, str]:
+    if not queries_path.exists():
+        return {}
+    tree = ast.parse(queries_path.read_text(encoding="utf-8"), filename=str(queries_path))
+    summaries: dict[str, str] = {}
+    for node in tree.body:
+        if not isinstance(node, ast.AsyncFunctionDef | ast.FunctionDef):
+            continue
+        filename = query_sql_filename(node)
+        summary = ast.get_docstring(node)
+        if filename is not None and summary:
+            summaries[filename] = " ".join(summary.strip().split())
+    return summaries
+
+
+def sql_sequence_steps(sql_dir: Path, summaries: dict[str, str] | None = None) -> list[SqlStep]:
     if not sql_dir.exists():
         return []
     steps: list[SqlStep] = []
+    summaries = summaries or {}
     for path in sorted(sql_dir.glob("*.sql")):
         tables = sql_tables(path.read_text(encoding="utf-8"))
         if tables:
             steps.append(
-                SqlStep(filename=path.name, action=sql_action(path.name), tables=tuple(tables))
+                SqlStep(
+                    filename=path.name,
+                    action=sql_action(path.name),
+                    tables=tuple(tables),
+                    summary=summaries.get(path.name, SQL_RECORD_ACTIONS[sql_action(path.name)]),
+                )
             )
     return steps
 
@@ -309,7 +345,7 @@ def api_sequence_from_dir(
         endpoint_name=function.name,
         operation_id=endpoint_operation_id(function),
         steps=endpoint_sequence_steps(function, metadata),
-        sql_steps=sql_sequence_steps(api_dir / "sql"),
+        sql_steps=sql_sequence_steps(api_dir / "sql", query_sql_summaries(api_dir / "queries.py")),
         integration_resources=(
             integration_resources(integrations_root)
             if integrations_root is not None
@@ -378,8 +414,8 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
         tables = ", ".join(sql_step.tables)
         indent = "  " + ("  " * alt_depth)
         lines.append(
-            f"{indent}API->>DB: {SQL_RECORD_ACTIONS[sql_step.action]}"
-            f" SQL {sql_step.filename}<br/>テーブル {tables}"
+            f"{indent}API->>DB: {sql_step.summary}"
+            f"<br/>SQL {sql_step.filename}<br/>テーブル {tables}"
         )
 
     for depth in range(alt_depth - 1, -1, -1):

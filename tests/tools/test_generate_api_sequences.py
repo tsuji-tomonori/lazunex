@@ -25,6 +25,7 @@ from tools.generate_api_sequences import (
     is_router_decorator,
     literal_string,
     main,
+    query_sql_summaries,
     render_sequence_markdown,
     sql_sequence_steps,
     sql_tables,
@@ -96,7 +97,22 @@ async def build_project_detail_response(project: ProjectRef) -> GetProjectRespon
     write_file(
         api_root,
         "projects/get_project/sql/001_select_projects.sql",
+        "-- Project 詳細表示に必要な Project レコードを取得する。\n"
         "SELECT projects.project_id FROM projects;",
+    )
+    write_file(
+        api_root,
+        "projects/get_project/queries.py",
+        """
+from pathlib import Path
+from sqlalchemy.ext.asyncio import AsyncSession
+
+SQL_DIR = Path(__file__).with_name("sql")
+
+async def select_projects(session: AsyncSession, params):
+    \"\"\"Project 詳細表示に必要な Project レコードを取得する。\"\"\"
+    return await fetch_all(session, SQL_DIR / "001_select_projects.sql", params, Row)
+""",
     )
 
     sequence = api_sequence_from_dir(api_dir, api_root, integrations_root)
@@ -128,7 +144,12 @@ async def build_project_detail_response(project: ProjectRef) -> GetProjectRespon
         ),
     ]
     assert sequence.sql_steps == [
-        SqlStep("001_select_projects.sql", "参照", ("projects",)),
+        SqlStep(
+            "001_select_projects.sql",
+            "参照",
+            ("projects",),
+            "Project 詳細表示に必要な Project レコードを取得する。",
+        ),
     ]
     assert sequence.integration_resources == frozenset({"api_gateway"})
 
@@ -171,8 +192,18 @@ def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
                 ),
             ],
             sql_steps=[
-                SqlStep("001_select_projects.sql", "参照", ("projects", "project_members")),
-                SqlStep("002_select_projects.sql", "参照", ("projects",)),
+                SqlStep(
+                    "001_select_projects.sql",
+                    "参照",
+                    ("projects", "project_members"),
+                    "Project 詳細表示に必要な Project と member を取得する。",
+                ),
+                SqlStep(
+                    "002_select_projects.sql",
+                    "参照",
+                    ("projects",),
+                    "Project 一覧表示に必要な Project を取得する。",
+                ),
             ],
             integration_resources=frozenset({"api_gateway"}),
         )
@@ -191,8 +222,8 @@ def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
     assert "API->>API: プロジェクトを参照できるかを判定する。" not in markdown
     assert "    API->>API: プロジェクト詳細レスポンスを組み立てる。" in markdown
     assert (
-        "API->>DB: レコードを参照する"
-        " SQL 001_select_projects.sql<br/>テーブル projects, project_members"
+        "API->>DB: Project 詳細表示に必要な Project と member を取得する。"
+        "<br/>SQL 001_select_projects.sql<br/>テーブル projects, project_members"
         in markdown
     )
     assert markdown.rstrip().endswith("  end\n```")
@@ -303,9 +334,32 @@ async def list_apis():
 
     assert api_dirs(api_root) == [api_root / "apis/list_apis"]
     assert sql_sequence_steps(api_root / "apis/list_apis/sql") == [
-        SqlStep("001_insert_audit_events.sql", "追加", ("audit_events",))
+        SqlStep("001_insert_audit_events.sql", "追加", ("audit_events",), "レコードを追加する")
     ]
     assert build_arg_parser().parse_args([]).docs_root == Path("docs/spec/40.apis")
+
+
+def test_query_sql_summaries_reads_docstrings_by_sql_filename(tmp_path: Path) -> None:
+    queries_path = write_file(
+        tmp_path,
+        "queries.py",
+        """
+from pathlib import Path
+SQL_DIR = Path(__file__).with_name("sql")
+
+async def select_projects(session, params):
+    \"\"\"Project 一覧表示に必要な Project を取得する。\"\"\"
+    return await fetch_all(session, SQL_DIR / "001_select_projects.sql", params, Row)
+
+async def helper():
+    \"\"\"SQL参照がない関数です。\"\"\"
+    return None
+""",
+    )
+
+    assert query_sql_summaries(queries_path) == {
+        "001_select_projects.sql": "Project 一覧表示に必要な Project を取得する。"
+    }
 
 
 def test_function_metadata_reads_docstrings_arguments_and_return_types(

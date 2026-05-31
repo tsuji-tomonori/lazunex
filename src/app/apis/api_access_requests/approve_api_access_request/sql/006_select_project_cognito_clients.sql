@@ -1,3 +1,4 @@
+-- 承認後にscopeを付与する対象を決めるため、Project Cognito clientを取得する。
 SELECT
     c.project_cognito_client_id,
     c.project_id,

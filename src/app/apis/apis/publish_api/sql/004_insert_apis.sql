@@ -1,3 +1,4 @@
+-- 公開対象APIのcatalog metadataを保持するため、API catalogを追加する。
 INSERT INTO apis (
     api_id,
     api_code,

@@ -1,3 +1,4 @@
+-- Project作成の処理結果として、Project Usage Plan keyイベントを追加する。
 INSERT INTO project_usage_plan_key_events (
     event_id,
     aggregate_id,

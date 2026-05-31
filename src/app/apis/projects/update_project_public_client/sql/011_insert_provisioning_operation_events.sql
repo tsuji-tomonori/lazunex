@@ -1,3 +1,4 @@
+-- Project public client更新の処理結果として、provisioning operation eventsを追加する。
 INSERT INTO provisioning_operation_events (
     event_id,
     aggregate_id,

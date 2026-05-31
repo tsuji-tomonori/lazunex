@@ -1,3 +1,4 @@
+-- public client設定の更新内容とversionを反映するため、Project Cognito clientを更新する。
 UPDATE project_cognito_clients
 SET
     access_token_validity = @access_token_validity,

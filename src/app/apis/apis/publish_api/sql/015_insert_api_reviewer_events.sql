@@ -1,3 +1,4 @@
+-- API公開登録の処理結果として、API reviewerイベントを追加する。
 INSERT INTO api_reviewer_events (
     event_id,
     aggregate_id,

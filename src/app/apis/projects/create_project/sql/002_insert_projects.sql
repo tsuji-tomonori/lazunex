@@ -1,3 +1,4 @@
+-- 新規Projectの基本情報を保持するため、Projectを追加する。
 INSERT INTO projects (
     project_id,
     project_code,

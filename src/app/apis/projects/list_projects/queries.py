@@ -29,19 +29,14 @@ class SelectProjectsRow(BaseModel):
     description: str
     owner_principal_id: str
     department_code: str
-    project_api_key_id: UUID
-    apigw_api_key_id: str
-    api_key_last4: str
-    project_usage_plan_id: UUID
-    apigw_usage_plan_id: str
-    public_app_client_id: str
-    confidential_app_client_id: str
+    subscription_count: Any
 
 
 async def select_projects(
     session: AsyncSession,
     params: SelectProjectsParams,
 ) -> list[SelectProjectsRow]:
+    """参照可能なProject一覧を返すため、検索条件に合うProjectを取得する。"""
     return await fetch_all(
         session,
         SQL_DIR / "001_select_projects.sql",

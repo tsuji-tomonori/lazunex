@@ -1,3 +1,4 @@
+-- Projectの利用申請履歴を一覧表示するため、利用申請と審査結果を取得する。
 SELECT
     ar.access_request_id,
     ar.project_id,

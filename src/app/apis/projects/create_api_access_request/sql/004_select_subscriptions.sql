@@ -1,3 +1,4 @@
+-- 既に利用可能なAPIへの重複申請を防ぐため、active subscriptionを取得する。
 SELECT
     subscription_id,
     project_id,

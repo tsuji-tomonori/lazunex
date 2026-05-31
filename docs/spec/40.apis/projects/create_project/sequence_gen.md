@@ -26,23 +26,23 @@ sequenceDiagram
     API->>API: provisioning operation/step event を追記する。
     API->>API: 監査イベントを追記する。
     API->>API: Project 作成レスポンスを組み立てる。
-    API->>DB: レコードを参照する SQL 001_select_projects.sql<br/>テーブル projects
-    API->>DB: レコードを追加する SQL 002_insert_projects.sql<br/>テーブル projects
-    API->>DB: レコードを追加する SQL 003_insert_project_events.sql<br/>テーブル project_events
-    API->>DB: レコードを追加する SQL 004_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
-    API->>DB: レコードを追加する SQL 005_insert_project_api_keys.sql<br/>テーブル project_api_keys
-    API->>DB: レコードを追加する SQL 006_insert_project_usage_plans.sql<br/>テーブル project_usage_plans
-    API->>DB: レコードを追加する SQL 007_insert_project_usage_plan_keys.sql<br/>テーブル project_usage_plan_keys
-    API->>DB: レコードを追加する SQL 008_insert_project_cognito_clients.sql<br/>テーブル project_cognito_clients
-    API->>DB: レコードを追加する SQL 009_insert_project_cognito_client_urls.sql<br/>テーブル project_cognito_client_urls
-    API->>DB: レコードを追加する SQL 010_insert_project_members.sql<br/>テーブル project_members
-    API->>DB: レコードを追加する SQL 011_insert_idempotency_records.sql<br/>テーブル idempotency_records
-    API->>DB: レコードを追加する SQL 012_insert_provisioning_steps.sql<br/>テーブル provisioning_steps
-    API->>DB: レコードを追加する SQL 013_insert_project_member_events.sql<br/>テーブル project_member_events
-    API->>DB: レコードを追加する SQL 014_insert_project_api_key_events.sql<br/>テーブル project_api_key_events
-    API->>DB: レコードを追加する SQL 015_insert_project_usage_plan_events.sql<br/>テーブル project_usage_plan_events
-    API->>DB: レコードを追加する SQL 016_insert_project_usage_plan_key_events.sql<br/>テーブル project_usage_plan_key_events
-    API->>DB: レコードを追加する SQL 017_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
-    API->>DB: レコードを追加する SQL 018_insert_provisioning_step_events.sql<br/>テーブル provisioning_step_events
+    API->>DB: Project codeの重複作成を防ぐため、既存Projectを取得する。<br/>SQL 001_select_projects.sql<br/>テーブル projects
+    API->>DB: 新規Projectの基本情報を保持するため、Projectを追加する。<br/>SQL 002_insert_projects.sql<br/>テーブル projects
+    API->>DB: Project作成を履歴化するため、Projectイベントを追加する。<br/>SQL 003_insert_project_events.sql<br/>テーブル project_events
+    API->>DB: Project作成の処理結果として、provisioning operationを追加する。<br/>SQL 004_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
+    API->>DB: Projectに払い出したAPI key metadataを保持するため、Project API keyを追加する。<br/>SQL 005_insert_project_api_keys.sql<br/>テーブル project_api_keys
+    API->>DB: Project用Usage Plan metadataを保持するため、Project Usage Planを追加する。<br/>SQL 006_insert_project_usage_plans.sql<br/>テーブル project_usage_plans
+    API->>DB: ProjectのAPI keyとUsage Planの紐づきを保持するため、Project Usage Plan keyを追加する。<br/>SQL 007_insert_project_usage_plan_keys.sql<br/>テーブル project_usage_plan_keys
+    API->>DB: Project用Cognito app client metadataを保持するため、Project Cognito clientを追加する。<br/>SQL 008_insert_project_cognito_clients.sql<br/>テーブル project_cognito_clients
+    API->>DB: public clientのcallback/logout URLを保持するため、Project Cognito client URLを追加する。<br/>SQL 009_insert_project_cognito_client_urls.sql<br/>テーブル project_cognito_client_urls
+    API->>DB: Project owner/memberを管理するため、Project memberを追加する。<br/>SQL 010_insert_project_members.sql<br/>テーブル project_members
+    API->>DB: Project作成の処理結果として、冪等性レコードを追加する。<br/>SQL 011_insert_idempotency_records.sql<br/>テーブル idempotency_records
+    API->>DB: Project作成の処理結果として、provisioning stepを追加する。<br/>SQL 012_insert_provisioning_steps.sql<br/>テーブル provisioning_steps
+    API->>DB: Project作成の処理結果として、Project memberイベントを追加する。<br/>SQL 013_insert_project_member_events.sql<br/>テーブル project_member_events
+    API->>DB: Project作成の処理結果として、Project API keyイベントを追加する。<br/>SQL 014_insert_project_api_key_events.sql<br/>テーブル project_api_key_events
+    API->>DB: Project作成の処理結果として、Project Usage Planイベントを追加する。<br/>SQL 015_insert_project_usage_plan_events.sql<br/>テーブル project_usage_plan_events
+    API->>DB: Project作成の処理結果として、Project Usage Plan keyイベントを追加する。<br/>SQL 016_insert_project_usage_plan_key_events.sql<br/>テーブル project_usage_plan_key_events
+    API->>DB: Project作成の処理結果として、provisioning operation eventsを追加する。<br/>SQL 017_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
+    API->>DB: Project作成の処理結果として、provisioning step eventsを追加する。<br/>SQL 018_insert_provisioning_step_events.sql<br/>テーブル provisioning_step_events
   end
 ```

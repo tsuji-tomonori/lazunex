@@ -1,3 +1,4 @@
+-- 重複承認を防ぐため、既存のactive subscriptionを取得する。
 SELECT
     subscription_id,
     project_id,

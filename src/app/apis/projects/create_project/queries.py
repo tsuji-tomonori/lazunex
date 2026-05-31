@@ -6,7 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.query import fetch_all, fetch_one
+from app.db.query import execute_sql, fetch_all
 
 # This file is generated from SQL files in the sibling sql directory.
 # Do not edit generated models by hand.
@@ -31,6 +31,7 @@ async def select_projects(
     session: AsyncSession,
     params: SelectProjectsParams,
 ) -> list[SelectProjectsRow]:
+    """Project codeの重複作成を防ぐため、既存Projectを取得する。"""
     return await fetch_all(
         session,
         SQL_DIR / "001_select_projects.sql",
@@ -51,20 +52,15 @@ class InsertProjectsParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertProjectsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    project_id: UUID
-
-
 async def insert_projects(
     session: AsyncSession,
     params: InsertProjectsParams,
-) -> InsertProjectsRow | None:
-    return await fetch_one(
+) -> None:
+    """新規Projectの基本情報を保持するため、Projectを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "002_insert_projects.sql",
         params,
-        InsertProjectsRow,
     )
 
 
@@ -82,20 +78,15 @@ class InsertProjectEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertProjectEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_project_events(
     session: AsyncSession,
     params: InsertProjectEventsParams,
-) -> InsertProjectEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """Project作成を履歴化するため、Projectイベントを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "003_insert_project_events.sql",
         params,
-        InsertProjectEventsRow,
     )
 
 
@@ -109,20 +100,15 @@ class InsertProvisioningOperationsParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertProvisioningOperationsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    operation_id: UUID
-
-
 async def insert_provisioning_operations(
     session: AsyncSession,
     params: InsertProvisioningOperationsParams,
-) -> InsertProvisioningOperationsRow | None:
-    return await fetch_one(
+) -> None:
+    """Project作成の処理結果として、provisioning operationを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "004_insert_provisioning_operations.sql",
         params,
-        InsertProvisioningOperationsRow,
     )
 
 
@@ -142,20 +128,15 @@ class InsertProjectApiKeysParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertProjectApiKeysRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    project_api_key_id: UUID
-
-
 async def insert_project_api_keys(
     session: AsyncSession,
     params: InsertProjectApiKeysParams,
-) -> InsertProjectApiKeysRow | None:
-    return await fetch_one(
+) -> None:
+    """Projectに払い出したAPI key metadataを保持するため、Project API keyを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "005_insert_project_api_keys.sql",
         params,
-        InsertProjectApiKeysRow,
     )
 
 
@@ -175,20 +156,15 @@ class InsertProjectUsagePlansParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertProjectUsagePlansRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    project_usage_plan_id: UUID
-
-
 async def insert_project_usage_plans(
     session: AsyncSession,
     params: InsertProjectUsagePlansParams,
-) -> InsertProjectUsagePlansRow | None:
-    return await fetch_one(
+) -> None:
+    """Project用Usage Plan metadataを保持するため、Project Usage Planを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "006_insert_project_usage_plans.sql",
         params,
-        InsertProjectUsagePlansRow,
     )
 
 
@@ -205,20 +181,15 @@ class InsertProjectUsagePlanKeysParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertProjectUsagePlanKeysRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    project_usage_plan_key_id: UUID
-
-
 async def insert_project_usage_plan_keys(
     session: AsyncSession,
     params: InsertProjectUsagePlanKeysParams,
-) -> InsertProjectUsagePlanKeysRow | None:
-    return await fetch_one(
+) -> None:
+    """ProjectのAPI keyとUsage Planの紐づきを保持するため、Project Usage Plan keyを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "007_insert_project_usage_plan_keys.sql",
         params,
-        InsertProjectUsagePlanKeysRow,
     )
 
 
@@ -249,20 +220,15 @@ class InsertProjectCognitoClientsParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertProjectCognitoClientsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    project_cognito_client_id: UUID
-
-
 async def insert_project_cognito_clients(
     session: AsyncSession,
     params: InsertProjectCognitoClientsParams,
-) -> InsertProjectCognitoClientsRow | None:
-    return await fetch_one(
+) -> None:
+    """Project用Cognito app client metadataを保持するため、Project Cognito clientを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "008_insert_project_cognito_clients.sql",
         params,
-        InsertProjectCognitoClientsRow,
     )
 
 
@@ -276,20 +242,15 @@ class InsertProjectCognitoClientUrlsParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertProjectCognitoClientUrlsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    client_url_id: UUID
-
-
 async def insert_project_cognito_client_urls(
     session: AsyncSession,
     params: InsertProjectCognitoClientUrlsParams,
-) -> InsertProjectCognitoClientUrlsRow | None:
-    return await fetch_one(
+) -> None:
+    """public clientのcallback/logout URLを保持するため、Project Cognito client URLを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "009_insert_project_cognito_client_urls.sql",
         params,
-        InsertProjectCognitoClientUrlsRow,
     )
 
 
@@ -303,20 +264,15 @@ class InsertProjectMembersParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertProjectMembersRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    project_member_id: UUID
-
-
 async def insert_project_members(
     session: AsyncSession,
     params: InsertProjectMembersParams,
-) -> InsertProjectMembersRow | None:
-    return await fetch_one(
+) -> None:
+    """Project owner/memberを管理するため、Project memberを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "010_insert_project_members.sql",
         params,
-        InsertProjectMembersRow,
     )
 
 
@@ -332,20 +288,15 @@ class InsertIdempotencyRecordsParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertIdempotencyRecordsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    idempotency_record_id: UUID
-
-
 async def insert_idempotency_records(
     session: AsyncSession,
     params: InsertIdempotencyRecordsParams,
-) -> InsertIdempotencyRecordsRow | None:
-    return await fetch_one(
+) -> None:
+    """Project作成の処理結果として、冪等性レコードを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "011_insert_idempotency_records.sql",
         params,
-        InsertIdempotencyRecordsRow,
     )
 
 
@@ -367,20 +318,15 @@ class InsertProvisioningStepsParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertProvisioningStepsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    operation_step_id: UUID
-
-
 async def insert_provisioning_steps(
     session: AsyncSession,
     params: InsertProvisioningStepsParams,
-) -> InsertProvisioningStepsRow | None:
-    return await fetch_one(
+) -> None:
+    """Project作成の処理結果として、provisioning stepを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "012_insert_provisioning_steps.sql",
         params,
-        InsertProvisioningStepsRow,
     )
 
 
@@ -398,20 +344,15 @@ class InsertProjectMemberEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertProjectMemberEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_project_member_events(
     session: AsyncSession,
     params: InsertProjectMemberEventsParams,
-) -> InsertProjectMemberEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """Project作成の処理結果として、Project memberイベントを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "013_insert_project_member_events.sql",
         params,
-        InsertProjectMemberEventsRow,
     )
 
 
@@ -429,20 +370,15 @@ class InsertProjectApiKeyEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertProjectApiKeyEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_project_api_key_events(
     session: AsyncSession,
     params: InsertProjectApiKeyEventsParams,
-) -> InsertProjectApiKeyEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """Project作成の処理結果として、Project API keyイベントを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "014_insert_project_api_key_events.sql",
         params,
-        InsertProjectApiKeyEventsRow,
     )
 
 
@@ -460,20 +396,15 @@ class InsertProjectUsagePlanEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertProjectUsagePlanEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_project_usage_plan_events(
     session: AsyncSession,
     params: InsertProjectUsagePlanEventsParams,
-) -> InsertProjectUsagePlanEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """Project作成の処理結果として、Project Usage Planイベントを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "015_insert_project_usage_plan_events.sql",
         params,
-        InsertProjectUsagePlanEventsRow,
     )
 
 
@@ -491,20 +422,15 @@ class InsertProjectUsagePlanKeyEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertProjectUsagePlanKeyEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_project_usage_plan_key_events(
     session: AsyncSession,
     params: InsertProjectUsagePlanKeyEventsParams,
-) -> InsertProjectUsagePlanKeyEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """Project作成の処理結果として、Project Usage Plan keyイベントを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "016_insert_project_usage_plan_key_events.sql",
         params,
-        InsertProjectUsagePlanKeyEventsRow,
     )
 
 
@@ -522,20 +448,15 @@ class InsertProvisioningOperationEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertProvisioningOperationEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_provisioning_operation_events(
     session: AsyncSession,
     params: InsertProvisioningOperationEventsParams,
-) -> InsertProvisioningOperationEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """Project作成の処理結果として、provisioning operation eventsを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "017_insert_provisioning_operation_events.sql",
         params,
-        InsertProvisioningOperationEventsRow,
     )
 
 
@@ -553,18 +474,13 @@ class InsertProvisioningStepEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertProvisioningStepEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_provisioning_step_events(
     session: AsyncSession,
     params: InsertProvisioningStepEventsParams,
-) -> InsertProvisioningStepEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """Project作成の処理結果として、provisioning step eventsを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "018_insert_provisioning_step_events.sql",
         params,
-        InsertProvisioningStepEventsRow,
     )

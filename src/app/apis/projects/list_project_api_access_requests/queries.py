@@ -49,6 +49,7 @@ async def select_api_access_requests(
     session: AsyncSession,
     params: SelectApiAccessRequestsParams,
 ) -> list[SelectApiAccessRequestsRow]:
+    """Projectの利用申請履歴を一覧表示するため、利用申請と審査結果を取得する。"""
     return await fetch_all(
         session,
         SQL_DIR / "001_select_api_access_requests.sql",

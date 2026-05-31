@@ -24,17 +24,17 @@ sequenceDiagram
     API->>API: provisioning operation/step event を追記する。
     API->>API: 監査イベントを追記する。
     API->>API: public App Client 更新レスポンスを組み立てる。
-    API->>DB: レコードを参照する SQL 001_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients, projects, project_members
-    API->>DB: レコードを参照する SQL 002_select_project_cognito_client_scopes.sql<br/>テーブル project_cognito_client_scopes
-    API->>DB: レコードを更新する SQL 003_update_project_cognito_clients.sql<br/>テーブル project_cognito_clients
-    API->>DB: レコードを削除する SQL 004_delete_project_cognito_client_urls.sql<br/>テーブル project_cognito_client_urls
-    API->>DB: レコードを追加する SQL 005_insert_project_cognito_client_urls.sql<br/>テーブル project_cognito_client_urls
-    API->>DB: レコードを追加する SQL 006_insert_project_cognito_client_events.sql<br/>テーブル project_cognito_client_events
-    API->>DB: レコードを追加する SQL 007_insert_audit_events.sql<br/>テーブル audit_events
-    API->>DB: レコードを追加する SQL 008_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
-    API->>DB: レコードを追加する SQL 009_insert_idempotency_records.sql<br/>テーブル idempotency_records
-    API->>DB: レコードを追加する SQL 010_insert_provisioning_steps.sql<br/>テーブル provisioning_steps
-    API->>DB: レコードを追加する SQL 011_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
-    API->>DB: レコードを追加する SQL 012_insert_provisioning_step_events.sql<br/>テーブル provisioning_step_events
+    API->>DB: 更新対象のpublic clientと現在versionを確認するため、Project Cognito clientを取得する。<br/>SQL 001_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients, projects, project_members
+    API->>DB: public client更新後も既存scopeを維持するため、Project Cognito client scopeを取得する。<br/>SQL 002_select_project_cognito_client_scopes.sql<br/>テーブル project_cognito_client_scopes
+    API->>DB: public client設定の更新内容とversionを反映するため、Project Cognito clientを更新する。<br/>SQL 003_update_project_cognito_clients.sql<br/>テーブル project_cognito_clients
+    API->>DB: public clientのURL設定を最新化するため、既存のProject Cognito client URLを削除する。<br/>SQL 004_delete_project_cognito_client_urls.sql<br/>テーブル project_cognito_client_urls
+    API->>DB: public clientのURL設定を最新化するため、既存のProject Cognito client URLを削除する。<br/>SQL 005_insert_project_cognito_client_urls.sql<br/>テーブル project_cognito_client_urls
+    API->>DB: Project public client更新の処理結果として、Project Cognito clientイベントを追加する。<br/>SQL 006_insert_project_cognito_client_events.sql<br/>テーブル project_cognito_client_events
+    API->>DB: Project public client更新の処理結果として、監査イベントを追加する。<br/>SQL 007_insert_audit_events.sql<br/>テーブル audit_events
+    API->>DB: Project public client更新の処理結果として、provisioning operationを追加する。<br/>SQL 008_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
+    API->>DB: Project public client更新の処理結果として、冪等性レコードを追加する。<br/>SQL 009_insert_idempotency_records.sql<br/>テーブル idempotency_records
+    API->>DB: Project public client更新の処理結果として、provisioning stepを追加する。<br/>SQL 010_insert_provisioning_steps.sql<br/>テーブル provisioning_steps
+    API->>DB: Project public client更新の処理結果として、provisioning operation eventsを追加する。<br/>SQL 011_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
+    API->>DB: Project public client更新の処理結果として、provisioning step eventsを追加する。<br/>SQL 012_insert_provisioning_step_events.sql<br/>テーブル provisioning_step_events
   end
 ```

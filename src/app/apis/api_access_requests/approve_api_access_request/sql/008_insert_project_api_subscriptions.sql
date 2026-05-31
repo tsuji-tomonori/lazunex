@@ -1,3 +1,4 @@
+-- 承認済みAPI利用権を有効化するため、Project API subscriptionを追加する。
 INSERT INTO project_api_subscriptions (
     subscription_id,
     project_id,

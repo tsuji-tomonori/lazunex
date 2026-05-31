@@ -1,3 +1,4 @@
+-- 利用申請承認の処理結果として、provisioning step eventsを追加する。
 INSERT INTO provisioning_step_events (
     event_id,
     aggregate_id,

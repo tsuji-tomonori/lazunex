@@ -101,6 +101,14 @@ def test_parse_tables_supports_comments_and_like_tables() -> None:
     assert tables["api_events"].columns[0].comment == "イベントID。"
     assert tables["api_events"].table_constraints == ["UNIQUE (aggregate_id, event_id)"]
 
+    direct_like_tables = parse_tables("""
+    CREATE TABLE base_events (
+        event_id uuid PRIMARY KEY
+    );
+    CREATE TABLE api_events LIKE base_events;
+    """)
+    assert [column.name for column in direct_like_tables["api_events"].columns] == ["event_id"]
+
 
 def test_parse_tables_supports_commented_out_comment_on_metadata() -> None:
     sql = """

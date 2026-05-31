@@ -1,3 +1,4 @@
+-- Project用Cognito app client metadataを保持するため、Project Cognito clientを追加する。
 INSERT INTO project_cognito_clients (
     project_cognito_client_id,
     project_id,

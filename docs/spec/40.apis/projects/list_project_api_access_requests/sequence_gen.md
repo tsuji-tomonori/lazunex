@@ -14,6 +14,6 @@ sequenceDiagram
     API->>API: Project に紐づく access request を検索する。
     API->>API: 一覧取得結果に limit と nextToken を適用する。
     API->>API: Project 利用申請一覧レスポンスを組み立てる。
-    API->>DB: レコードを参照する SQL 001_select_api_access_requests.sql<br/>テーブル api_access_requests, projects, apis, api_gateway_stages, api_access_reviews, api_reviewers, project_members
+    API->>DB: Projectの利用申請履歴を一覧表示するため、利用申請と審査結果を取得する。<br/>SQL 001_select_api_access_requests.sql<br/>テーブル api_access_requests, projects, apis, api_gateway_stages, api_access_reviews, api_reviewers, project_members
   end
 ```

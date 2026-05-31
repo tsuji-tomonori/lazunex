@@ -1,3 +1,4 @@
+-- Project作成の処理結果として、provisioning operationを追加する。
 INSERT INTO provisioning_operations (
     operation_id,
     idempotency_key,

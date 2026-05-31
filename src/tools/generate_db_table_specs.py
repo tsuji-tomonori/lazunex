@@ -125,20 +125,26 @@ def uncomment_comment_on_statements(sql: str) -> str:
     return re.sub(r"^\s*--\s+(COMMENT ON .*)$", r"\1", sql, flags=re.MULTILINE)
 
 
-def table_like_source(schema: exp.Schema) -> str | None:
-    for expression in schema.expressions:
+def table_like_source(expressions: list[Any]) -> str | None:
+    for expression in expressions:
         if isinstance(expression, exp.LikeProperty):
             return table_name(expression.this)
     return None
 
 
 def parse_create_table(statement: exp.Create) -> tuple[str, list[Column], list[str], str | None]:
+    properties = statement.args.get("properties")
+    if isinstance(statement.this, exp.Table) and isinstance(properties, exp.Properties):
+        like_source = table_like_source(properties.expressions)
+        if like_source:
+            return table_name(statement.this), [], [], like_source
+
     if not isinstance(statement.this, exp.Schema):
         raise ValueError(f"CREATE TABLE statement has no schema: {statement.sql()}")
 
     schema = statement.this
     name = table_name(schema)
-    like_source = table_like_source(schema)
+    like_source = table_like_source(schema.expressions)
     if like_source:
         return name, [], [], like_source
 

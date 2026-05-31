@@ -1,3 +1,4 @@
+-- Projectに払い出したAPI key metadataを保持するため、Project API keyを追加する。
 INSERT INTO project_api_keys (
     project_api_key_id,
     project_id,

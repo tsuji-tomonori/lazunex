@@ -1,3 +1,4 @@
+-- 更新対象のpublic clientと現在versionを確認するため、Project Cognito clientを取得する。
 SELECT
     c.project_cognito_client_id,
     c.project_id,

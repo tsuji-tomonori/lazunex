@@ -1,3 +1,4 @@
+-- Project public client更新の処理結果として、冪等性レコードを追加する。
 INSERT INTO idempotency_records (
     idempotency_record_id,
     idempotency_key,

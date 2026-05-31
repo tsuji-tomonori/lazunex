@@ -1,3 +1,4 @@
+-- Project詳細レスポンスを組み立てるため、Projectと関連metadataを取得する。
 SELECT
     p.project_id,
     p.project_code,

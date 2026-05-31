@@ -11,8 +11,11 @@ from pathlib import Path
 
 import sqlglot
 from sqlglot import exp
+from sqlglot.expressions.core import Expression
 
 from tools.generate_db_table_specs import parse_tables
+
+DDL_ONLY_TABLE_EXCEPTIONS = frozenset({"hub_users"})
 
 
 @dataclass(frozen=True, order=True)
@@ -77,13 +80,13 @@ def line_number(starts: list[int], offset: int) -> int:
     return bisect.bisect_right(starts, offset)
 
 
-def expression_start(expression: exp.Expression) -> int | None:
+def expression_start(expression: Expression) -> int | None:
     meta_start = expression.meta.get("start")
     if isinstance(meta_start, int):
         return meta_start
 
     child = expression.this
-    if isinstance(child, exp.Expression):
+    if isinstance(child, Expression):
         return expression_start(child)
     return None
 
@@ -91,7 +94,7 @@ def expression_start(expression: exp.Expression) -> int | None:
 def reference(
     path: Path,
     starts: list[int],
-    expression: exp.Expression,
+    expression: Expression,
     detail: str,
 ) -> SqlReference:
     start = expression_start(expression)
@@ -99,7 +102,7 @@ def reference(
     return SqlReference(path=path, line=line, detail=detail)
 
 
-def table_aliases(tree: exp.Expression) -> dict[str, str]:
+def table_aliases(tree: Expression) -> dict[str, str]:
     aliases: dict[str, str] = {}
     for table in tree.find_all(exp.Table):
         table_name = table.name
@@ -111,12 +114,12 @@ def table_aliases(tree: exp.Expression) -> dict[str, str]:
     return aliases
 
 
-def target_tables(tree: exp.Expression) -> set[str]:
+def target_tables(tree: Expression) -> set[str]:
     return {table.name for table in tree.find_all(exp.Table) if table.name}
 
 
 def add_table_references(
-    tree: exp.Expression,
+    tree: Expression,
     path: Path,
     starts: list[int],
     usage: SqlUsage,
@@ -128,7 +131,7 @@ def add_table_references(
 
 
 def add_insert_schema_columns(
-    tree: exp.Expression,
+    tree: Expression,
     path: Path,
     starts: list[int],
     usage: SqlUsage,
@@ -162,7 +165,7 @@ def resolved_table_for_column(
 
 
 def add_column_references(
-    tree: exp.Expression,
+    tree: Expression,
     path: Path,
     starts: list[int],
     usage: SqlUsage,
@@ -193,7 +196,7 @@ def parse_sql_usage(sql: str, path: str | PathLike[str]) -> SqlUsage:
     for tree in sqlglot.parse(sql, read="postgres"):
         if tree is None:
             continue
-        if not isinstance(tree, exp.Expression):
+        if not isinstance(tree, Expression):
             raise TypeError(f"SQLGlot returned unsupported expression: {type(tree).__name__}")
         add_table_references(tree, sql_path, starts, usage)
         add_insert_schema_columns(tree, sql_path, starts, usage)
@@ -208,8 +211,23 @@ def collect_sql_usage(sql_dir: Path) -> SqlUsage:
     return usage
 
 
+def ddl_like_sources(ddl_sql: str) -> set[str]:
+    sources: set[str] = set()
+    for statement in sqlglot.parse(ddl_sql, read="postgres"):
+        if not isinstance(statement, exp.Create) or statement.kind != "TABLE":
+            continue
+        properties = statement.args.get("properties")
+        if not isinstance(properties, exp.Properties):
+            continue
+        for expression in properties.expressions:
+            if isinstance(expression, exp.LikeProperty) and isinstance(expression.this, exp.Table):
+                sources.add(expression.this.name)
+    return sources
+
+
 def compare_usage_to_ddl(usage: SqlUsage, ddl_sql: str) -> DriftReport:
     ddl_tables = parse_tables(ddl_sql)
+    like_sources = ddl_like_sources(ddl_sql)
     ddl_columns = {
         table_name: {column.name for column in table.columns}
         for table_name, table in ddl_tables.items()
@@ -222,7 +240,7 @@ def compare_usage_to_ddl(usage: SqlUsage, ddl_sql: str) -> DriftReport:
         for table, columns in usage.columns.items()
         if table in ddl_columns and set(columns) - ddl_columns[table]
     }
-    ddl_only_tables = set(ddl_tables) - used_tables
+    ddl_only_tables = set(ddl_tables) - used_tables - like_sources - DDL_ONLY_TABLE_EXCEPTIONS
     ddl_only_columns = {
         table: ddl_columns[table] - set(usage.columns.get(table, {}))
         for table in sorted(set(ddl_tables) & used_tables)

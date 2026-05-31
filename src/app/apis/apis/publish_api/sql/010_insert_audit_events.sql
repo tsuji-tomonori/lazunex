@@ -1,3 +1,4 @@
+-- API公開登録の処理結果として、監査イベントを追加する。
 INSERT INTO audit_events (
     audit_event_id,
     actor_principal_id,

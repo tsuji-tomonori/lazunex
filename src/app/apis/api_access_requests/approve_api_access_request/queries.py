@@ -6,7 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.query import fetch_all, fetch_one
+from app.db.query import execute_sql, fetch_all
 
 # This file is generated from SQL files in the sibling sql directory.
 # Do not edit generated models by hand.
@@ -43,6 +43,7 @@ async def select_api_access_requests(
     session: AsyncSession,
     params: SelectApiAccessRequestsParams,
 ) -> list[SelectApiAccessRequestsRow]:
+    """承認対象の利用申請と現在状態を確認するため、利用申請を取得する。"""
     return await fetch_all(
         session,
         SQL_DIR / "001_select_api_access_requests.sql",
@@ -70,6 +71,7 @@ async def select_api_reviewers(
     session: AsyncSession,
     params: SelectApiReviewersParams,
 ) -> list[SelectApiReviewersRow]:
+    """承認者が対象APIのreviewerか確認するため、API reviewerを取得する。"""
     return await fetch_all(
         session,
         SQL_DIR / "002_select_api_reviewers.sql",
@@ -99,6 +101,7 @@ async def select_subscriptions(
     session: AsyncSession,
     params: SelectSubscriptionsParams,
 ) -> list[SelectSubscriptionsRow]:
+    """重複承認を防ぐため、既存のactive subscriptionを取得する。"""
     return await fetch_all(
         session,
         SQL_DIR / "003_select_subscriptions.sql",
@@ -121,20 +124,15 @@ class InsertAccessRequestEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertAccessRequestEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_access_request_events(
     session: AsyncSession,
     params: InsertAccessRequestEventsParams,
-) -> InsertAccessRequestEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """承認処理の開始と完了を追跡するため、利用申請イベントを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "004_insert_access_request_events.sql",
         params,
-        InsertAccessRequestEventsRow,
     )
 
 
@@ -148,20 +146,15 @@ class InsertProvisioningOperationsParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertProvisioningOperationsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    operation_id: UUID
-
-
 async def insert_provisioning_operations(
     session: AsyncSession,
     params: InsertProvisioningOperationsParams,
-) -> InsertProvisioningOperationsRow | None:
-    return await fetch_one(
+) -> None:
+    """承認後のAWS反映作業を追跡するため、provisioning operationを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "005_insert_provisioning_operations.sql",
         params,
-        InsertProvisioningOperationsRow,
     )
 
 
@@ -188,6 +181,7 @@ async def select_project_cognito_clients(
     session: AsyncSession,
     params: SelectProjectCognitoClientsParams,
 ) -> list[SelectProjectCognitoClientsRow]:
+    """承認後にscopeを付与する対象を決めるため、Project Cognito clientを取得する。"""
     return await fetch_all(
         session,
         SQL_DIR / "006_select_project_cognito_clients.sql",
@@ -206,20 +200,15 @@ class InsertApiAccessReviewsParams(BaseModel):
     now: datetime
 
 
-class InsertApiAccessReviewsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    access_review_id: UUID
-
-
 async def insert_api_access_reviews(
     session: AsyncSession,
     params: InsertApiAccessReviewsParams,
-) -> InsertApiAccessReviewsRow | None:
-    return await fetch_one(
+) -> None:
+    """承認結果と承認コメントを保持するため、利用申請レビューを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "007_insert_api_access_reviews.sql",
         params,
-        InsertApiAccessReviewsRow,
     )
 
 
@@ -235,20 +224,15 @@ class InsertProjectApiSubscriptionsParams(BaseModel):
     now: datetime
 
 
-class InsertProjectApiSubscriptionsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    subscription_id: UUID
-
-
 async def insert_project_api_subscriptions(
     session: AsyncSession,
     params: InsertProjectApiSubscriptionsParams,
-) -> InsertProjectApiSubscriptionsRow | None:
-    return await fetch_one(
+) -> None:
+    """承認済みAPI利用権を有効化するため、Project API subscriptionを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "008_insert_project_api_subscriptions.sql",
         params,
-        InsertProjectApiSubscriptionsRow,
     )
 
 
@@ -265,20 +249,15 @@ class InsertProjectUsagePlanApiStagesParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertProjectUsagePlanApiStagesRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    usage_plan_api_stage_id: UUID
-
-
 async def insert_project_usage_plan_api_stages(
     session: AsyncSession,
     params: InsertProjectUsagePlanApiStagesParams,
-) -> InsertProjectUsagePlanApiStagesRow | None:
-    return await fetch_one(
+) -> None:
+    """Usage Planから対象stageを利用可能にするため、Usage Plan stage紐づけを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "009_insert_project_usage_plan_api_stages.sql",
         params,
-        InsertProjectUsagePlanApiStagesRow,
     )
 
 
@@ -294,20 +273,15 @@ class InsertProjectCognitoClientScopesParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertProjectCognitoClientScopesRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    project_cognito_client_scope_id: UUID
-
-
 async def insert_project_cognito_client_scopes(
     session: AsyncSession,
     params: InsertProjectCognitoClientScopesParams,
-) -> InsertProjectCognitoClientScopesRow | None:
-    return await fetch_one(
+) -> None:
+    """Cognito clientにAPI実行scopeを許可するため、Project Cognito client scopeを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "010_insert_project_cognito_client_scopes.sql",
         params,
-        InsertProjectCognitoClientScopesRow,
     )
 
 
@@ -325,20 +299,15 @@ class InsertSubscriptionEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertSubscriptionEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_subscription_events(
     session: AsyncSession,
     params: InsertSubscriptionEventsParams,
-) -> InsertSubscriptionEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """利用申請承認の処理結果として、subscriptionイベントを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "011_insert_subscription_events.sql",
         params,
-        InsertSubscriptionEventsRow,
     )
 
 
@@ -354,20 +323,15 @@ class InsertAuditEventsParams(BaseModel):
     now: datetime
 
 
-class InsertAuditEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    audit_event_id: UUID
-
-
 async def insert_audit_events(
     session: AsyncSession,
     params: InsertAuditEventsParams,
-) -> InsertAuditEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """利用申請承認の処理結果として、監査イベントを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "012_insert_audit_events.sql",
         params,
-        InsertAuditEventsRow,
     )
 
 
@@ -383,20 +347,15 @@ class InsertIdempotencyRecordsParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertIdempotencyRecordsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    idempotency_record_id: UUID
-
-
 async def insert_idempotency_records(
     session: AsyncSession,
     params: InsertIdempotencyRecordsParams,
-) -> InsertIdempotencyRecordsRow | None:
-    return await fetch_one(
+) -> None:
+    """利用申請承認の処理結果として、冪等性レコードを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "013_insert_idempotency_records.sql",
         params,
-        InsertIdempotencyRecordsRow,
     )
 
 
@@ -418,20 +377,15 @@ class InsertProvisioningStepsParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertProvisioningStepsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    operation_step_id: UUID
-
-
 async def insert_provisioning_steps(
     session: AsyncSession,
     params: InsertProvisioningStepsParams,
-) -> InsertProvisioningStepsRow | None:
-    return await fetch_one(
+) -> None:
+    """利用申請承認の処理結果として、provisioning stepを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "014_insert_provisioning_steps.sql",
         params,
-        InsertProvisioningStepsRow,
     )
 
 
@@ -449,20 +403,15 @@ class InsertUsagePlanStageEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertUsagePlanStageEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_usage_plan_stage_events(
     session: AsyncSession,
     params: InsertUsagePlanStageEventsParams,
-) -> InsertUsagePlanStageEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """利用申請承認の処理結果として、Usage Plan stageイベントを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "015_insert_usage_plan_stage_events.sql",
         params,
-        InsertUsagePlanStageEventsRow,
     )
 
 
@@ -480,20 +429,15 @@ class InsertClientScopeEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertClientScopeEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_client_scope_events(
     session: AsyncSession,
     params: InsertClientScopeEventsParams,
-) -> InsertClientScopeEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """利用申請承認の処理結果として、client scopeイベントを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "016_insert_client_scope_events.sql",
         params,
-        InsertClientScopeEventsRow,
     )
 
 
@@ -511,20 +455,15 @@ class InsertProvisioningOperationEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertProvisioningOperationEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_provisioning_operation_events(
     session: AsyncSession,
     params: InsertProvisioningOperationEventsParams,
-) -> InsertProvisioningOperationEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """利用申請承認の処理結果として、provisioning operation eventsを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "017_insert_provisioning_operation_events.sql",
         params,
-        InsertProvisioningOperationEventsRow,
     )
 
 
@@ -542,18 +481,13 @@ class InsertProvisioningStepEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertProvisioningStepEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_provisioning_step_events(
     session: AsyncSession,
     params: InsertProvisioningStepEventsParams,
-) -> InsertProvisioningStepEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """利用申請承認の処理結果として、provisioning step eventsを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "018_insert_provisioning_step_events.sql",
         params,
-        InsertProvisioningStepEventsRow,
     )

@@ -6,7 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.query import fetch_all, fetch_one
+from app.db.query import execute_sql, fetch_all
 
 # This file is generated from SQL files in the sibling sql directory.
 # Do not edit generated models by hand.
@@ -37,6 +37,7 @@ async def select_api_access_requests(
     session: AsyncSession,
     params: SelectApiAccessRequestsParams,
 ) -> list[SelectApiAccessRequestsRow]:
+    """却下対象の利用申請と現在状態を確認するため、利用申請を取得する。"""
     return await fetch_all(
         session,
         SQL_DIR / "001_select_api_access_requests.sql",
@@ -64,6 +65,7 @@ async def select_api_reviewers(
     session: AsyncSession,
     params: SelectApiReviewersParams,
 ) -> list[SelectApiReviewersRow]:
+    """却下者が対象APIのreviewerか確認するため、API reviewerを取得する。"""
     return await fetch_all(
         session,
         SQL_DIR / "002_select_api_reviewers.sql",
@@ -81,20 +83,15 @@ class InsertApiAccessReviewsParams(BaseModel):
     now: datetime
 
 
-class InsertApiAccessReviewsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    access_review_id: UUID
-
-
 async def insert_api_access_reviews(
     session: AsyncSession,
     params: InsertApiAccessReviewsParams,
-) -> InsertApiAccessReviewsRow | None:
-    return await fetch_one(
+) -> None:
+    """却下結果と却下コメントを保持するため、利用申請レビューを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "003_insert_api_access_reviews.sql",
         params,
-        InsertApiAccessReviewsRow,
     )
 
 
@@ -112,20 +109,15 @@ class InsertAccessRequestEventsParams(BaseModel):
     event_payload: dict[str, Any]
 
 
-class InsertAccessRequestEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    event_id: UUID
-
-
 async def insert_access_request_events(
     session: AsyncSession,
     params: InsertAccessRequestEventsParams,
-) -> InsertAccessRequestEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """却下処理の開始と完了を追跡するため、利用申請イベントを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "004_insert_access_request_events.sql",
         params,
-        InsertAccessRequestEventsRow,
     )
 
 
@@ -140,20 +132,15 @@ class InsertAuditEventsParams(BaseModel):
     now: datetime
 
 
-class InsertAuditEventsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    audit_event_id: UUID
-
-
 async def insert_audit_events(
     session: AsyncSession,
     params: InsertAuditEventsParams,
-) -> InsertAuditEventsRow | None:
-    return await fetch_one(
+) -> None:
+    """利用申請却下の処理結果として、監査イベントを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "005_insert_audit_events.sql",
         params,
-        InsertAuditEventsRow,
     )
 
 
@@ -168,18 +155,13 @@ class InsertIdempotencyRecordsParams(BaseModel):
     actor_principal_id: str
 
 
-class InsertIdempotencyRecordsRow(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    idempotency_record_id: UUID
-
-
 async def insert_idempotency_records(
     session: AsyncSession,
     params: InsertIdempotencyRecordsParams,
-) -> InsertIdempotencyRecordsRow | None:
-    return await fetch_one(
+) -> None:
+    """利用申請却下の処理結果として、冪等性レコードを追加する。"""
+    await execute_sql(
         session,
         SQL_DIR / "006_insert_idempotency_records.sql",
         params,
-        InsertIdempotencyRecordsRow,
     )

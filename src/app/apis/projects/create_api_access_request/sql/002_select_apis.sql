@@ -1,3 +1,4 @@
+-- 申請対象APIが利用申請可能か確認するため、API catalog情報を取得する。
 SELECT
     a.api_id,
     a.api_code,

@@ -1,3 +1,4 @@
+-- Cognito clientにAPI実行scopeを許可するため、Project Cognito client scopeを追加する。
 INSERT INTO project_cognito_client_scopes (
     project_cognito_client_scope_id,
     project_id,
