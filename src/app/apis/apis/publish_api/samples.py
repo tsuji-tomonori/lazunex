@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from app.apis.apis.publish_api.schemas import (
     ApiScopeResponse,
     OpenApiDocumentRequest,
@@ -32,17 +34,18 @@ PUBLISH_API_REQUEST_SAMPLE = PublishApiRequest(
         )
     ],
     openapi_document=OpenApiDocumentRequest(
-        s3_uri="s3://lazunex-openapi/billing-api-v1/openapi.yaml", sha256="..."
+        s3_uri="s3://lazunex-openapi/billing-api-v1/openapi.yaml",
+        sha256="0" * 64,
     ),
 )
 PUBLISH_API_RESPONSE_SAMPLE = PublishApiResponse(
-    api_id="7b0d4a98-0000-0000-0000-000000000001",
-    api_stage_id="7b0d4a98-0000-0000-0000-000000000101",
+    api_id=UUID("7b0d4a98-0000-0000-0000-000000000001"),
+    api_stage_id=UUID("7b0d4a98-0000-0000-0000-000000000101"),
     scope=ApiScopeResponse(
         resource_server_identifier="api-hub",
         scope_name="api:7b0d4a98-0000-0000-0000-000000000001:invoke",
         scope_full_name="api-hub/api:7b0d4a98-0000-0000-0000-000000000001:invoke",
     ),
     derived_state=ApiDerivedState.PUBLISHED,
-    operation_id="5d4d5b68-0000-0000-0000-000000000001",
+    operation_id=UUID("5d4d5b68-0000-0000-0000-000000000001"),
 )

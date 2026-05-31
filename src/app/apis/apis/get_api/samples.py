@@ -1,13 +1,15 @@
+from uuid import UUID
+
 from app.apis.apis.get_api.schemas import (
     ApiDetailStageResponse,
     ApiReviewerResponse,
     ApiScopeResponse,
     GetApiResponse,
 )
-from app.apis.common import ApiDerivedState, ApiVisibility, ReviewerRole
+from app.apis.common import ApiDerivedState, ApiVisibility, ReviewerRole, ScopeConfigObserved
 
 GET_API_RESPONSE_SAMPLE = GetApiResponse(
-    api_id="7b0d4a98-0000-0000-0000-000000000001",
+    api_id=UUID("7b0d4a98-0000-0000-0000-000000000001"),
     api_code="billing-api-v1",
     name="Billing API",
     description="社内請求API",
@@ -17,7 +19,7 @@ GET_API_RESPONSE_SAMPLE = GetApiResponse(
     visibility=ApiVisibility.INTERNAL,
     derived_state=ApiDerivedState.PUBLISHED,
     stage=ApiDetailStageResponse(
-        api_stage_id="7b0d4a98-0000-0000-0000-000000000101",
+        api_stage_id=UUID("7b0d4a98-0000-0000-0000-000000000101"),
         aws_account_id="123456789012",
         aws_region="ap-northeast-1",
         rest_api_id="abc123def4",
@@ -25,7 +27,7 @@ GET_API_RESPONSE_SAMPLE = GetApiResponse(
         invoke_url="https://abc123def4.execute-api.ap-northeast-1.amazonaws.com/prod",
         custom_domain_url="https://billing-api.internal.example.com",
         api_key_required_observed=True,
-        scope_config_observed="VERIFIED",
+        scope_config_observed=ScopeConfigObserved.VERIFIED,
     ),
     scope=ApiScopeResponse(
         scope_name="api:7b0d4a98-0000-0000-0000-000000000001:invoke",

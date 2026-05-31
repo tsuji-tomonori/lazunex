@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from app.apis.common import TokenValidityUnit
 from app.apis.projects.update_project_public_client.schemas import (
     UpdatedPublicClientResponse,
@@ -22,7 +24,7 @@ UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE = UpdateProjectPublicClientRequest(
     expected_row_version=3,
 )
 UPDATE_PROJECT_PUBLIC_CLIENT_RESPONSE_SAMPLE = UpdateProjectPublicClientResponse(
-    project_id="cb62b5f6-0000-0000-0000-000000000001",
+    project_id=UUID("cb62b5f6-0000-0000-0000-000000000001"),
     public_client=UpdatedPublicClientResponse(
         app_client_id="public-client-id",
         callback_urls=[
@@ -37,5 +39,5 @@ UPDATE_PROJECT_PUBLIC_CLIENT_RESPONSE_SAMPLE = UpdateProjectPublicClientResponse
         refresh_token_rotation_enabled=True,
         row_version=4,
     ),
-    operation_id="62f6d4b2-0000-0000-0000-000000000001",
+    operation_id=UUID("62f6d4b2-0000-0000-0000-000000000001"),
 )

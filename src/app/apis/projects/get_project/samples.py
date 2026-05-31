@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from app.apis.common import ProjectDerivedState, QuotaPeriod, TokenValidityUnit
 from app.apis.projects.get_project.schemas import (
     GetProjectResponse,
@@ -9,7 +11,7 @@ from app.apis.projects.get_project.schemas import (
 )
 
 GET_PROJECT_RESPONSE_SAMPLE = GetProjectResponse(
-    project_id="cb62b5f6-0000-0000-0000-000000000001",
+    project_id=UUID("cb62b5f6-0000-0000-0000-000000000001"),
     project_code="payment-frontend",
     name="Payment Frontend",
     description="決済画面プロジェクト",

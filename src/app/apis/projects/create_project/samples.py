@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from app.apis.common import ProjectDerivedState, QuotaPeriod, TokenValidityUnit
 from app.apis.projects.create_project.schemas import (
     ConfidentialClientSettingsRequest,
@@ -41,7 +43,7 @@ CREATE_PROJECT_REQUEST_SAMPLE = CreateProjectRequest(
     ),
 )
 CREATE_PROJECT_RESPONSE_SAMPLE = CreateProjectResponse(
-    project_id="cb62b5f6-0000-0000-0000-000000000001",
+    project_id=UUID("cb62b5f6-0000-0000-0000-000000000001"),
     project_code="payment-frontend",
     derived_state=ProjectDerivedState.ACTIVE,
     api_key=CreatedApiKeyResponse(
@@ -56,5 +58,5 @@ CREATE_PROJECT_RESPONSE_SAMPLE = CreateProjectResponse(
             client_secret_last4="wxyz",  # noqa: S106
         ),
     ),
-    operation_id="8f5a1f0a-0000-0000-0000-000000000001",
+    operation_id=UUID("8f5a1f0a-0000-0000-0000-000000000001"),
 )
