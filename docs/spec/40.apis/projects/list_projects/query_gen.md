@@ -16,27 +16,27 @@
 
 ### 引数
 
-| 項目 | 型 | nullable |
-| --- | --- | --- |
-| `actor_principal_id` | `str` | no |
-| `is_hub_admin` | `Any` | no |
-| `after_project_code` | `Any` | no |
-| `limit` | `Any` | no |
+| 取得元テーブル | 項目 | 型 | nullable |
+| --- | --- | --- | --- |
+| <code>project_members, projects</code> | <code>actor_principal_id</code> | <code>str</code> | no |
+| <code>-</code> | <code>is_hub_admin</code> | <code>Any</code> | no |
+| <code>projects</code> | <code>after_project_code</code> | <code>Any</code> | no |
+| <code>-</code> | <code>limit</code> | <code>Any</code> | no |
 
 ### 戻り値
 
-| 項目 | 型 | nullable |
-| --- | --- | --- |
-| `project_id` | `UUID` | no |
-| `project_code` | `str` | no |
-| `name` | `str` | no |
-| `description` | `str` | no |
-| `owner_principal_id` | `str` | no |
-| `department_code` | `str` | no |
-| `subscription_count` | `Any` | no |
+| 取得元テーブル | 項目 | 型 | nullable |
+| --- | --- | --- | --- |
+| <code>projects</code> | <code>project_id</code> | <code>UUID</code> | no |
+| <code>projects</code> | <code>project_code</code> | <code>str</code> | no |
+| <code>projects</code> | <code>name</code> | <code>str</code> | no |
+| <code>projects</code> | <code>description</code> | <code>str</code> | no |
+| <code>projects</code> | <code>owner_principal_id</code> | <code>str</code> | no |
+| <code>projects</code> | <code>department_code</code> | <code>str</code> | no |
+| <code>project_api_subscriptions</code> | <code>subscription_count</code> | <code>Any</code> | no |
 
 ### 条件
 
-- `JOIN ON pm.project_id = p.project_id AND pm.member_principal_id = @actor_principal_id`
-- `JOIN ON sub.project_id = p.project_id`
-- `WHERE (p.owner_principal_id = @actor_principal_id OR NOT pm.project_member_id IS NULL OR @is_hub_admin = TRUE) AND (@after_project_code IS NULL OR p.project_code > @after_project_code)`
+- `JOIN ON project_members.project_id = projects.project_id AND project_members.member_principal_id = @actor_principal_id`
+- `JOIN ON project_api_subscriptions.project_id = projects.project_id`
+- `WHERE (projects.owner_principal_id = @actor_principal_id OR NOT project_members.project_member_id IS NULL OR @is_hub_admin = TRUE) AND (@after_project_code IS NULL OR projects.project_code > @after_project_code)`

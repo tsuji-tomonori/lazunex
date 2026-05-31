@@ -15,23 +15,23 @@
 
 ### 引数
 
-| 項目 | 型 | nullable |
-| --- | --- | --- |
-| `actor_principal_id` | `str` | no |
-| `project_id` | `UUID` | no |
+| 取得元テーブル | 項目 | 型 | nullable |
+| --- | --- | --- | --- |
+| <code>project_members, projects</code> | <code>actor_principal_id</code> | <code>str</code> | no |
+| <code>projects</code> | <code>project_id</code> | <code>UUID</code> | no |
 
 ### 戻り値
 
-| 項目 | 型 | nullable |
-| --- | --- | --- |
-| `project_id` | `UUID` | no |
-| `project_code` | `str` | no |
-| `owner_principal_id` | `str` | no |
+| 取得元テーブル | 項目 | 型 | nullable |
+| --- | --- | --- | --- |
+| <code>projects</code> | <code>project_id</code> | <code>UUID</code> | no |
+| <code>projects</code> | <code>project_code</code> | <code>str</code> | no |
+| <code>projects</code> | <code>owner_principal_id</code> | <code>str</code> | no |
 
 ### 条件
 
-- `JOIN ON pm.project_id = p.project_id AND pm.member_principal_id = @actor_principal_id`
-- `WHERE p.project_id = @project_id AND (p.owner_principal_id = @actor_principal_id OR pm.member_role IN ('OWNER', 'ADMIN'))`
+- `JOIN ON project_members.project_id = projects.project_id AND project_members.member_principal_id = @actor_principal_id`
+- `WHERE projects.project_id = @project_id AND (projects.owner_principal_id = @actor_principal_id OR project_members.member_role IN ('OWNER', 'ADMIN'))`
 
 
 ## 002_select_apis.sql
@@ -49,32 +49,32 @@
 
 ### 引数
 
-| 項目 | 型 | nullable |
-| --- | --- | --- |
-| `api_stage_id` | `Any` | no |
-| `api_id` | `UUID` | no |
+| 取得元テーブル | 項目 | 型 | nullable |
+| --- | --- | --- | --- |
+| <code>api_gateway_stages</code> | <code>api_stage_id</code> | <code>Any</code> | no |
+| <code>apis</code> | <code>api_id</code> | <code>UUID</code> | no |
 
 ### 戻り値
 
-| 項目 | 型 | nullable |
-| --- | --- | --- |
-| `api_id` | `UUID` | no |
-| `api_code` | `str` | no |
-| `name` | `str` | no |
-| `visibility` | `str` | no |
-| `api_stage_id` | `UUID` | no |
-| `apigw_rest_api_id` | `str` | no |
-| `apigw_stage_name` | `str` | no |
-| `api_scope_id` | `UUID` | no |
-| `scope_full_name` | `str` | no |
-| `reviewer_principal_id` | `str` | no |
+| 取得元テーブル | 項目 | 型 | nullable |
+| --- | --- | --- | --- |
+| <code>apis</code> | <code>api_id</code> | <code>UUID</code> | no |
+| <code>apis</code> | <code>api_code</code> | <code>str</code> | no |
+| <code>apis</code> | <code>name</code> | <code>str</code> | no |
+| <code>apis</code> | <code>visibility</code> | <code>str</code> | no |
+| <code>api_gateway_stages</code> | <code>api_stage_id</code> | <code>UUID</code> | no |
+| <code>api_gateway_stages</code> | <code>apigw_rest_api_id</code> | <code>str</code> | no |
+| <code>api_gateway_stages</code> | <code>apigw_stage_name</code> | <code>str</code> | no |
+| <code>api_cognito_scopes</code> | <code>api_scope_id</code> | <code>UUID</code> | no |
+| <code>api_cognito_scopes</code> | <code>scope_full_name</code> | <code>str</code> | no |
+| <code>api_reviewers</code> | <code>reviewer_principal_id</code> | <code>str</code> | no |
 
 ### 条件
 
-- `JOIN ON s.api_stage_id = COALESCE(@api_stage_id, a.default_api_stage_id) AND s.api_id = a.api_id`
-- `JOIN ON c.api_id = a.api_id`
-- `JOIN ON r.api_id = a.api_id AND r.reviewer_role = 'PRIMARY'`
-- `WHERE a.api_id = @api_id`
+- `JOIN ON api_gateway_stages.api_stage_id = COALESCE(@api_stage_id, apis.default_api_stage_id) AND api_gateway_stages.api_id = apis.api_id`
+- `JOIN ON api_cognito_scopes.api_id = apis.api_id`
+- `JOIN ON api_reviewers.api_id = apis.api_id AND api_reviewers.reviewer_role = 'PRIMARY'`
+- `WHERE apis.api_id = @api_id`
 
 
 ## 003_select_project_cognito_clients.sql
@@ -89,20 +89,20 @@
 
 ### 引数
 
-| 項目 | 型 | nullable |
-| --- | --- | --- |
-| `project_id` | `UUID` | no |
+| 取得元テーブル | 項目 | 型 | nullable |
+| --- | --- | --- | --- |
+| <code>project_cognito_clients</code> | <code>project_id</code> | <code>UUID</code> | no |
 
 ### 戻り値
 
-| 項目 | 型 | nullable |
-| --- | --- | --- |
-| `project_cognito_client_id` | `UUID` | no |
-| `project_id` | `UUID` | no |
-| `client_type` | `str` | no |
-| `cognito_user_pool_id` | `str` | no |
-| `app_client_id` | `str` | no |
-| `base_allowed_scopes` | `dict[str, Any]` | no |
+| 取得元テーブル | 項目 | 型 | nullable |
+| --- | --- | --- | --- |
+| <code>project_cognito_clients</code> | <code>project_cognito_client_id</code> | <code>UUID</code> | no |
+| <code>project_cognito_clients</code> | <code>project_id</code> | <code>UUID</code> | no |
+| <code>project_cognito_clients</code> | <code>client_type</code> | <code>str</code> | no |
+| <code>project_cognito_clients</code> | <code>cognito_user_pool_id</code> | <code>str</code> | no |
+| <code>project_cognito_clients</code> | <code>app_client_id</code> | <code>str</code> | no |
+| <code>project_cognito_clients</code> | <code>base_allowed_scopes</code> | <code>dict[str, Any]</code> | no |
 
 ### 条件
 
@@ -121,22 +121,22 @@
 
 ### 引数
 
-| 項目 | 型 | nullable |
-| --- | --- | --- |
-| `project_id` | `UUID` | no |
-| `api_stage_id` | `UUID` | no |
+| 取得元テーブル | 項目 | 型 | nullable |
+| --- | --- | --- | --- |
+| <code>project_api_subscriptions</code> | <code>project_id</code> | <code>UUID</code> | no |
+| <code>project_api_subscriptions</code> | <code>api_stage_id</code> | <code>UUID</code> | no |
 
 ### 戻り値
 
-| 項目 | 型 | nullable |
-| --- | --- | --- |
-| `subscription_id` | `UUID` | no |
-| `project_id` | `UUID` | no |
-| `api_id` | `UUID` | no |
-| `api_stage_id` | `UUID` | no |
-| `approved_auth_mode` | `str` | no |
-| `approved_by` | `str` | no |
-| `approved_at` | `datetime` | no |
+| 取得元テーブル | 項目 | 型 | nullable |
+| --- | --- | --- | --- |
+| <code>project_api_subscriptions</code> | <code>subscription_id</code> | <code>UUID</code> | no |
+| <code>project_api_subscriptions</code> | <code>project_id</code> | <code>UUID</code> | no |
+| <code>project_api_subscriptions</code> | <code>api_id</code> | <code>UUID</code> | no |
+| <code>project_api_subscriptions</code> | <code>api_stage_id</code> | <code>UUID</code> | no |
+| <code>project_api_subscriptions</code> | <code>approved_auth_mode</code> | <code>str</code> | no |
+| <code>project_api_subscriptions</code> | <code>approved_by</code> | <code>str</code> | no |
+| <code>project_api_subscriptions</code> | <code>approved_at</code> | <code>datetime</code> | no |
 
 ### 条件
 
@@ -156,26 +156,26 @@
 
 ### 引数
 
-| 項目 | 型 | nullable |
-| --- | --- | --- |
-| `project_id` | `UUID` | no |
-| `api_stage_id` | `UUID` | no |
+| 取得元テーブル | 項目 | 型 | nullable |
+| --- | --- | --- | --- |
+| <code>api_access_requests</code> | <code>project_id</code> | <code>UUID</code> | no |
+| <code>api_access_requests</code> | <code>api_stage_id</code> | <code>UUID</code> | no |
 
 ### 戻り値
 
-| 項目 | 型 | nullable |
-| --- | --- | --- |
-| `access_request_id` | `UUID` | no |
-| `project_id` | `UUID` | no |
-| `api_id` | `UUID` | no |
-| `api_stage_id` | `UUID` | no |
-| `requested_auth_mode` | `str` | no |
-| `requested_by` | `str` | no |
-| `requested_at` | `datetime` | no |
+| 取得元テーブル | 項目 | 型 | nullable |
+| --- | --- | --- | --- |
+| <code>api_access_requests</code> | <code>access_request_id</code> | <code>UUID</code> | no |
+| <code>api_access_requests</code> | <code>project_id</code> | <code>UUID</code> | no |
+| <code>api_access_requests</code> | <code>api_id</code> | <code>UUID</code> | no |
+| <code>api_access_requests</code> | <code>api_stage_id</code> | <code>UUID</code> | no |
+| <code>api_access_requests</code> | <code>requested_auth_mode</code> | <code>str</code> | no |
+| <code>api_access_requests</code> | <code>requested_by</code> | <code>str</code> | no |
+| <code>api_access_requests</code> | <code>requested_at</code> | <code>datetime</code> | no |
 
 ### 条件
 
-- `WHERE ar.project_id = @project_id AND ar.api_stage_id = @api_stage_id AND NOT EXISTS(SELECT 1 FROM api_access_reviews AS rv WHERE rv.access_request_id = ar.access_request_id)`
+- `WHERE api_access_requests.project_id = @project_id AND api_access_requests.api_stage_id = @api_stage_id AND NOT EXISTS(SELECT 1 FROM api_access_reviews AS rv WHERE api_access_reviews.access_request_id = api_access_requests.access_request_id)`
 
 
 ## 006_insert_api_access_requests.sql
@@ -190,16 +190,16 @@
 
 ### 引数
 
-| 項目 | 型 | nullable |
-| --- | --- | --- |
-| `access_request_id` | `UUID` | no |
-| `project_id` | `UUID` | no |
-| `api_id` | `UUID` | no |
-| `api_stage_id` | `UUID` | no |
-| `requested_auth_mode` | `str` | no |
-| `requested_reason` | `str` | no |
-| `actor_principal_id` | `str` | no |
-| `now` | `datetime` | no |
+| 取得元テーブル | 項目 | 型 | nullable |
+| --- | --- | --- | --- |
+| <code>api_access_requests</code> | <code>access_request_id</code> | <code>UUID</code> | no |
+| <code>api_access_requests</code> | <code>project_id</code> | <code>UUID</code> | no |
+| <code>api_access_requests</code> | <code>api_id</code> | <code>UUID</code> | no |
+| <code>api_access_requests</code> | <code>api_stage_id</code> | <code>UUID</code> | no |
+| <code>api_access_requests</code> | <code>requested_auth_mode</code> | <code>str</code> | no |
+| <code>api_access_requests</code> | <code>requested_reason</code> | <code>str</code> | no |
+| <code>api_access_requests</code> | <code>actor_principal_id</code> | <code>str</code> | no |
+| <code>api_access_requests</code> | <code>now</code> | <code>datetime</code> | no |
 
 ### 戻り値
 
@@ -222,18 +222,18 @@ _なし_
 
 ### 引数
 
-| 項目 | 型 | nullable |
-| --- | --- | --- |
-| `event_id` | `UUID` | no |
-| `access_request_id` | `UUID` | no |
-| `event_name` | `str` | no |
-| `actor_principal_id` | `str` | no |
-| `actor_type` | `str` | no |
-| `now` | `datetime` | no |
-| `reason` | `str` | no |
-| `correlation_id` | `str` | no |
-| `idempotency_key` | `str` | no |
-| `event_payload` | `dict[str, Any]` | no |
+| 取得元テーブル | 項目 | 型 | nullable |
+| --- | --- | --- | --- |
+| <code>access_request_events</code> | <code>event_id</code> | <code>UUID</code> | no |
+| <code>access_request_events</code> | <code>access_request_id</code> | <code>UUID</code> | no |
+| <code>access_request_events</code> | <code>event_name</code> | <code>str</code> | no |
+| <code>access_request_events</code> | <code>actor_principal_id</code> | <code>str</code> | no |
+| <code>access_request_events</code> | <code>actor_type</code> | <code>str</code> | no |
+| <code>access_request_events</code> | <code>now</code> | <code>datetime</code> | no |
+| <code>access_request_events</code> | <code>reason</code> | <code>str</code> | no |
+| <code>access_request_events</code> | <code>correlation_id</code> | <code>str</code> | no |
+| <code>access_request_events</code> | <code>idempotency_key</code> | <code>str</code> | no |
+| <code>access_request_events</code> | <code>event_payload</code> | <code>dict[str, Any]</code> | no |
 
 ### 戻り値
 
@@ -256,15 +256,15 @@ _なし_
 
 ### 引数
 
-| 項目 | 型 | nullable |
-| --- | --- | --- |
-| `audit_event_id` | `UUID` | no |
-| `actor_principal_id` | `str` | no |
-| `access_request_id` | `UUID` | no |
-| `source_ip` | `str` | no |
-| `user_agent` | `str` | no |
-| `details` | `dict[str, Any]` | no |
-| `now` | `datetime` | no |
+| 取得元テーブル | 項目 | 型 | nullable |
+| --- | --- | --- | --- |
+| <code>audit_events</code> | <code>audit_event_id</code> | <code>UUID</code> | no |
+| <code>audit_events</code> | <code>actor_principal_id</code> | <code>str</code> | no |
+| <code>audit_events</code> | <code>access_request_id</code> | <code>UUID</code> | no |
+| <code>audit_events</code> | <code>source_ip</code> | <code>str</code> | no |
+| <code>audit_events</code> | <code>user_agent</code> | <code>str</code> | no |
+| <code>audit_events</code> | <code>details</code> | <code>dict[str, Any]</code> | no |
+| <code>audit_events</code> | <code>now</code> | <code>datetime</code> | no |
 
 ### 戻り値
 
@@ -287,15 +287,15 @@ _なし_
 
 ### 引数
 
-| 項目 | 型 | nullable |
-| --- | --- | --- |
-| `idempotency_record_id` | `UUID` | no |
-| `idempotency_key` | `str` | no |
-| `request_hash` | `str` | no |
-| `response_payload` | `dict[str, Any]` | no |
-| `expires_at` | `datetime` | no |
-| `now` | `datetime` | no |
-| `actor_principal_id` | `str` | no |
+| 取得元テーブル | 項目 | 型 | nullable |
+| --- | --- | --- | --- |
+| <code>idempotency_records</code> | <code>idempotency_record_id</code> | <code>UUID</code> | no |
+| <code>idempotency_records</code> | <code>idempotency_key</code> | <code>str</code> | no |
+| <code>idempotency_records</code> | <code>request_hash</code> | <code>str</code> | no |
+| <code>idempotency_records</code> | <code>response_payload</code> | <code>dict[str, Any]</code> | no |
+| <code>idempotency_records</code> | <code>expires_at</code> | <code>datetime</code> | no |
+| <code>idempotency_records</code> | <code>now</code> | <code>datetime</code> | no |
+| <code>idempotency_records</code> | <code>actor_principal_id</code> | <code>str</code> | no |
 
 ### 戻り値
 

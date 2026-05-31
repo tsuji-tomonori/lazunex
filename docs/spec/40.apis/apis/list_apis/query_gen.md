@@ -16,30 +16,30 @@
 
 ### 引数
 
-| 項目 | 型 | nullable |
-| --- | --- | --- |
-| `visibility` | `str` | no |
-| `keyword` | `Any` | no |
-| `after_api_code` | `Any` | no |
-| `limit` | `Any` | no |
+| 取得元テーブル | 項目 | 型 | nullable |
+| --- | --- | --- | --- |
+| <code>apis</code> | <code>visibility</code> | <code>str</code> | no |
+| <code>-</code> | <code>keyword</code> | <code>Any</code> | no |
+| <code>apis</code> | <code>after_api_code</code> | <code>Any</code> | no |
+| <code>-</code> | <code>limit</code> | <code>Any</code> | no |
 
 ### 戻り値
 
-| 項目 | 型 | nullable |
-| --- | --- | --- |
-| `api_id` | `UUID` | no |
-| `api_code` | `str` | no |
-| `name` | `str` | no |
-| `description` | `str` | no |
-| `provider_name` | `str` | no |
-| `visibility` | `str` | no |
-| `api_stage_id` | `UUID` | no |
-| `apigw_stage_name` | `str` | no |
-| `invoke_url` | `str` | no |
-| `scope_full_name` | `str` | no |
+| 取得元テーブル | 項目 | 型 | nullable |
+| --- | --- | --- | --- |
+| <code>apis</code> | <code>api_id</code> | <code>UUID</code> | no |
+| <code>apis</code> | <code>api_code</code> | <code>str</code> | no |
+| <code>apis</code> | <code>name</code> | <code>str</code> | no |
+| <code>apis</code> | <code>description</code> | <code>str</code> | no |
+| <code>apis</code> | <code>provider_name</code> | <code>str</code> | no |
+| <code>apis</code> | <code>visibility</code> | <code>str</code> | no |
+| <code>api_gateway_stages</code> | <code>api_stage_id</code> | <code>UUID</code> | no |
+| <code>api_gateway_stages</code> | <code>apigw_stage_name</code> | <code>str</code> | no |
+| <code>api_gateway_stages</code> | <code>invoke_url</code> | <code>str</code> | no |
+| <code>api_cognito_scopes</code> | <code>scope_full_name</code> | <code>str</code> | no |
 
 ### 条件
 
-- `JOIN ON s.api_stage_id = a.default_api_stage_id`
-- `JOIN ON c.api_id = a.api_id`
-- `WHERE (@visibility IS NULL OR a.visibility = @visibility) AND (@keyword IS NULL OR LOWER(a.name) LIKE LOWER(@keyword) OR LOWER(a.api_code) LIKE LOWER(@keyword)) AND (@after_api_code IS NULL OR a.api_code > @after_api_code)`
+- `JOIN ON api_gateway_stages.api_stage_id = apis.default_api_stage_id`
+- `JOIN ON api_cognito_scopes.api_id = apis.api_id`
+- `WHERE (@visibility IS NULL OR apis.visibility = @visibility) AND (@keyword IS NULL OR LOWER(apis.name) LIKE LOWER(@keyword) OR LOWER(apis.api_code) LIKE LOWER(@keyword)) AND (@after_api_code IS NULL OR apis.api_code > @after_api_code)`

@@ -17,39 +17,39 @@ API詳細レスポンスを組み立てるため、API catalog情報を取得す
 
 ### 引数
 
-| 項目 | 型 | nullable |
-| --- | --- | --- |
-| `api_id` | `UUID` | no |
+| 取得元テーブル | 項目 | 型 | nullable |
+| --- | --- | --- | --- |
+| <code>apis</code> | <code>api_id</code> | <code>UUID</code> | no |
 
 ### 戻り値
 
-| 項目 | 型 | nullable |
-| --- | --- | --- |
-| `api_id` | `UUID` | no |
-| `api_code` | `str` | no |
-| `name` | `str` | no |
-| `description` | `str` | no |
-| `provider_name` | `str` | no |
-| `provider_contact` | `str` | no |
-| `owner_principal_id` | `str` | no |
-| `visibility` | `str` | no |
-| `api_stage_id` | `UUID` | no |
-| `aws_account_id` | `str` | no |
-| `aws_region` | `str` | no |
-| `apigw_rest_api_id` | `str` | no |
-| `apigw_stage_name` | `str` | no |
-| `invoke_url` | `str` | no |
-| `custom_domain_url` | `str | None` | yes |
-| `api_key_required_observed` | `bool` | no |
-| `scope_config_observed` | `str` | no |
-| `scope_name` | `str` | no |
-| `scope_full_name` | `str` | no |
-| `reviewer_principal_id` | `str` | no |
-| `reviewer_role` | `str` | no |
+| 取得元テーブル | 項目 | 型 | nullable |
+| --- | --- | --- | --- |
+| <code>apis</code> | <code>api_id</code> | <code>UUID</code> | no |
+| <code>apis</code> | <code>api_code</code> | <code>str</code> | no |
+| <code>apis</code> | <code>name</code> | <code>str</code> | no |
+| <code>apis</code> | <code>description</code> | <code>str</code> | no |
+| <code>apis</code> | <code>provider_name</code> | <code>str</code> | no |
+| <code>apis</code> | <code>provider_contact</code> | <code>str</code> | no |
+| <code>apis</code> | <code>owner_principal_id</code> | <code>str</code> | no |
+| <code>apis</code> | <code>visibility</code> | <code>str</code> | no |
+| <code>api_gateway_stages</code> | <code>api_stage_id</code> | <code>UUID</code> | no |
+| <code>api_gateway_stages</code> | <code>aws_account_id</code> | <code>str</code> | no |
+| <code>api_gateway_stages</code> | <code>aws_region</code> | <code>str</code> | no |
+| <code>api_gateway_stages</code> | <code>apigw_rest_api_id</code> | <code>str</code> | no |
+| <code>api_gateway_stages</code> | <code>apigw_stage_name</code> | <code>str</code> | no |
+| <code>api_gateway_stages</code> | <code>invoke_url</code> | <code>str</code> | no |
+| <code>api_gateway_stages</code> | <code>custom_domain_url</code> | <code>str &#124; None</code> | yes |
+| <code>api_gateway_stages</code> | <code>api_key_required_observed</code> | <code>bool</code> | no |
+| <code>api_gateway_stages</code> | <code>scope_config_observed</code> | <code>str</code> | no |
+| <code>api_cognito_scopes</code> | <code>scope_name</code> | <code>str</code> | no |
+| <code>api_cognito_scopes</code> | <code>scope_full_name</code> | <code>str</code> | no |
+| <code>api_reviewers</code> | <code>reviewer_principal_id</code> | <code>str</code> | no |
+| <code>api_reviewers</code> | <code>reviewer_role</code> | <code>str</code> | no |
 
 ### 条件
 
-- `JOIN ON s.api_id = a.api_id`
-- `JOIN ON c.api_id = a.api_id`
-- `JOIN ON r.api_id = a.api_id`
-- `WHERE a.api_id = @api_id`
+- `JOIN ON api_gateway_stages.api_id = apis.api_id`
+- `JOIN ON api_cognito_scopes.api_id = apis.api_id`
+- `JOIN ON api_reviewers.api_id = apis.api_id`
+- `WHERE apis.api_id = @api_id`

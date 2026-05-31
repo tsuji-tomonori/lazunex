@@ -57,8 +57,8 @@ def test_sql_tables_and_conditions_preserve_sql_order() -> None:
 
     assert sql_tables(statements) == ("projects", "project_events")
     assert sql_conditions(statements) == (
-        "JOIN ON e.aggregate_id = p.project_id",
-        "WHERE p.project_code = @project_code",
+        "JOIN ON project_events.aggregate_id = projects.project_id",
+        "WHERE projects.project_code = @project_code",
         "HAVING COUNT(*) > 0",
     )
 
@@ -85,9 +85,54 @@ def test_generate_query_specs_renders_sql_chapters(tmp_path: Path) -> None:
     assert "### SQLの概要" in content
     assert "Project 一覧を取得する。" in content
     assert "### 利用するテーブル\n\n- `projects`" in content
-    assert "| `project_code` | `str` | no |" in content
-    assert "| `description` | `str | None` | yes |" in content
+    assert (
+        "| <code>projects</code> | <code>project_code</code> | "
+        "<code>str</code> | no |"
+    ) in content
+    assert (
+        "| <code>projects</code> | <code>description</code> | "
+        "<code>str &#124; None</code> | yes |"
+    ) in content
     assert "### 条件\n\n- `WHERE project_code = @project_code`" in content
+
+
+def test_generate_query_specs_renders_source_tables_and_expanded_aliases(
+    tmp_path: Path,
+) -> None:
+    api_root = write_api_sql(
+        tmp_path,
+        """
+        SELECT
+            p.project_id,
+            COUNT(e.event_id) AS event_count
+        FROM projects AS p
+        LEFT JOIN project_events AS e
+            ON e.aggregate_id = p.project_id
+        WHERE p.project_code = @project_code;
+        """,
+    )
+
+    content = next(
+        iter(generate_query_specs(api_root, tmp_path / "docs", write_ddl(tmp_path)).values())
+    )
+
+    assert (
+        "| <code>projects</code> | <code>project_code</code> | "
+        "<code>str</code> | no |"
+    ) in content
+    assert (
+        "| <code>projects</code> | <code>project_id</code> | "
+        "<code>UUID</code> | no |"
+    ) in content
+    assert (
+        "| <code>project_events</code> | <code>event_count</code> | "
+        "<code>Any</code> | no |"
+    ) in content
+    assert (
+        "- `JOIN ON project_events.aggregate_id = projects.project_id`"
+        in content
+    )
+    assert "- `WHERE projects.project_code = @project_code`" in content
 
 
 def test_render_query_markdown_marks_empty_sections(tmp_path: Path) -> None:
