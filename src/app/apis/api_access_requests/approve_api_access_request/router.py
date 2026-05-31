@@ -28,7 +28,10 @@ router = APIRouter()
     tags=["api-access-requests"],
 )
 async def approve_api_access_request(
-    access_request_id: Annotated[str, Path(alias="accessRequestId")],
+    access_request_id: Annotated[
+        str,
+        Path(alias="accessRequestId", description="API利用申請を一意に識別するIDです。"),
+    ],
     request: Annotated[
         ApproveApiAccessRequestRequest,
         Body(

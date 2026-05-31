@@ -29,7 +29,12 @@ router = APIRouter()
     tags=["api-access-requests"],
 )
 async def create_api_access_request(
-    project_id: Annotated[str, Path(alias="projectId")],
+    project_id: Annotated[
+        str,
+        Path(
+            alias="projectId", description="API利用単位となるプロジェクトを一意に識別するIDです。"
+        ),
+    ],
     request: Annotated[
         CreateApiAccessRequestRequest,
         Body(

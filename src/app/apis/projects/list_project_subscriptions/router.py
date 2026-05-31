@@ -27,7 +27,12 @@ router = APIRouter()
     tags=["projects"],
 )
 async def list_project_subscriptions(
-    project_id: Annotated[str, Path(alias="projectId")],
+    project_id: Annotated[
+        str,
+        Path(
+            alias="projectId", description="API利用単位となるプロジェクトを一意に識別するIDです。"
+        ),
+    ],
     query: Annotated[ListProjectSubscriptionsQuery, Query()],
 ) -> ListProjectSubscriptionsResponse:
     not_implemented()

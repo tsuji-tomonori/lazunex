@@ -22,6 +22,9 @@ router = APIRouter()
     tags=["apis"],
 )
 async def get_api(
-    api_id: Annotated[str, Path(alias="apiId")],
+    api_id: Annotated[
+        str,
+        Path(alias="apiId", description="APIカタログ上のAPIを一意に識別するIDです。"),
+    ],
 ) -> GetApiResponse:
     not_implemented()

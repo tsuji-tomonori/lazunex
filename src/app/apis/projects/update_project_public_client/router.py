@@ -28,7 +28,12 @@ router = APIRouter()
     tags=["projects"],
 )
 async def update_project_public_client(
-    project_id: Annotated[str, Path(alias="projectId")],
+    project_id: Annotated[
+        str,
+        Path(
+            alias="projectId", description="API利用単位となるプロジェクトを一意に識別するIDです。"
+        ),
+    ],
     request: Annotated[
         UpdateProjectPublicClientRequest,
         Body(
