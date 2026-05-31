@@ -17,7 +17,7 @@ MESSAGE_PATTERN = re.compile(
 )
 SQL_MESSAGE_PATTERN = re.compile(
     r"^\s*API->>DB:\s*DBを(?:参照|追加|更新|削除)する"
-    r"\(SQL\s+(?P<filename>[^;]+);\s+テーブル\s+(?P<tables>[^)]+)\)$"
+    r"\s+SQL\s+(?P<filename>\S+)\s+テーブル\s+(?P<tables>.+)$"
 )
 ALLOWED_SEQUENCE_LINES = {
     "sequenceDiagram",
@@ -43,6 +43,10 @@ def mermaid_blocks(source: str) -> list[tuple[int, list[str]]]:
 
 def has_message_separator(label: str) -> bool:
     return ":" in label or "\uff1a" in label
+
+
+def has_unsafe_label_delimiter(label: str) -> bool:
+    return any(character in label for character in ("(", ")", ";"))
 
 
 def validate_sequence_block(
@@ -121,6 +125,14 @@ def validate_sequence_block(
                         path=path,
                         line=index,
                         message="Message label must not contain ':' or fullwidth colon.",
+                    )
+                )
+            if has_unsafe_label_delimiter(label):
+                issues.append(
+                    MermaidIssue(
+                        path=path,
+                        line=index,
+                        message="Message label must not contain parentheses or semicolons.",
                     )
                 )
             sql_match = SQL_MESSAGE_PATTERN.match(line)

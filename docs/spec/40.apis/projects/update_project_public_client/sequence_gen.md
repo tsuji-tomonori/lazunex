@@ -8,34 +8,34 @@ sequenceDiagram
   participant API as API: updateProjectPublicClient
   participant R_cognito as Resource: cognito
   participant DB as DB
-  API->>API: 呼び出し元の sub、group、scope を取得する。(戻り値 CallerIdentity)
-  API->>API: public App Client 更新リクエストを検証する。(引数 request UpdateProjectPublicClientRequest; 戻り値 UpdateProjectPublicClientRequest)
-  API->>API: 対象 Project を取得する。(引数 project_id ResourceId; 戻り値 ProjectRef)
+  API->>API: 呼び出し元の sub、group、scope を取得する。 戻り値 CallerIdentity
+  API->>API: public App Client 更新リクエストを検証する。 引数 request UpdateProjectPublicClientRequest 戻り値 UpdateProjectPublicClientRequest
+  API->>API: 対象 Project を取得する。 引数 project_id ResourceId 戻り値 ProjectRef
   alt 呼び出し元が Project owner であるかを判定する。
-    API->>API: 呼び出し元が Project owner であるかを判定する。(引数 project ProjectRef, caller CallerIdentity; 戻り値 bool)
+    API->>API: 呼び出し元が Project owner であるかを判定する。 引数 project ProjectRef, caller CallerIdentity 戻り値 bool
   end
-  API->>API: Project の public App Client metadata を取得する。(引数 project ProjectRef; 戻り値 UpdatedPublicClientResponse)
-  API->>API: Idempotency-Key に対応する既存レコードを取得する。(引数 idempotency_key str; 戻り値 IdempotencyRecordRef)
-  API->>API: public client 更新用の provisioning operation を作成する。(引数 project ProjectRef, request UpdateProjectPublicClientRequest, idempotency_key str; 戻り値 ProvisioningOperationRef)
-  API->>API: 冪等性レコードを作成または確認する。(引数 idempotency_key str, operation ProvisioningOperationRef; 戻り値 IdempotencyRecordRef)
-  API->>R_cognito: Cognito App Client 設定を取得する。(引数 public_client UpdatedPublicClientResponse; 戻り値 CognitoAppClientRef)
-  API->>API: callback URL、logout URL、token 設定を既存設定へ統合する。(引数 current CognitoAppClientRef, request UpdateProjectPublicClientRequest; 戻り値 CognitoAppClientRef)
-  API->>R_cognito: Cognito App Client を更新する。(引数 merged CognitoAppClientRef, operation ProvisioningOperationRef; 戻り値 CognitoAppClientRef)
-  API->>API: public App Client metadata を更新する。(引数 project ProjectRef, merged CognitoAppClientRef; 戻り値 UpdatedPublicClientResponse)
-  API->>API: Project public client 更新イベントを追記する。(引数 project ProjectRef, public_client UpdatedPublicClientResponse; 戻り値 EventRef)
-  API->>API: provisioning operation/step event を追記する。(引数 operation ProvisioningOperationRef; 戻り値 list[EventRef])
-  API->>API: 監査イベントを追記する。(引数 project ProjectRef, caller CallerIdentity; 戻り値 EventRef)
-  API->>API: public App Client 更新レスポンスを組み立てる。(引数 project ProjectRef, public_client UpdatedPublicClientResponse, operation ProvisioningOperationRef; 戻り値 UpdateProjectPublicClientResponse)
-  API->>DB: DBを参照する(SQL 001_select_project_cognito_clients.sql; テーブル project_cognito_clients, projects, project_members)
-  API->>DB: DBを参照する(SQL 002_select_project_cognito_client_scopes.sql; テーブル project_cognito_client_scopes)
-  API->>DB: DBを更新する(SQL 003_update_project_cognito_clients.sql; テーブル project_cognito_clients)
-  API->>DB: DBを削除する(SQL 004_delete_project_cognito_client_urls.sql; テーブル project_cognito_client_urls)
-  API->>DB: DBを追加する(SQL 005_insert_project_cognito_client_urls.sql; テーブル project_cognito_client_urls)
-  API->>DB: DBを追加する(SQL 006_insert_project_cognito_client_events.sql; テーブル project_cognito_client_events)
-  API->>DB: DBを追加する(SQL 007_insert_audit_events.sql; テーブル audit_events)
-  API->>DB: DBを追加する(SQL 008_insert_provisioning_operations.sql; テーブル provisioning_operations)
-  API->>DB: DBを追加する(SQL 009_insert_idempotency_records.sql; テーブル idempotency_records)
-  API->>DB: DBを追加する(SQL 010_insert_provisioning_steps.sql; テーブル provisioning_steps)
-  API->>DB: DBを追加する(SQL 011_insert_provisioning_operation_events.sql; テーブル provisioning_operation_events)
-  API->>DB: DBを追加する(SQL 012_insert_provisioning_step_events.sql; テーブル provisioning_step_events)
+  API->>API: Project の public App Client metadata を取得する。 引数 project ProjectRef 戻り値 UpdatedPublicClientResponse
+  API->>API: Idempotency-Key に対応する既存レコードを取得する。 引数 idempotency_key str 戻り値 IdempotencyRecordRef
+  API->>API: public client 更新用の provisioning operation を作成する。 引数 project ProjectRef, request UpdateProjectPublicClientRequest, idempotency_key str 戻り値 ProvisioningOperationRef
+  API->>API: 冪等性レコードを作成または確認する。 引数 idempotency_key str, operation ProvisioningOperationRef 戻り値 IdempotencyRecordRef
+  API->>R_cognito: Cognito App Client 設定を取得する。 引数 public_client UpdatedPublicClientResponse 戻り値 CognitoAppClientRef
+  API->>API: callback URL、logout URL、token 設定を既存設定へ統合する。 引数 current CognitoAppClientRef, request UpdateProjectPublicClientRequest 戻り値 CognitoAppClientRef
+  API->>R_cognito: Cognito App Client を更新する。 引数 merged CognitoAppClientRef, operation ProvisioningOperationRef 戻り値 CognitoAppClientRef
+  API->>API: public App Client metadata を更新する。 引数 project ProjectRef, merged CognitoAppClientRef 戻り値 UpdatedPublicClientResponse
+  API->>API: Project public client 更新イベントを追記する。 引数 project ProjectRef, public_client UpdatedPublicClientResponse 戻り値 EventRef
+  API->>API: provisioning operation/step event を追記する。 引数 operation ProvisioningOperationRef 戻り値 list[EventRef]
+  API->>API: 監査イベントを追記する。 引数 project ProjectRef, caller CallerIdentity 戻り値 EventRef
+  API->>API: public App Client 更新レスポンスを組み立てる。 引数 project ProjectRef, public_client UpdatedPublicClientResponse, operation ProvisioningOperationRef 戻り値 UpdateProjectPublicClientResponse
+  API->>DB: DBを参照する SQL 001_select_project_cognito_clients.sql テーブル project_cognito_clients, projects, project_members
+  API->>DB: DBを参照する SQL 002_select_project_cognito_client_scopes.sql テーブル project_cognito_client_scopes
+  API->>DB: DBを更新する SQL 003_update_project_cognito_clients.sql テーブル project_cognito_clients
+  API->>DB: DBを削除する SQL 004_delete_project_cognito_client_urls.sql テーブル project_cognito_client_urls
+  API->>DB: DBを追加する SQL 005_insert_project_cognito_client_urls.sql テーブル project_cognito_client_urls
+  API->>DB: DBを追加する SQL 006_insert_project_cognito_client_events.sql テーブル project_cognito_client_events
+  API->>DB: DBを追加する SQL 007_insert_audit_events.sql テーブル audit_events
+  API->>DB: DBを追加する SQL 008_insert_provisioning_operations.sql テーブル provisioning_operations
+  API->>DB: DBを追加する SQL 009_insert_idempotency_records.sql テーブル idempotency_records
+  API->>DB: DBを追加する SQL 010_insert_provisioning_steps.sql テーブル provisioning_steps
+  API->>DB: DBを追加する SQL 011_insert_provisioning_operation_events.sql テーブル provisioning_operation_events
+  API->>DB: DBを追加する SQL 012_insert_provisioning_step_events.sql テーブル provisioning_step_events
 ```

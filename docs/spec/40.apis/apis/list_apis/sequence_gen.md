@@ -7,13 +7,13 @@ sequenceDiagram
   autonumber
   participant API as API: listApis
   participant DB as DB
-  API->>API: API 一覧取得条件を検証する。(引数 query ListApisQuery; 戻り値 ListApisQuery)
-  API->>API: 呼び出し元の role、group、scope を取得する。(戻り値 CallerIdentity)
+  API->>API: API 一覧取得条件を検証する。 引数 query ListApisQuery 戻り値 ListApisQuery
+  API->>API: 呼び出し元の role、group、scope を取得する。 戻り値 CallerIdentity
   alt 呼び出し元が API 一覧を参照できるかを判定する。
-    API->>API: 呼び出し元が API 一覧を参照できるかを判定する。(引数 caller CallerIdentity; 戻り値 bool)
+    API->>API: 呼び出し元が API 一覧を参照できるかを判定する。 引数 caller CallerIdentity 戻り値 bool
   end
-  API->>API: 呼び出し元が参照可能な公開 API を検索する。(引数 query ListApisQuery, caller CallerIdentity; 戻り値 SequencePage[ApiListItemResponse])
-  API->>API: 一覧取得結果に limit と nextToken を適用する。(引数 page SequencePage[ApiListItemResponse], query ListApisQuery; 戻り値 SequencePage[ApiListItemResponse])
-  API->>API: API 一覧レスポンスを組み立てる。(引数 page SequencePage[ApiListItemResponse]; 戻り値 ListApisResponse)
-  API->>DB: DBを参照する(SQL 001_select_apis.sql; テーブル apis, api_gateway_stages, api_cognito_scopes)
+  API->>API: 呼び出し元が参照可能な公開 API を検索する。 引数 query ListApisQuery, caller CallerIdentity 戻り値 SequencePage[ApiListItemResponse]
+  API->>API: 一覧取得結果に limit と nextToken を適用する。 引数 page SequencePage[ApiListItemResponse], query ListApisQuery 戻り値 SequencePage[ApiListItemResponse]
+  API->>API: API 一覧レスポンスを組み立てる。 引数 page SequencePage[ApiListItemResponse] 戻り値 ListApisResponse
+  API->>DB: DBを参照する SQL 001_select_apis.sql テーブル apis, api_gateway_stages, api_cognito_scopes
 ```

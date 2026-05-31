@@ -192,7 +192,7 @@ def sequence_label(step: SequenceStep) -> str:
         details.append(f"戻り値 {step.return_type}")
     if not details:
         return step.description
-    return f"{step.description}({'; '.join(details)})"
+    return f"{step.description} {' '.join(details)}"
 
 
 def function_target(function_name: str) -> str:
@@ -366,7 +366,7 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
         tables = ", ".join(sql_step.tables)
         lines.append(
             f"  API->>DB: DBを{sql_step.action}する"
-            f"(SQL {sql_step.filename}; テーブル {tables})"
+            f" SQL {sql_step.filename} テーブル {tables}"
         )
 
     lines.extend(["```", ""])

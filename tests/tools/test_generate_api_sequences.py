@@ -192,7 +192,7 @@ def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
     assert "alt プロジェクトを参照できるかを判定する。" in markdown
     assert (
         "API->>DB: DBを参照する"
-        "(SQL 001_select_projects.sql; テーブル projects, project_members)"
+        " SQL 001_select_projects.sql テーブル projects, project_members"
         in markdown
     )
 
