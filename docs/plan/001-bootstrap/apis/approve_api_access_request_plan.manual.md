@@ -9,6 +9,8 @@ API 審査者または Hub 管理者が利用申請を承認し、Usage Plan と
 - 承認対象 request が審査中であることを確認する。
 - Usage Plan への API stage 追加と App Client への custom scope 追加を同期実行する。
 - DB の subscription、request 状態、provisioning operation/step、audit event を整合させる。
+- `Idempotency-Key` を `idempotency_records` に記録し、二重承認を防ぐ。
+- Usage Plan stage 追加と App Client scope 付与は `usage_plan_stage_events`、`client_scope_events` に残す。
 - 途中失敗時は partial failure として記録し、同一 operation を再実行可能にする。
 
 ## 実装計画
@@ -20,19 +22,22 @@ API 審査者または Hub 管理者が利用申請を承認し、Usage Plan と
 5. 既存 active subscription がないことを確認する。
 6. `access_request.approving` イベントを追記する。
 7. Provisioning operation を作成する。
-8. FastAPI API Lambda が API Gateway `UpdateUsagePlan` で API stage を追加する。
-9. FastAPI API Lambda が Cognito App Client を `DescribeUserPoolClient` で取得する。
-10. 既存 `AllowedOAuthScopes` に対象 scope をマージする。
-11. FastAPI API Lambda が Cognito `UpdateUserPoolClient` を実行する。
-12. `api_access_reviews`、`project_api_subscriptions`、`project_usage_plan_api_stages`、`project_cognito_client_scopes` を保存する。
-13. `access_request.approved`、`subscription.provisioned`、`audit_events` を追記する。
+8. `idempotency_records` を作成または確認する。
+9. FastAPI API Lambda が API Gateway `UpdateUsagePlan` で API stage を追加し、provisioning step を記録する。
+10. FastAPI API Lambda が Cognito App Client を `DescribeUserPoolClient` で取得する。
+11. 既存 `AllowedOAuthScopes` に対象 scope をマージする。
+12. FastAPI API Lambda が Cognito `UpdateUserPoolClient` を実行し、provisioning step を記録する。
+13. `api_access_reviews`、`project_api_subscriptions`、`project_usage_plan_api_stages`、`project_cognito_client_scopes` を保存する。
+14. `usage_plan_stage_events`、`client_scope_events` を追記する。
+15. `access_request.approved`、`subscription.provisioned`、provisioning operation/step event、`audit_events` を追記する。
 
 ## 作業
 
 - 承認 API の contract、request/response schema、router を実装する。
 - 対象申請、Project、API、stage、subscription を取得・検証する SQL を実装する。
 - API Gateway と Cognito の resource integration を実装する。
-- provisioning operation/step と audit event の保存処理を実装する。
+- provisioning operation/step、provisioning event、audit event の保存処理を実装する。
+- `idempotency_records`、Usage Plan stage event、client scope event の保存 SQL を実装する。
 - 正常系、権限不足、状態不正、片側反映失敗、冪等再送の単体テストを作成する。
 
 ## 完了条件

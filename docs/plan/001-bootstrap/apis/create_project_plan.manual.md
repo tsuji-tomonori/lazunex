@@ -9,6 +9,9 @@ API 利用者が API 利用単位となる Project を作成し、API key、Usag
 - Project 作成時に API Gateway API key、Usage Plan、public/confidential App Client を同期作成する。
 - API key と client secret は初回レスポンスでのみ返し、DB にはハッシュと末尾だけを保存する。
 - AWS 反映は resource integration に閉じ、失敗時は provisioning operation/step に記録する。
+- 変更系 API として `Idempotency-Key` を必須にし、`idempotency_records` で二重実行を防止する。
+- Project owner は `project_members` に保存し、追加事実を `project_member_events` に残す。
+- API key、Usage Plan、Usage Plan Key の払い出し事実は各 lifecycle event に残す。
 - unit test では AWS を呼ばず fake integration で払い出し結果を検証する。
 
 ## 実装計画
@@ -17,19 +20,23 @@ API 利用者が API 利用単位となる Project を作成し、API key、Usag
 2. 呼び出し元が Project を作成できる利用者であることを確認する。
 3. `Idempotency-Key` から既存 operation の有無を確認する。
 4. Project 作成用の provisioning operation を作成する。
-5. FastAPI API Lambda が API Gateway API key を作成する。
-6. FastAPI API Lambda が API Gateway Usage Plan を作成する。
-7. FastAPI API Lambda が Cognito public App Client を作成する。
-8. FastAPI API Lambda が Cognito confidential App Client を作成する。
-9. API key 値と client secret 値の hash、hash key version、last4 を計算する。
-10. `projects`、Project owner、API key metadata、Usage Plan metadata、App Client metadata を保存する。
-11. `project.created`、`project.provisioned`、`audit_events` を追記する。
-12. 初回レスポンスとして API key 値と client secret 値を返す。
+5. `idempotency_records` を作成または確認する。
+6. FastAPI API Lambda が API Gateway API key を作成し、provisioning step を記録する。
+7. FastAPI API Lambda が API Gateway Usage Plan を作成し、provisioning step を記録する。
+8. FastAPI API Lambda が Cognito public App Client を作成し、provisioning step を記録する。
+9. FastAPI API Lambda が Cognito confidential App Client を作成し、provisioning step を記録する。
+10. API key 値と client secret 値の hash、hash key version、last4 を計算する。
+11. `projects`、Project owner、API key metadata、Usage Plan metadata、App Client metadata を保存する。
+12. `project_member_events`、`project_api_key_events`、`project_usage_plan_events`、`project_usage_plan_key_events` を追記する。
+13. `project.created`、`project.provisioned`、provisioning operation/step event、`audit_events` を追記する。
+14. 初回レスポンスとして API key 値と client secret 値を返す。
 
 ## 作業
 
 - Project 作成 API の contract、request/response schema、router を実装する。
 - Project、owner、API key、Usage Plan、App Client metadata の保存 SQL を実装する。
+- `idempotency_records`、provisioning step、provisioning event の保存 SQL を実装する。
+- Project member、API key、Usage Plan、Usage Plan Key の lifecycle event 保存 SQL を実装する。
 - API Gateway と Cognito の resource integration を実装する。
 - secret hash 生成と平文非保存の処理を実装する。
 - 正常系、冪等再送、部分失敗、secret 非保存の単体テストを作成する。

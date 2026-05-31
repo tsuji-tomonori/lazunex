@@ -1,0 +1,38 @@
+INSERT INTO provisioning_steps (
+    operation_step_id,
+    operation_id,
+    step_order,
+    step_name,
+    aws_service,
+    aws_action,
+    request_payload,
+    response_payload,
+    error_code,
+    error_message,
+    started_at,
+    finished_at,
+    created_at,
+    created_by,
+    updated_at,
+    updated_by,
+    row_version
+) VALUES (
+    :operation_step_id,
+    :operation_id,
+    :step_order,
+    :step_name,
+    :aws_service,
+    :aws_action,
+    CAST(:request_payload AS json),
+    CAST(:response_payload AS json),
+    :error_code,
+    :error_message,
+    :started_at,
+    :finished_at,
+    :now,
+    :actor_principal_id,
+    :now,
+    :actor_principal_id,
+    1
+)
+RETURNING operation_step_id;
