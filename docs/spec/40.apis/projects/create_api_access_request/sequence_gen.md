@@ -4,56 +4,38 @@
 
 ```mermaid
 sequenceDiagram
+  autonumber
   participant API as API: createApiAccessRequest
   participant DB as DB
-  API->>API: 1. get_caller_identity
-  API->>API: 2. validate_create_access_request_request
-  API->>API: 3. get_project
-  alt 4. project_owner_permission
-    API->>API: 4. has_project_owner_permission
+  API->>API: 呼び出し元の sub、group、scope を取得する。(戻り値: CallerIdentity)
+  API->>API: 利用申請作成リクエストを検証する。(引数: request: CreateApiAccessRequestRequest; 戻り値: CreateApiAccessRequestRequest)
+  API->>API: 対象 Project を取得する。(引数: project_id: ResourceId; 戻り値: ProjectRef)
+  alt 呼び出し元が Project owner であるかを判定する。
+    API->>API: 呼び出し元が Project owner であるかを判定する。(引数: project: ProjectRef, caller: CallerIdentity; 戻り値: bool)
   end
-  alt 5. published_api
-    API->>API: 5. is_published_api
+  alt 対象 API が公開済みであるかを判定する。
+    API->>API: 対象 API が公開済みであるかを判定する。(引数: api_id: ResourceId; 戻り値: bool)
   end
-  API->>API: 6. get_api_reviewer
-  alt 7. active_subscription
-    API->>API: 7. has_active_subscription
+  API->>API: 対象 API の reviewer 情報を取得する。(引数: api_id: ResourceId; 戻り値: ApiReviewerRefs)
+  alt 同一 Project/API の active subscription が存在するかを判定する。
+    API->>API: 同一 Project/API の active subscription が存在するかを判定する。(引数: project: ProjectRef, api_id: ResourceId; 戻り値: bool)
   end
-  alt 8. pending_access_request_for_project_api
-    API->>API: 8. has_pending_access_request_for_project_api
+  alt 同一 Project/API の審査中申請が存在するかを判定する。
+    API->>API: 同一 Project/API の審査中申請が存在するかを判定する。(引数: project: ProjectRef, api_id: ResourceId; 戻り値: bool)
   end
-  API->>API: 9. save_api_access_request
-  API->>API: 10. get_idempotency_record
-  API->>API: 11. create_idempotency_record
-  API->>API: 12. append_access_request_created_event
-  API->>API: 13. append_audit_event
-  API->>API: 14. build_create_access_request_response
-  API->>DB: 15. 参照 001_select_projects.sql (projects)
-  DB-->>API: projects
-  API->>DB: 16. 参照 001_select_projects.sql (project_members)
-  DB-->>API: project_members
-  API->>DB: 17. 参照 002_select_apis.sql (apis)
-  DB-->>API: apis
-  API->>DB: 18. 参照 002_select_apis.sql (api_gateway_stages)
-  DB-->>API: api_gateway_stages
-  API->>DB: 19. 参照 002_select_apis.sql (api_cognito_scopes)
-  DB-->>API: api_cognito_scopes
-  API->>DB: 20. 参照 002_select_apis.sql (api_reviewers)
-  DB-->>API: api_reviewers
-  API->>DB: 21. 参照 003_select_project_cognito_clients.sql (project_cognito_clients)
-  DB-->>API: project_cognito_clients
-  API->>DB: 22. 参照 004_select_subscriptions.sql (project_api_subscriptions)
-  DB-->>API: project_api_subscriptions
-  API->>DB: 23. 参照 005_select_api_access_requests.sql (api_access_requests)
-  DB-->>API: api_access_requests
-  API->>DB: 24. 参照 005_select_api_access_requests.sql (api_access_reviews)
-  DB-->>API: api_access_reviews
-  API->>DB: 25. 追加 006_insert_api_access_requests.sql (api_access_requests)
-  DB-->>API: api_access_requests
-  API->>DB: 26. 追加 007_insert_access_request_events.sql (access_request_events)
-  DB-->>API: access_request_events
-  API->>DB: 27. 追加 008_insert_audit_events.sql (audit_events)
-  DB-->>API: audit_events
-  API->>DB: 28. 追加 009_insert_idempotency_records.sql (idempotency_records)
-  DB-->>API: idempotency_records
+  API->>API: 利用申請を保存する。(引数: project: ProjectRef, request: CreateApiAccessRequestRequest, caller: CallerIdentity; 戻り値: ApiAccessRequestRef)
+  API->>API: Idempotency-Key に対応する既存レコードを取得する。(引数: idempotency_key: str; 戻り値: IdempotencyRecordRef)
+  API->>API: 冪等性レコードを作成または確認する。(引数: idempotency_key: str, access_request: ApiAccessRequestRef; 戻り値: IdempotencyRecordRef)
+  API->>API: 利用申請作成イベントを追記する。(引数: access_request: ApiAccessRequestRef; 戻り値: EventRef)
+  API->>API: 監査イベントを追記する。(引数: access_request: ApiAccessRequestRef, caller: CallerIdentity; 戻り値: EventRef)
+  API->>API: 利用申請作成レスポンスを組み立てる。(引数: access_request: ApiAccessRequestRef; 戻り値: CreateApiAccessRequestResponse)
+  API->>DB: DBを参照する(SQL: 001_select_projects.sql; テーブル: projects, project_members)
+  API->>DB: DBを参照する(SQL: 002_select_apis.sql; テーブル: apis, api_gateway_stages, api_cognito_scopes, api_reviewers)
+  API->>DB: DBを参照する(SQL: 003_select_project_cognito_clients.sql; テーブル: project_cognito_clients)
+  API->>DB: DBを参照する(SQL: 004_select_subscriptions.sql; テーブル: project_api_subscriptions)
+  API->>DB: DBを参照する(SQL: 005_select_api_access_requests.sql; テーブル: api_access_requests, api_access_reviews)
+  API->>DB: DBを追加する(SQL: 006_insert_api_access_requests.sql; テーブル: api_access_requests)
+  API->>DB: DBを追加する(SQL: 007_insert_access_request_events.sql; テーブル: access_request_events)
+  API->>DB: DBを追加する(SQL: 008_insert_audit_events.sql; テーブル: audit_events)
+  API->>DB: DBを追加する(SQL: 009_insert_idempotency_records.sql; テーブル: idempotency_records)
 ```

@@ -4,20 +4,16 @@
 
 ```mermaid
 sequenceDiagram
+  autonumber
   participant API as API: listProjects
   participant DB as DB
-  API->>API: 1. validate_project_list_query
-  API->>API: 2. get_caller_identity
-  alt 3. project_list_permission
-    API->>API: 3. has_project_list_permission
+  API->>API: Project 一覧取得条件を検証する。(引数: query: ListProjectsQuery; 戻り値: ListProjectsQuery)
+  API->>API: 呼び出し元の sub、group、scope を取得する。(戻り値: CallerIdentity)
+  alt 呼び出し元が Project 一覧を参照できるかを判定する。
+    API->>API: 呼び出し元が Project 一覧を参照できるかを判定する。(引数: caller: CallerIdentity; 戻り値: bool)
   end
-  API->>API: 4. get_viewable_projects
-  API->>API: 5. apply_pagination
-  API->>API: 6. build_project_list_response
-  API->>DB: 7. 参照 001_select_projects.sql (projects)
-  DB-->>API: projects
-  API->>DB: 8. 参照 001_select_projects.sql (project_members)
-  DB-->>API: project_members
-  API->>DB: 9. 参照 001_select_projects.sql (project_api_subscriptions)
-  DB-->>API: project_api_subscriptions
+  API->>API: 呼び出し元が参照可能な Project を検索する。(引数: query: ListProjectsQuery, caller: CallerIdentity; 戻り値: SequencePage[ProjectListItemResponse])
+  API->>API: 一覧取得結果に limit と nextToken を適用する。(引数: page: SequencePage[ProjectListItemResponse], query: ListProjectsQuery; 戻り値: SequencePage[ProjectListItemResponse])
+  API->>API: Project 一覧レスポンスを組み立てる。(引数: page: SequencePage[ProjectListItemResponse]; 戻り値: ListProjectsResponse)
+  API->>DB: DBを参照する(SQL: 001_select_projects.sql; テーブル: projects, project_members, project_api_subscriptions)
 ```

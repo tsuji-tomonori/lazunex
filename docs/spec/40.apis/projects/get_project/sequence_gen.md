@@ -4,25 +4,15 @@
 
 ```mermaid
 sequenceDiagram
+  autonumber
   participant API as API: getProject
   participant DB as DB
-  API->>API: 1. get_caller_identity
-  API->>API: 2. validate_project_id
-  API->>API: 3. get_project_detail
-  alt 4. project_view_permission
-    API->>API: 4. has_project_view_permission
+  API->>API: 呼び出し元の sub、group、scope を取得する。(戻り値: CallerIdentity)
+  API->>API: Project ID を検証する。(引数: project_id: ResourceId; 戻り値: ResourceId)
+  API->>API: Project 詳細レスポンスに必要な情報を取得する。(引数: project_id: ResourceId; 戻り値: GetProjectResponse)
+  alt 呼び出し元が Project 詳細を参照できるかを判定する。
+    API->>API: 呼び出し元が Project 詳細を参照できるかを判定する。(引数: project: GetProjectResponse, caller: CallerIdentity; 戻り値: bool)
   end
-  API->>API: 5. build_project_detail_response
-  API->>DB: 6. 参照 001_select_projects.sql (projects)
-  DB-->>API: projects
-  API->>DB: 7. 参照 001_select_projects.sql (project_api_keys)
-  DB-->>API: project_api_keys
-  API->>DB: 8. 参照 001_select_projects.sql (project_usage_plans)
-  DB-->>API: project_usage_plans
-  API->>DB: 9. 参照 001_select_projects.sql (project_cognito_clients)
-  DB-->>API: project_cognito_clients
-  API->>DB: 10. 参照 001_select_projects.sql (project_cognito_client_urls)
-  DB-->>API: project_cognito_client_urls
-  API->>DB: 11. 参照 001_select_projects.sql (project_members)
-  DB-->>API: project_members
+  API->>API: secret 値を含めずに Project 詳細レスポンスを組み立てる。(引数: project: GetProjectResponse; 戻り値: GetProjectResponse)
+  API->>DB: DBを参照する(SQL: 001_select_projects.sql; テーブル: projects, project_api_keys, project_usage_plans, project_cognito_clients, project_cognito_client_urls, project_members)
 ```

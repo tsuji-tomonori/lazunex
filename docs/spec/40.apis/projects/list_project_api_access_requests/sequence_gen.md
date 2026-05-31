@@ -4,29 +4,17 @@
 
 ```mermaid
 sequenceDiagram
+  autonumber
   participant API as API: listProjectApiAccessRequests
   participant DB as DB
-  API->>API: 1. get_caller_identity
-  API->>API: 2. validate_project_access_request_list_query
-  API->>API: 3. get_project
-  alt 4. project_access_request_view_permission
-    API->>API: 4. has_project_access_request_view_permission
+  API->>API: 呼び出し元の sub、group、scope を取得する。(戻り値: CallerIdentity)
+  API->>API: Project 利用申請一覧取得条件を検証する。(引数: query: ListProjectApiAccessRequestsQuery; 戻り値: ListProjectApiAccessRequestsQuery)
+  API->>API: 対象 Project を取得する。(引数: project_id: ResourceId; 戻り値: ProjectRef)
+  alt 呼び出し元が Project 内の利用申請履歴を参照できるかを判定する。
+    API->>API: 呼び出し元が Project 内の利用申請履歴を参照できるかを判定する。(引数: project: ProjectRef, caller: CallerIdentity; 戻り値: bool)
   end
-  API->>API: 5. get_project_access_requests
-  API->>API: 6. apply_pagination
-  API->>API: 7. build_project_access_request_list_response
-  API->>DB: 8. 参照 001_select_api_access_requests.sql (api_access_requests)
-  DB-->>API: api_access_requests
-  API->>DB: 9. 参照 001_select_api_access_requests.sql (projects)
-  DB-->>API: projects
-  API->>DB: 10. 参照 001_select_api_access_requests.sql (apis)
-  DB-->>API: apis
-  API->>DB: 11. 参照 001_select_api_access_requests.sql (api_gateway_stages)
-  DB-->>API: api_gateway_stages
-  API->>DB: 12. 参照 001_select_api_access_requests.sql (api_access_reviews)
-  DB-->>API: api_access_reviews
-  API->>DB: 13. 参照 001_select_api_access_requests.sql (api_reviewers)
-  DB-->>API: api_reviewers
-  API->>DB: 14. 参照 001_select_api_access_requests.sql (project_members)
-  DB-->>API: project_members
+  API->>API: Project に紐づく access request を検索する。(引数: project: ProjectRef, query: ListProjectApiAccessRequestsQuery, caller: CallerIdentity; 戻り値: SequencePage[ProjectApiAccessRequestItemResponse])
+  API->>API: 一覧取得結果に limit と nextToken を適用する。(引数: page: SequencePage[ProjectApiAccessRequestItemResponse], query: ListProjectApiAccessRequestsQuery; 戻り値: SequencePage[ProjectApiAccessRequestItemResponse])
+  API->>API: Project 利用申請一覧レスポンスを組み立てる。(引数: page: SequencePage[ProjectApiAccessRequestItemResponse]; 戻り値: ListProjectApiAccessRequestsResponse)
+  API->>DB: DBを参照する(SQL: 001_select_api_access_requests.sql; テーブル: api_access_requests, projects, apis, api_gateway_stages, api_access_reviews, api_reviewers, project_members)
 ```

@@ -4,88 +4,56 @@
 
 ```mermaid
 sequenceDiagram
+  autonumber
   participant API as API: approveApiAccessRequest
   participant R_cognito as Resource: cognito
   participant DB as DB
-  API->>API: 1. get_caller_identity
-  API->>API: 2. get_access_request
-  alt 3. pending_access_request
-    API->>API: 3. is_pending_access_request
+  API->>API: 呼び出し元の role、group、scope を取得する。(戻り値: CallerIdentity)
+  API->>API: 承認対象の利用申請を取得する。(引数: access_request_id: ResourceId; 戻り値: ApiAccessRequestRef)
+  alt 利用申請が審査中状態であるかを判定する。
+    API->>API: 利用申請が審査中状態であるかを判定する。(引数: access_request: ApiAccessRequestRef; 戻り値: bool)
   end
-  alt 4. api_reviewer_permission
-    API->>API: 4. has_api_reviewer_permission
+  alt 呼び出し元が対象 API の reviewer または Hub 管理者であるかを判定する。
+    API->>API: 呼び出し元が対象 API の reviewer または Hub 管理者であるかを判定する。(引数: access_request: ApiAccessRequestRef, caller: CallerIdentity; 戻り値: bool)
   end
-  alt 5. available_project_api_stage
-    API->>API: 5. is_available_project_api_stage
+  alt 承認対象の Project、API、stage が利用可能かを判定する。
+    API->>API: 承認対象の Project、API、stage が利用可能かを判定する。(引数: access_request: ApiAccessRequestRef; 戻り値: bool)
   end
-  alt 6. active_subscription
-    API->>API: 6. has_active_subscription
+  alt 同一 Project/API の active subscription が存在するかを判定する。
+    API->>API: 同一 Project/API の active subscription が存在するかを判定する。(引数: access_request: ApiAccessRequestRef; 戻り値: bool)
   end
-  API->>API: 7. append_access_request_approving_event
-  API->>API: 8. create_provisioning_operation
-  API->>API: 9. get_idempotency_record
-  API->>API: 10. create_idempotency_record
-  API->>API: 11. add_usage_plan_api_stage
-  API->>R_cognito: 12. get_cognito_app_client
-  R_cognito-->>API: cognito_app_client
-  API->>R_cognito: 13. merge_cognito_allowed_scopes
-  R_cognito-->>API: cognito_allowed_scopes
-  API->>R_cognito: 14. update_cognito_app_client
-  R_cognito-->>API: cognito_app_client
-  API->>API: 15. save_approved_access_resources
-  API->>API: 16. append_usage_plan_stage_event
-  API->>API: 17. append_client_scope_event
-  API->>API: 18. append_access_request_approved_event
-  API->>API: 19. append_subscription_provisioned_event
-  API->>API: 20. append_provisioning_events
-  API->>API: 21. append_audit_event
-  API->>API: 22. build_approve_access_request_response
-  API->>DB: 23. 参照 001_select_api_access_requests.sql (api_access_requests)
-  DB-->>API: api_access_requests
-  API->>DB: 24. 参照 001_select_api_access_requests.sql (projects)
-  DB-->>API: projects
-  API->>DB: 25. 参照 001_select_api_access_requests.sql (apis)
-  DB-->>API: apis
-  API->>DB: 26. 参照 001_select_api_access_requests.sql (api_gateway_stages)
-  DB-->>API: api_gateway_stages
-  API->>DB: 27. 参照 001_select_api_access_requests.sql (api_cognito_scopes)
-  DB-->>API: api_cognito_scopes
-  API->>DB: 28. 参照 001_select_api_access_requests.sql (api_access_reviews)
-  DB-->>API: api_access_reviews
-  API->>DB: 29. 参照 002_select_api_reviewers.sql (api_reviewers)
-  DB-->>API: api_reviewers
-  API->>DB: 30. 参照 003_select_subscriptions.sql (project_api_subscriptions)
-  DB-->>API: project_api_subscriptions
-  API->>DB: 31. 追加 004_insert_access_request_events.sql (access_request_events)
-  DB-->>API: access_request_events
-  API->>DB: 32. 追加 005_insert_provisioning_operations.sql (provisioning_operations)
-  DB-->>API: provisioning_operations
-  API->>DB: 33. 参照 006_select_project_cognito_clients.sql (project_cognito_clients)
-  DB-->>API: project_cognito_clients
-  API->>DB: 34. 参照 006_select_project_cognito_clients.sql (project_usage_plans)
-  DB-->>API: project_usage_plans
-  API->>DB: 35. 追加 007_insert_api_access_reviews.sql (api_access_reviews)
-  DB-->>API: api_access_reviews
-  API->>DB: 36. 追加 008_insert_project_api_subscriptions.sql (project_api_subscriptions)
-  DB-->>API: project_api_subscriptions
-  API->>DB: 37. 追加 009_insert_project_usage_plan_api_stages.sql (project_usage_plan_api_stages)
-  DB-->>API: project_usage_plan_api_stages
-  API->>DB: 38. 追加 010_insert_project_cognito_client_scopes.sql (project_cognito_client_scopes)
-  DB-->>API: project_cognito_client_scopes
-  API->>DB: 39. 追加 011_insert_subscription_events.sql (subscription_events)
-  DB-->>API: subscription_events
-  API->>DB: 40. 追加 012_insert_audit_events.sql (audit_events)
-  DB-->>API: audit_events
-  API->>DB: 41. 追加 013_insert_idempotency_records.sql (idempotency_records)
-  DB-->>API: idempotency_records
-  API->>DB: 42. 追加 014_insert_provisioning_steps.sql (provisioning_steps)
-  DB-->>API: provisioning_steps
-  API->>DB: 43. 追加 015_insert_usage_plan_stage_events.sql (usage_plan_stage_events)
-  DB-->>API: usage_plan_stage_events
-  API->>DB: 44. 追加 016_insert_client_scope_events.sql (client_scope_events)
-  DB-->>API: client_scope_events
-  API->>DB: 45. 追加 017_insert_provisioning_operation_events.sql (provisioning_operation_events)
-  DB-->>API: provisioning_operation_events
-  API->>DB: 46. 追加 018_insert_provisioning_step_events.sql (provisioning_step_events)
-  DB-->>API: provisioning_step_events
+  API->>API: 利用申請承認開始イベントを追記する。(引数: access_request: ApiAccessRequestRef; 戻り値: EventRef)
+  API->>API: 承認反映用の provisioning operation を作成する。(引数: access_request: ApiAccessRequestRef, request: ApproveApiAccessRequestRequest, idempotency_key: str; 戻り値: ProvisioningOperationRef)
+  API->>API: Idempotency-Key に対応する既存レコードを取得する。(引数: idempotency_key: str; 戻り値: IdempotencyRecordRef)
+  API->>API: 冪等性レコードを作成または確認する。(引数: idempotency_key: str, operation: ProvisioningOperationRef; 戻り値: IdempotencyRecordRef)
+  API->>API: API Gateway Usage Plan に API stage を追加する。(引数: access_request: ApiAccessRequestRef, operation: ProvisioningOperationRef; 戻り値: UsagePlanApiStageRef)
+  API->>R_cognito: Cognito App Client 設定を取得する。(引数: access_request: ApiAccessRequestRef; 戻り値: CognitoAppClientRef)
+  API->>R_cognito: 既存 AllowedOAuthScopes に承認対象 scope を統合する。(引数: client: CognitoAppClientRef, access_request: ApiAccessRequestRef; 戻り値: CognitoAppClientRef)
+  API->>R_cognito: Cognito App Client を更新する。(引数: client: CognitoAppClientRef, operation: ProvisioningOperationRef; 戻り値: CognitoAppClientRef)
+  API->>API: 承認結果、subscription、linkage、client scope を保存する。(引数: access_request: ApiAccessRequestRef, request: ApproveApiAccessRequestRequest, usage_plan_stage: UsagePlanApiStageRef, client: CognitoAppClientRef; 戻り値: ApprovedAccessResourceRefs)
+  API->>API: Usage Plan stage 追加イベントを追記する。(引数: usage_plan_stage: UsagePlanApiStageRef; 戻り値: EventRef)
+  API->>API: Cognito App Client scope 付与イベントを追記する。(引数: resources: ApprovedAccessResourceRefs; 戻り値: list[EventRef])
+  API->>API: 利用申請承認済みイベントを追記する。(引数: access_request: ApiAccessRequestRef; 戻り値: EventRef)
+  API->>API: subscription 反映済みイベントを追記する。(引数: resources: ApprovedAccessResourceRefs; 戻り値: EventRef)
+  API->>API: provisioning operation/step event を追記する。(引数: operation: ProvisioningOperationRef; 戻り値: list[EventRef])
+  API->>API: 監査イベントを追記する。(引数: access_request: ApiAccessRequestRef, caller: CallerIdentity; 戻り値: EventRef)
+  API->>API: 利用申請承認レスポンスを組み立てる。(引数: access_request: ApiAccessRequestRef, resources: ApprovedAccessResourceRefs, request: ApproveApiAccessRequestRequest, operation: ProvisioningOperationRef; 戻り値: ApproveApiAccessRequestResponse)
+  API->>DB: DBを参照する(SQL: 001_select_api_access_requests.sql; テーブル: api_access_requests, projects, apis, api_gateway_stages, api_cognito_scopes, api_access_reviews)
+  API->>DB: DBを参照する(SQL: 002_select_api_reviewers.sql; テーブル: api_reviewers)
+  API->>DB: DBを参照する(SQL: 003_select_subscriptions.sql; テーブル: project_api_subscriptions)
+  API->>DB: DBを追加する(SQL: 004_insert_access_request_events.sql; テーブル: access_request_events)
+  API->>DB: DBを追加する(SQL: 005_insert_provisioning_operations.sql; テーブル: provisioning_operations)
+  API->>DB: DBを参照する(SQL: 006_select_project_cognito_clients.sql; テーブル: project_cognito_clients, project_usage_plans)
+  API->>DB: DBを追加する(SQL: 007_insert_api_access_reviews.sql; テーブル: api_access_reviews)
+  API->>DB: DBを追加する(SQL: 008_insert_project_api_subscriptions.sql; テーブル: project_api_subscriptions)
+  API->>DB: DBを追加する(SQL: 009_insert_project_usage_plan_api_stages.sql; テーブル: project_usage_plan_api_stages)
+  API->>DB: DBを追加する(SQL: 010_insert_project_cognito_client_scopes.sql; テーブル: project_cognito_client_scopes)
+  API->>DB: DBを追加する(SQL: 011_insert_subscription_events.sql; テーブル: subscription_events)
+  API->>DB: DBを追加する(SQL: 012_insert_audit_events.sql; テーブル: audit_events)
+  API->>DB: DBを追加する(SQL: 013_insert_idempotency_records.sql; テーブル: idempotency_records)
+  API->>DB: DBを追加する(SQL: 014_insert_provisioning_steps.sql; テーブル: provisioning_steps)
+  API->>DB: DBを追加する(SQL: 015_insert_usage_plan_stage_events.sql; テーブル: usage_plan_stage_events)
+  API->>DB: DBを追加する(SQL: 016_insert_client_scope_events.sql; テーブル: client_scope_events)
+  API->>DB: DBを追加する(SQL: 017_insert_provisioning_operation_events.sql; テーブル: provisioning_operation_events)
+  API->>DB: DBを追加する(SQL: 018_insert_provisioning_step_events.sql; テーブル: provisioning_step_events)
 ```

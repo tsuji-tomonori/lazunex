@@ -16,6 +16,7 @@ from tools.generate_api_sequences import (
     changed_outputs,
     endpoint_function,
     endpoint_operation_id,
+    function_metadata,
     function_target,
     generate_sequences,
     integration_resource_for_target,
@@ -78,6 +79,22 @@ async def get_project(project_id):
     )
     write_file(
         api_root,
+        "projects/get_project/functions.py",
+        """
+from app.apis.types import ResourceId
+
+async def get_project(project_id: ResourceId) -> ProjectRef:
+    \"\"\"プロジェクト情報を取得する。\"\"\"
+
+async def has_project_view_permission(project: ProjectRef, caller=None) -> bool:
+    \"\"\"プロジェクトを参照できるかを判定する。\"\"\"
+
+async def build_project_detail_response(project: ProjectRef) -> GetProjectResponse:
+    \"\"\"プロジェクト詳細レスポンスを組み立てる。\"\"\"
+""",
+    )
+    write_file(
+        api_root,
         "projects/get_project/sql/001_select_projects.sql",
         "SELECT projects.project_id FROM projects;",
     )
@@ -88,12 +105,30 @@ async def get_project(project_id):
     assert sequence.api == "get_project"
     assert sequence.operation_id == "getProject"
     assert sequence.steps == [
-        SequenceStep("get_project", "project"),
-        SequenceStep("has_project_view_permission", "project_view_permission"),
-        SequenceStep("build_project_detail_response", "project_detail_response"),
+        SequenceStep(
+            "get_project",
+            "project",
+            "プロジェクト情報を取得する。",
+            ("project_id: ResourceId",),
+            "ProjectRef",
+        ),
+        SequenceStep(
+            "has_project_view_permission",
+            "project_view_permission",
+            "プロジェクトを参照できるかを判定する。",
+            ("project: ProjectRef", "caller"),
+            "bool",
+        ),
+        SequenceStep(
+            "build_project_detail_response",
+            "project_detail_response",
+            "プロジェクト詳細レスポンスを組み立てる。",
+            ("project: ProjectRef",),
+            "GetProjectResponse",
+        ),
     ]
     assert sequence.sql_steps == [
-        SqlStep("001_select_projects.sql", "参照", "projects"),
+        SqlStep("001_select_projects.sql", "参照", ("projects",)),
     ]
     assert sequence.integration_resources == frozenset({"api_gateway"})
 
@@ -106,14 +141,38 @@ def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
             endpoint_name="get_project",
             operation_id="getProject",
             steps=[
-                SequenceStep("get_project", "project"),
-                SequenceStep("create_api_gateway_api_key", "api_gateway_api_key"),
-                SequenceStep("has_project_view_permission", "project_view_permission"),
-                SequenceStep("build_project_detail_response", "project_detail_response"),
+                SequenceStep(
+                    "get_project",
+                    "project",
+                    "プロジェクト情報を取得する。",
+                    ("project_id: ResourceId",),
+                    "ProjectRef",
+                ),
+                SequenceStep(
+                    "create_api_gateway_api_key",
+                    "api_gateway_api_key",
+                    "API keyを作成する。",
+                    ("project: ProjectRef",),
+                    "ApiGatewayApiKeyRef",
+                ),
+                SequenceStep(
+                    "has_project_view_permission",
+                    "project_view_permission",
+                    "プロジェクトを参照できるかを判定する。",
+                    ("project: ProjectRef", "caller: CallerIdentity"),
+                    "bool",
+                ),
+                SequenceStep(
+                    "build_project_detail_response",
+                    "project_detail_response",
+                    "プロジェクト詳細レスポンスを組み立てる。",
+                    ("project: ProjectRef",),
+                    "GetProjectResponse",
+                ),
             ],
             sql_steps=[
-                SqlStep("001_select_projects.sql", "参照", "projects"),
-                SqlStep("002_select_projects.sql", "参照", "projects"),
+                SqlStep("001_select_projects.sql", "参照", ("projects", "project_members")),
+                SqlStep("002_select_projects.sql", "参照", ("projects",)),
             ],
             integration_resources=frozenset({"api_gateway"}),
         )
@@ -125,10 +184,17 @@ def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
     assert "participant R_project_view_permission" not in markdown
     assert "participant DB as DB" in markdown
     assert "participant T_projects" not in markdown
-    assert "API->>API: 1. get_project" in markdown
-    assert "API->>R_api_gateway: 2. create_api_gateway_api_key" in markdown
-    assert "alt 3. project_view_permission" in markdown
-    assert "API->>DB: 5. 参照 001_select_projects.sql (projects)" in markdown
+    assert "  autonumber" in markdown
+    assert "API->>API: プロジェクト情報を取得する。" in markdown
+    assert "引数: project_id: ResourceId" in markdown
+    assert "戻り値: ProjectRef" in markdown
+    assert "API->>R_api_gateway: API keyを作成する。" in markdown
+    assert "alt プロジェクトを参照できるかを判定する。" in markdown
+    assert (
+        "API->>DB: DBを参照する"
+        "(SQL: 001_select_projects.sql; テーブル: projects, project_members)"
+        in markdown
+    )
 
 
 def test_generate_sequences_and_check_mode(
@@ -151,6 +217,17 @@ router = APIRouter()
 async def list_apis(query):
     page = await api_functions.get_viewable_apis(query, caller=None)
     return await api_functions.build_api_list_response(page)
+""",
+    )
+    write_file(
+        api_root,
+        "apis/list_apis/functions.py",
+        """
+async def get_viewable_apis(query, caller=None) -> ApiListPage:
+    \"\"\"参照可能なAPI一覧を取得する。\"\"\"
+
+async def build_api_list_response(page: ApiListPage) -> ListApisResponse:
+    \"\"\"API一覧レスポンスを組み立てる。\"\"\"
 """,
     )
 
@@ -225,9 +302,56 @@ async def list_apis():
 
     assert api_dirs(api_root) == [api_root / "apis/list_apis"]
     assert sql_sequence_steps(api_root / "apis/list_apis/sql") == [
-        SqlStep("001_insert_audit_events.sql", "追加", "audit_events")
+        SqlStep("001_insert_audit_events.sql", "追加", ("audit_events",))
     ]
     assert build_arg_parser().parse_args([]).docs_root == Path("docs/spec/40.apis")
+
+
+def test_function_metadata_reads_docstrings_arguments_and_return_types(
+    tmp_path: Path,
+) -> None:
+    functions_path = write_file(
+        tmp_path,
+        "functions.py",
+        """
+async def get_project(project_id: ResourceId, *, caller: CallerIdentity) -> ProjectRef:
+    \"\"\"プロジェクト情報を取得する。\"\"\"
+
+def helper() -> None:
+    \"\"\"privateではない同期helperも読み取る。\"\"\"
+
+async def _internal_helper(value: str) -> str:
+    return value
+""",
+    )
+
+    metadata = function_metadata(functions_path)
+
+    assert metadata["get_project"].description == "プロジェクト情報を取得する。"
+    assert metadata["get_project"].arguments == (
+        "project_id: ResourceId",
+        "caller: CallerIdentity",
+    )
+    assert metadata["get_project"].return_type == "ProjectRef"
+    assert "_internal_helper" not in metadata
+
+
+def test_function_metadata_requires_docstrings(tmp_path: Path) -> None:
+    functions_path = write_file(
+        tmp_path,
+        "functions.py",
+        """
+async def get_project() -> ProjectRef:
+    return project
+""",
+    )
+
+    try:
+        function_metadata(functions_path)
+    except ValueError as error:
+        assert str(error) == "get_project docstring is not found"
+    else:
+        raise AssertionError("function_metadata should reject functions without docstrings")
 
 
 def test_integration_resources_are_loaded_from_port_directories(tmp_path: Path) -> None:

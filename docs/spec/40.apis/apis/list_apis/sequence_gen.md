@@ -4,20 +4,16 @@
 
 ```mermaid
 sequenceDiagram
+  autonumber
   participant API as API: listApis
   participant DB as DB
-  API->>API: 1. validate_api_list_query
-  API->>API: 2. get_caller_identity
-  alt 3. api_list_permission
-    API->>API: 3. has_api_list_permission
+  API->>API: API 一覧取得条件を検証する。(引数: query: ListApisQuery; 戻り値: ListApisQuery)
+  API->>API: 呼び出し元の role、group、scope を取得する。(戻り値: CallerIdentity)
+  alt 呼び出し元が API 一覧を参照できるかを判定する。
+    API->>API: 呼び出し元が API 一覧を参照できるかを判定する。(引数: caller: CallerIdentity; 戻り値: bool)
   end
-  API->>API: 4. get_viewable_apis
-  API->>API: 5. apply_pagination
-  API->>API: 6. build_api_list_response
-  API->>DB: 7. 参照 001_select_apis.sql (apis)
-  DB-->>API: apis
-  API->>DB: 8. 参照 001_select_apis.sql (api_gateway_stages)
-  DB-->>API: api_gateway_stages
-  API->>DB: 9. 参照 001_select_apis.sql (api_cognito_scopes)
-  DB-->>API: api_cognito_scopes
+  API->>API: 呼び出し元が参照可能な公開 API を検索する。(引数: query: ListApisQuery, caller: CallerIdentity; 戻り値: SequencePage[ApiListItemResponse])
+  API->>API: 一覧取得結果に limit と nextToken を適用する。(引数: page: SequencePage[ApiListItemResponse], query: ListApisQuery; 戻り値: SequencePage[ApiListItemResponse])
+  API->>API: API 一覧レスポンスを組み立てる。(引数: page: SequencePage[ApiListItemResponse]; 戻り値: ListApisResponse)
+  API->>DB: DBを参照する(SQL: 001_select_apis.sql; テーブル: apis, api_gateway_stages, api_cognito_scopes)
 ```

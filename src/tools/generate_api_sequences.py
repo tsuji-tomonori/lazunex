@@ -29,13 +29,23 @@ PREDICATES = {"has", "is"}
 class SequenceStep:
     function_name: str
     target: str
+    description: str
+    arguments: tuple[str, ...] = ()
+    return_type: str | None = None
 
 
 @dataclass(frozen=True)
 class SqlStep:
     filename: str
     action: str
-    table: str
+    tables: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class FunctionMetadata:
+    description: str
+    arguments: tuple[str, ...]
+    return_type: str | None
 
 
 @dataclass(frozen=True)
@@ -119,6 +129,72 @@ def awaited_api_function_name(node: ast.AST) -> str | None:
     return function.attr
 
 
+def annotation_text(node: ast.AST | None) -> str | None:
+    if node is None:
+        return None
+    return ast.unparse(node)
+
+
+def function_arguments(function: ast.AsyncFunctionDef | ast.FunctionDef) -> tuple[str, ...]:
+    arguments: list[str] = []
+    for arg in [
+        *function.args.posonlyargs,
+        *function.args.args,
+        *function.args.kwonlyargs,
+    ]:
+        annotation = annotation_text(arg.annotation)
+        arguments.append(f"{arg.arg}: {annotation}" if annotation else arg.arg)
+    if function.args.vararg is not None:
+        annotation = annotation_text(function.args.vararg.annotation)
+        arguments.append(
+            f"*{function.args.vararg.arg}: {annotation}"
+            if annotation
+            else f"*{function.args.vararg.arg}"
+        )
+    if function.args.kwarg is not None:
+        annotation = annotation_text(function.args.kwarg.annotation)
+        arguments.append(
+            f"**{function.args.kwarg.arg}: {annotation}"
+            if annotation
+            else f"**{function.args.kwarg.arg}"
+        )
+    return tuple(arguments)
+
+
+def docstring_summary(function: ast.AsyncFunctionDef | ast.FunctionDef) -> str:
+    docstring = ast.get_docstring(function)
+    if not docstring:
+        raise ValueError(f"{function.name} docstring is not found")
+    return " ".join(docstring.strip().split())
+
+
+def function_metadata(functions_path: Path) -> dict[str, FunctionMetadata]:
+    tree = ast.parse(functions_path.read_text(encoding="utf-8"), filename=str(functions_path))
+    metadata: dict[str, FunctionMetadata] = {}
+    for node in tree.body:
+        if not isinstance(node, ast.AsyncFunctionDef | ast.FunctionDef):
+            continue
+        if node.name.startswith("_"):
+            continue
+        metadata[node.name] = FunctionMetadata(
+            description=docstring_summary(node),
+            arguments=function_arguments(node),
+            return_type=annotation_text(node.returns),
+        )
+    return metadata
+
+
+def sequence_label(step: SequenceStep) -> str:
+    details: list[str] = []
+    if step.arguments:
+        details.append(f"引数: {', '.join(step.arguments)}")
+    if step.return_type:
+        details.append(f"戻り値: {step.return_type}")
+    if not details:
+        return step.description
+    return f"{step.description}({'; '.join(details)})"
+
+
 def function_target(function_name: str) -> str:
     head, _separator, tail = function_name.partition("_")
     if head in PREDICATES:
@@ -151,14 +227,26 @@ def integration_resource_for_target(
     return None
 
 
-def endpoint_sequence_steps(function: ast.AsyncFunctionDef | ast.FunctionDef) -> list[SequenceStep]:
+def endpoint_sequence_steps(
+    function: ast.AsyncFunctionDef | ast.FunctionDef,
+    metadata: dict[str, FunctionMetadata],
+) -> list[SequenceStep]:
     steps: list[SequenceStep] = []
     for node in ast.walk(function):
         function_name = awaited_api_function_name(node)
         if function_name is None:
             continue
+        if function_name not in metadata:
+            raise ValueError(f"{function_name} metadata is not found")
+        function_metadata = metadata[function_name]
         steps.append(
-            SequenceStep(function_name=function_name, target=function_target(function_name))
+            SequenceStep(
+                function_name=function_name,
+                target=function_target(function_name),
+                description=function_metadata.description,
+                arguments=function_metadata.arguments,
+                return_type=function_metadata.return_type,
+            )
         )
     return steps
 
@@ -186,9 +274,9 @@ def sql_sequence_steps(sql_dir: Path) -> list[SqlStep]:
     steps: list[SqlStep] = []
     for path in sorted(sql_dir.glob("*.sql")):
         tables = sql_tables(path.read_text(encoding="utf-8"))
-        for table in tables:
+        if tables:
             steps.append(
-                SqlStep(filename=path.name, action=sql_action(path.name), table=table)
+                SqlStep(filename=path.name, action=sql_action(path.name), tables=tuple(tables))
             )
     return steps
 
@@ -199,8 +287,10 @@ def api_sequence_from_dir(
     integrations_root: Path | None = None,
 ) -> ApiSequence:
     router_path = api_dir / "router.py"
+    functions_path = api_dir / "functions.py"
     tree = ast.parse(router_path.read_text(encoding="utf-8"), filename=str(router_path))
     function = endpoint_function(tree)
+    metadata = function_metadata(functions_path)
     relative = api_dir.relative_to(api_root)
     domain, api = relative.parts
     return ApiSequence(
@@ -208,7 +298,7 @@ def api_sequence_from_dir(
         api=api,
         endpoint_name=function.name,
         operation_id=endpoint_operation_id(function),
-        steps=endpoint_sequence_steps(function),
+        steps=endpoint_sequence_steps(function, metadata),
         sql_steps=sql_sequence_steps(api_dir / "sql"),
         integration_resources=(
             integration_resources(integrations_root)
@@ -245,6 +335,7 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
         "",
         "```mermaid",
         "sequenceDiagram",
+        "  autonumber",
         f"  participant API as API: {sequence.operation_id}",
     ]
     for target in resource_targets:
@@ -254,33 +345,29 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
     if sequence.sql_steps:
         lines.append("  participant DB as DB")
 
-    sequence_number = 1
     for step in sequence.steps:
+        label = sequence_label(step)
         if is_predicate_function(step.function_name):
-            lines.append(f"  alt {sequence_number}. {step.target}")
-            lines.append(f"    API->>API: {sequence_number}. {step.function_name}")
+            lines.append(f"  alt {step.description}")
+            lines.append(f"    API->>API: {label}")
             lines.append("  end")
-            sequence_number += 1
             continue
         resource = integration_resource_for_target(
             step.target,
             sequence.integration_resources,
         )
         if resource is None:
-            lines.append(f"  API->>API: {sequence_number}. {step.function_name}")
+            lines.append(f"  API->>API: {label}")
         else:
             resource_id = participant_id("R", resource)
-            lines.append(f"  API->>{resource_id}: {sequence_number}. {step.function_name}")
-            lines.append(f"  {resource_id}-->>API: {step.target}")
-        sequence_number += 1
+            lines.append(f"  API->>{resource_id}: {label}")
 
     for sql_step in sequence.sql_steps:
+        tables = ", ".join(sql_step.tables)
         lines.append(
-            f"  API->>DB: {sequence_number}. {sql_step.action} "
-            f"{sql_step.filename} ({sql_step.table})"
+            f"  API->>DB: DBを{sql_step.action}する"
+            f"(SQL: {sql_step.filename}; テーブル: {tables})"
         )
-        lines.append(f"  DB-->>API: {sql_step.table}")
-        sequence_number += 1
 
     lines.extend(["```", ""])
     return "\n".join(lines)

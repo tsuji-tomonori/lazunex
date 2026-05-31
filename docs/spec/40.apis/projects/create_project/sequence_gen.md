@@ -4,68 +4,46 @@
 
 ```mermaid
 sequenceDiagram
+  autonumber
   participant API as API: createProject
   participant R_api_gateway as Resource: api gateway
   participant R_cognito as Resource: cognito
   participant DB as DB
-  API->>API: 1. get_caller_identity
-  API->>API: 2. validate_create_project_request
-  alt 3. project_creation_permission
-    API->>API: 3. has_project_creation_permission
+  API->>API: 呼び出し元の sub、group、scope を取得する。(戻り値: CallerIdentity)
+  API->>API: Project 作成リクエストを検証する。(引数: request: CreateProjectRequest; 戻り値: CreateProjectRequest)
+  alt 呼び出し元が Project を作成できるかを判定する。
+    API->>API: 呼び出し元が Project を作成できるかを判定する。(引数: caller: CallerIdentity; 戻り値: bool)
   end
-  API->>API: 4. get_idempotency_record
-  API->>API: 5. create_project_provisioning_operation
-  API->>API: 6. create_idempotency_record
-  API->>R_api_gateway: 7. create_api_gateway_api_key
-  R_api_gateway-->>API: api_gateway_api_key
-  API->>R_api_gateway: 8. create_api_gateway_usage_plan
-  R_api_gateway-->>API: api_gateway_usage_plan
-  API->>R_api_gateway: 9. create_api_gateway_usage_plan_key
-  R_api_gateway-->>API: api_gateway_usage_plan_key
-  API->>R_cognito: 10. create_cognito_public_app_client
-  R_cognito-->>API: cognito_public_app_client
-  API->>R_cognito: 11. create_cognito_confidential_app_client
-  R_cognito-->>API: cognito_confidential_app_client
-  API->>API: 12. hash_project_secrets
-  API->>API: 13. save_project_resources
-  API->>API: 14. append_project_lifecycle_events
-  API->>API: 15. append_provisioning_events
-  API->>API: 16. append_audit_event
-  API->>API: 17. build_create_project_response
-  API->>DB: 18. 参照 001_select_projects.sql (projects)
-  DB-->>API: projects
-  API->>DB: 19. 追加 002_insert_projects.sql (projects)
-  DB-->>API: projects
-  API->>DB: 20. 追加 003_insert_project_events.sql (project_events)
-  DB-->>API: project_events
-  API->>DB: 21. 追加 004_insert_provisioning_operations.sql (provisioning_operations)
-  DB-->>API: provisioning_operations
-  API->>DB: 22. 追加 005_insert_project_api_keys.sql (project_api_keys)
-  DB-->>API: project_api_keys
-  API->>DB: 23. 追加 006_insert_project_usage_plans.sql (project_usage_plans)
-  DB-->>API: project_usage_plans
-  API->>DB: 24. 追加 007_insert_project_usage_plan_keys.sql (project_usage_plan_keys)
-  DB-->>API: project_usage_plan_keys
-  API->>DB: 25. 追加 008_insert_project_cognito_clients.sql (project_cognito_clients)
-  DB-->>API: project_cognito_clients
-  API->>DB: 26. 追加 009_insert_project_cognito_client_urls.sql (project_cognito_client_urls)
-  DB-->>API: project_cognito_client_urls
-  API->>DB: 27. 追加 010_insert_project_members.sql (project_members)
-  DB-->>API: project_members
-  API->>DB: 28. 追加 011_insert_idempotency_records.sql (idempotency_records)
-  DB-->>API: idempotency_records
-  API->>DB: 29. 追加 012_insert_provisioning_steps.sql (provisioning_steps)
-  DB-->>API: provisioning_steps
-  API->>DB: 30. 追加 013_insert_project_member_events.sql (project_member_events)
-  DB-->>API: project_member_events
-  API->>DB: 31. 追加 014_insert_project_api_key_events.sql (project_api_key_events)
-  DB-->>API: project_api_key_events
-  API->>DB: 32. 追加 015_insert_project_usage_plan_events.sql (project_usage_plan_events)
-  DB-->>API: project_usage_plan_events
-  API->>DB: 33. 追加 016_insert_project_usage_plan_key_events.sql (project_usage_plan_key_events)
-  DB-->>API: project_usage_plan_key_events
-  API->>DB: 34. 追加 017_insert_provisioning_operation_events.sql (provisioning_operation_events)
-  DB-->>API: provisioning_operation_events
-  API->>DB: 35. 追加 018_insert_provisioning_step_events.sql (provisioning_step_events)
-  DB-->>API: provisioning_step_events
+  API->>API: Idempotency-Key に対応する既存レコードを取得する。(引数: idempotency_key: str; 戻り値: IdempotencyRecordRef)
+  API->>API: Project 作成用の provisioning operation を作成する。(引数: request: CreateProjectRequest, idempotency_key: str; 戻り値: ProvisioningOperationRef)
+  API->>API: 冪等性レコードを作成または確認する。(引数: idempotency_key: str, operation: ProvisioningOperationRef; 戻り値: IdempotencyRecordRef)
+  API->>R_api_gateway: API Gateway API key を作成する。(引数: request: CreateProjectRequest, operation: ProvisioningOperationRef; 戻り値: SecretValue)
+  API->>R_api_gateway: API Gateway Usage Plan を作成する。(引数: request: CreateProjectRequest, operation: ProvisioningOperationRef; 戻り値: ApiGatewayId)
+  API->>R_api_gateway: API Gateway Usage Plan Key 紐づけを作成する。(引数: api_key_value: SecretValue, usage_plan_id: ApiGatewayId, operation: ProvisioningOperationRef; 戻り値: ApiGatewayId)
+  API->>R_cognito: PKCE 用 public App Client を作成する。(引数: request: CreateProjectRequest, operation: ProvisioningOperationRef; 戻り値: ApiGatewayId)
+  API->>R_cognito: Client Credentials 用 confidential App Client を作成する。(引数: request: CreateProjectRequest, operation: ProvisioningOperationRef; 戻り値: CognitoConfidentialClientRef)
+  API->>API: API key 値と client secret 値を hash 化する。(引数: api_key_value: SecretValue, confidential_client_secret: SecretValue; 戻り値: SecretHashRefs)
+  API->>API: Project、owner、API key、Usage Plan、App Client metadata を保存する。(引数: request: CreateProjectRequest, api_key_value: SecretValue, usage_plan_id: ApiGatewayId, usage_plan_key_id: ApiGatewayId, public_client_id: ApiGatewayId, confidential_client: CognitoConfidentialClientRef, secret_hashes: SecretHashRefs; 戻り値: ProjectResourceRefs)
+  API->>API: Project 関連 lifecycle event を追記する。(引数: resources: ProjectResourceRefs; 戻り値: list[EventRef])
+  API->>API: provisioning operation/step event を追記する。(引数: operation: ProvisioningOperationRef; 戻り値: list[EventRef])
+  API->>API: 監査イベントを追記する。(引数: resources: ProjectResourceRefs, caller: CallerIdentity; 戻り値: EventRef)
+  API->>API: Project 作成レスポンスを組み立てる。(引数: resources: ProjectResourceRefs, api_key_value: SecretValue, confidential_client: CognitoConfidentialClientRef, operation: ProvisioningOperationRef; 戻り値: CreateProjectResponse)
+  API->>DB: DBを参照する(SQL: 001_select_projects.sql; テーブル: projects)
+  API->>DB: DBを追加する(SQL: 002_insert_projects.sql; テーブル: projects)
+  API->>DB: DBを追加する(SQL: 003_insert_project_events.sql; テーブル: project_events)
+  API->>DB: DBを追加する(SQL: 004_insert_provisioning_operations.sql; テーブル: provisioning_operations)
+  API->>DB: DBを追加する(SQL: 005_insert_project_api_keys.sql; テーブル: project_api_keys)
+  API->>DB: DBを追加する(SQL: 006_insert_project_usage_plans.sql; テーブル: project_usage_plans)
+  API->>DB: DBを追加する(SQL: 007_insert_project_usage_plan_keys.sql; テーブル: project_usage_plan_keys)
+  API->>DB: DBを追加する(SQL: 008_insert_project_cognito_clients.sql; テーブル: project_cognito_clients)
+  API->>DB: DBを追加する(SQL: 009_insert_project_cognito_client_urls.sql; テーブル: project_cognito_client_urls)
+  API->>DB: DBを追加する(SQL: 010_insert_project_members.sql; テーブル: project_members)
+  API->>DB: DBを追加する(SQL: 011_insert_idempotency_records.sql; テーブル: idempotency_records)
+  API->>DB: DBを追加する(SQL: 012_insert_provisioning_steps.sql; テーブル: provisioning_steps)
+  API->>DB: DBを追加する(SQL: 013_insert_project_member_events.sql; テーブル: project_member_events)
+  API->>DB: DBを追加する(SQL: 014_insert_project_api_key_events.sql; テーブル: project_api_key_events)
+  API->>DB: DBを追加する(SQL: 015_insert_project_usage_plan_events.sql; テーブル: project_usage_plan_events)
+  API->>DB: DBを追加する(SQL: 016_insert_project_usage_plan_key_events.sql; テーブル: project_usage_plan_key_events)
+  API->>DB: DBを追加する(SQL: 017_insert_provisioning_operation_events.sql; テーブル: provisioning_operation_events)
+  API->>DB: DBを追加する(SQL: 018_insert_provisioning_step_events.sql; テーブル: provisioning_step_events)
 ```

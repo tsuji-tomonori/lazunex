@@ -4,21 +4,15 @@
 
 ```mermaid
 sequenceDiagram
+  autonumber
   participant API as API: getApi
   participant DB as DB
-  API->>API: 1. get_caller_identity
-  API->>API: 2. validate_api_id
-  API->>API: 3. get_api_detail
-  alt 4. viewable_api
-    API->>API: 4. is_viewable_api
+  API->>API: 呼び出し元の role、group、scope を取得する。(戻り値: CallerIdentity)
+  API->>API: API ID を検証する。(引数: api_id: ResourceId; 戻り値: ResourceId)
+  API->>API: API 詳細レスポンスに必要な情報を取得する。(引数: api_id: ResourceId; 戻り値: GetApiResponse)
+  alt 対象 API が呼び出し元から参照可能かを判定する。
+    API->>API: 対象 API が呼び出し元から参照可能かを判定する。(引数: api: GetApiResponse, caller: CallerIdentity; 戻り値: bool)
   end
-  API->>API: 5. build_api_detail_response
-  API->>DB: 6. 参照 001_select_apis.sql (apis)
-  DB-->>API: apis
-  API->>DB: 7. 参照 001_select_apis.sql (api_gateway_stages)
-  DB-->>API: api_gateway_stages
-  API->>DB: 8. 参照 001_select_apis.sql (api_cognito_scopes)
-  DB-->>API: api_cognito_scopes
-  API->>DB: 9. 参照 001_select_apis.sql (api_reviewers)
-  DB-->>API: api_reviewers
+  API->>API: API 詳細レスポンスを組み立てる。(引数: api: GetApiResponse; 戻り値: GetApiResponse)
+  API->>DB: DBを参照する(SQL: 001_select_apis.sql; テーブル: apis, api_gateway_stages, api_cognito_scopes, api_reviewers)
 ```

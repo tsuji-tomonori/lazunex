@@ -4,39 +4,30 @@
 
 ```mermaid
 sequenceDiagram
+  autonumber
   participant API as API: rejectApiAccessRequest
   participant DB as DB
-  API->>API: 1. get_caller_identity
-  API->>API: 2. get_access_request
-  alt 3. pending_access_request
-    API->>API: 3. is_pending_access_request
+  API->>API: 呼び出し元の role、group、scope を取得する。(戻り値: CallerIdentity)
+  API->>API: 却下対象の利用申請を取得する。(引数: access_request_id: ResourceId; 戻り値: ApiAccessRequestRef)
+  alt 利用申請が審査中状態であるかを判定する。
+    API->>API: 利用申請が審査中状態であるかを判定する。(引数: access_request: ApiAccessRequestRef; 戻り値: bool)
   end
-  alt 4. api_reviewer_permission
-    API->>API: 4. has_api_reviewer_permission
+  alt 呼び出し元が対象 API の reviewer または Hub 管理者であるかを判定する。
+    API->>API: 呼び出し元が対象 API の reviewer または Hub 管理者であるかを判定する。(引数: access_request: ApiAccessRequestRef, caller: CallerIdentity; 戻り値: bool)
   end
-  API->>API: 5. validate_rejection_reason
-  API->>API: 6. append_access_request_rejecting_event
-  API->>API: 7. save_api_access_review
-  API->>API: 8. get_idempotency_record
-  API->>API: 9. create_idempotency_record
-  API->>API: 10. update_access_request_status
-  API->>API: 11. append_access_request_rejected_event
-  API->>API: 12. append_audit_event
-  API->>API: 13. build_reject_access_request_response
-  API->>DB: 14. 参照 001_select_api_access_requests.sql (api_access_requests)
-  DB-->>API: api_access_requests
-  API->>DB: 15. 参照 001_select_api_access_requests.sql (apis)
-  DB-->>API: apis
-  API->>DB: 16. 参照 001_select_api_access_requests.sql (api_access_reviews)
-  DB-->>API: api_access_reviews
-  API->>DB: 17. 参照 002_select_api_reviewers.sql (api_reviewers)
-  DB-->>API: api_reviewers
-  API->>DB: 18. 追加 003_insert_api_access_reviews.sql (api_access_reviews)
-  DB-->>API: api_access_reviews
-  API->>DB: 19. 追加 004_insert_access_request_events.sql (access_request_events)
-  DB-->>API: access_request_events
-  API->>DB: 20. 追加 005_insert_audit_events.sql (audit_events)
-  DB-->>API: audit_events
-  API->>DB: 21. 追加 006_insert_idempotency_records.sql (idempotency_records)
-  DB-->>API: idempotency_records
+  API->>API: 利用申請却下理由を検証する。(引数: request: RejectApiAccessRequestRequest; 戻り値: RejectApiAccessRequestRequest)
+  API->>API: 利用申請却下開始イベントを追記する。(引数: access_request: ApiAccessRequestRef; 戻り値: EventRef)
+  API->>API: 却下結果の review レコードを保存する。(引数: access_request: ApiAccessRequestRef, request: RejectApiAccessRequestRequest, caller: CallerIdentity; 戻り値: ApiAccessReviewRef)
+  API->>API: Idempotency-Key に対応する既存レコードを取得する。(引数: idempotency_key: str; 戻り値: IdempotencyRecordRef)
+  API->>API: 冪等性レコードを作成または確認する。(引数: idempotency_key: str, review: ApiAccessReviewRef; 戻り値: IdempotencyRecordRef)
+  API->>API: 利用申請状態を rejected 相当に更新する。(引数: access_request: ApiAccessRequestRef, review: ApiAccessReviewRef; 戻り値: ApiAccessRequestRef)
+  API->>API: 利用申請却下済みイベントを追記する。(引数: access_request: ApiAccessRequestRef; 戻り値: EventRef)
+  API->>API: 監査イベントを追記する。(引数: access_request: ApiAccessRequestRef, caller: CallerIdentity; 戻り値: EventRef)
+  API->>API: 利用申請却下レスポンスを組み立てる。(引数: access_request: ApiAccessRequestRef, review: ApiAccessReviewRef; 戻り値: RejectApiAccessRequestResponse)
+  API->>DB: DBを参照する(SQL: 001_select_api_access_requests.sql; テーブル: api_access_requests, apis, api_access_reviews)
+  API->>DB: DBを参照する(SQL: 002_select_api_reviewers.sql; テーブル: api_reviewers)
+  API->>DB: DBを追加する(SQL: 003_insert_api_access_reviews.sql; テーブル: api_access_reviews)
+  API->>DB: DBを追加する(SQL: 004_insert_access_request_events.sql; テーブル: access_request_events)
+  API->>DB: DBを追加する(SQL: 005_insert_audit_events.sql; テーブル: audit_events)
+  API->>DB: DBを追加する(SQL: 006_insert_idempotency_records.sql; テーブル: idempotency_records)
 ```
