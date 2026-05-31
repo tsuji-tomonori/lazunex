@@ -5,31 +5,19 @@
 ```mermaid
 sequenceDiagram
   participant API as API: listApis
-  participant R_api_list_query as Resource: api list query
-  participant R_caller_identity as Resource: caller identity
-  participant R_viewable_apis as Resource: viewable apis
-  participant R_pagination as Resource: pagination
-  participant R_api_list_response as Resource: api list response
-  participant T_apis as Table: apis
-  participant T_api_gateway_stages as Table: api_gateway_stages
-  participant T_api_cognito_scopes as Table: api_cognito_scopes
-  API->>R_api_list_query: validate_api_list_query
-  R_api_list_query-->>API: api_list_query
-  API->>R_caller_identity: get_caller_identity
-  R_caller_identity-->>API: caller_identity
-  alt api_list_permission
-    API->>API: has_api_list_permission
+  participant DB as DB
+  API->>API: 1. validate_api_list_query
+  API->>API: 2. get_caller_identity
+  alt 3. api_list_permission
+    API->>API: 3. has_api_list_permission
   end
-  API->>R_viewable_apis: get_viewable_apis
-  R_viewable_apis-->>API: viewable_apis
-  API->>R_pagination: apply_pagination
-  R_pagination-->>API: pagination
-  API->>R_api_list_response: build_api_list_response
-  R_api_list_response-->>API: api_list_response
-  API->>T_apis: 参照 001_select_apis.sql
-  T_apis-->>API: apis
-  API->>T_api_gateway_stages: 参照 001_select_apis.sql
-  T_api_gateway_stages-->>API: api_gateway_stages
-  API->>T_api_cognito_scopes: 参照 001_select_apis.sql
-  T_api_cognito_scopes-->>API: api_cognito_scopes
+  API->>API: 4. get_viewable_apis
+  API->>API: 5. apply_pagination
+  API->>API: 6. build_api_list_response
+  API->>DB: 7. 参照 001_select_apis.sql (apis)
+  DB-->>API: apis
+  API->>DB: 8. 参照 001_select_apis.sql (api_gateway_stages)
+  DB-->>API: api_gateway_stages
+  API->>DB: 9. 参照 001_select_apis.sql (api_cognito_scopes)
+  DB-->>API: api_cognito_scopes
 ```

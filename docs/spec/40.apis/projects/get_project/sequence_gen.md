@@ -5,37 +5,24 @@
 ```mermaid
 sequenceDiagram
   participant API as API: getProject
-  participant R_caller_identity as Resource: caller identity
-  participant R_project_id as Resource: project id
-  participant R_project_detail as Resource: project detail
-  participant R_project_detail_response as Resource: project detail response
-  participant T_projects as Table: projects
-  participant T_project_api_keys as Table: project_api_keys
-  participant T_project_usage_plans as Table: project_usage_plans
-  participant T_project_cognito_clients as Table: project_cognito_clients
-  participant T_project_cognito_client_urls as Table: project_cognito_client_urls
-  participant T_project_members as Table: project_members
-  API->>R_caller_identity: get_caller_identity
-  R_caller_identity-->>API: caller_identity
-  API->>R_project_id: validate_project_id
-  R_project_id-->>API: project_id
-  API->>R_project_detail: get_project_detail
-  R_project_detail-->>API: project_detail
-  alt project_view_permission
-    API->>API: has_project_view_permission
+  participant DB as DB
+  API->>API: 1. get_caller_identity
+  API->>API: 2. validate_project_id
+  API->>API: 3. get_project_detail
+  alt 4. project_view_permission
+    API->>API: 4. has_project_view_permission
   end
-  API->>R_project_detail_response: build_project_detail_response
-  R_project_detail_response-->>API: project_detail_response
-  API->>T_projects: 参照 001_select_projects.sql
-  T_projects-->>API: projects
-  API->>T_project_api_keys: 参照 001_select_projects.sql
-  T_project_api_keys-->>API: project_api_keys
-  API->>T_project_usage_plans: 参照 001_select_projects.sql
-  T_project_usage_plans-->>API: project_usage_plans
-  API->>T_project_cognito_clients: 参照 001_select_projects.sql
-  T_project_cognito_clients-->>API: project_cognito_clients
-  API->>T_project_cognito_client_urls: 参照 001_select_projects.sql
-  T_project_cognito_client_urls-->>API: project_cognito_client_urls
-  API->>T_project_members: 参照 001_select_projects.sql
-  T_project_members-->>API: project_members
+  API->>API: 5. build_project_detail_response
+  API->>DB: 6. 参照 001_select_projects.sql (projects)
+  DB-->>API: projects
+  API->>DB: 7. 参照 001_select_projects.sql (project_api_keys)
+  DB-->>API: project_api_keys
+  API->>DB: 8. 参照 001_select_projects.sql (project_usage_plans)
+  DB-->>API: project_usage_plans
+  API->>DB: 9. 参照 001_select_projects.sql (project_cognito_clients)
+  DB-->>API: project_cognito_clients
+  API->>DB: 10. 参照 001_select_projects.sql (project_cognito_client_urls)
+  DB-->>API: project_cognito_client_urls
+  API->>DB: 11. 参照 001_select_projects.sql (project_members)
+  DB-->>API: project_members
 ```

@@ -5,31 +5,20 @@
 ```mermaid
 sequenceDiagram
   participant API as API: getApi
-  participant R_caller_identity as Resource: caller identity
-  participant R_api_id as Resource: api id
-  participant R_api_detail as Resource: api detail
-  participant R_api_detail_response as Resource: api detail response
-  participant T_apis as Table: apis
-  participant T_api_gateway_stages as Table: api_gateway_stages
-  participant T_api_cognito_scopes as Table: api_cognito_scopes
-  participant T_api_reviewers as Table: api_reviewers
-  API->>R_caller_identity: get_caller_identity
-  R_caller_identity-->>API: caller_identity
-  API->>R_api_id: validate_api_id
-  R_api_id-->>API: api_id
-  API->>R_api_detail: get_api_detail
-  R_api_detail-->>API: api_detail
-  alt viewable_api
-    API->>API: is_viewable_api
+  participant DB as DB
+  API->>API: 1. get_caller_identity
+  API->>API: 2. validate_api_id
+  API->>API: 3. get_api_detail
+  alt 4. viewable_api
+    API->>API: 4. is_viewable_api
   end
-  API->>R_api_detail_response: build_api_detail_response
-  R_api_detail_response-->>API: api_detail_response
-  API->>T_apis: 参照 001_select_apis.sql
-  T_apis-->>API: apis
-  API->>T_api_gateway_stages: 参照 001_select_apis.sql
-  T_api_gateway_stages-->>API: api_gateway_stages
-  API->>T_api_cognito_scopes: 参照 001_select_apis.sql
-  T_api_cognito_scopes-->>API: api_cognito_scopes
-  API->>T_api_reviewers: 参照 001_select_apis.sql
-  T_api_reviewers-->>API: api_reviewers
+  API->>API: 5. build_api_detail_response
+  API->>DB: 6. 参照 001_select_apis.sql (apis)
+  DB-->>API: apis
+  API->>DB: 7. 参照 001_select_apis.sql (api_gateway_stages)
+  DB-->>API: api_gateway_stages
+  API->>DB: 8. 参照 001_select_apis.sql (api_cognito_scopes)
+  DB-->>API: api_cognito_scopes
+  API->>DB: 9. 参照 001_select_apis.sql (api_reviewers)
+  DB-->>API: api_reviewers
 ```

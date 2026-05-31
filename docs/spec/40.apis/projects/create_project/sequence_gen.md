@@ -5,107 +5,67 @@
 ```mermaid
 sequenceDiagram
   participant API as API: createProject
-  participant R_caller_identity as Resource: caller identity
-  participant R_create_project_request as Resource: create project request
-  participant R_idempotency_record as Resource: idempotency record
-  participant R_project_provisioning_operation as Resource: project provisioning operation
-  participant R_api_gateway_api_key as Resource: api gateway api key
-  participant R_api_gateway_usage_plan as Resource: api gateway usage plan
-  participant R_api_gateway_usage_plan_key as Resource: api gateway usage plan key
-  participant R_cognito_public_app_client as Resource: cognito public app client
-  participant R_cognito_confidential_app_client as Resource: cognito confidential app client
-  participant R_project_secrets as Resource: project secrets
-  participant R_project_resources as Resource: project resources
-  participant R_project_lifecycle_events as Resource: project lifecycle events
-  participant R_provisioning_events as Resource: provisioning events
-  participant R_audit_event as Resource: audit event
-  participant R_create_project_response as Resource: create project response
-  participant T_projects as Table: projects
-  participant T_project_events as Table: project_events
-  participant T_provisioning_operations as Table: provisioning_operations
-  participant T_project_api_keys as Table: project_api_keys
-  participant T_project_usage_plans as Table: project_usage_plans
-  participant T_project_usage_plan_keys as Table: project_usage_plan_keys
-  participant T_project_cognito_clients as Table: project_cognito_clients
-  participant T_project_cognito_client_urls as Table: project_cognito_client_urls
-  participant T_project_members as Table: project_members
-  participant T_idempotency_records as Table: idempotency_records
-  participant T_provisioning_steps as Table: provisioning_steps
-  participant T_project_member_events as Table: project_member_events
-  participant T_project_api_key_events as Table: project_api_key_events
-  participant T_project_usage_plan_events as Table: project_usage_plan_events
-  participant T_project_usage_plan_key_events as Table: project_usage_plan_key_events
-  participant T_provisioning_operation_events as Table: provisioning_operation_events
-  participant T_provisioning_step_events as Table: provisioning_step_events
-  API->>R_caller_identity: get_caller_identity
-  R_caller_identity-->>API: caller_identity
-  API->>R_create_project_request: validate_create_project_request
-  R_create_project_request-->>API: create_project_request
-  alt project_creation_permission
-    API->>API: has_project_creation_permission
+  participant R_api_gateway as Resource: api gateway
+  participant R_cognito as Resource: cognito
+  participant DB as DB
+  API->>API: 1. get_caller_identity
+  API->>API: 2. validate_create_project_request
+  alt 3. project_creation_permission
+    API->>API: 3. has_project_creation_permission
   end
-  API->>R_idempotency_record: get_idempotency_record
-  R_idempotency_record-->>API: idempotency_record
-  API->>R_project_provisioning_operation: create_project_provisioning_operation
-  R_project_provisioning_operation-->>API: project_provisioning_operation
-  API->>R_idempotency_record: create_idempotency_record
-  R_idempotency_record-->>API: idempotency_record
-  API->>R_api_gateway_api_key: create_api_gateway_api_key
-  R_api_gateway_api_key-->>API: api_gateway_api_key
-  API->>R_api_gateway_usage_plan: create_api_gateway_usage_plan
-  R_api_gateway_usage_plan-->>API: api_gateway_usage_plan
-  API->>R_api_gateway_usage_plan_key: create_api_gateway_usage_plan_key
-  R_api_gateway_usage_plan_key-->>API: api_gateway_usage_plan_key
-  API->>R_cognito_public_app_client: create_cognito_public_app_client
-  R_cognito_public_app_client-->>API: cognito_public_app_client
-  API->>R_cognito_confidential_app_client: create_cognito_confidential_app_client
-  R_cognito_confidential_app_client-->>API: cognito_confidential_app_client
-  API->>R_project_secrets: hash_project_secrets
-  R_project_secrets-->>API: project_secrets
-  API->>R_project_resources: save_project_resources
-  R_project_resources-->>API: project_resources
-  API->>R_project_lifecycle_events: append_project_lifecycle_events
-  R_project_lifecycle_events-->>API: project_lifecycle_events
-  API->>R_provisioning_events: append_provisioning_events
-  R_provisioning_events-->>API: provisioning_events
-  API->>R_audit_event: append_audit_event
-  R_audit_event-->>API: audit_event
-  API->>R_create_project_response: build_create_project_response
-  R_create_project_response-->>API: create_project_response
-  API->>T_projects: 参照 001_select_projects.sql
-  T_projects-->>API: projects
-  API->>T_projects: 追加 002_insert_projects.sql
-  T_projects-->>API: projects
-  API->>T_project_events: 追加 003_insert_project_events.sql
-  T_project_events-->>API: project_events
-  API->>T_provisioning_operations: 追加 004_insert_provisioning_operations.sql
-  T_provisioning_operations-->>API: provisioning_operations
-  API->>T_project_api_keys: 追加 005_insert_project_api_keys.sql
-  T_project_api_keys-->>API: project_api_keys
-  API->>T_project_usage_plans: 追加 006_insert_project_usage_plans.sql
-  T_project_usage_plans-->>API: project_usage_plans
-  API->>T_project_usage_plan_keys: 追加 007_insert_project_usage_plan_keys.sql
-  T_project_usage_plan_keys-->>API: project_usage_plan_keys
-  API->>T_project_cognito_clients: 追加 008_insert_project_cognito_clients.sql
-  T_project_cognito_clients-->>API: project_cognito_clients
-  API->>T_project_cognito_client_urls: 追加 009_insert_project_cognito_client_urls.sql
-  T_project_cognito_client_urls-->>API: project_cognito_client_urls
-  API->>T_project_members: 追加 010_insert_project_members.sql
-  T_project_members-->>API: project_members
-  API->>T_idempotency_records: 追加 011_insert_idempotency_records.sql
-  T_idempotency_records-->>API: idempotency_records
-  API->>T_provisioning_steps: 追加 012_insert_provisioning_steps.sql
-  T_provisioning_steps-->>API: provisioning_steps
-  API->>T_project_member_events: 追加 013_insert_project_member_events.sql
-  T_project_member_events-->>API: project_member_events
-  API->>T_project_api_key_events: 追加 014_insert_project_api_key_events.sql
-  T_project_api_key_events-->>API: project_api_key_events
-  API->>T_project_usage_plan_events: 追加 015_insert_project_usage_plan_events.sql
-  T_project_usage_plan_events-->>API: project_usage_plan_events
-  API->>T_project_usage_plan_key_events: 追加 016_insert_project_usage_plan_key_events.sql
-  T_project_usage_plan_key_events-->>API: project_usage_plan_key_events
-  API->>T_provisioning_operation_events: 追加 017_insert_provisioning_operation_events.sql
-  T_provisioning_operation_events-->>API: provisioning_operation_events
-  API->>T_provisioning_step_events: 追加 018_insert_provisioning_step_events.sql
-  T_provisioning_step_events-->>API: provisioning_step_events
+  API->>API: 4. get_idempotency_record
+  API->>API: 5. create_project_provisioning_operation
+  API->>API: 6. create_idempotency_record
+  API->>R_api_gateway: 7. create_api_gateway_api_key
+  R_api_gateway-->>API: api_gateway_api_key
+  API->>R_api_gateway: 8. create_api_gateway_usage_plan
+  R_api_gateway-->>API: api_gateway_usage_plan
+  API->>R_api_gateway: 9. create_api_gateway_usage_plan_key
+  R_api_gateway-->>API: api_gateway_usage_plan_key
+  API->>R_cognito: 10. create_cognito_public_app_client
+  R_cognito-->>API: cognito_public_app_client
+  API->>R_cognito: 11. create_cognito_confidential_app_client
+  R_cognito-->>API: cognito_confidential_app_client
+  API->>API: 12. hash_project_secrets
+  API->>API: 13. save_project_resources
+  API->>API: 14. append_project_lifecycle_events
+  API->>API: 15. append_provisioning_events
+  API->>API: 16. append_audit_event
+  API->>API: 17. build_create_project_response
+  API->>DB: 18. 参照 001_select_projects.sql (projects)
+  DB-->>API: projects
+  API->>DB: 19. 追加 002_insert_projects.sql (projects)
+  DB-->>API: projects
+  API->>DB: 20. 追加 003_insert_project_events.sql (project_events)
+  DB-->>API: project_events
+  API->>DB: 21. 追加 004_insert_provisioning_operations.sql (provisioning_operations)
+  DB-->>API: provisioning_operations
+  API->>DB: 22. 追加 005_insert_project_api_keys.sql (project_api_keys)
+  DB-->>API: project_api_keys
+  API->>DB: 23. 追加 006_insert_project_usage_plans.sql (project_usage_plans)
+  DB-->>API: project_usage_plans
+  API->>DB: 24. 追加 007_insert_project_usage_plan_keys.sql (project_usage_plan_keys)
+  DB-->>API: project_usage_plan_keys
+  API->>DB: 25. 追加 008_insert_project_cognito_clients.sql (project_cognito_clients)
+  DB-->>API: project_cognito_clients
+  API->>DB: 26. 追加 009_insert_project_cognito_client_urls.sql (project_cognito_client_urls)
+  DB-->>API: project_cognito_client_urls
+  API->>DB: 27. 追加 010_insert_project_members.sql (project_members)
+  DB-->>API: project_members
+  API->>DB: 28. 追加 011_insert_idempotency_records.sql (idempotency_records)
+  DB-->>API: idempotency_records
+  API->>DB: 29. 追加 012_insert_provisioning_steps.sql (provisioning_steps)
+  DB-->>API: provisioning_steps
+  API->>DB: 30. 追加 013_insert_project_member_events.sql (project_member_events)
+  DB-->>API: project_member_events
+  API->>DB: 31. 追加 014_insert_project_api_key_events.sql (project_api_key_events)
+  DB-->>API: project_api_key_events
+  API->>DB: 32. 追加 015_insert_project_usage_plan_events.sql (project_usage_plan_events)
+  DB-->>API: project_usage_plan_events
+  API->>DB: 33. 追加 016_insert_project_usage_plan_key_events.sql (project_usage_plan_key_events)
+  DB-->>API: project_usage_plan_key_events
+  API->>DB: 34. 追加 017_insert_provisioning_operation_events.sql (provisioning_operation_events)
+  DB-->>API: provisioning_operation_events
+  API->>DB: 35. 追加 018_insert_provisioning_step_events.sql (provisioning_step_events)
+  DB-->>API: provisioning_step_events
 ```

@@ -18,6 +18,8 @@ from tools.generate_api_sequences import (
     endpoint_operation_id,
     function_target,
     generate_sequences,
+    integration_resource_for_target,
+    integration_resources,
     is_predicate_function,
     is_router_decorator,
     literal_string,
@@ -56,7 +58,9 @@ def test_function_target_accepts_action_and_predicate_names() -> None:
 
 def test_api_sequence_from_dir_reads_router_calls_and_sql(tmp_path: Path) -> None:
     api_root = tmp_path / "src/app/apis"
+    integrations_root = tmp_path / "src/app/integrations"
     api_dir = api_root / "projects/get_project"
+    write_file(integrations_root, "api_gateway/port.py", "class ApiGatewayPort: ...")
     write_file(
         api_root,
         "projects/get_project/router.py",
@@ -78,7 +82,7 @@ async def get_project(project_id):
         "SELECT projects.project_id FROM projects;",
     )
 
-    sequence = api_sequence_from_dir(api_dir, api_root)
+    sequence = api_sequence_from_dir(api_dir, api_root, integrations_root)
 
     assert sequence.domain == "projects"
     assert sequence.api == "get_project"
@@ -91,9 +95,10 @@ async def get_project(project_id):
     assert sequence.sql_steps == [
         SqlStep("001_select_projects.sql", "参照", "projects"),
     ]
+    assert sequence.integration_resources == frozenset({"api_gateway"})
 
 
-def test_render_sequence_markdown_contains_api_resource_and_table_participants() -> None:
+def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
     markdown = render_sequence_markdown(
         ApiSequence(
             domain="projects",
@@ -102,7 +107,7 @@ def test_render_sequence_markdown_contains_api_resource_and_table_participants()
             operation_id="getProject",
             steps=[
                 SequenceStep("get_project", "project"),
-                SequenceStep("get_project", "project"),
+                SequenceStep("create_api_gateway_api_key", "api_gateway_api_key"),
                 SequenceStep("has_project_view_permission", "project_view_permission"),
                 SequenceStep("build_project_detail_response", "project_detail_response"),
             ],
@@ -110,16 +115,20 @@ def test_render_sequence_markdown_contains_api_resource_and_table_participants()
                 SqlStep("001_select_projects.sql", "参照", "projects"),
                 SqlStep("002_select_projects.sql", "参照", "projects"),
             ],
+            integration_resources=frozenset({"api_gateway"}),
         )
     )
 
     assert "participant API as API: getProject" in markdown
-    assert markdown.count("participant R_project as Resource: project") == 1
+    assert "participant R_project as Resource: project" not in markdown
+    assert markdown.count("participant R_api_gateway as Resource: api gateway") == 1
     assert "participant R_project_view_permission" not in markdown
-    assert markdown.count("participant T_projects as Table: projects") == 1
-    assert "API->>R_project: get_project" in markdown
-    assert "alt project_view_permission" in markdown
-    assert "API->>T_projects: 参照 001_select_projects.sql" in markdown
+    assert "participant DB as DB" in markdown
+    assert "participant T_projects" not in markdown
+    assert "API->>API: 1. get_project" in markdown
+    assert "API->>R_api_gateway: 2. create_api_gateway_api_key" in markdown
+    assert "alt 3. project_view_permission" in markdown
+    assert "API->>DB: 5. 参照 001_select_projects.sql (projects)" in markdown
 
 
 def test_generate_sequences_and_check_mode(
@@ -128,6 +137,8 @@ def test_generate_sequences_and_check_mode(
 ) -> None:
     api_root = tmp_path / "apis"
     docs_root = tmp_path / "docs/spec/40.apis"
+    integrations_root = tmp_path / "integrations"
+    write_file(integrations_root, "cognito/port.py", "class CognitoPort: ...")
     write_file(
         api_root,
         "apis/list_apis/router.py",
@@ -143,15 +154,53 @@ async def list_apis(query):
 """,
     )
 
-    rendered = generate_sequences(api_root, docs_root)
+    rendered = generate_sequences(api_root, docs_root, integrations_root)
     assert list(rendered) == [docs_root / "apis/list_apis/sequence_gen.md"]
     assert changed_outputs(rendered) == [docs_root / "apis/list_apis/sequence_gen.md"]
 
-    assert main(["--api-root", str(api_root), "--docs-root", str(docs_root), "--check"]) == 1
+    assert (
+        main(
+            [
+                "--api-root",
+                str(api_root),
+                "--docs-root",
+                str(docs_root),
+                "--integrations-root",
+                str(integrations_root),
+                "--check",
+            ]
+        )
+        == 1
+    )
     assert "sequence_gen.md" in capsys.readouterr().out
 
-    assert main(["--api-root", str(api_root), "--docs-root", str(docs_root)]) == 0
-    assert main(["--api-root", str(api_root), "--docs-root", str(docs_root), "--check"]) == 0
+    assert (
+        main(
+            [
+                "--api-root",
+                str(api_root),
+                "--docs-root",
+                str(docs_root),
+                "--integrations-root",
+                str(integrations_root),
+            ]
+        )
+        == 0
+    )
+    assert (
+        main(
+            [
+                "--api-root",
+                str(api_root),
+                "--docs-root",
+                str(docs_root),
+                "--integrations-root",
+                str(integrations_root),
+                "--check",
+            ]
+        )
+        == 0
+    )
 
 
 def test_helpers_cover_api_dirs_sql_steps_and_arg_parser(tmp_path: Path) -> None:
@@ -179,6 +228,20 @@ async def list_apis():
         SqlStep("001_insert_audit_events.sql", "追加", "audit_events")
     ]
     assert build_arg_parser().parse_args([]).docs_root == Path("docs/spec/40.apis")
+
+
+def test_integration_resources_are_loaded_from_port_directories(tmp_path: Path) -> None:
+    integrations_root = tmp_path / "integrations"
+    write_file(integrations_root, "api_gateway/port.py", "class ApiGatewayPort: ...")
+    write_file(integrations_root, "cognito/schemas.py", "class CognitoSchema: ...")
+    write_file(integrations_root, "secrets_manager/port.py", "class SecretsManagerPort: ...")
+
+    resources = integration_resources(integrations_root)
+
+    assert resources == frozenset({"api_gateway", "secrets_manager"})
+    assert integration_resource_for_target("api_gateway_api_key", resources) == "api_gateway"
+    assert integration_resource_for_target("secrets_manager_secret", resources) == "secrets_manager"
+    assert integration_resource_for_target("project", resources) is None
 
 
 def test_ast_helpers_handle_non_matches_and_fallbacks() -> None:

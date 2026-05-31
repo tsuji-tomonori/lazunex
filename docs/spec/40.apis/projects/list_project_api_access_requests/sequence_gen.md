@@ -5,46 +5,28 @@
 ```mermaid
 sequenceDiagram
   participant API as API: listProjectApiAccessRequests
-  participant R_caller_identity as Resource: caller identity
-  participant R_project_access_request_list_query as Resource: project access request list query
-  participant R_project as Resource: project
-  participant R_project_access_requests as Resource: project access requests
-  participant R_pagination as Resource: pagination
-  participant R_project_access_request_list_response as Resource: project access request list response
-  participant T_api_access_requests as Table: api_access_requests
-  participant T_projects as Table: projects
-  participant T_apis as Table: apis
-  participant T_api_gateway_stages as Table: api_gateway_stages
-  participant T_api_access_reviews as Table: api_access_reviews
-  participant T_api_reviewers as Table: api_reviewers
-  participant T_project_members as Table: project_members
-  API->>R_caller_identity: get_caller_identity
-  R_caller_identity-->>API: caller_identity
-  API->>R_project_access_request_list_query: validate_project_access_request_list_query
-  R_project_access_request_list_query-->>API: project_access_request_list_query
-  API->>R_project: get_project
-  R_project-->>API: project
-  alt project_access_request_view_permission
-    API->>API: has_project_access_request_view_permission
+  participant DB as DB
+  API->>API: 1. get_caller_identity
+  API->>API: 2. validate_project_access_request_list_query
+  API->>API: 3. get_project
+  alt 4. project_access_request_view_permission
+    API->>API: 4. has_project_access_request_view_permission
   end
-  API->>R_project_access_requests: get_project_access_requests
-  R_project_access_requests-->>API: project_access_requests
-  API->>R_pagination: apply_pagination
-  R_pagination-->>API: pagination
-  API->>R_project_access_request_list_response: build_project_access_request_list_response
-  R_project_access_request_list_response-->>API: project_access_request_list_response
-  API->>T_api_access_requests: 参照 001_select_api_access_requests.sql
-  T_api_access_requests-->>API: api_access_requests
-  API->>T_projects: 参照 001_select_api_access_requests.sql
-  T_projects-->>API: projects
-  API->>T_apis: 参照 001_select_api_access_requests.sql
-  T_apis-->>API: apis
-  API->>T_api_gateway_stages: 参照 001_select_api_access_requests.sql
-  T_api_gateway_stages-->>API: api_gateway_stages
-  API->>T_api_access_reviews: 参照 001_select_api_access_requests.sql
-  T_api_access_reviews-->>API: api_access_reviews
-  API->>T_api_reviewers: 参照 001_select_api_access_requests.sql
-  T_api_reviewers-->>API: api_reviewers
-  API->>T_project_members: 参照 001_select_api_access_requests.sql
-  T_project_members-->>API: project_members
+  API->>API: 5. get_project_access_requests
+  API->>API: 6. apply_pagination
+  API->>API: 7. build_project_access_request_list_response
+  API->>DB: 8. 参照 001_select_api_access_requests.sql (api_access_requests)
+  DB-->>API: api_access_requests
+  API->>DB: 9. 参照 001_select_api_access_requests.sql (projects)
+  DB-->>API: projects
+  API->>DB: 10. 参照 001_select_api_access_requests.sql (apis)
+  DB-->>API: apis
+  API->>DB: 11. 参照 001_select_api_access_requests.sql (api_gateway_stages)
+  DB-->>API: api_gateway_stages
+  API->>DB: 12. 参照 001_select_api_access_requests.sql (api_access_reviews)
+  DB-->>API: api_access_reviews
+  API->>DB: 13. 参照 001_select_api_access_requests.sql (api_reviewers)
+  DB-->>API: api_reviewers
+  API->>DB: 14. 参照 001_select_api_access_requests.sql (project_members)
+  DB-->>API: project_members
 ```

@@ -4,7 +4,7 @@ import argparse
 import ast
 import re
 from collections.abc import Iterable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 GENERATED_COMMENT = (
@@ -46,6 +46,9 @@ class ApiSequence:
     operation_id: str
     steps: list[SequenceStep]
     sql_steps: list[SqlStep]
+    integration_resources: frozenset[str] = field(
+        default_factory=lambda: frozenset[str]()
+    )
 
 
 def snake_to_title(value: str) -> str:
@@ -128,6 +131,26 @@ def is_predicate_function(function_name: str) -> bool:
     return head in PREDICATES
 
 
+def integration_resources(integrations_root: Path) -> frozenset[str]:
+    if not integrations_root.exists():
+        return frozenset()
+    return frozenset(
+        path.name
+        for path in sorted(integrations_root.iterdir())
+        if path.is_dir() and (path / "port.py").exists()
+    )
+
+
+def integration_resource_for_target(
+    target: str,
+    resources: frozenset[str],
+) -> str | None:
+    for resource in sorted(resources, key=len, reverse=True):
+        if target == resource or target.startswith(f"{resource}_"):
+            return resource
+    return None
+
+
 def endpoint_sequence_steps(function: ast.AsyncFunctionDef | ast.FunctionDef) -> list[SequenceStep]:
     steps: list[SequenceStep] = []
     for node in ast.walk(function):
@@ -170,7 +193,11 @@ def sql_sequence_steps(sql_dir: Path) -> list[SqlStep]:
     return steps
 
 
-def api_sequence_from_dir(api_dir: Path, api_root: Path) -> ApiSequence:
+def api_sequence_from_dir(
+    api_dir: Path,
+    api_root: Path,
+    integrations_root: Path | None = None,
+) -> ApiSequence:
     router_path = api_dir / "router.py"
     tree = ast.parse(router_path.read_text(encoding="utf-8"), filename=str(router_path))
     function = endpoint_function(tree)
@@ -183,6 +210,11 @@ def api_sequence_from_dir(api_dir: Path, api_root: Path) -> ApiSequence:
         operation_id=endpoint_operation_id(function),
         steps=endpoint_sequence_steps(function),
         sql_steps=sql_sequence_steps(api_dir / "sql"),
+        integration_resources=(
+            integration_resources(integrations_root)
+            if integrations_root is not None
+            else frozenset()
+        ),
     )
 
 
@@ -199,12 +231,12 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
     for step in sequence.steps:
         if is_predicate_function(step.function_name):
             continue
-        if step.target not in resource_targets:
-            resource_targets.append(step.target)
-    table_names: list[str] = []
-    for sql_step in sequence.sql_steps:
-        if sql_step.table not in table_names:
-            table_names.append(sql_step.table)
+        resource = integration_resource_for_target(
+            step.target,
+            sequence.integration_resources,
+        )
+        if resource is not None and resource not in resource_targets:
+            resource_targets.append(resource)
 
     lines = [
         GENERATED_COMMENT,
@@ -219,23 +251,36 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
         lines.append(
             f"  participant {participant_id('R', target)} as Resource: {snake_to_title(target)}"
         )
-    for table in table_names:
-        lines.append(f"  participant {participant_id('T', table)} as Table: {table}")
+    if sequence.sql_steps:
+        lines.append("  participant DB as DB")
 
+    sequence_number = 1
     for step in sequence.steps:
         if is_predicate_function(step.function_name):
-            lines.append(f"  alt {step.target}")
-            lines.append(f"    API->>API: {step.function_name}")
+            lines.append(f"  alt {sequence_number}. {step.target}")
+            lines.append(f"    API->>API: {sequence_number}. {step.function_name}")
             lines.append("  end")
+            sequence_number += 1
             continue
-        resource_id = participant_id("R", step.target)
-        lines.append(f"  API->>{resource_id}: {step.function_name}")
-        lines.append(f"  {resource_id}-->>API: {step.target}")
+        resource = integration_resource_for_target(
+            step.target,
+            sequence.integration_resources,
+        )
+        if resource is None:
+            lines.append(f"  API->>API: {sequence_number}. {step.function_name}")
+        else:
+            resource_id = participant_id("R", resource)
+            lines.append(f"  API->>{resource_id}: {sequence_number}. {step.function_name}")
+            lines.append(f"  {resource_id}-->>API: {step.target}")
+        sequence_number += 1
 
     for sql_step in sequence.sql_steps:
-        table_id = participant_id("T", sql_step.table)
-        lines.append(f"  API->>{table_id}: {sql_step.action} {sql_step.filename}")
-        lines.append(f"  {table_id}-->>API: {sql_step.table}")
+        lines.append(
+            f"  API->>DB: {sequence_number}. {sql_step.action} "
+            f"{sql_step.filename} ({sql_step.table})"
+        )
+        lines.append(f"  DB-->>API: {sql_step.table}")
+        sequence_number += 1
 
     lines.extend(["```", ""])
     return "\n".join(lines)
@@ -245,10 +290,14 @@ def output_path(sequence: ApiSequence, docs_root: Path) -> Path:
     return docs_root / sequence.domain / sequence.api / "sequence_gen.md"
 
 
-def generate_sequences(api_root: Path, docs_root: Path) -> dict[Path, str]:
+def generate_sequences(
+    api_root: Path,
+    docs_root: Path,
+    integrations_root: Path = Path("src/app/integrations"),
+) -> dict[Path, str]:
     rendered: dict[Path, str] = {}
     for directory in api_dirs(api_root):
-        sequence = api_sequence_from_dir(directory, api_root)
+        sequence = api_sequence_from_dir(directory, api_root, integrations_root)
         rendered[output_path(sequence, docs_root)] = render_sequence_markdown(sequence)
     return rendered
 
@@ -276,6 +325,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--api-root", type=Path, default=Path("src/app/apis"))
     parser.add_argument("--docs-root", type=Path, default=Path("docs/spec/40.apis"))
     parser.add_argument(
+        "--integrations-root",
+        type=Path,
+        default=Path("src/app/integrations"),
+    )
+    parser.add_argument(
         "--check",
         action="store_true",
         help="Only check generated sequence files are up to date.",
@@ -285,7 +339,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_arg_parser().parse_args(argv)
-    rendered = generate_sequences(args.api_root, args.docs_root)
+    rendered = generate_sequences(args.api_root, args.docs_root, args.integrations_root)
     changed = changed_outputs(rendered)
     if args.check:
         if changed:

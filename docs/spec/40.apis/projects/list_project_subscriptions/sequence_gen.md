@@ -5,49 +5,30 @@
 ```mermaid
 sequenceDiagram
   participant API as API: listProjectSubscriptions
-  participant R_caller_identity as Resource: caller identity
-  participant R_project_subscription_list_query as Resource: project subscription list query
-  participant R_project as Resource: project
-  participant R_project_subscriptions as Resource: project subscriptions
-  participant R_pagination as Resource: pagination
-  participant R_project_subscription_list_response as Resource: project subscription list response
-  participant T_project_api_subscriptions as Table: project_api_subscriptions
-  participant T_projects as Table: projects
-  participant T_apis as Table: apis
-  participant T_api_gateway_stages as Table: api_gateway_stages
-  participant T_api_cognito_scopes as Table: api_cognito_scopes
-  participant T_project_cognito_client_scopes as Table: project_cognito_client_scopes
-  participant T_project_cognito_clients as Table: project_cognito_clients
-  participant T_project_members as Table: project_members
-  API->>R_caller_identity: get_caller_identity
-  R_caller_identity-->>API: caller_identity
-  API->>R_project_subscription_list_query: validate_project_subscription_list_query
-  R_project_subscription_list_query-->>API: project_subscription_list_query
-  API->>R_project: get_project
-  R_project-->>API: project
-  alt project_subscription_view_permission
-    API->>API: has_project_subscription_view_permission
+  participant DB as DB
+  API->>API: 1. get_caller_identity
+  API->>API: 2. validate_project_subscription_list_query
+  API->>API: 3. get_project
+  alt 4. project_subscription_view_permission
+    API->>API: 4. has_project_subscription_view_permission
   end
-  API->>R_project_subscriptions: get_project_subscriptions
-  R_project_subscriptions-->>API: project_subscriptions
-  API->>R_pagination: apply_pagination
-  R_pagination-->>API: pagination
-  API->>R_project_subscription_list_response: build_project_subscription_list_response
-  R_project_subscription_list_response-->>API: project_subscription_list_response
-  API->>T_project_api_subscriptions: 参照 001_select_subscriptions.sql
-  T_project_api_subscriptions-->>API: project_api_subscriptions
-  API->>T_projects: 参照 001_select_subscriptions.sql
-  T_projects-->>API: projects
-  API->>T_apis: 参照 001_select_subscriptions.sql
-  T_apis-->>API: apis
-  API->>T_api_gateway_stages: 参照 001_select_subscriptions.sql
-  T_api_gateway_stages-->>API: api_gateway_stages
-  API->>T_api_cognito_scopes: 参照 001_select_subscriptions.sql
-  T_api_cognito_scopes-->>API: api_cognito_scopes
-  API->>T_project_cognito_client_scopes: 参照 001_select_subscriptions.sql
-  T_project_cognito_client_scopes-->>API: project_cognito_client_scopes
-  API->>T_project_cognito_clients: 参照 001_select_subscriptions.sql
-  T_project_cognito_clients-->>API: project_cognito_clients
-  API->>T_project_members: 参照 001_select_subscriptions.sql
-  T_project_members-->>API: project_members
+  API->>API: 5. get_project_subscriptions
+  API->>API: 6. apply_pagination
+  API->>API: 7. build_project_subscription_list_response
+  API->>DB: 8. 参照 001_select_subscriptions.sql (project_api_subscriptions)
+  DB-->>API: project_api_subscriptions
+  API->>DB: 9. 参照 001_select_subscriptions.sql (projects)
+  DB-->>API: projects
+  API->>DB: 10. 参照 001_select_subscriptions.sql (apis)
+  DB-->>API: apis
+  API->>DB: 11. 参照 001_select_subscriptions.sql (api_gateway_stages)
+  DB-->>API: api_gateway_stages
+  API->>DB: 12. 参照 001_select_subscriptions.sql (api_cognito_scopes)
+  DB-->>API: api_cognito_scopes
+  API->>DB: 13. 参照 001_select_subscriptions.sql (project_cognito_client_scopes)
+  DB-->>API: project_cognito_client_scopes
+  API->>DB: 14. 参照 001_select_subscriptions.sql (project_cognito_clients)
+  DB-->>API: project_cognito_clients
+  API->>DB: 15. 参照 001_select_subscriptions.sql (project_members)
+  DB-->>API: project_members
 ```

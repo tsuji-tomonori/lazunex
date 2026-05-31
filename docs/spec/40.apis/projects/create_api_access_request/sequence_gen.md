@@ -5,86 +5,55 @@
 ```mermaid
 sequenceDiagram
   participant API as API: createApiAccessRequest
-  participant R_caller_identity as Resource: caller identity
-  participant R_create_access_request_request as Resource: create access request request
-  participant R_project as Resource: project
-  participant R_api_reviewer as Resource: api reviewer
-  participant R_api_access_request as Resource: api access request
-  participant R_idempotency_record as Resource: idempotency record
-  participant R_access_request_created_event as Resource: access request created event
-  participant R_audit_event as Resource: audit event
-  participant R_create_access_request_response as Resource: create access request response
-  participant T_projects as Table: projects
-  participant T_project_members as Table: project_members
-  participant T_apis as Table: apis
-  participant T_api_gateway_stages as Table: api_gateway_stages
-  participant T_api_cognito_scopes as Table: api_cognito_scopes
-  participant T_api_reviewers as Table: api_reviewers
-  participant T_project_cognito_clients as Table: project_cognito_clients
-  participant T_project_api_subscriptions as Table: project_api_subscriptions
-  participant T_api_access_requests as Table: api_access_requests
-  participant T_api_access_reviews as Table: api_access_reviews
-  participant T_access_request_events as Table: access_request_events
-  participant T_audit_events as Table: audit_events
-  participant T_idempotency_records as Table: idempotency_records
-  API->>R_caller_identity: get_caller_identity
-  R_caller_identity-->>API: caller_identity
-  API->>R_create_access_request_request: validate_create_access_request_request
-  R_create_access_request_request-->>API: create_access_request_request
-  API->>R_project: get_project
-  R_project-->>API: project
-  alt project_owner_permission
-    API->>API: has_project_owner_permission
+  participant DB as DB
+  API->>API: 1. get_caller_identity
+  API->>API: 2. validate_create_access_request_request
+  API->>API: 3. get_project
+  alt 4. project_owner_permission
+    API->>API: 4. has_project_owner_permission
   end
-  alt published_api
-    API->>API: is_published_api
+  alt 5. published_api
+    API->>API: 5. is_published_api
   end
-  API->>R_api_reviewer: get_api_reviewer
-  R_api_reviewer-->>API: api_reviewer
-  alt active_subscription
-    API->>API: has_active_subscription
+  API->>API: 6. get_api_reviewer
+  alt 7. active_subscription
+    API->>API: 7. has_active_subscription
   end
-  alt pending_access_request_for_project_api
-    API->>API: has_pending_access_request_for_project_api
+  alt 8. pending_access_request_for_project_api
+    API->>API: 8. has_pending_access_request_for_project_api
   end
-  API->>R_api_access_request: save_api_access_request
-  R_api_access_request-->>API: api_access_request
-  API->>R_idempotency_record: get_idempotency_record
-  R_idempotency_record-->>API: idempotency_record
-  API->>R_idempotency_record: create_idempotency_record
-  R_idempotency_record-->>API: idempotency_record
-  API->>R_access_request_created_event: append_access_request_created_event
-  R_access_request_created_event-->>API: access_request_created_event
-  API->>R_audit_event: append_audit_event
-  R_audit_event-->>API: audit_event
-  API->>R_create_access_request_response: build_create_access_request_response
-  R_create_access_request_response-->>API: create_access_request_response
-  API->>T_projects: 参照 001_select_projects.sql
-  T_projects-->>API: projects
-  API->>T_project_members: 参照 001_select_projects.sql
-  T_project_members-->>API: project_members
-  API->>T_apis: 参照 002_select_apis.sql
-  T_apis-->>API: apis
-  API->>T_api_gateway_stages: 参照 002_select_apis.sql
-  T_api_gateway_stages-->>API: api_gateway_stages
-  API->>T_api_cognito_scopes: 参照 002_select_apis.sql
-  T_api_cognito_scopes-->>API: api_cognito_scopes
-  API->>T_api_reviewers: 参照 002_select_apis.sql
-  T_api_reviewers-->>API: api_reviewers
-  API->>T_project_cognito_clients: 参照 003_select_project_cognito_clients.sql
-  T_project_cognito_clients-->>API: project_cognito_clients
-  API->>T_project_api_subscriptions: 参照 004_select_subscriptions.sql
-  T_project_api_subscriptions-->>API: project_api_subscriptions
-  API->>T_api_access_requests: 参照 005_select_api_access_requests.sql
-  T_api_access_requests-->>API: api_access_requests
-  API->>T_api_access_reviews: 参照 005_select_api_access_requests.sql
-  T_api_access_reviews-->>API: api_access_reviews
-  API->>T_api_access_requests: 追加 006_insert_api_access_requests.sql
-  T_api_access_requests-->>API: api_access_requests
-  API->>T_access_request_events: 追加 007_insert_access_request_events.sql
-  T_access_request_events-->>API: access_request_events
-  API->>T_audit_events: 追加 008_insert_audit_events.sql
-  T_audit_events-->>API: audit_events
-  API->>T_idempotency_records: 追加 009_insert_idempotency_records.sql
-  T_idempotency_records-->>API: idempotency_records
+  API->>API: 9. save_api_access_request
+  API->>API: 10. get_idempotency_record
+  API->>API: 11. create_idempotency_record
+  API->>API: 12. append_access_request_created_event
+  API->>API: 13. append_audit_event
+  API->>API: 14. build_create_access_request_response
+  API->>DB: 15. 参照 001_select_projects.sql (projects)
+  DB-->>API: projects
+  API->>DB: 16. 参照 001_select_projects.sql (project_members)
+  DB-->>API: project_members
+  API->>DB: 17. 参照 002_select_apis.sql (apis)
+  DB-->>API: apis
+  API->>DB: 18. 参照 002_select_apis.sql (api_gateway_stages)
+  DB-->>API: api_gateway_stages
+  API->>DB: 19. 参照 002_select_apis.sql (api_cognito_scopes)
+  DB-->>API: api_cognito_scopes
+  API->>DB: 20. 参照 002_select_apis.sql (api_reviewers)
+  DB-->>API: api_reviewers
+  API->>DB: 21. 参照 003_select_project_cognito_clients.sql (project_cognito_clients)
+  DB-->>API: project_cognito_clients
+  API->>DB: 22. 参照 004_select_subscriptions.sql (project_api_subscriptions)
+  DB-->>API: project_api_subscriptions
+  API->>DB: 23. 参照 005_select_api_access_requests.sql (api_access_requests)
+  DB-->>API: api_access_requests
+  API->>DB: 24. 参照 005_select_api_access_requests.sql (api_access_reviews)
+  DB-->>API: api_access_reviews
+  API->>DB: 25. 追加 006_insert_api_access_requests.sql (api_access_requests)
+  DB-->>API: api_access_requests
+  API->>DB: 26. 追加 007_insert_access_request_events.sql (access_request_events)
+  DB-->>API: access_request_events
+  API->>DB: 27. 追加 008_insert_audit_events.sql (audit_events)
+  DB-->>API: audit_events
+  API->>DB: 28. 追加 009_insert_idempotency_records.sql (idempotency_records)
+  DB-->>API: idempotency_records
 ```

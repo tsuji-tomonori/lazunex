@@ -5,89 +5,54 @@
 ```mermaid
 sequenceDiagram
   participant API as API: updateProjectPublicClient
-  participant R_caller_identity as Resource: caller identity
-  participant R_public_client_update_request as Resource: public client update request
-  participant R_project as Resource: project
-  participant R_public_app_client_metadata as Resource: public app client metadata
-  participant R_idempotency_record as Resource: idempotency record
-  participant R_provisioning_operation as Resource: provisioning operation
-  participant R_cognito_app_client as Resource: cognito app client
-  participant R_public_client_settings as Resource: public client settings
-  participant R_project_public_client_updated_event as Resource: project public client updated event
-  participant R_provisioning_events as Resource: provisioning events
-  participant R_audit_event as Resource: audit event
-  participant R_update_public_client_response as Resource: update public client response
-  participant T_project_cognito_clients as Table: project_cognito_clients
-  participant T_projects as Table: projects
-  participant T_project_members as Table: project_members
-  participant T_project_cognito_client_scopes as Table: project_cognito_client_scopes
-  participant T_project_cognito_client_urls as Table: project_cognito_client_urls
-  participant T_project_cognito_client_events as Table: project_cognito_client_events
-  participant T_audit_events as Table: audit_events
-  participant T_provisioning_operations as Table: provisioning_operations
-  participant T_idempotency_records as Table: idempotency_records
-  participant T_provisioning_steps as Table: provisioning_steps
-  participant T_provisioning_operation_events as Table: provisioning_operation_events
-  participant T_provisioning_step_events as Table: provisioning_step_events
-  API->>R_caller_identity: get_caller_identity
-  R_caller_identity-->>API: caller_identity
-  API->>R_public_client_update_request: validate_public_client_update_request
-  R_public_client_update_request-->>API: public_client_update_request
-  API->>R_project: get_project
-  R_project-->>API: project
-  alt project_owner_permission
-    API->>API: has_project_owner_permission
+  participant R_cognito as Resource: cognito
+  participant DB as DB
+  API->>API: 1. get_caller_identity
+  API->>API: 2. validate_public_client_update_request
+  API->>API: 3. get_project
+  alt 4. project_owner_permission
+    API->>API: 4. has_project_owner_permission
   end
-  API->>R_public_app_client_metadata: get_public_app_client_metadata
-  R_public_app_client_metadata-->>API: public_app_client_metadata
-  API->>R_idempotency_record: get_idempotency_record
-  R_idempotency_record-->>API: idempotency_record
-  API->>R_provisioning_operation: create_provisioning_operation
-  R_provisioning_operation-->>API: provisioning_operation
-  API->>R_idempotency_record: create_idempotency_record
-  R_idempotency_record-->>API: idempotency_record
-  API->>R_cognito_app_client: get_cognito_app_client
-  R_cognito_app_client-->>API: cognito_app_client
-  API->>R_public_client_settings: merge_public_client_settings
-  R_public_client_settings-->>API: public_client_settings
-  API->>R_cognito_app_client: update_cognito_app_client
-  R_cognito_app_client-->>API: cognito_app_client
-  API->>R_public_app_client_metadata: update_public_app_client_metadata
-  R_public_app_client_metadata-->>API: public_app_client_metadata
-  API->>R_project_public_client_updated_event: append_project_public_client_updated_event
-  R_project_public_client_updated_event-->>API: project_public_client_updated_event
-  API->>R_provisioning_events: append_provisioning_events
-  R_provisioning_events-->>API: provisioning_events
-  API->>R_audit_event: append_audit_event
-  R_audit_event-->>API: audit_event
-  API->>R_update_public_client_response: build_update_public_client_response
-  R_update_public_client_response-->>API: update_public_client_response
-  API->>T_project_cognito_clients: 参照 001_select_project_cognito_clients.sql
-  T_project_cognito_clients-->>API: project_cognito_clients
-  API->>T_projects: 参照 001_select_project_cognito_clients.sql
-  T_projects-->>API: projects
-  API->>T_project_members: 参照 001_select_project_cognito_clients.sql
-  T_project_members-->>API: project_members
-  API->>T_project_cognito_client_scopes: 参照 002_select_project_cognito_client_scopes.sql
-  T_project_cognito_client_scopes-->>API: project_cognito_client_scopes
-  API->>T_project_cognito_clients: 更新 003_update_project_cognito_clients.sql
-  T_project_cognito_clients-->>API: project_cognito_clients
-  API->>T_project_cognito_client_urls: 削除 004_delete_project_cognito_client_urls.sql
-  T_project_cognito_client_urls-->>API: project_cognito_client_urls
-  API->>T_project_cognito_client_urls: 追加 005_insert_project_cognito_client_urls.sql
-  T_project_cognito_client_urls-->>API: project_cognito_client_urls
-  API->>T_project_cognito_client_events: 追加 006_insert_project_cognito_client_events.sql
-  T_project_cognito_client_events-->>API: project_cognito_client_events
-  API->>T_audit_events: 追加 007_insert_audit_events.sql
-  T_audit_events-->>API: audit_events
-  API->>T_provisioning_operations: 追加 008_insert_provisioning_operations.sql
-  T_provisioning_operations-->>API: provisioning_operations
-  API->>T_idempotency_records: 追加 009_insert_idempotency_records.sql
-  T_idempotency_records-->>API: idempotency_records
-  API->>T_provisioning_steps: 追加 010_insert_provisioning_steps.sql
-  T_provisioning_steps-->>API: provisioning_steps
-  API->>T_provisioning_operation_events: 追加 011_insert_provisioning_operation_events.sql
-  T_provisioning_operation_events-->>API: provisioning_operation_events
-  API->>T_provisioning_step_events: 追加 012_insert_provisioning_step_events.sql
-  T_provisioning_step_events-->>API: provisioning_step_events
+  API->>API: 5. get_public_app_client_metadata
+  API->>API: 6. get_idempotency_record
+  API->>API: 7. create_provisioning_operation
+  API->>API: 8. create_idempotency_record
+  API->>R_cognito: 9. get_cognito_app_client
+  R_cognito-->>API: cognito_app_client
+  API->>API: 10. merge_public_client_settings
+  API->>R_cognito: 11. update_cognito_app_client
+  R_cognito-->>API: cognito_app_client
+  API->>API: 12. update_public_app_client_metadata
+  API->>API: 13. append_project_public_client_updated_event
+  API->>API: 14. append_provisioning_events
+  API->>API: 15. append_audit_event
+  API->>API: 16. build_update_public_client_response
+  API->>DB: 17. 参照 001_select_project_cognito_clients.sql (project_cognito_clients)
+  DB-->>API: project_cognito_clients
+  API->>DB: 18. 参照 001_select_project_cognito_clients.sql (projects)
+  DB-->>API: projects
+  API->>DB: 19. 参照 001_select_project_cognito_clients.sql (project_members)
+  DB-->>API: project_members
+  API->>DB: 20. 参照 002_select_project_cognito_client_scopes.sql (project_cognito_client_scopes)
+  DB-->>API: project_cognito_client_scopes
+  API->>DB: 21. 更新 003_update_project_cognito_clients.sql (project_cognito_clients)
+  DB-->>API: project_cognito_clients
+  API->>DB: 22. 削除 004_delete_project_cognito_client_urls.sql (project_cognito_client_urls)
+  DB-->>API: project_cognito_client_urls
+  API->>DB: 23. 追加 005_insert_project_cognito_client_urls.sql (project_cognito_client_urls)
+  DB-->>API: project_cognito_client_urls
+  API->>DB: 24. 追加 006_insert_project_cognito_client_events.sql (project_cognito_client_events)
+  DB-->>API: project_cognito_client_events
+  API->>DB: 25. 追加 007_insert_audit_events.sql (audit_events)
+  DB-->>API: audit_events
+  API->>DB: 26. 追加 008_insert_provisioning_operations.sql (provisioning_operations)
+  DB-->>API: provisioning_operations
+  API->>DB: 27. 追加 009_insert_idempotency_records.sql (idempotency_records)
+  DB-->>API: idempotency_records
+  API->>DB: 28. 追加 010_insert_provisioning_steps.sql (provisioning_steps)
+  DB-->>API: provisioning_steps
+  API->>DB: 29. 追加 011_insert_provisioning_operation_events.sql (provisioning_operation_events)
+  DB-->>API: provisioning_operation_events
+  API->>DB: 30. 追加 012_insert_provisioning_step_events.sql (provisioning_step_events)
+  DB-->>API: provisioning_step_events
 ```

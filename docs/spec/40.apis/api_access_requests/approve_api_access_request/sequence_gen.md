@@ -5,138 +5,87 @@
 ```mermaid
 sequenceDiagram
   participant API as API: approveApiAccessRequest
-  participant R_caller_identity as Resource: caller identity
-  participant R_access_request as Resource: access request
-  participant R_access_request_approving_event as Resource: access request approving event
-  participant R_provisioning_operation as Resource: provisioning operation
-  participant R_idempotency_record as Resource: idempotency record
-  participant R_usage_plan_api_stage as Resource: usage plan api stage
-  participant R_cognito_app_client as Resource: cognito app client
-  participant R_cognito_allowed_scopes as Resource: cognito allowed scopes
-  participant R_approved_access_resources as Resource: approved access resources
-  participant R_usage_plan_stage_event as Resource: usage plan stage event
-  participant R_client_scope_event as Resource: client scope event
-  participant R_access_request_approved_event as Resource: access request approved event
-  participant R_subscription_provisioned_event as Resource: subscription provisioned event
-  participant R_provisioning_events as Resource: provisioning events
-  participant R_audit_event as Resource: audit event
-  participant R_approve_access_request_response as Resource: approve access request response
-  participant T_api_access_requests as Table: api_access_requests
-  participant T_projects as Table: projects
-  participant T_apis as Table: apis
-  participant T_api_gateway_stages as Table: api_gateway_stages
-  participant T_api_cognito_scopes as Table: api_cognito_scopes
-  participant T_api_access_reviews as Table: api_access_reviews
-  participant T_api_reviewers as Table: api_reviewers
-  participant T_project_api_subscriptions as Table: project_api_subscriptions
-  participant T_access_request_events as Table: access_request_events
-  participant T_provisioning_operations as Table: provisioning_operations
-  participant T_project_cognito_clients as Table: project_cognito_clients
-  participant T_project_usage_plans as Table: project_usage_plans
-  participant T_project_usage_plan_api_stages as Table: project_usage_plan_api_stages
-  participant T_project_cognito_client_scopes as Table: project_cognito_client_scopes
-  participant T_subscription_events as Table: subscription_events
-  participant T_audit_events as Table: audit_events
-  participant T_idempotency_records as Table: idempotency_records
-  participant T_provisioning_steps as Table: provisioning_steps
-  participant T_usage_plan_stage_events as Table: usage_plan_stage_events
-  participant T_client_scope_events as Table: client_scope_events
-  participant T_provisioning_operation_events as Table: provisioning_operation_events
-  participant T_provisioning_step_events as Table: provisioning_step_events
-  API->>R_caller_identity: get_caller_identity
-  R_caller_identity-->>API: caller_identity
-  API->>R_access_request: get_access_request
-  R_access_request-->>API: access_request
-  alt pending_access_request
-    API->>API: is_pending_access_request
+  participant R_cognito as Resource: cognito
+  participant DB as DB
+  API->>API: 1. get_caller_identity
+  API->>API: 2. get_access_request
+  alt 3. pending_access_request
+    API->>API: 3. is_pending_access_request
   end
-  alt api_reviewer_permission
-    API->>API: has_api_reviewer_permission
+  alt 4. api_reviewer_permission
+    API->>API: 4. has_api_reviewer_permission
   end
-  alt available_project_api_stage
-    API->>API: is_available_project_api_stage
+  alt 5. available_project_api_stage
+    API->>API: 5. is_available_project_api_stage
   end
-  alt active_subscription
-    API->>API: has_active_subscription
+  alt 6. active_subscription
+    API->>API: 6. has_active_subscription
   end
-  API->>R_access_request_approving_event: append_access_request_approving_event
-  R_access_request_approving_event-->>API: access_request_approving_event
-  API->>R_provisioning_operation: create_provisioning_operation
-  R_provisioning_operation-->>API: provisioning_operation
-  API->>R_idempotency_record: get_idempotency_record
-  R_idempotency_record-->>API: idempotency_record
-  API->>R_idempotency_record: create_idempotency_record
-  R_idempotency_record-->>API: idempotency_record
-  API->>R_usage_plan_api_stage: add_usage_plan_api_stage
-  R_usage_plan_api_stage-->>API: usage_plan_api_stage
-  API->>R_cognito_app_client: get_cognito_app_client
-  R_cognito_app_client-->>API: cognito_app_client
-  API->>R_cognito_allowed_scopes: merge_cognito_allowed_scopes
-  R_cognito_allowed_scopes-->>API: cognito_allowed_scopes
-  API->>R_cognito_app_client: update_cognito_app_client
-  R_cognito_app_client-->>API: cognito_app_client
-  API->>R_approved_access_resources: save_approved_access_resources
-  R_approved_access_resources-->>API: approved_access_resources
-  API->>R_usage_plan_stage_event: append_usage_plan_stage_event
-  R_usage_plan_stage_event-->>API: usage_plan_stage_event
-  API->>R_client_scope_event: append_client_scope_event
-  R_client_scope_event-->>API: client_scope_event
-  API->>R_access_request_approved_event: append_access_request_approved_event
-  R_access_request_approved_event-->>API: access_request_approved_event
-  API->>R_subscription_provisioned_event: append_subscription_provisioned_event
-  R_subscription_provisioned_event-->>API: subscription_provisioned_event
-  API->>R_provisioning_events: append_provisioning_events
-  R_provisioning_events-->>API: provisioning_events
-  API->>R_audit_event: append_audit_event
-  R_audit_event-->>API: audit_event
-  API->>R_approve_access_request_response: build_approve_access_request_response
-  R_approve_access_request_response-->>API: approve_access_request_response
-  API->>T_api_access_requests: 参照 001_select_api_access_requests.sql
-  T_api_access_requests-->>API: api_access_requests
-  API->>T_projects: 参照 001_select_api_access_requests.sql
-  T_projects-->>API: projects
-  API->>T_apis: 参照 001_select_api_access_requests.sql
-  T_apis-->>API: apis
-  API->>T_api_gateway_stages: 参照 001_select_api_access_requests.sql
-  T_api_gateway_stages-->>API: api_gateway_stages
-  API->>T_api_cognito_scopes: 参照 001_select_api_access_requests.sql
-  T_api_cognito_scopes-->>API: api_cognito_scopes
-  API->>T_api_access_reviews: 参照 001_select_api_access_requests.sql
-  T_api_access_reviews-->>API: api_access_reviews
-  API->>T_api_reviewers: 参照 002_select_api_reviewers.sql
-  T_api_reviewers-->>API: api_reviewers
-  API->>T_project_api_subscriptions: 参照 003_select_subscriptions.sql
-  T_project_api_subscriptions-->>API: project_api_subscriptions
-  API->>T_access_request_events: 追加 004_insert_access_request_events.sql
-  T_access_request_events-->>API: access_request_events
-  API->>T_provisioning_operations: 追加 005_insert_provisioning_operations.sql
-  T_provisioning_operations-->>API: provisioning_operations
-  API->>T_project_cognito_clients: 参照 006_select_project_cognito_clients.sql
-  T_project_cognito_clients-->>API: project_cognito_clients
-  API->>T_project_usage_plans: 参照 006_select_project_cognito_clients.sql
-  T_project_usage_plans-->>API: project_usage_plans
-  API->>T_api_access_reviews: 追加 007_insert_api_access_reviews.sql
-  T_api_access_reviews-->>API: api_access_reviews
-  API->>T_project_api_subscriptions: 追加 008_insert_project_api_subscriptions.sql
-  T_project_api_subscriptions-->>API: project_api_subscriptions
-  API->>T_project_usage_plan_api_stages: 追加 009_insert_project_usage_plan_api_stages.sql
-  T_project_usage_plan_api_stages-->>API: project_usage_plan_api_stages
-  API->>T_project_cognito_client_scopes: 追加 010_insert_project_cognito_client_scopes.sql
-  T_project_cognito_client_scopes-->>API: project_cognito_client_scopes
-  API->>T_subscription_events: 追加 011_insert_subscription_events.sql
-  T_subscription_events-->>API: subscription_events
-  API->>T_audit_events: 追加 012_insert_audit_events.sql
-  T_audit_events-->>API: audit_events
-  API->>T_idempotency_records: 追加 013_insert_idempotency_records.sql
-  T_idempotency_records-->>API: idempotency_records
-  API->>T_provisioning_steps: 追加 014_insert_provisioning_steps.sql
-  T_provisioning_steps-->>API: provisioning_steps
-  API->>T_usage_plan_stage_events: 追加 015_insert_usage_plan_stage_events.sql
-  T_usage_plan_stage_events-->>API: usage_plan_stage_events
-  API->>T_client_scope_events: 追加 016_insert_client_scope_events.sql
-  T_client_scope_events-->>API: client_scope_events
-  API->>T_provisioning_operation_events: 追加 017_insert_provisioning_operation_events.sql
-  T_provisioning_operation_events-->>API: provisioning_operation_events
-  API->>T_provisioning_step_events: 追加 018_insert_provisioning_step_events.sql
-  T_provisioning_step_events-->>API: provisioning_step_events
+  API->>API: 7. append_access_request_approving_event
+  API->>API: 8. create_provisioning_operation
+  API->>API: 9. get_idempotency_record
+  API->>API: 10. create_idempotency_record
+  API->>API: 11. add_usage_plan_api_stage
+  API->>R_cognito: 12. get_cognito_app_client
+  R_cognito-->>API: cognito_app_client
+  API->>R_cognito: 13. merge_cognito_allowed_scopes
+  R_cognito-->>API: cognito_allowed_scopes
+  API->>R_cognito: 14. update_cognito_app_client
+  R_cognito-->>API: cognito_app_client
+  API->>API: 15. save_approved_access_resources
+  API->>API: 16. append_usage_plan_stage_event
+  API->>API: 17. append_client_scope_event
+  API->>API: 18. append_access_request_approved_event
+  API->>API: 19. append_subscription_provisioned_event
+  API->>API: 20. append_provisioning_events
+  API->>API: 21. append_audit_event
+  API->>API: 22. build_approve_access_request_response
+  API->>DB: 23. 参照 001_select_api_access_requests.sql (api_access_requests)
+  DB-->>API: api_access_requests
+  API->>DB: 24. 参照 001_select_api_access_requests.sql (projects)
+  DB-->>API: projects
+  API->>DB: 25. 参照 001_select_api_access_requests.sql (apis)
+  DB-->>API: apis
+  API->>DB: 26. 参照 001_select_api_access_requests.sql (api_gateway_stages)
+  DB-->>API: api_gateway_stages
+  API->>DB: 27. 参照 001_select_api_access_requests.sql (api_cognito_scopes)
+  DB-->>API: api_cognito_scopes
+  API->>DB: 28. 参照 001_select_api_access_requests.sql (api_access_reviews)
+  DB-->>API: api_access_reviews
+  API->>DB: 29. 参照 002_select_api_reviewers.sql (api_reviewers)
+  DB-->>API: api_reviewers
+  API->>DB: 30. 参照 003_select_subscriptions.sql (project_api_subscriptions)
+  DB-->>API: project_api_subscriptions
+  API->>DB: 31. 追加 004_insert_access_request_events.sql (access_request_events)
+  DB-->>API: access_request_events
+  API->>DB: 32. 追加 005_insert_provisioning_operations.sql (provisioning_operations)
+  DB-->>API: provisioning_operations
+  API->>DB: 33. 参照 006_select_project_cognito_clients.sql (project_cognito_clients)
+  DB-->>API: project_cognito_clients
+  API->>DB: 34. 参照 006_select_project_cognito_clients.sql (project_usage_plans)
+  DB-->>API: project_usage_plans
+  API->>DB: 35. 追加 007_insert_api_access_reviews.sql (api_access_reviews)
+  DB-->>API: api_access_reviews
+  API->>DB: 36. 追加 008_insert_project_api_subscriptions.sql (project_api_subscriptions)
+  DB-->>API: project_api_subscriptions
+  API->>DB: 37. 追加 009_insert_project_usage_plan_api_stages.sql (project_usage_plan_api_stages)
+  DB-->>API: project_usage_plan_api_stages
+  API->>DB: 38. 追加 010_insert_project_cognito_client_scopes.sql (project_cognito_client_scopes)
+  DB-->>API: project_cognito_client_scopes
+  API->>DB: 39. 追加 011_insert_subscription_events.sql (subscription_events)
+  DB-->>API: subscription_events
+  API->>DB: 40. 追加 012_insert_audit_events.sql (audit_events)
+  DB-->>API: audit_events
+  API->>DB: 41. 追加 013_insert_idempotency_records.sql (idempotency_records)
+  DB-->>API: idempotency_records
+  API->>DB: 42. 追加 014_insert_provisioning_steps.sql (provisioning_steps)
+  DB-->>API: provisioning_steps
+  API->>DB: 43. 追加 015_insert_usage_plan_stage_events.sql (usage_plan_stage_events)
+  DB-->>API: usage_plan_stage_events
+  API->>DB: 44. 追加 016_insert_client_scope_events.sql (client_scope_events)
+  DB-->>API: client_scope_events
+  API->>DB: 45. 追加 017_insert_provisioning_operation_events.sql (provisioning_operation_events)
+  DB-->>API: provisioning_operation_events
+  API->>DB: 46. 追加 018_insert_provisioning_step_events.sql (provisioning_step_events)
+  DB-->>API: provisioning_step_events
 ```

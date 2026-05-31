@@ -5,31 +5,19 @@
 ```mermaid
 sequenceDiagram
   participant API as API: listProjects
-  participant R_project_list_query as Resource: project list query
-  participant R_caller_identity as Resource: caller identity
-  participant R_viewable_projects as Resource: viewable projects
-  participant R_pagination as Resource: pagination
-  participant R_project_list_response as Resource: project list response
-  participant T_projects as Table: projects
-  participant T_project_members as Table: project_members
-  participant T_project_api_subscriptions as Table: project_api_subscriptions
-  API->>R_project_list_query: validate_project_list_query
-  R_project_list_query-->>API: project_list_query
-  API->>R_caller_identity: get_caller_identity
-  R_caller_identity-->>API: caller_identity
-  alt project_list_permission
-    API->>API: has_project_list_permission
+  participant DB as DB
+  API->>API: 1. validate_project_list_query
+  API->>API: 2. get_caller_identity
+  alt 3. project_list_permission
+    API->>API: 3. has_project_list_permission
   end
-  API->>R_viewable_projects: get_viewable_projects
-  R_viewable_projects-->>API: viewable_projects
-  API->>R_pagination: apply_pagination
-  R_pagination-->>API: pagination
-  API->>R_project_list_response: build_project_list_response
-  R_project_list_response-->>API: project_list_response
-  API->>T_projects: 参照 001_select_projects.sql
-  T_projects-->>API: projects
-  API->>T_project_members: 参照 001_select_projects.sql
-  T_project_members-->>API: project_members
-  API->>T_project_api_subscriptions: 参照 001_select_projects.sql
-  T_project_api_subscriptions-->>API: project_api_subscriptions
+  API->>API: 4. get_viewable_projects
+  API->>API: 5. apply_pagination
+  API->>API: 6. build_project_list_response
+  API->>DB: 7. 参照 001_select_projects.sql (projects)
+  DB-->>API: projects
+  API->>DB: 8. 参照 001_select_projects.sql (project_members)
+  DB-->>API: project_members
+  API->>DB: 9. 参照 001_select_projects.sql (project_api_subscriptions)
+  DB-->>API: project_api_subscriptions
 ```

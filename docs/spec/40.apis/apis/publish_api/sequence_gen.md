@@ -5,94 +5,61 @@
 ```mermaid
 sequenceDiagram
   participant API as API: publishApi
-  participant R_caller_identity as Resource: caller identity
-  participant R_api_publish_request as Resource: api publish request
-  participant R_idempotency_record as Resource: idempotency record
-  participant R_api_gateway_stage_registration as Resource: api gateway stage registration
-  participant R_provisioning_operation as Resource: provisioning operation
-  participant R_cognito_custom_scope as Resource: cognito custom scope
-  participant R_api_catalog_metadata as Resource: api catalog metadata
-  participant R_api_lifecycle_events as Resource: api lifecycle events
-  participant R_provisioning_events as Resource: provisioning events
-  participant R_audit_event as Resource: audit event
-  participant R_publish_api_response as Resource: publish api response
-  participant T_apis as Table: apis
-  participant T_api_cognito_scopes as Table: api_cognito_scopes
-  participant T_provisioning_operations as Table: provisioning_operations
-  participant T_api_gateway_stages as Table: api_gateway_stages
-  participant T_api_documents as Table: api_documents
-  participant T_api_reviewers as Table: api_reviewers
-  participant T_api_events as Table: api_events
-  participant T_audit_events as Table: audit_events
-  participant T_idempotency_records as Table: idempotency_records
-  participant T_provisioning_steps as Table: provisioning_steps
-  participant T_api_stage_events as Table: api_stage_events
-  participant T_api_scope_events as Table: api_scope_events
-  participant T_api_reviewer_events as Table: api_reviewer_events
-  participant T_provisioning_operation_events as Table: provisioning_operation_events
-  participant T_provisioning_step_events as Table: provisioning_step_events
-  API->>R_caller_identity: get_caller_identity
-  R_caller_identity-->>API: caller_identity
-  API->>R_api_publish_request: validate_api_publish_request
-  R_api_publish_request-->>API: api_publish_request
-  alt api_publish_permission
-    API->>API: has_api_publish_permission
+  participant R_api_gateway as Resource: api gateway
+  participant R_cognito as Resource: cognito
+  participant DB as DB
+  API->>API: 1. get_caller_identity
+  API->>API: 2. validate_api_publish_request
+  alt 3. api_publish_permission
+    API->>API: 3. has_api_publish_permission
   end
-  API->>R_idempotency_record: get_idempotency_record
-  R_idempotency_record-->>API: idempotency_record
-  API->>R_api_gateway_stage_registration: verify_api_gateway_stage_registration
-  R_api_gateway_stage_registration-->>API: api_gateway_stage_registration
-  alt registered_api
-    API->>API: has_registered_api
+  API->>API: 4. get_idempotency_record
+  API->>R_api_gateway: 5. verify_api_gateway_stage_registration
+  R_api_gateway-->>API: api_gateway_stage_registration
+  alt 6. registered_api
+    API->>API: 6. has_registered_api
   end
-  API->>R_provisioning_operation: create_provisioning_operation
-  R_provisioning_operation-->>API: provisioning_operation
-  API->>R_idempotency_record: create_idempotency_record
-  R_idempotency_record-->>API: idempotency_record
-  API->>R_cognito_custom_scope: add_cognito_custom_scope
-  R_cognito_custom_scope-->>API: cognito_custom_scope
-  API->>R_api_catalog_metadata: save_api_catalog_metadata
-  R_api_catalog_metadata-->>API: api_catalog_metadata
-  API->>R_api_lifecycle_events: append_api_lifecycle_events
-  R_api_lifecycle_events-->>API: api_lifecycle_events
-  API->>R_provisioning_events: append_provisioning_events
-  R_provisioning_events-->>API: provisioning_events
-  API->>R_audit_event: append_audit_event
-  R_audit_event-->>API: audit_event
-  API->>R_publish_api_response: build_publish_api_response
-  R_publish_api_response-->>API: publish_api_response
-  API->>T_apis: 参照 001_select_apis.sql
-  T_apis-->>API: apis
-  API->>T_api_cognito_scopes: 参照 002_select_api_cognito_scopes.sql
-  T_api_cognito_scopes-->>API: api_cognito_scopes
-  API->>T_provisioning_operations: 追加 003_insert_provisioning_operations.sql
-  T_provisioning_operations-->>API: provisioning_operations
-  API->>T_apis: 追加 004_insert_apis.sql
-  T_apis-->>API: apis
-  API->>T_api_gateway_stages: 追加 005_insert_api_gateway_stages.sql
-  T_api_gateway_stages-->>API: api_gateway_stages
-  API->>T_api_cognito_scopes: 追加 006_insert_api_cognito_scopes.sql
-  T_api_cognito_scopes-->>API: api_cognito_scopes
-  API->>T_api_documents: 追加 007_insert_api_documents.sql
-  T_api_documents-->>API: api_documents
-  API->>T_api_reviewers: 追加 008_insert_api_reviewers.sql
-  T_api_reviewers-->>API: api_reviewers
-  API->>T_api_events: 追加 009_insert_api_events.sql
-  T_api_events-->>API: api_events
-  API->>T_audit_events: 追加 010_insert_audit_events.sql
-  T_audit_events-->>API: audit_events
-  API->>T_idempotency_records: 追加 011_insert_idempotency_records.sql
-  T_idempotency_records-->>API: idempotency_records
-  API->>T_provisioning_steps: 追加 012_insert_provisioning_steps.sql
-  T_provisioning_steps-->>API: provisioning_steps
-  API->>T_api_stage_events: 追加 013_insert_api_stage_events.sql
-  T_api_stage_events-->>API: api_stage_events
-  API->>T_api_scope_events: 追加 014_insert_api_scope_events.sql
-  T_api_scope_events-->>API: api_scope_events
-  API->>T_api_reviewer_events: 追加 015_insert_api_reviewer_events.sql
-  T_api_reviewer_events-->>API: api_reviewer_events
-  API->>T_provisioning_operation_events: 追加 016_insert_provisioning_operation_events.sql
-  T_provisioning_operation_events-->>API: provisioning_operation_events
-  API->>T_provisioning_step_events: 追加 017_insert_provisioning_step_events.sql
-  T_provisioning_step_events-->>API: provisioning_step_events
+  API->>API: 7. create_provisioning_operation
+  API->>API: 8. create_idempotency_record
+  API->>R_cognito: 9. add_cognito_custom_scope
+  R_cognito-->>API: cognito_custom_scope
+  API->>API: 10. save_api_catalog_metadata
+  API->>API: 11. append_api_lifecycle_events
+  API->>API: 12. append_provisioning_events
+  API->>API: 13. append_audit_event
+  API->>API: 14. build_publish_api_response
+  API->>DB: 15. 参照 001_select_apis.sql (apis)
+  DB-->>API: apis
+  API->>DB: 16. 参照 002_select_api_cognito_scopes.sql (api_cognito_scopes)
+  DB-->>API: api_cognito_scopes
+  API->>DB: 17. 追加 003_insert_provisioning_operations.sql (provisioning_operations)
+  DB-->>API: provisioning_operations
+  API->>DB: 18. 追加 004_insert_apis.sql (apis)
+  DB-->>API: apis
+  API->>DB: 19. 追加 005_insert_api_gateway_stages.sql (api_gateway_stages)
+  DB-->>API: api_gateway_stages
+  API->>DB: 20. 追加 006_insert_api_cognito_scopes.sql (api_cognito_scopes)
+  DB-->>API: api_cognito_scopes
+  API->>DB: 21. 追加 007_insert_api_documents.sql (api_documents)
+  DB-->>API: api_documents
+  API->>DB: 22. 追加 008_insert_api_reviewers.sql (api_reviewers)
+  DB-->>API: api_reviewers
+  API->>DB: 23. 追加 009_insert_api_events.sql (api_events)
+  DB-->>API: api_events
+  API->>DB: 24. 追加 010_insert_audit_events.sql (audit_events)
+  DB-->>API: audit_events
+  API->>DB: 25. 追加 011_insert_idempotency_records.sql (idempotency_records)
+  DB-->>API: idempotency_records
+  API->>DB: 26. 追加 012_insert_provisioning_steps.sql (provisioning_steps)
+  DB-->>API: provisioning_steps
+  API->>DB: 27. 追加 013_insert_api_stage_events.sql (api_stage_events)
+  DB-->>API: api_stage_events
+  API->>DB: 28. 追加 014_insert_api_scope_events.sql (api_scope_events)
+  DB-->>API: api_scope_events
+  API->>DB: 29. 追加 015_insert_api_reviewer_events.sql (api_reviewer_events)
+  DB-->>API: api_reviewer_events
+  API->>DB: 30. 追加 016_insert_provisioning_operation_events.sql (provisioning_operation_events)
+  DB-->>API: provisioning_operation_events
+  API->>DB: 31. 追加 017_insert_provisioning_step_events.sql (provisioning_step_events)
+  DB-->>API: provisioning_step_events
 ```

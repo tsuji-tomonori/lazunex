@@ -5,65 +5,38 @@
 ```mermaid
 sequenceDiagram
   participant API as API: rejectApiAccessRequest
-  participant R_caller_identity as Resource: caller identity
-  participant R_access_request as Resource: access request
-  participant R_rejection_reason as Resource: rejection reason
-  participant R_access_request_rejecting_event as Resource: access request rejecting event
-  participant R_api_access_review as Resource: api access review
-  participant R_idempotency_record as Resource: idempotency record
-  participant R_access_request_status as Resource: access request status
-  participant R_access_request_rejected_event as Resource: access request rejected event
-  participant R_audit_event as Resource: audit event
-  participant R_reject_access_request_response as Resource: reject access request response
-  participant T_api_access_requests as Table: api_access_requests
-  participant T_apis as Table: apis
-  participant T_api_access_reviews as Table: api_access_reviews
-  participant T_api_reviewers as Table: api_reviewers
-  participant T_access_request_events as Table: access_request_events
-  participant T_audit_events as Table: audit_events
-  participant T_idempotency_records as Table: idempotency_records
-  API->>R_caller_identity: get_caller_identity
-  R_caller_identity-->>API: caller_identity
-  API->>R_access_request: get_access_request
-  R_access_request-->>API: access_request
-  alt pending_access_request
-    API->>API: is_pending_access_request
+  participant DB as DB
+  API->>API: 1. get_caller_identity
+  API->>API: 2. get_access_request
+  alt 3. pending_access_request
+    API->>API: 3. is_pending_access_request
   end
-  alt api_reviewer_permission
-    API->>API: has_api_reviewer_permission
+  alt 4. api_reviewer_permission
+    API->>API: 4. has_api_reviewer_permission
   end
-  API->>R_rejection_reason: validate_rejection_reason
-  R_rejection_reason-->>API: rejection_reason
-  API->>R_access_request_rejecting_event: append_access_request_rejecting_event
-  R_access_request_rejecting_event-->>API: access_request_rejecting_event
-  API->>R_api_access_review: save_api_access_review
-  R_api_access_review-->>API: api_access_review
-  API->>R_idempotency_record: get_idempotency_record
-  R_idempotency_record-->>API: idempotency_record
-  API->>R_idempotency_record: create_idempotency_record
-  R_idempotency_record-->>API: idempotency_record
-  API->>R_access_request_status: update_access_request_status
-  R_access_request_status-->>API: access_request_status
-  API->>R_access_request_rejected_event: append_access_request_rejected_event
-  R_access_request_rejected_event-->>API: access_request_rejected_event
-  API->>R_audit_event: append_audit_event
-  R_audit_event-->>API: audit_event
-  API->>R_reject_access_request_response: build_reject_access_request_response
-  R_reject_access_request_response-->>API: reject_access_request_response
-  API->>T_api_access_requests: 参照 001_select_api_access_requests.sql
-  T_api_access_requests-->>API: api_access_requests
-  API->>T_apis: 参照 001_select_api_access_requests.sql
-  T_apis-->>API: apis
-  API->>T_api_access_reviews: 参照 001_select_api_access_requests.sql
-  T_api_access_reviews-->>API: api_access_reviews
-  API->>T_api_reviewers: 参照 002_select_api_reviewers.sql
-  T_api_reviewers-->>API: api_reviewers
-  API->>T_api_access_reviews: 追加 003_insert_api_access_reviews.sql
-  T_api_access_reviews-->>API: api_access_reviews
-  API->>T_access_request_events: 追加 004_insert_access_request_events.sql
-  T_access_request_events-->>API: access_request_events
-  API->>T_audit_events: 追加 005_insert_audit_events.sql
-  T_audit_events-->>API: audit_events
-  API->>T_idempotency_records: 追加 006_insert_idempotency_records.sql
-  T_idempotency_records-->>API: idempotency_records
+  API->>API: 5. validate_rejection_reason
+  API->>API: 6. append_access_request_rejecting_event
+  API->>API: 7. save_api_access_review
+  API->>API: 8. get_idempotency_record
+  API->>API: 9. create_idempotency_record
+  API->>API: 10. update_access_request_status
+  API->>API: 11. append_access_request_rejected_event
+  API->>API: 12. append_audit_event
+  API->>API: 13. build_reject_access_request_response
+  API->>DB: 14. 参照 001_select_api_access_requests.sql (api_access_requests)
+  DB-->>API: api_access_requests
+  API->>DB: 15. 参照 001_select_api_access_requests.sql (apis)
+  DB-->>API: apis
+  API->>DB: 16. 参照 001_select_api_access_requests.sql (api_access_reviews)
+  DB-->>API: api_access_reviews
+  API->>DB: 17. 参照 002_select_api_reviewers.sql (api_reviewers)
+  DB-->>API: api_reviewers
+  API->>DB: 18. 追加 003_insert_api_access_reviews.sql (api_access_reviews)
+  DB-->>API: api_access_reviews
+  API->>DB: 19. 追加 004_insert_access_request_events.sql (access_request_events)
+  DB-->>API: access_request_events
+  API->>DB: 20. 追加 005_insert_audit_events.sql (audit_events)
+  DB-->>API: audit_events
+  API->>DB: 21. 追加 006_insert_idempotency_records.sql (idempotency_records)
+  DB-->>API: idempotency_records
 ```
