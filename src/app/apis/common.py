@@ -17,80 +17,105 @@ class ApiBaseModel(BaseModel):
 class ApiVisibility(StrEnum):
     """APIカタログの公開範囲を表す列挙値です。"""
 
+    # 社内利用者に公開されるAPIです。
     INTERNAL = "INTERNAL"
+    # 限定された利用者だけに公開されるAPIです。
     RESTRICTED = "RESTRICTED"
 
 
 class ApiDerivedState(StrEnum):
     """APIカタログの現在状態を表す列挙値です。"""
 
+    # APIカタログで公開済みの状態です。
     PUBLISHED = "PUBLISHED"
 
 
 class ProjectDerivedState(StrEnum):
     """プロジェクトの現在状態を表す列挙値です。"""
 
+    # プロジェクトが利用可能な状態です。
     ACTIVE = "ACTIVE"
 
 
 class AccessRequestDerivedState(StrEnum):
     """API利用申請の現在状態を表す列挙値です。"""
 
+    # API利用申請が審査待ちの状態です。
     PENDING = "PENDING"
+    # API利用申請が承認された状態です。
     APPROVED = "APPROVED"
+    # API利用申請が却下された状態です。
     REJECTED = "REJECTED"
 
 
 class SubscriptionDerivedState(StrEnum):
     """API利用権の現在状態を表す列挙値です。"""
 
+    # 承認済みのAPI利用権が有効な状態です。
     ACTIVE = "ACTIVE"
 
 
 class AuthMode(StrEnum):
     """API利用時に許可する認証方式を表す列挙値です。"""
 
+    # PKCEを利用するpublic client向けの認証方式です。
     PUBLIC_PKCE = "PUBLIC_PKCE"
+    # client credentialsを利用するconfidential client向けの認証方式です。
     CLIENT_CREDENTIALS = "CLIENT_CREDENTIALS"
+    # public clientとconfidential clientの両方を許可する認証方式です。
     BOTH = "BOTH"
 
 
 class ReviewerRole(StrEnum):
     """API利用申請を審査する担当者の役割を表す列挙値です。"""
 
+    # 主担当としてAPI利用申請を審査する役割です。
     PRIMARY = "PRIMARY"
+    # 主担当の代替としてAPI利用申請を審査する役割です。
     BACKUP = "BACKUP"
+    # 管理者としてAPI利用申請を審査できる役割です。
     ADMIN = "ADMIN"
 
 
 class ScopeConfigObserved(StrEnum):
     """API Gateway stageで検出したCognito scope設定状態を表す列挙値です。"""
 
+    # API Gateway methodに必要なCognito scope設定が確認済みです。
     VERIFIED = "VERIFIED"
+    # API Gateway methodに必要なCognito scope設定がありません。
     NOT_CONFIGURED = "NOT_CONFIGURED"
+    # API Gateway methodのCognito scope設定を確認できていない状態です。
     UNKNOWN = "UNKNOWN"
 
 
 class ScopeAttachmentMode(StrEnum):
     """API Gateway methodへのscope反映方法を表す列挙値です。"""
 
+    # scope設定を検証するだけでAPI Gateway methodには反映しません。
     VERIFY_ONLY = "VERIFY_ONLY"
+    # API Gatewayの全methodへscope設定を反映します。
     PATCH_ALL_METHODS = "PATCH_ALL_METHODS"
 
 
 class QuotaPeriod(StrEnum):
     """API Gateway Usage Planのquota集計期間を表す列挙値です。"""
 
+    # quotaを1日単位で集計します。
     DAY = "DAY"
+    # quotaを1週間単位で集計します。
     WEEK = "WEEK"
+    # quotaを1か月単位で集計します。
     MONTH = "MONTH"
 
 
 class TokenValidityUnit(StrEnum):
     """Cognito app client token有効期間の単位を表す列挙値です。"""
 
+    # token有効期間を分単位で指定します。
     MINUTES = "minutes"
+    # token有効期間を時間単位で指定します。
     HOURS = "hours"
+    # token有効期間を日単位で指定します。
     DAYS = "days"
 
 

@@ -11,9 +11,15 @@ from tools.check_api_descriptions import (
     check_api_descriptions,
     check_router_file,
     check_schema_file,
+    enum_member_comment,
+    enum_member_line_numbers,
+    enum_members,
+    field_name,
     has_japanese_text,
+    is_field_call,
     is_placeholder_description,
     is_router_decorator,
+    is_str_enum_class,
     literal_string,
     main,
     render_issues,
@@ -47,6 +53,46 @@ def test_is_router_decorator_rejects_non_route_shapes() -> None:
     assert not is_router_decorator(ast_module.parse("router.websocket('/x')").body[0].value)
     assert not is_router_decorator(ast_module.parse("other.get('/x')").body[0].value)
     assert is_router_decorator(ast_module.parse("router.get('/x')").body[0].value)
+
+
+def test_ast_helpers_accept_supported_shapes() -> None:
+    ast_module = __import__("ast")
+    field_assign = ast_module.parse("value: str = pydantic.Field()").body[0]
+    attribute_assign = ast_module.parse("model.value: str = Field()").body[0]
+    enum_class = ast_module.parse(
+        """
+class Sample(enum.StrEnum):
+    # サンプル値です。
+    VALUE = 'VALUE'
+    dynamic = value
+"""
+    ).body[0]
+    source_lines = ["class Sample(enum.StrEnum):", "    # サンプル値です。", "    VALUE = 'VALUE'"]
+
+    assert is_field_call(field_assign.value)
+    assert field_name(attribute_assign) is None
+    assert is_str_enum_class(enum_class)
+    assert enum_members(enum_class) == {"VALUE": "VALUE"}
+    assert enum_member_line_numbers(enum_class) == {"VALUE": 4}
+    assert enum_member_comment(source_lines, 3) == "サンプル値です。"
+    assert (
+        enum_member_comment(["VALUE = 'VALUE'  # インライン説明です。"], 1)
+        == "インライン説明です。"
+    )
+
+
+def test_enum_member_comment_rejects_missing_comment() -> None:
+    ast_module = __import__("ast")
+    enum_class = ast_module.parse(
+        """
+class Sample(StrEnum):
+    VALUE = 'VALUE'
+"""
+    ).body[0]
+
+    assert enum_member_line_numbers(enum_class) == {"VALUE": 3}
+    assert enum_member_comment(["class Sample(StrEnum):", "    VALUE = 'VALUE'"], 2) is None
+    assert enum_member_comment([], 0) is None
 
 
 def test_check_router_file_accepts_japanese_summary_and_description(tmp_path: Path) -> None:
@@ -201,6 +247,54 @@ class FieldIssues(BaseModel):
     assert "requires Field" in issues[0].message
     assert "requires a Japanese Field description" in issues[1].message
     assert "description must contain Japanese" in issues[2].message
+
+
+def test_check_schema_file_accepts_enum_value_comments(tmp_path: Path) -> None:
+    schema = write_api_file(
+        tmp_path,
+        "apis/common.py",
+        '''
+from enum import StrEnum
+
+class ApiVisibility(StrEnum):
+    """APIカタログの公開範囲を表す列挙値です。"""
+    # 社内利用者に公開されるAPIです。
+    INTERNAL = "INTERNAL"
+    # 限定された利用者だけに公開されるAPIです。
+    RESTRICTED = "RESTRICTED"
+''',
+    )
+
+    assert check_schema_file(schema) == []
+
+
+def test_check_schema_file_reports_enum_value_comment_issues(tmp_path: Path) -> None:
+    schema = write_api_file(
+        tmp_path,
+        "apis/common.py",
+        '''
+from enum import StrEnum
+
+class ApiVisibility(StrEnum):
+    """APIカタログの公開範囲を表す列挙値です。"""
+    # Internal users only.
+    INTERNAL = "INTERNAL"
+    # RESTRICTED の値を指定します。
+    RESTRICTED = "RESTRICTED"
+    LEGACY = "LEGACY"
+''',
+    )
+
+    issues = check_schema_file(schema)
+
+    assert [issue.target for issue in issues] == [
+        "ApiVisibility.INTERNAL",
+        "ApiVisibility.RESTRICTED",
+        "ApiVisibility.LEGACY",
+    ]
+    assert "must contain Japanese" in issues[0].message
+    assert "value meaning concretely" in issues[1].message
+    assert "requires a Japanese comment" in issues[2].message
 
 
 def test_check_api_descriptions_collects_router_and_schema_files(tmp_path: Path) -> None:

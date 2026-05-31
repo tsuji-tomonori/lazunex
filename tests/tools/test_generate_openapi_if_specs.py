@@ -6,6 +6,7 @@ from _pytest.monkeypatch import MonkeyPatch
 
 from tools.generate_openapi_if_specs import (
     build_arg_parser,
+    enum_comment_descriptions,
     generate_from_openapi,
     iter_operations,
     load_fastapi_openapi,
@@ -220,9 +221,46 @@ def test_schema_type_and_constraints() -> None:
     assert schema_constraints(
         {"type": "string", "minLength": 1, "enum": ["active", "deleted"], "title": "UserStatus"},
         schemas,
-    ) == ("minLength=1, active=有効なユーザーです。<br>deleted=削除済みのユーザーです。")
+    ) == (
+        "minLength=1, active=列挙値として指定可能な値です。"
+        "<br>deleted=列挙値として指定可能な値です。"
+    )
+    assert (
+        schema_constraints(
+            {"type": "string", "enum": ["INTERNAL"], "title": "ApiVisibility"},
+            schemas,
+        )
+        == "INTERNAL=社内利用者に公開されるAPIです。"
+    )
     assert schema_components({"components": {"schemas": []}}) == {}
     assert schema_components({}) == {}
+
+
+def test_enum_comment_descriptions_reads_enum_member_comments(tmp_path: Path) -> None:
+    common = tmp_path / "common.py"
+    common.write_text(
+        '''
+from enum import StrEnum
+
+class SampleStatus(StrEnum):
+    """サンプル状態です。"""
+    # 処理を継続できる状態です。
+    ACTIVE = "active"
+    # 処理を終了した状態です。
+    CLOSED = "closed"
+''',
+        encoding="utf-8",
+    )
+
+    descriptions = enum_comment_descriptions(common)
+
+    assert descriptions == {
+        "SampleStatus": {
+            "active": "処理を継続できる状態です。",
+            "closed": "処理を終了した状態です。",
+        }
+    }
+    assert enum_comment_descriptions(tmp_path / "missing.py") == {}
 
 
 def test_parameter_and_request_body_rows() -> None:
@@ -271,7 +309,8 @@ def test_response_summary_and_render_markdown() -> None:
     assert "## Responses" in rendered
     assert (
         "| `status` | `string(active, deleted)` | yes | 状態。 | "
-        "active=有効なユーザーです。<br>deleted=削除済みのユーザーです。 |" in rendered
+        "active=列挙値として指定可能な値です。"
+        "<br>deleted=列挙値として指定可能な値です。 |" in rendered
     )
     assert "| `profile.displayName` | `string` | yes | 画面に表示するユーザー名。 | - |" in rendered
     assert "| `addresses[].postalCode` | `string` | yes | 郵便番号。 | - |" in rendered

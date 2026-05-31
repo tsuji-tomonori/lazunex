@@ -29,11 +29,11 @@ _なし_
 | `callbackUrls` | `array<string>` | yes | Cognito public app clientに許可するOAuth callback URL一覧です。 | - |
 | `logoutUrls` | `array<string>` | yes | Cognito public app clientに許可するlogout URL一覧です。 | - |
 | `accessTokenValidity` | `integer` | yes | 発行されるaccess tokenの有効期間の数値です。 | minimum=1.0 |
-| `accessTokenUnit` | `string(minutes, hours, days)` | yes | Cognito app client token有効期間の単位を表す列挙値です。 | minutes=分単位の有効期間です。<br>hours=時間単位の有効期間です。<br>days=日単位の有効期間です。 |
+| `accessTokenUnit` | `string(minutes, hours, days)` | yes | Cognito app client token有効期間の単位を表す列挙値です。 | minutes=token有効期間を分単位で指定します。<br>hours=token有効期間を時間単位で指定します。<br>days=token有効期間を日単位で指定します。 |
 | `idTokenValidity` | `integer` | yes | 発行されるID tokenの有効期間の数値です。 | minimum=1.0 |
-| `idTokenUnit` | `string(minutes, hours, days)` | yes | Cognito app client token有効期間の単位を表す列挙値です。 | minutes=分単位の有効期間です。<br>hours=時間単位の有効期間です。<br>days=日単位の有効期間です。 |
+| `idTokenUnit` | `string(minutes, hours, days)` | yes | Cognito app client token有効期間の単位を表す列挙値です。 | minutes=token有効期間を分単位で指定します。<br>hours=token有効期間を時間単位で指定します。<br>days=token有効期間を日単位で指定します。 |
 | `refreshTokenValidity` | `integer` | yes | 発行されるrefresh tokenの有効期間の数値です。 | minimum=1.0 |
-| `refreshTokenUnit` | `string(minutes, hours, days)` | yes | Cognito app client token有効期間の単位を表す列挙値です。 | minutes=分単位の有効期間です。<br>hours=時間単位の有効期間です。<br>days=日単位の有効期間です。 |
+| `refreshTokenUnit` | `string(minutes, hours, days)` | yes | Cognito app client token有効期間の単位を表す列挙値です。 | minutes=token有効期間を分単位で指定します。<br>hours=token有効期間を時間単位で指定します。<br>days=token有効期間を日単位で指定します。 |
 | `refreshTokenRotationEnabled` | `boolean` | yes | refresh token rotationを有効にするかどうかです。 | - |
 | `retryGracePeriodSeconds` | `integer` | yes | refresh token rotation後に旧tokenの再利用を許容する秒数です。 | minimum=0.0 |
 | `expectedRowVersion` | `integer` | yes | 楽観ロックで更新対象行の現在versionを検証するための値です。 | minimum=1.0 |
@@ -66,9 +66,9 @@ Media type: `application/json`
 | `publicClient.callbackUrls` | `array<string>` | yes | Cognito public app clientに許可するOAuth callback URL一覧です。 | - |
 | `publicClient.logoutUrls` | `array<string>` | yes | Cognito public app clientに許可するlogout URL一覧です。 | - |
 | `publicClient.accessTokenValidity` | `integer` | yes | 発行されるaccess tokenの有効期間の数値です。 | minimum=1.0 |
-| `publicClient.accessTokenUnit` | `string(minutes, hours, days)` | yes | Cognito app client token有効期間の単位を表す列挙値です。 | minutes=分単位の有効期間です。<br>hours=時間単位の有効期間です。<br>days=日単位の有効期間です。 |
+| `publicClient.accessTokenUnit` | `string(minutes, hours, days)` | yes | Cognito app client token有効期間の単位を表す列挙値です。 | minutes=token有効期間を分単位で指定します。<br>hours=token有効期間を時間単位で指定します。<br>days=token有効期間を日単位で指定します。 |
 | `publicClient.refreshTokenValidity` | `integer` | yes | 発行されるrefresh tokenの有効期間の数値です。 | minimum=1.0 |
-| `publicClient.refreshTokenUnit` | `string(minutes, hours, days)` | yes | Cognito app client token有効期間の単位を表す列挙値です。 | minutes=分単位の有効期間です。<br>hours=時間単位の有効期間です。<br>days=日単位の有効期間です。 |
+| `publicClient.refreshTokenUnit` | `string(minutes, hours, days)` | yes | Cognito app client token有効期間の単位を表す列挙値です。 | minutes=token有効期間を分単位で指定します。<br>hours=token有効期間を時間単位で指定します。<br>days=token有効期間を日単位で指定します。 |
 | `publicClient.refreshTokenRotationEnabled` | `boolean` | yes | refresh token rotationを有効にするかどうかです。 | - |
 | `publicClient.rowVersion` | `integer` | yes | 更新後のpublic app client設定行のversionです。 | minimum=1.0 |
 | `operationId` | `string` | yes | AWS反映などのプロビジョニング操作を追跡するIDです。 | - |

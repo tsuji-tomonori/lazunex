@@ -20,7 +20,7 @@ _なし_
 | --- | --- | --- | --- | --- |
 | `limit` | `integer` | no | 一覧APIで1回に返却する最大件数です。 | minimum=1, maximum=100 |
 | `nextToken` | `string \| null` | no | 次ページを取得するために前回レスポンスから受け取る継続tokenです。 | minLength=1 |
-| `derivedState` | `string(PUBLISHED) \| null` | no | イベント履歴から導出した対象リソースの現在状態です。 | PUBLISHED=APIカタログへ公開済みのAPIです。 |
+| `derivedState` | `string(PUBLISHED) \| null` | no | イベント履歴から導出した対象リソースの現在状態です。 | PUBLISHED=APIカタログで公開済みの状態です。 |
 | `keyword` | `string \| null` | no | API名、プロジェクト名、説明などを部分一致検索するキーワードです。 | minLength=1, maxLength=200 |
 | `providerName` | `string \| null` | no | API提供者として表示する組織名またはチーム名です。 | minLength=1, maxLength=200 |
 
@@ -51,8 +51,8 @@ Media type: `application/json`
 | `items[].name` | `string` | yes | 利用者に表示するリソース名です。 | minLength=1, maxLength=200 |
 | `items[].description` | `string` | yes | 利用者に表示するリソースの概要説明です。 | minLength=1 |
 | `items[].providerName` | `string` | yes | API提供者として表示する組織名またはチーム名です。 | minLength=1, maxLength=200 |
-| `items[].visibility` | `string(INTERNAL, RESTRICTED)` | yes | APIカタログの公開範囲を表す列挙値です。 | INTERNAL=組織内の利用者へ公開するAPIです。<br>RESTRICTED=許可された利用者またはプロジェクトに限定して公開するAPIです。 |
-| `items[].derivedState` | `string(PUBLISHED)` | yes | APIカタログの現在状態を表す列挙値です。 | PUBLISHED=APIカタログへ公開済みのAPIです。 |
+| `items[].visibility` | `string(INTERNAL, RESTRICTED)` | yes | APIカタログの公開範囲を表す列挙値です。 | INTERNAL=社内利用者に公開されるAPIです。<br>RESTRICTED=限定された利用者だけに公開されるAPIです。 |
+| `items[].derivedState` | `string(PUBLISHED)` | yes | APIカタログの現在状態を表す列挙値です。 | PUBLISHED=APIカタログで公開済みの状態です。 |
 | `items[].stage` | `ApiListStageResponse` | yes | API一覧で表示する代表stageの接続情報です。 | - |
 | `items[].stage.apiStageId` | `string` | yes | API Gateway stageに対応するLazunex内のstage IDです。 | - |
 | `items[].stage.stageName` | `string` | yes | API Gatewayにデプロイされているstage名です。 | minLength=1, maxLength=128 |

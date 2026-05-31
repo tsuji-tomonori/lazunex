@@ -1,10 +1,18 @@
 import argparse
+import ast
 import re
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, cast
 
 from app.main import create_app
+from tools.check_api_descriptions import (
+    enum_member_comment,
+    enum_member_line_numbers,
+    enum_members,
+    is_str_enum_class,
+)
 
 HTTP_METHODS = {"get", "post", "put", "patch", "delete", "options", "head"}
 type JsonObject = dict[str, Any]
@@ -18,63 +26,7 @@ PARAMETER_DESCRIPTION_OVERRIDES = {
         "同じキーで再送された場合、サーバーは同一リクエストとして扱います。"
     ),
 }
-ENUM_VALUE_DESCRIPTIONS = {
-    "AccessRequestDerivedState": {
-        "PENDING": "審査待ちのAPI利用申請です。",
-        "APPROVED": "承認済みのAPI利用申請です。",
-        "REJECTED": "否認済みのAPI利用申請です。",
-    },
-    "ApiDerivedState": {
-        "PUBLISHED": "APIカタログへ公開済みのAPIです。",
-    },
-    "ApiVisibility": {
-        "INTERNAL": "組織内の利用者へ公開するAPIです。",
-        "RESTRICTED": "許可された利用者またはプロジェクトに限定して公開するAPIです。",
-    },
-    "AuthMode": {
-        "PUBLIC_PKCE": "PKCEを使うpublic clientでの認証を許可します。",
-        "CLIENT_CREDENTIALS": "client credentialsを使うconfidential clientでの認証を許可します。",
-        "BOTH": "public clientとconfidential clientの両方の認証方式を許可します。",
-    },
-    "ProjectDerivedState": {
-        "ACTIVE": "利用可能なプロジェクトです。",
-    },
-    "QuotaPeriod": {
-        "DAY": "1日単位で利用量上限を集計します。",
-        "WEEK": "1週間単位で利用量上限を集計します。",
-        "MONTH": "1か月単位で利用量上限を集計します。",
-    },
-    "ReviewerRole": {
-        "PRIMARY": "主担当の審査者です。",
-        "BACKUP": "副担当の審査者です。",
-        "ADMIN": "管理者権限を持つ審査者です。",
-    },
-    "ScopeAttachmentMode": {
-        "VERIFY_ONLY": "API Gateway methodのscope設定を検証のみ行います。",
-        "PATCH_ALL_METHODS": "API Gateway methodへscope設定を反映します。",
-    },
-    "ScopeConfigObserved": {
-        "VERIFIED": "期待するscope設定が検出されています。",
-        "NOT_CONFIGURED": "scope設定が検出されていません。",
-        "UNKNOWN": "scope設定の検出状態が不明です。",
-    },
-    "SubscriptionDerivedState": {
-        "ACTIVE": "利用可能なAPI利用権です。",
-    },
-    "TokenValidityUnit": {
-        "minutes": "分単位の有効期間です。",
-        "hours": "時間単位の有効期間です。",
-        "days": "日単位の有効期間です。",
-    },
-    "UserStatus": {
-        "active": "有効なユーザーです。",
-        "deleted": "削除済みのユーザーです。",
-    },
-}
-ENUM_VALUE_DESCRIPTION_FALLBACKS = {
-    "active": "有効な状態です。",
-    "deleted": "削除済みの状態です。",
-}
+DEFAULT_API_COMMON_PATH = Path(__file__).resolve().parents[1] / "app/apis/common.py"
 
 
 @dataclass(frozen=True)
@@ -148,12 +100,34 @@ def enum_type(schema: JsonObject) -> str:
     return f"{base_type}({', '.join(values)})"
 
 
+@lru_cache
+def enum_comment_descriptions(
+    path: Path = DEFAULT_API_COMMON_PATH,
+) -> dict[str, dict[str, str]]:
+    if not path.exists():
+        return {}
+    source = path.read_text(encoding="utf-8")
+    source_lines = source.splitlines()
+    tree = ast.parse(source, filename=str(path))
+    descriptions: dict[str, dict[str, str]] = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ClassDef) or not is_str_enum_class(node):
+            continue
+        members = enum_members(node)
+        member_lines = enum_member_line_numbers(node)
+        value_descriptions: dict[str, str] = {}
+        for member_name, member_value in members.items():
+            description = enum_member_comment(source_lines, member_lines[member_name])
+            if description:
+                value_descriptions[member_value] = description
+        descriptions[node.name] = value_descriptions
+    return descriptions
+
+
 def enum_value_description(schema: JsonObject, value: str) -> str:
     schema_name = str(schema.get("title") or "")
-    descriptions = ENUM_VALUE_DESCRIPTIONS.get(schema_name, {})
     return (
-        descriptions.get(value)
-        or ENUM_VALUE_DESCRIPTION_FALLBACKS.get(value)
+        enum_comment_descriptions().get(schema_name, {}).get(value)
         or "列挙値として指定可能な値です。"
     )
 

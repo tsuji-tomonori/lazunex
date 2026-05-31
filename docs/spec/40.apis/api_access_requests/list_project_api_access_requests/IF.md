@@ -53,9 +53,9 @@ Media type: `application/json`
 | `items[].apiName` | `string` | yes | APIカタログに表示されるAPI名です。 | minLength=1, maxLength=200 |
 | `items[].apiStageId` | `string` | yes | API Gateway stageに対応するLazunex内のstage IDです。 | - |
 | `items[].stageName` | `string` | yes | API Gatewayにデプロイされているstage名です。 | minLength=1, maxLength=128 |
-| `items[].requestedAuthMode` | `string(PUBLIC_PKCE, CLIENT_CREDENTIALS, BOTH)` | yes | API利用時に許可する認証方式を表す列挙値です。 | PUBLIC_PKCE=PKCEを使うpublic clientでの認証を許可します。<br>CLIENT_CREDENTIALS=client credentialsを使うconfidential clientでの認証を許可します。<br>BOTH=public clientとconfidential clientの両方の認証方式を許可します。 |
+| `items[].requestedAuthMode` | `string(PUBLIC_PKCE, CLIENT_CREDENTIALS, BOTH)` | yes | API利用時に許可する認証方式を表す列挙値です。 | PUBLIC_PKCE=PKCEを利用するpublic client向けの認証方式です。<br>CLIENT_CREDENTIALS=client credentialsを利用するconfidential client向けの認証方式です。<br>BOTH=public clientとconfidential clientの両方を許可する認証方式です。 |
 | `items[].requestedReason` | `string` | yes | 申請者がAPI利用を希望する理由です。 | minLength=1 |
-| `items[].derivedState` | `string(PENDING, APPROVED, REJECTED)` | yes | API利用申請の現在状態を表す列挙値です。 | PENDING=審査待ちのAPI利用申請です。<br>APPROVED=承認済みのAPI利用申請です。<br>REJECTED=否認済みのAPI利用申請です。 |
+| `items[].derivedState` | `string(PENDING, APPROVED, REJECTED)` | yes | API利用申請の現在状態を表す列挙値です。 | PENDING=API利用申請が審査待ちの状態です。<br>APPROVED=API利用申請が承認された状態です。<br>REJECTED=API利用申請が却下された状態です。 |
 | `items[].requestedBy` | `string` | yes | API利用申請を作成した認証主体IDです。 | minLength=1, maxLength=256 |
 | `items[].requestedAt` | `string` | yes | API利用申請が作成された日時です。 | - |
 | `items[].review` | `object \| null` | yes | API利用申請に対する審査結果情報です。 | - |

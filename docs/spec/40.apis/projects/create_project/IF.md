@@ -33,21 +33,21 @@ _なし_
 | `usagePlan.defaultRateLimit` | `integer` | yes | Usage Planで許可する平均リクエストレートです。 | minimum=0.0 |
 | `usagePlan.defaultBurstLimit` | `integer` | yes | Usage Planで許可する短時間の最大burstリクエスト数です。 | minimum=0.0 |
 | `usagePlan.defaultQuotaLimit` | `integer` | yes | Usage Planで許可するquota期間内の最大リクエスト数です。 | minimum=0.0 |
-| `usagePlan.defaultQuotaPeriod` | `string(DAY, WEEK, MONTH)` | yes | API Gateway Usage Planのquota集計期間を表す列挙値です。 | DAY=1日単位で利用量上限を集計します。<br>WEEK=1週間単位で利用量上限を集計します。<br>MONTH=1か月単位で利用量上限を集計します。 |
+| `usagePlan.defaultQuotaPeriod` | `string(DAY, WEEK, MONTH)` | yes | API Gateway Usage Planのquota集計期間を表す列挙値です。 | DAY=quotaを1日単位で集計します。<br>WEEK=quotaを1週間単位で集計します。<br>MONTH=quotaを1か月単位で集計します。 |
 | `publicClient` | `PublicClientSettingsRequest` | yes | PKCE向けCognito public app clientのURLとtoken設定です。 | - |
 | `publicClient.callbackUrls` | `array<string>` | yes | Cognito public app clientに許可するOAuth callback URL一覧です。 | - |
 | `publicClient.logoutUrls` | `array<string>` | yes | Cognito public app clientに許可するlogout URL一覧です。 | - |
 | `publicClient.accessTokenValidity` | `integer` | yes | 発行されるaccess tokenの有効期間の数値です。 | minimum=1.0 |
-| `publicClient.accessTokenUnit` | `string(minutes, hours, days)` | yes | Cognito app client token有効期間の単位を表す列挙値です。 | minutes=分単位の有効期間です。<br>hours=時間単位の有効期間です。<br>days=日単位の有効期間です。 |
+| `publicClient.accessTokenUnit` | `string(minutes, hours, days)` | yes | Cognito app client token有効期間の単位を表す列挙値です。 | minutes=token有効期間を分単位で指定します。<br>hours=token有効期間を時間単位で指定します。<br>days=token有効期間を日単位で指定します。 |
 | `publicClient.idTokenValidity` | `integer` | yes | 発行されるID tokenの有効期間の数値です。 | minimum=1.0 |
-| `publicClient.idTokenUnit` | `string(minutes, hours, days)` | yes | Cognito app client token有効期間の単位を表す列挙値です。 | minutes=分単位の有効期間です。<br>hours=時間単位の有効期間です。<br>days=日単位の有効期間です。 |
+| `publicClient.idTokenUnit` | `string(minutes, hours, days)` | yes | Cognito app client token有効期間の単位を表す列挙値です。 | minutes=token有効期間を分単位で指定します。<br>hours=token有効期間を時間単位で指定します。<br>days=token有効期間を日単位で指定します。 |
 | `publicClient.refreshTokenValidity` | `integer` | yes | 発行されるrefresh tokenの有効期間の数値です。 | minimum=1.0 |
-| `publicClient.refreshTokenUnit` | `string(minutes, hours, days)` | yes | Cognito app client token有効期間の単位を表す列挙値です。 | minutes=分単位の有効期間です。<br>hours=時間単位の有効期間です。<br>days=日単位の有効期間です。 |
+| `publicClient.refreshTokenUnit` | `string(minutes, hours, days)` | yes | Cognito app client token有効期間の単位を表す列挙値です。 | minutes=token有効期間を分単位で指定します。<br>hours=token有効期間を時間単位で指定します。<br>days=token有効期間を日単位で指定します。 |
 | `publicClient.refreshTokenRotationEnabled` | `boolean` | yes | refresh token rotationを有効にするかどうかです。 | - |
 | `publicClient.retryGracePeriodSeconds` | `integer` | yes | refresh token rotation後に旧tokenの再利用を許容する秒数です。 | minimum=0.0 |
 | `confidentialClient` | `ConfidentialClientSettingsRequest` | yes | client credentials向けCognito confidential app clientのtoken設定です。 | - |
 | `confidentialClient.accessTokenValidity` | `integer` | yes | 発行されるaccess tokenの有効期間の数値です。 | minimum=1.0 |
-| `confidentialClient.accessTokenUnit` | `string(minutes, hours, days)` | yes | Cognito app client token有効期間の単位を表す列挙値です。 | minutes=分単位の有効期間です。<br>hours=時間単位の有効期間です。<br>days=日単位の有効期間です。 |
+| `confidentialClient.accessTokenUnit` | `string(minutes, hours, days)` | yes | Cognito app client token有効期間の単位を表す列挙値です。 | minutes=token有効期間を分単位で指定します。<br>hours=token有効期間を時間単位で指定します。<br>days=token有効期間を日単位で指定します。 |
 
 ## Responses
 
@@ -72,7 +72,7 @@ Media type: `application/json`
 | --- | --- | --- | --- | --- |
 | `projectId` | `string` | yes | API利用単位となるプロジェクトを一意に識別するIDです。 | - |
 | `projectCode` | `string` | yes | 利用者がプロジェクトを識別するためのコードです。 | minLength=1, maxLength=100 |
-| `derivedState` | `string(ACTIVE)` | yes | プロジェクトの現在状態を表す列挙値です。 | ACTIVE=利用可能なプロジェクトです。 |
+| `derivedState` | `string(ACTIVE)` | yes | プロジェクトの現在状態を表す列挙値です。 | ACTIVE=プロジェクトが利用可能な状態です。 |
 | `apiKey` | `CreatedApiKeyResponse` | yes | プロジェクト作成時に払い出されたAPI key情報です。 | - |
 | `apiKey.apigwApiKeyId` | `string` | yes | AWS API Gatewayで作成されたAPI key IDです。 | minLength=1, maxLength=128 |
 | `apiKey.apiKeyValue` | `string` | yes | 初回作成レスポンスでのみ返却するAPI keyの平文値です。 | minLength=1 |

@@ -26,7 +26,7 @@ _なし_
 
 | 項目 | 型 | 必須 | 説明 | 制約 |
 | --- | --- | --- | --- | --- |
-| `approvedAuthMode` | `string(PUBLIC_PKCE, CLIENT_CREDENTIALS, BOTH)` | yes | API利用時に許可する認証方式を表す列挙値です。 | PUBLIC_PKCE=PKCEを使うpublic clientでの認証を許可します。<br>CLIENT_CREDENTIALS=client credentialsを使うconfidential clientでの認証を許可します。<br>BOTH=public clientとconfidential clientの両方の認証方式を許可します。 |
+| `approvedAuthMode` | `string(PUBLIC_PKCE, CLIENT_CREDENTIALS, BOTH)` | yes | API利用時に許可する認証方式を表す列挙値です。 | PUBLIC_PKCE=PKCEを利用するpublic client向けの認証方式です。<br>CLIENT_CREDENTIALS=client credentialsを利用するconfidential client向けの認証方式です。<br>BOTH=public clientとconfidential clientの両方を許可する認証方式です。 |
 | `reviewComment` | `string` | yes | 審査者が承認または却下時に記録するコメントです。 | minLength=1 |
 
 ## Responses
@@ -56,8 +56,8 @@ Media type: `application/json`
 | `projectId` | `string` | yes | API利用単位となるプロジェクトを一意に識別するIDです。 | - |
 | `apiId` | `string` | yes | APIカタログ上のAPIを一意に識別するIDです。 | - |
 | `apiStageId` | `string` | yes | API Gateway stageに対応するLazunex内のstage IDです。 | - |
-| `approvedAuthMode` | `string(PUBLIC_PKCE, CLIENT_CREDENTIALS, BOTH)` | yes | API利用時に許可する認証方式を表す列挙値です。 | PUBLIC_PKCE=PKCEを使うpublic clientでの認証を許可します。<br>CLIENT_CREDENTIALS=client credentialsを使うconfidential clientでの認証を許可します。<br>BOTH=public clientとconfidential clientの両方の認証方式を許可します。 |
-| `derivedState` | `string(PENDING, APPROVED, REJECTED)` | yes | API利用申請の現在状態を表す列挙値です。 | PENDING=審査待ちのAPI利用申請です。<br>APPROVED=承認済みのAPI利用申請です。<br>REJECTED=否認済みのAPI利用申請です。 |
+| `approvedAuthMode` | `string(PUBLIC_PKCE, CLIENT_CREDENTIALS, BOTH)` | yes | API利用時に許可する認証方式を表す列挙値です。 | PUBLIC_PKCE=PKCEを利用するpublic client向けの認証方式です。<br>CLIENT_CREDENTIALS=client credentialsを利用するconfidential client向けの認証方式です。<br>BOTH=public clientとconfidential clientの両方を許可する認証方式です。 |
+| `derivedState` | `string(PENDING, APPROVED, REJECTED)` | yes | API利用申請の現在状態を表す列挙値です。 | PENDING=API利用申請が審査待ちの状態です。<br>APPROVED=API利用申請が承認された状態です。<br>REJECTED=API利用申請が却下された状態です。 |
 | `operationId` | `string` | yes | AWS反映などのプロビジョニング操作を追跡するIDです。 | - |
 
 ##### `400` リクエスト本文やヘッダーの組み合わせが業務ルールに合わない場合、または冪等性キーなどの必須入力が不正な場合に返します。

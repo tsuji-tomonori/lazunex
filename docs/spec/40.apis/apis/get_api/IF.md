@@ -49,8 +49,8 @@ Media type: `application/json`
 | `providerName` | `string` | yes | API提供者として表示する組織名またはチーム名です。 | minLength=1, maxLength=200 |
 | `providerContact` | `string` | yes | API提供者への問い合わせ先です。 | minLength=1, maxLength=320 |
 | `ownerPrincipalId` | `string` | yes | プロジェクトまたはAPIの所有者を表す認証主体IDです。 | minLength=1, maxLength=256 |
-| `visibility` | `string(INTERNAL, RESTRICTED)` | yes | APIカタログの公開範囲を表す列挙値です。 | INTERNAL=組織内の利用者へ公開するAPIです。<br>RESTRICTED=許可された利用者またはプロジェクトに限定して公開するAPIです。 |
-| `derivedState` | `string(PUBLISHED)` | yes | APIカタログの現在状態を表す列挙値です。 | PUBLISHED=APIカタログへ公開済みのAPIです。 |
+| `visibility` | `string(INTERNAL, RESTRICTED)` | yes | APIカタログの公開範囲を表す列挙値です。 | INTERNAL=社内利用者に公開されるAPIです。<br>RESTRICTED=限定された利用者だけに公開されるAPIです。 |
+| `derivedState` | `string(PUBLISHED)` | yes | APIカタログの現在状態を表す列挙値です。 | PUBLISHED=APIカタログで公開済みの状態です。 |
 | `stage` | `ApiDetailStageResponse` | yes | API詳細で返却するAPI Gateway stageの接続情報です。 | - |
 | `stage.apiStageId` | `string` | yes | API Gateway stageに対応するLazunex内のstage IDです。 | - |
 | `stage.awsAccountId` | `string` | yes | 対象API Gateway REST APIが存在するAWSアカウントIDです。 | minLength=12, maxLength=12, pattern=^\d{12}$ |
@@ -60,13 +60,13 @@ Media type: `application/json`
 | `stage.invokeUrl` | `string` | yes | 対象API Gateway stageを呼び出すためのベースURLです。 | minLength=1 |
 | `stage.customDomainUrl` | `string \| null` | no | API Gateway stageに紐づく任意のcustom domain URLです。 | minLength=1 |
 | `stage.apiKeyRequiredObserved` | `boolean` | yes | API Gateway stageでAPI key必須設定が検出されたかどうかです。 | - |
-| `stage.scopeConfigObserved` | `string(VERIFIED, NOT_CONFIGURED, UNKNOWN)` | yes | API Gateway stageで検出したCognito scope設定状態を表す列挙値です。 | VERIFIED=期待するscope設定が検出されています。<br>NOT_CONFIGURED=scope設定が検出されていません。<br>UNKNOWN=scope設定の検出状態が不明です。 |
+| `stage.scopeConfigObserved` | `string(VERIFIED, NOT_CONFIGURED, UNKNOWN)` | yes | API Gateway stageで検出したCognito scope設定状態を表す列挙値です。 | VERIFIED=API Gateway methodに必要なCognito scope設定が確認済みです。<br>NOT_CONFIGURED=API Gateway methodに必要なCognito scope設定がありません。<br>UNKNOWN=API Gateway methodのCognito scope設定を確認できていない状態です。 |
 | `scope` | `app__apis__apis__get_api__schemas__ApiScopeResponse` | yes | API呼び出し認可に利用するCognito custom scope情報です。 | - |
 | `scope.scopeName` | `string` | yes | Cognito resource serverに登録するAPI呼び出し用scope名です。 | minLength=1, maxLength=256 |
 | `scope.scopeFullName` | `string` | yes | Cognito access tokenに要求されるresource server付きの完全なscope名です。 | minLength=1, maxLength=600 |
 | `reviewers` | `array<ApiReviewerResponse>` | yes | API利用申請を審査できる担当者一覧です。 | - |
 | `reviewers[].reviewerPrincipalId` | `string` | yes | API利用申請を審査できる認証主体IDです。 | minLength=1, maxLength=256 |
-| `reviewers[].reviewerRole` | `string(PRIMARY, BACKUP, ADMIN)` | yes | API利用申請を審査する担当者の役割を表す列挙値です。 | PRIMARY=主担当の審査者です。<br>BACKUP=副担当の審査者です。<br>ADMIN=管理者権限を持つ審査者です。 |
+| `reviewers[].reviewerRole` | `string(PRIMARY, BACKUP, ADMIN)` | yes | API利用申請を審査する担当者の役割を表す列挙値です。 | PRIMARY=主担当としてAPI利用申請を審査する役割です。<br>BACKUP=主担当の代替としてAPI利用申請を審査する役割です。<br>ADMIN=管理者としてAPI利用申請を審査できる役割です。 |
 
 ##### `401` 認証情報が未指定、期限切れ、または検証できない場合に返します。
 

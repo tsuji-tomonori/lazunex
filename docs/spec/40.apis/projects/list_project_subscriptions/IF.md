@@ -54,8 +54,8 @@ Media type: `application/json`
 | `items[].stageName` | `string` | yes | API Gatewayにデプロイされているstage名です。 | minLength=1, maxLength=128 |
 | `items[].invokeUrl` | `string` | yes | 対象API Gateway stageを呼び出すためのベースURLです。 | minLength=1 |
 | `items[].scopeFullName` | `string` | yes | Cognito access tokenに要求されるresource server付きの完全なscope名です。 | minLength=1, maxLength=600 |
-| `items[].approvedAuthMode` | `string(PUBLIC_PKCE, CLIENT_CREDENTIALS, BOTH)` | yes | API利用時に許可する認証方式を表す列挙値です。 | PUBLIC_PKCE=PKCEを使うpublic clientでの認証を許可します。<br>CLIENT_CREDENTIALS=client credentialsを使うconfidential clientでの認証を許可します。<br>BOTH=public clientとconfidential clientの両方の認証方式を許可します。 |
-| `items[].derivedState` | `string(ACTIVE)` | yes | API利用権の現在状態を表す列挙値です。 | ACTIVE=利用可能なAPI利用権です。 |
+| `items[].approvedAuthMode` | `string(PUBLIC_PKCE, CLIENT_CREDENTIALS, BOTH)` | yes | API利用時に許可する認証方式を表す列挙値です。 | PUBLIC_PKCE=PKCEを利用するpublic client向けの認証方式です。<br>CLIENT_CREDENTIALS=client credentialsを利用するconfidential client向けの認証方式です。<br>BOTH=public clientとconfidential clientの両方を許可する認証方式です。 |
+| `items[].derivedState` | `string(ACTIVE)` | yes | API利用権の現在状態を表す列挙値です。 | ACTIVE=承認済みのAPI利用権が有効な状態です。 |
 | `items[].approvedAt` | `string` | yes | API利用権が承認された日時です。 | - |
 | `nextToken` | `string \| null` | no | 次ページを取得するために前回レスポンスから受け取る継続tokenです。 | minLength=1 |
 

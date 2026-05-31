@@ -58,6 +58,57 @@ def field_name(node: ast.AnnAssign) -> str | None:
     return None
 
 
+def is_str_enum_class(node: ast.ClassDef) -> bool:
+    for base in node.bases:
+        if isinstance(base, ast.Name) and base.id == "StrEnum":
+            return True
+        if isinstance(base, ast.Attribute) and base.attr == "StrEnum":
+            return True
+    return False
+
+
+def enum_members(node: ast.ClassDef) -> dict[str, str]:
+    members: dict[str, str] = {}
+    for statement in node.body:
+        if not isinstance(statement, ast.Assign):
+            continue
+        value = literal_string(statement.value)
+        if value is None:
+            continue
+        for target in statement.targets:
+            if isinstance(target, ast.Name) and target.id.isupper():
+                members[target.id] = value
+    return members
+
+
+def enum_member_line_numbers(node: ast.ClassDef) -> dict[str, int]:
+    lines: dict[str, int] = {}
+    for statement in node.body:
+        if not isinstance(statement, ast.Assign):
+            continue
+        if literal_string(statement.value) is None:
+            continue
+        for target in statement.targets:
+            if isinstance(target, ast.Name) and target.id.isupper():
+                lines[target.id] = statement.lineno
+    return lines
+
+
+def enum_member_comment(source_lines: Sequence[str], line_number: int) -> str | None:
+    if line_number <= 0 or line_number > len(source_lines):
+        return None
+    line = source_lines[line_number - 1]
+    if "#" in line:
+        return line.split("#", maxsplit=1)[1].strip()
+    previous_index = line_number - 2
+    if previous_index < 0:
+        return None
+    previous_line = source_lines[previous_index].strip()
+    if previous_line.startswith("#"):
+        return previous_line.removeprefix("#").strip()
+    return None
+
+
 def is_router_decorator(node: ast.AST) -> TypeGuard[ast.Call]:
     if not isinstance(node, ast.Call):
         return False
@@ -109,6 +160,7 @@ def check_router_file(path: Path) -> list[DescriptionIssue]:
 
 def check_schema_file(path: Path) -> list[DescriptionIssue]:
     source = path.read_text(encoding="utf-8")
+    source_lines = source.splitlines()
     tree = ast.parse(source, filename=str(path))
     issues: list[DescriptionIssue] = []
 
@@ -190,6 +242,39 @@ def check_schema_file(path: Path) -> list[DescriptionIssue]:
                         ),
                     )
                 )
+        if is_str_enum_class(node):
+            members = enum_members(node)
+            member_lines = enum_member_line_numbers(node)
+            for member_name in members:
+                line = member_lines[member_name]
+                description = enum_member_comment(source_lines, line)
+                if description is None:
+                    issues.append(
+                        DescriptionIssue(
+                            path=path,
+                            line=line,
+                            target=f"{node.name}.{member_name}",
+                            message="enum value requires a Japanese comment",
+                        )
+                    )
+                elif not has_japanese_text(description):
+                    issues.append(
+                        DescriptionIssue(
+                            path=path,
+                            line=line,
+                            target=f"{node.name}.{member_name}",
+                            message="enum value comment must contain Japanese text",
+                        )
+                    )
+                elif is_placeholder_description(description):
+                    issues.append(
+                        DescriptionIssue(
+                            path=path,
+                            line=line,
+                            target=f"{node.name}.{member_name}",
+                            message="enum value comment must describe the value meaning concretely",
+                        )
+                    )
     return issues
 
 
@@ -206,7 +291,7 @@ def check_api_descriptions(api_dir: Path) -> list[DescriptionIssue]:
     for path in api_description_files(api_dir):
         if path.name == "router.py":
             issues.extend(check_router_file(path))
-        elif path.name == "schemas.py":
+        elif path.name in {"common.py", "schemas.py"}:
             issues.extend(check_schema_file(path))
     return sorted(issues)
 

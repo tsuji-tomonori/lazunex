@@ -30,7 +30,7 @@ _なし_
 | `providerName` | `string` | yes | API提供者として表示する組織名またはチーム名です。 | minLength=1, maxLength=200 |
 | `providerContact` | `string` | yes | API提供者への問い合わせ先です。 | minLength=1, maxLength=320 |
 | `ownerPrincipalId` | `string` | yes | プロジェクトまたはAPIの所有者を表す認証主体IDです。 | minLength=1, maxLength=256 |
-| `visibility` | `string(INTERNAL, RESTRICTED)` | yes | APIカタログの公開範囲を表す列挙値です。 | INTERNAL=組織内の利用者へ公開するAPIです。<br>RESTRICTED=許可された利用者またはプロジェクトに限定して公開するAPIです。 |
+| `visibility` | `string(INTERNAL, RESTRICTED)` | yes | APIカタログの公開範囲を表す列挙値です。 | INTERNAL=社内利用者に公開されるAPIです。<br>RESTRICTED=限定された利用者だけに公開されるAPIです。 |
 | `apigw` | `PublishApiGatewayRequest` | yes | 公開登録するAPI Gateway REST APIとstageの接続情報です。 | - |
 | `apigw.awsAccountId` | `string` | yes | 対象API Gateway REST APIが存在するAWSアカウントIDです。 | minLength=12, maxLength=12, pattern=^\d{12}$ |
 | `apigw.awsRegion` | `string` | yes | 対象API Gateway REST APIが存在するAWSリージョンです。 | minLength=1, maxLength=32 |
@@ -39,10 +39,10 @@ _なし_
 | `apigw.invokeUrl` | `string` | yes | 対象API Gateway stageを呼び出すためのベースURLです。 | minLength=1 |
 | `apigw.customDomainUrl` | `string \| null` | no | API Gateway stageに紐づく任意のcustom domain URLです。 | minLength=1 |
 | `apigw.authorizerId` | `string \| null` | no | API Gateway stageで利用するCognito authorizer IDです。 | minLength=1, maxLength=128 |
-| `apigw.scopeAttachmentMode` | `string(VERIFY_ONLY, PATCH_ALL_METHODS)` | yes | API Gateway methodへのscope反映方法を表す列挙値です。 | VERIFY_ONLY=API Gateway methodのscope設定を検証のみ行います。<br>PATCH_ALL_METHODS=API Gateway methodへscope設定を反映します。 |
+| `apigw.scopeAttachmentMode` | `string(VERIFY_ONLY, PATCH_ALL_METHODS)` | yes | API Gateway methodへのscope反映方法を表す列挙値です。 | VERIFY_ONLY=scope設定を検証するだけでAPI Gateway methodには反映しません。<br>PATCH_ALL_METHODS=API Gatewayの全methodへscope設定を反映します。 |
 | `reviewers` | `array<PublishApiReviewerRequest>` | yes | API利用申請を審査できる担当者一覧です。 | - |
 | `reviewers[].reviewerPrincipalId` | `string` | yes | API利用申請を審査できる認証主体IDです。 | minLength=1, maxLength=256 |
-| `reviewers[].reviewerRole` | `string(PRIMARY, BACKUP, ADMIN)` | yes | API利用申請を審査する担当者の役割を表す列挙値です。 | PRIMARY=主担当の審査者です。<br>BACKUP=副担当の審査者です。<br>ADMIN=管理者権限を持つ審査者です。 |
+| `reviewers[].reviewerRole` | `string(PRIMARY, BACKUP, ADMIN)` | yes | API利用申請を審査する担当者の役割を表す列挙値です。 | PRIMARY=主担当としてAPI利用申請を審査する役割です。<br>BACKUP=主担当の代替としてAPI利用申請を審査する役割です。<br>ADMIN=管理者としてAPI利用申請を審査できる役割です。 |
 | `openapiDocument` | `OpenApiDocumentRequest` | yes | APIカタログに紐づけるOpenAPI文書の保存情報です。 | - |
 | `openapiDocument.s3Uri` | `string` | yes | OpenAPI文書を保存しているS3 URIです。 | minLength=1 |
 | `openapiDocument.sha256` | `string` | yes | OpenAPI文書の改ざん検知に利用するSHA-256ハッシュです。 | minLength=64, maxLength=64, pattern=^[0-9a-fA-F]{64}$ |
@@ -74,7 +74,7 @@ Media type: `application/json`
 | `scope.resourceServerIdentifier` | `string` | yes | Cognito resource serverを識別するURI形式の値です。 | minLength=1, maxLength=256 |
 | `scope.scopeName` | `string` | yes | Cognito resource serverに登録するAPI呼び出し用scope名です。 | minLength=1, maxLength=256 |
 | `scope.scopeFullName` | `string` | yes | Cognito access tokenに要求されるresource server付きの完全なscope名です。 | minLength=1, maxLength=600 |
-| `derivedState` | `string(PUBLISHED)` | yes | APIカタログの現在状態を表す列挙値です。 | PUBLISHED=APIカタログへ公開済みのAPIです。 |
+| `derivedState` | `string(PUBLISHED)` | yes | APIカタログの現在状態を表す列挙値です。 | PUBLISHED=APIカタログで公開済みの状態です。 |
 | `operationId` | `string` | yes | AWS反映などのプロビジョニング操作を追跡するIDです。 | - |
 
 ##### `400` リクエスト本文やヘッダーの組み合わせが業務ルールに合わない場合、または冪等性キーなどの必須入力が不正な場合に返します。

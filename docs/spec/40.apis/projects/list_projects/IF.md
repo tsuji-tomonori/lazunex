@@ -20,7 +20,7 @@ _なし_
 | --- | --- | --- | --- | --- |
 | `limit` | `integer` | no | 一覧APIで1回に返却する最大件数です。 | minimum=1, maximum=100 |
 | `nextToken` | `string \| null` | no | 次ページを取得するために前回レスポンスから受け取る継続tokenです。 | minLength=1 |
-| `derivedState` | `string(ACTIVE) \| null` | no | イベント履歴から導出した対象リソースの現在状態です。 | ACTIVE=利用可能なプロジェクトです。 |
+| `derivedState` | `string(ACTIVE) \| null` | no | イベント履歴から導出した対象リソースの現在状態です。 | ACTIVE=プロジェクトが利用可能な状態です。 |
 | `keyword` | `string \| null` | no | API名、プロジェクト名、説明などを部分一致検索するキーワードです。 | minLength=1, maxLength=200 |
 | `ownerPrincipalId` | `string \| null` | no | プロジェクトまたはAPIの所有者を表す認証主体IDです。 | minLength=1, maxLength=256 |
 
@@ -52,7 +52,7 @@ Media type: `application/json`
 | `items[].description` | `string` | yes | 利用者に表示するリソースの概要説明です。 | minLength=1 |
 | `items[].ownerPrincipalId` | `string` | yes | プロジェクトまたはAPIの所有者を表す認証主体IDです。 | minLength=1, maxLength=256 |
 | `items[].departmentCode` | `string` | yes | プロジェクトを所管する部署コードです。 | minLength=1, maxLength=64 |
-| `items[].derivedState` | `string(ACTIVE)` | yes | プロジェクトの現在状態を表す列挙値です。 | ACTIVE=利用可能なプロジェクトです。 |
+| `items[].derivedState` | `string(ACTIVE)` | yes | プロジェクトの現在状態を表す列挙値です。 | ACTIVE=プロジェクトが利用可能な状態です。 |
 | `items[].subscriptionCount` | `integer` | yes | プロジェクトに紐づく有効なAPI利用権の件数です。 | minimum=0.0 |
 | `nextToken` | `string \| null` | no | 次ページを取得するために前回レスポンスから受け取る継続tokenです。 | minLength=1 |
 
