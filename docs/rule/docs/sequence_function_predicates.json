@@ -1,0 +1,13 @@
+{
+  "description": "Mermaid sequence variable generation に利用できる condition function の predicate 語彙です。",
+  "entries": [
+    {
+      "name": "has",
+      "description": "呼び出し元の権限、既存リソース、重複状態などの有無を判定する条件関数に使います。"
+    },
+    {
+      "name": "is",
+      "description": "対象リソースの状態、公開状態、参照可能性などを判定する条件関数に使います。"
+    }
+  ]
+}

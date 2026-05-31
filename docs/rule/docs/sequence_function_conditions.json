@@ -1,0 +1,21 @@
+{
+  "description": "Mermaid sequence variable generation に利用できる condition 語彙です。",
+  "entries": [
+    {"name": "active_subscription", "description": "Project/API に active subscription が存在するかを判定します。"},
+    {"name": "api_list_permission", "description": "API 一覧を参照できる権限があるかを判定します。"},
+    {"name": "api_publish_permission", "description": "API 公開登録を実行できる権限があるかを判定します。"},
+    {"name": "api_reviewer_permission", "description": "対象 API の reviewer または Hub 管理者であるかを判定します。"},
+    {"name": "available_project_api_stage", "description": "承認対象の Project/API/stage が利用可能かを判定します。"},
+    {"name": "pending_access_request", "description": "利用申請が審査中状態であるかを判定します。"},
+    {"name": "pending_access_request_for_project_api", "description": "同一 Project/API の審査中申請が存在するかを判定します。"},
+    {"name": "project_access_request_view_permission", "description": "Project 内の利用申請履歴を参照できる権限があるかを判定します。"},
+    {"name": "project_creation_permission", "description": "Project を作成できる利用者であるかを判定します。"},
+    {"name": "project_list_permission", "description": "Project 一覧を参照できる権限があるかを判定します。"},
+    {"name": "project_owner_permission", "description": "呼び出し元が Project owner であるかを判定します。"},
+    {"name": "project_subscription_view_permission", "description": "Project subscription 一覧を参照できる権限があるかを判定します。"},
+    {"name": "project_view_permission", "description": "Project 詳細を参照できる権限があるかを判定します。"},
+    {"name": "published_api", "description": "対象 API が公開済みであるかを判定します。"},
+    {"name": "registered_api", "description": "登録対象 API が既に登録済みかを判定します。"},
+    {"name": "viewable_api", "description": "対象 API を呼び出し元が参照可能かを判定します。"}
+  ]
+}

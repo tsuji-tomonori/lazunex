@@ -1,0 +1,53 @@
+{
+  "description": "Mermaid sequence variable generation に利用できる sequence-level function の action 語彙です。",
+  "entries": [
+    {
+      "name": "add",
+      "description": "外部サービスまたは既存リソースへ要素を追加する処理に使います。"
+    },
+    {
+      "name": "append",
+      "description": "イベント、監査ログ、履歴など追記型の事実を記録する処理に使います。"
+    },
+    {
+      "name": "apply",
+      "description": "検索結果や一覧結果に paging などの制御を適用する処理に使います。"
+    },
+    {
+      "name": "build",
+      "description": "API response や内部 DTO を組み立てる処理に使います。"
+    },
+    {
+      "name": "create",
+      "description": "新規リソース、provisioning operation、idempotency record を作成する処理に使います。"
+    },
+    {
+      "name": "get",
+      "description": "DB、外部 API、認証情報、metadata から既存情報を取得する処理に使います。"
+    },
+    {
+      "name": "hash",
+      "description": "API key や client secret などの secret 値を保存用に hash 化する処理に使います。"
+    },
+    {
+      "name": "merge",
+      "description": "既存設定へ新しい scope や public client 設定を統合する処理に使います。"
+    },
+    {
+      "name": "save",
+      "description": "DB に業務リソースや metadata を保存する処理に使います。"
+    },
+    {
+      "name": "update",
+      "description": "既存リソース、外部サービス設定、DB metadata、状態を更新する処理に使います。"
+    },
+    {
+      "name": "validate",
+      "description": "request、path parameter、query parameter、入力理由などを検証する処理に使います。"
+    },
+    {
+      "name": "verify",
+      "description": "外部リソースや登録情報が期待する状態にあることを検証する処理に使います。"
+    }
+  ]
+}
