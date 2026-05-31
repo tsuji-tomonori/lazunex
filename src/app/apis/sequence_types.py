@@ -10,6 +10,7 @@ from app.apis.types import (
     ResourceId,
     ScopeFullName,
     SecretLast4,
+    SecretValue,
     Sha256Hash,
     UrlText,
 )
@@ -116,6 +117,14 @@ class CognitoAppClientRef:
 
     app_client_id: ApiGatewayId
     allowed_scopes: Sequence[ScopeFullName]
+
+
+@dataclass(frozen=True)
+class CognitoConfidentialClientRef:
+    """Cognito confidential App Clientと初回secretの参照情報です。"""
+
+    app_client_id: ApiGatewayId
+    client_secret: SecretValue
 
 
 @dataclass(frozen=True)

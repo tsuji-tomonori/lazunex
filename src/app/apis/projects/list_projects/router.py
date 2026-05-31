@@ -2,11 +2,11 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query, status
 
+from app.apis.projects.list_projects import functions as api_functions
 from app.apis.projects.list_projects.samples import LIST_PROJECTS_RESPONSE_SAMPLE
 from app.apis.projects.list_projects.schemas import ListProjectsQuery, ListProjectsResponse
 from app.apis.responses import (
     error_responses,
-    not_implemented,
     success_response,
 )
 
@@ -34,4 +34,13 @@ router = APIRouter()
 async def list_projects(
     query: Annotated[ListProjectsQuery, Query()],
 ) -> ListProjectsResponse:
-    not_implemented()
+    validated_query = await api_functions.validate_project_list_query(query)
+    caller = await api_functions.get_caller_identity()
+    await api_functions.has_project_list_permission(caller)
+    projects = await api_functions.get_viewable_projects(validated_query, caller)
+    projects_with_members = await api_functions.get_project_member_metadata(projects)
+    projects_with_resources = await api_functions.get_project_resource_metadata(
+        projects_with_members
+    )
+    page = await api_functions.apply_pagination(projects_with_resources, validated_query)
+    return await api_functions.build_project_list_response(page)

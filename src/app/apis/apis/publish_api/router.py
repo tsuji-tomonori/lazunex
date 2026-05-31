@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Header, status
 
+from app.apis.apis.publish_api import functions as api_functions
 from app.apis.apis.publish_api.samples import (
     PUBLISH_API_REQUEST_SAMPLE,
     PUBLISH_API_RESPONSE_SAMPLE,
@@ -10,7 +11,6 @@ from app.apis.apis.publish_api.schemas import PublishApiRequest, PublishApiRespo
 from app.apis.base import sample_value
 from app.apis.responses import (
     error_responses,
-    not_implemented,
     success_response,
 )
 
@@ -47,4 +47,24 @@ async def publish_api(
     ],
     idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
 ) -> PublishApiResponse:
-    not_implemented()
+    caller = await api_functions.get_caller_identity()
+    validated_request = await api_functions.validate_api_publish_request(request)
+    await api_functions.has_api_publish_permission(validated_request, caller)
+    await api_functions.get_idempotency_record(idempotency_key)
+    await api_functions.verify_api_gateway_stage_registration(validated_request)
+    await api_functions.has_registered_api(validated_request)
+    operation = await api_functions.create_provisioning_operation(
+        validated_request,
+        idempotency_key,
+    )
+    await api_functions.create_idempotency_record(idempotency_key, operation)
+    scope = await api_functions.add_cognito_custom_scope(validated_request, operation)
+    api = await api_functions.save_api_catalog_metadata(validated_request, scope, operation)
+    await api_functions.append_api_lifecycle_events(api)
+    await api_functions.append_provisioning_events(operation)
+    await api_functions.append_audit_event(api, caller)
+    return await api_functions.build_publish_api_response(
+        api,
+        scope,
+        operation=operation,
+    )

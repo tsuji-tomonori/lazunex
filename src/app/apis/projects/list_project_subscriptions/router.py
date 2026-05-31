@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Path, Query, status
 
+from app.apis.projects.list_project_subscriptions import functions as api_functions
 from app.apis.projects.list_project_subscriptions.samples import (
     LIST_PROJECT_SUBSCRIPTIONS_RESPONSE_SAMPLE,
 )
@@ -11,9 +12,9 @@ from app.apis.projects.list_project_subscriptions.schemas import (
 )
 from app.apis.responses import (
     error_responses,
-    not_implemented,
     success_response,
 )
+from app.apis.types import ResourceId
 
 router = APIRouter()
 
@@ -39,11 +40,23 @@ router = APIRouter()
 )
 async def list_project_subscriptions(
     project_id: Annotated[
-        str,
+        ResourceId,
         Path(
             alias="projectId", description="API利用単位となるプロジェクトを一意に識別するIDです。"
         ),
     ],
     query: Annotated[ListProjectSubscriptionsQuery, Query()],
 ) -> ListProjectSubscriptionsResponse:
-    not_implemented()
+    caller = await api_functions.get_caller_identity()
+    validated_query = await api_functions.validate_project_subscription_list_query(query)
+    project = await api_functions.get_project(project_id)
+    await api_functions.has_project_subscription_view_permission(project, caller)
+    subscriptions = await api_functions.get_active_subscriptions(project, validated_query)
+    subscriptions_with_api = await api_functions.get_subscription_api_metadata(subscriptions)
+    api_key = await api_functions.get_project_api_key_metadata(project)
+    cognito = await api_functions.get_project_client_metadata(project)
+    return await api_functions.build_project_subscription_list_response(
+        subscriptions_with_api,
+        api_key,
+        cognito,
+    )

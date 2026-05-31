@@ -2,11 +2,11 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query, status
 
+from app.apis.apis.list_apis import functions as api_functions
 from app.apis.apis.list_apis.samples import LIST_APIS_RESPONSE_SAMPLE
 from app.apis.apis.list_apis.schemas import ListApisQuery, ListApisResponse
 from app.apis.responses import (
     error_responses,
-    not_implemented,
     success_response,
 )
 
@@ -34,4 +34,9 @@ router = APIRouter()
 async def list_apis(
     query: Annotated[ListApisQuery, Query()],
 ) -> ListApisResponse:
-    not_implemented()
+    validated_query = await api_functions.validate_api_list_query(query)
+    caller = await api_functions.get_caller_identity()
+    await api_functions.has_api_list_permission(caller)
+    apis = await api_functions.get_viewable_apis(validated_query, caller)
+    page = await api_functions.apply_pagination(apis, validated_query)
+    return await api_functions.build_api_list_response(page)

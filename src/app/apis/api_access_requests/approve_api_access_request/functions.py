@@ -23,6 +23,11 @@ def _sequence_placeholder(function_name: str) -> NoReturn:
     raise NotImplementedError(f"{function_name} is a sequence-level placeholder.")
 
 
+async def get_caller_identity() -> CallerIdentity:
+    """呼び出し元の role、group、scope を取得する。"""
+    return _sequence_placeholder("get_caller_identity")
+
+
 async def get_access_request(access_request_id: ResourceId) -> ApiAccessRequestRef:
     """承認対象の利用申請を取得する。"""
     return _sequence_placeholder("get_access_request")

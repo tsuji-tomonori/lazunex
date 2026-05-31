@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Header, Path, status
 
+from app.apis.api_access_requests.approve_api_access_request import functions as api_functions
 from app.apis.api_access_requests.approve_api_access_request.samples import (
     APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE,
     APPROVE_API_ACCESS_REQUEST_RESPONSE_SAMPLE,
@@ -13,9 +14,9 @@ from app.apis.api_access_requests.approve_api_access_request.schemas import (
 from app.apis.base import sample_value
 from app.apis.responses import (
     error_responses,
-    not_implemented,
     success_response,
 )
+from app.apis.types import ResourceId
 
 router = APIRouter()
 
@@ -45,7 +46,7 @@ router = APIRouter()
 )
 async def approve_api_access_request(
     access_request_id: Annotated[
-        str,
+        ResourceId,
         Path(alias="accessRequestId", description="API利用申請を一意に識別するIDです。"),
     ],
     request: Annotated[
@@ -58,4 +59,42 @@ async def approve_api_access_request(
     ],
     idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
 ) -> ApproveApiAccessRequestResponse:
-    not_implemented()
+    caller = await api_functions.get_caller_identity()
+    access_request = await api_functions.get_access_request(access_request_id)
+    await api_functions.is_pending_access_request(access_request)
+    await api_functions.has_api_reviewer_permission(access_request, caller)
+    await api_functions.is_available_project_api_stage(access_request)
+    await api_functions.has_active_subscription(access_request)
+    await api_functions.append_access_request_approving_event(access_request)
+    operation = await api_functions.create_provisioning_operation(
+        access_request,
+        request,
+        idempotency_key,
+    )
+    await api_functions.get_idempotency_record(idempotency_key)
+    await api_functions.create_idempotency_record(idempotency_key, operation)
+    usage_plan_stage = await api_functions.add_usage_plan_api_stage(access_request, operation)
+    current_client = await api_functions.get_cognito_app_client(access_request)
+    merged_client = await api_functions.merge_cognito_allowed_scopes(
+        current_client,
+        access_request,
+    )
+    updated_client = await api_functions.update_cognito_app_client(merged_client, operation)
+    resources = await api_functions.save_approved_access_resources(
+        access_request,
+        request,
+        usage_plan_stage,
+        updated_client,
+    )
+    await api_functions.append_usage_plan_stage_event(usage_plan_stage)
+    await api_functions.append_client_scope_event(resources)
+    await api_functions.append_access_request_approved_event(access_request)
+    await api_functions.append_subscription_provisioned_event(resources)
+    await api_functions.append_provisioning_events(operation)
+    await api_functions.append_audit_event(access_request, caller)
+    return await api_functions.build_approve_access_request_response(
+        access_request,
+        resources,
+        request,
+        operation,
+    )

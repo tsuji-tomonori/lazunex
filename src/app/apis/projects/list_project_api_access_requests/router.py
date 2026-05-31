@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Path, Query, status
 
+from app.apis.projects.list_project_api_access_requests import functions as api_functions
 from app.apis.projects.list_project_api_access_requests.samples import (
     LIST_PROJECT_API_ACCESS_REQUESTS_RESPONSE_SAMPLE,
 )
@@ -11,9 +12,9 @@ from app.apis.projects.list_project_api_access_requests.schemas import (
 )
 from app.apis.responses import (
     error_responses,
-    not_implemented,
     success_response,
 )
+from app.apis.types import ResourceId
 
 router = APIRouter()
 
@@ -39,11 +40,21 @@ router = APIRouter()
 )
 async def list_project_api_access_requests(
     project_id: Annotated[
-        str,
+        ResourceId,
         Path(
             alias="projectId", description="API利用単位となるプロジェクトを一意に識別するIDです。"
         ),
     ],
     query: Annotated[ListProjectApiAccessRequestsQuery, Query()],
 ) -> ListProjectApiAccessRequestsResponse:
-    not_implemented()
+    caller = await api_functions.get_caller_identity()
+    validated_query = await api_functions.validate_project_access_request_list_query(query)
+    project = await api_functions.get_project(project_id)
+    await api_functions.has_project_access_request_view_permission(project, caller)
+    access_requests = await api_functions.get_project_access_requests(
+        project,
+        validated_query,
+        caller,
+    )
+    page = await api_functions.apply_pagination(access_requests, validated_query)
+    return await api_functions.build_project_access_request_list_response(page)

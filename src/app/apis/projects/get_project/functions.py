@@ -16,6 +16,11 @@ def _sequence_placeholder(function_name: str) -> NoReturn:
     raise NotImplementedError(f"{function_name} is a sequence-level placeholder.")
 
 
+async def get_caller_identity() -> CallerIdentity:
+    """呼び出し元の sub、group、scope を取得する。"""
+    return _sequence_placeholder("get_caller_identity")
+
+
 async def validate_project_id(project_id: ResourceId) -> ResourceId:
     """Project ID を検証する。"""
     return _sequence_placeholder("validate_project_id")

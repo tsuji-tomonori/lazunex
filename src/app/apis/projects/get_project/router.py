@@ -2,13 +2,14 @@ from typing import Annotated
 
 from fastapi import APIRouter, Path, status
 
+from app.apis.projects.get_project import functions as api_functions
 from app.apis.projects.get_project.samples import GET_PROJECT_RESPONSE_SAMPLE
 from app.apis.projects.get_project.schemas import GetProjectResponse
 from app.apis.responses import (
     error_responses,
-    not_implemented,
     success_response,
 )
+from app.apis.types import ResourceId
 
 router = APIRouter()
 
@@ -36,10 +37,22 @@ router = APIRouter()
 )
 async def get_project(
     project_id: Annotated[
-        str,
+        ResourceId,
         Path(
             alias="projectId", description="API利用単位となるプロジェクトを一意に識別するIDです。"
         ),
     ],
 ) -> GetProjectResponse:
-    not_implemented()
+    caller = await api_functions.get_caller_identity()
+    validated_project_id = await api_functions.validate_project_id(project_id)
+    project = await api_functions.get_project(validated_project_id)
+    await api_functions.has_project_view_permission(project, caller)
+    api_key = await api_functions.get_project_api_key_metadata(project)
+    usage_plan = await api_functions.get_project_usage_plan_metadata(project)
+    cognito = await api_functions.get_project_client_metadata(project)
+    return await api_functions.build_project_detail_response(
+        project,
+        api_key,
+        usage_plan,
+        cognito,
+    )

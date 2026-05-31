@@ -11,6 +11,7 @@ from app.apis.sequence_types import (
     ApprovedAccessResourceRefs,
     CallerIdentity,
     CognitoAppClientRef,
+    CognitoConfidentialClientRef,
     EventRef,
     IdempotencyRecordRef,
     OpenApiMetadataRef,
@@ -57,6 +58,10 @@ def test_sequence_types_keep_step_references() -> None:
         app_client_id="client-id",
         allowed_scopes=("api:sample:invoke",),
     )
+    confidential_client = CognitoConfidentialClientRef(
+        app_client_id="confidential-client-id",
+        client_secret="client-secret-value",  # noqa: S106
+    )
     usage_plan_stage = UsagePlanApiStageRef(usage_plan_api_stage_id=rid(12))
     access_request = ApiAccessRequestRef(
         access_request_id=rid(13),
@@ -85,6 +90,7 @@ def test_sequence_types_keep_step_references() -> None:
     assert resources.confidential_client_id == rid(11)
     assert secrets.api_key_last4 == "key4"
     assert client.allowed_scopes == ("api:sample:invoke",)
+    assert confidential_client.client_secret == "client-secret-value"  # noqa: S105
     assert usage_plan_stage.usage_plan_api_stage_id == rid(12)
     assert access_request.access_request_id == rid(13)
     assert review.review_id == rid(17)

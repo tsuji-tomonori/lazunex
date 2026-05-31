@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Header, Path, status
 
 from app.apis.base import sample_value
+from app.apis.projects.update_project_public_client import functions as api_functions
 from app.apis.projects.update_project_public_client.samples import (
     UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE,
     UPDATE_PROJECT_PUBLIC_CLIENT_RESPONSE_SAMPLE,
@@ -13,9 +14,9 @@ from app.apis.projects.update_project_public_client.schemas import (
 )
 from app.apis.responses import (
     error_responses,
-    not_implemented,
     success_response,
 )
+from app.apis.types import ResourceId
 
 router = APIRouter()
 
@@ -45,7 +46,7 @@ router = APIRouter()
 )
 async def update_project_public_client(
     project_id: Annotated[
-        str,
+        ResourceId,
         Path(
             alias="projectId", description="API利用単位となるプロジェクトを一意に識別するIDです。"
         ),
@@ -60,4 +61,33 @@ async def update_project_public_client(
     ],
     idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
 ) -> UpdateProjectPublicClientResponse:
-    not_implemented()
+    caller = await api_functions.get_caller_identity()
+    validated_request = await api_functions.validate_public_client_update_request(request)
+    project = await api_functions.get_project(project_id)
+    await api_functions.has_project_owner_permission(project, caller)
+    public_client = await api_functions.get_public_app_client_metadata(project)
+    await api_functions.get_idempotency_record(idempotency_key)
+    operation = await api_functions.create_provisioning_operation(
+        project,
+        validated_request,
+        idempotency_key,
+    )
+    await api_functions.create_idempotency_record(idempotency_key, operation)
+    current_client = await api_functions.get_cognito_app_client(public_client)
+    merged_client = await api_functions.merge_public_client_settings(
+        current_client,
+        validated_request,
+    )
+    updated_client = await api_functions.update_cognito_app_client(merged_client, operation)
+    updated_metadata = await api_functions.update_public_app_client_metadata(
+        project,
+        updated_client,
+    )
+    await api_functions.append_project_public_client_updated_event(project, updated_metadata)
+    await api_functions.append_provisioning_events(operation)
+    await api_functions.append_audit_event(project, caller)
+    return await api_functions.build_update_public_client_response(
+        project,
+        updated_metadata,
+        operation,
+    )

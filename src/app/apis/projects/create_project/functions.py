@@ -8,6 +8,7 @@ from app.apis.projects.create_project.schemas import (
 )
 from app.apis.sequence_types import (
     CallerIdentity,
+    CognitoConfidentialClientRef,
     EventRef,
     IdempotencyRecordRef,
     ProjectResourceRefs,
@@ -19,6 +20,11 @@ from app.apis.types import ApiGatewayId, SecretValue
 
 def _sequence_placeholder(function_name: str) -> NoReturn:
     raise NotImplementedError(f"{function_name} is a sequence-level placeholder.")
+
+
+async def get_caller_identity() -> CallerIdentity:
+    """呼び出し元の sub、group、scope を取得する。"""
+    return _sequence_placeholder("get_caller_identity")
 
 
 async def validate_create_project_request(request: CreateProjectRequest) -> CreateProjectRequest:
@@ -88,7 +94,7 @@ async def create_cognito_public_app_client(
 async def create_cognito_confidential_app_client(
     request: CreateProjectRequest,
     operation: ProvisioningOperationRef,
-) -> tuple[ApiGatewayId, SecretValue]:
+) -> CognitoConfidentialClientRef:
     """Client Credentials 用 confidential App Client を作成する。"""
     return _sequence_placeholder("create_cognito_confidential_app_client")
 
@@ -107,7 +113,7 @@ async def save_project_resources(
     usage_plan_id: ApiGatewayId,
     usage_plan_key_id: ApiGatewayId,
     public_client_id: ApiGatewayId,
-    confidential_client: tuple[ApiGatewayId, SecretValue],
+    confidential_client: CognitoConfidentialClientRef,
     secret_hashes: SecretHashRefs,
 ) -> ProjectResourceRefs:
     """Project、owner、API key、Usage Plan、App Client metadata を保存する。"""
@@ -135,7 +141,7 @@ async def append_audit_event(
 async def build_create_project_response(
     resources: ProjectResourceRefs,
     api_key_value: SecretValue,
-    confidential_client_secret: SecretValue,
+    confidential_client: CognitoConfidentialClientRef,
     operation: ProvisioningOperationRef,
 ) -> CreateProjectResponse:
     """Project 作成レスポンスを組み立てる。"""

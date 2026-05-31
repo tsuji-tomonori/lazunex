@@ -5,18 +5,21 @@ from typing import NoReturn
 from app.apis.apis.publish_api.schemas import PublishApiRequest, PublishApiResponse
 from app.apis.sequence_types import (
     ApiCatalogMetadataRef,
-    ApiReviewerRefs,
     ApiScopeRef,
     CallerIdentity,
     EventRef,
     IdempotencyRecordRef,
-    OpenApiMetadataRef,
     ProvisioningOperationRef,
 )
 
 
 def _sequence_placeholder(function_name: str) -> NoReturn:
     raise NotImplementedError(f"{function_name} is a sequence-level placeholder.")
+
+
+async def get_caller_identity() -> CallerIdentity:
+    """呼び出し元の role、group、scope を取得する。"""
+    return _sequence_placeholder("get_caller_identity")
 
 
 async def validate_api_publish_request(request: PublishApiRequest) -> PublishApiRequest:
@@ -101,8 +104,6 @@ async def append_audit_event(
 async def build_publish_api_response(
     api: ApiCatalogMetadataRef,
     scope: ApiScopeRef,
-    reviewers: ApiReviewerRefs,
-    openapi_metadata: OpenApiMetadataRef,
     operation: ProvisioningOperationRef,
 ) -> PublishApiResponse:
     """API 公開登録レスポンスを組み立てる。"""
