@@ -36,6 +36,7 @@ dev = [
     "pytest-mock>=3.15.1",
     "pytest-xdist>=3.8.0",
     "ruff>=0.15.15",
+    "sqlfluff>=4.2.1",
     "testcontainers[mysql]>=4.14.2",
 ]
 
@@ -77,6 +78,25 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S101"]
+
+[tool.sqlfluff.core]
+dialect = "postgres"
+exclude_rules = [
+    "AM03",
+    "AM05",
+    "AM09",
+    "LT01",
+    "LT02",
+    "LT05",
+    "RF04",
+    "ST09",
+]
+large_file_skip_byte_limit = 0
+max_line_length = 100
+sql_file_exts = ".sql"
+
+[tool.sqlfluff.indentation]
+tab_space_size = 4
 
 [tool.pyright]
 include = ["src", "tests"]

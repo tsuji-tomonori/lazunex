@@ -13,7 +13,11 @@ INSERT INTO project_events (
 ) VALUES (
     :event_id,
     :project_id,
-    COALESCE((SELECT MAX(event_seq) + 1 FROM project_events WHERE aggregate_id = :project_id), 1),
+    COALESCE((
+        SELECT MAX(event_seq) + 1
+        FROM project_events
+        WHERE aggregate_id = :project_id
+    ), 1),
     :event_name,
     :actor_principal_id,
     :actor_type,
