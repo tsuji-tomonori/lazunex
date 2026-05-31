@@ -16,7 +16,7 @@ MESSAGE_PATTERN = re.compile(
     r"(?P<target>[A-Za-z][A-Za-z0-9_]*):\s*(?P<label>.+)$"
 )
 SQL_MESSAGE_PATTERN = re.compile(
-    r"^\s*API->>DB:\s*DBを(?:参照|追加|更新|削除)する"
+    r"^\s*API->>DB:\s*レコードを(?:参照|追加|更新|削除)する"
     r"\s+SQL\s+(?P<filename>\S+)<br/>テーブル\s+(?P<tables>.+)$"
 )
 ALLOWED_SEQUENCE_LINES = {

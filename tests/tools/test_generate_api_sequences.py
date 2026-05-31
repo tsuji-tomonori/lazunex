@@ -178,7 +178,7 @@ def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
         )
     )
 
-    assert "participant API as API: getProject" in markdown
+    assert "participant API as API" in markdown
     assert "participant R_project as Resource: project" not in markdown
     assert markdown.count("participant R_api_gateway as Resource: api gateway") == 1
     assert "participant R_project_view_permission" not in markdown
@@ -191,7 +191,7 @@ def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
     assert "API->>API: プロジェクトを参照できるかを判定する。" not in markdown
     assert "    API->>API: プロジェクト詳細レスポンスを組み立てる。" in markdown
     assert (
-        "API->>DB: DBを参照する"
+        "API->>DB: レコードを参照する"
         " SQL 001_select_projects.sql<br/>テーブル projects, project_members"
         in markdown
     )

@@ -21,6 +21,12 @@ SQL_ACTIONS = {
     "update": "更新",
     "delete": "削除",
 }
+SQL_RECORD_ACTIONS = {
+    "参照": "レコードを参照する",
+    "追加": "レコードを追加する",
+    "更新": "レコードを更新する",
+    "削除": "レコードを削除する",
+}
 ROUTER_METHODS = {"delete", "get", "patch", "post", "put"}
 PREDICATES = {"has", "is"}
 
@@ -340,7 +346,7 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
         "```mermaid",
         "sequenceDiagram",
         "  autonumber",
-        f"  participant API as API: {sequence.operation_id}",
+        "  participant API as API",
     ]
     for target in resource_targets:
         lines.append(
@@ -372,7 +378,7 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
         tables = ", ".join(sql_step.tables)
         indent = "  " + ("  " * alt_depth)
         lines.append(
-            f"{indent}API->>DB: DBを{sql_step.action}する"
+            f"{indent}API->>DB: {SQL_RECORD_ACTIONS[sql_step.action]}"
             f" SQL {sql_step.filename}<br/>テーブル {tables}"
         )
 

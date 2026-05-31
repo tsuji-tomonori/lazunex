@@ -5,7 +5,7 @@
 ```mermaid
 sequenceDiagram
   autonumber
-  participant API as API: rejectApiAccessRequest
+  participant API as API
   participant DB as DB
   API->>API: 呼び出し元の role、group、scope を取得する。
   API->>API: 却下対象の利用申請を取得する。
@@ -20,12 +20,12 @@ sequenceDiagram
       API->>API: 利用申請却下済みイベントを追記する。
       API->>API: 監査イベントを追記する。
       API->>API: 利用申請却下レスポンスを組み立てる。
-      API->>DB: DBを参照する SQL 001_select_api_access_requests.sql<br/>テーブル api_access_requests, apis, api_access_reviews
-      API->>DB: DBを参照する SQL 002_select_api_reviewers.sql<br/>テーブル api_reviewers
-      API->>DB: DBを追加する SQL 003_insert_api_access_reviews.sql<br/>テーブル api_access_reviews
-      API->>DB: DBを追加する SQL 004_insert_access_request_events.sql<br/>テーブル access_request_events
-      API->>DB: DBを追加する SQL 005_insert_audit_events.sql<br/>テーブル audit_events
-      API->>DB: DBを追加する SQL 006_insert_idempotency_records.sql<br/>テーブル idempotency_records
+      API->>DB: レコードを参照する SQL 001_select_api_access_requests.sql<br/>テーブル api_access_requests, apis, api_access_reviews
+      API->>DB: レコードを参照する SQL 002_select_api_reviewers.sql<br/>テーブル api_reviewers
+      API->>DB: レコードを追加する SQL 003_insert_api_access_reviews.sql<br/>テーブル api_access_reviews
+      API->>DB: レコードを追加する SQL 004_insert_access_request_events.sql<br/>テーブル access_request_events
+      API->>DB: レコードを追加する SQL 005_insert_audit_events.sql<br/>テーブル audit_events
+      API->>DB: レコードを追加する SQL 006_insert_idempotency_records.sql<br/>テーブル idempotency_records
     end
   end
 ```

@@ -5,7 +5,7 @@
 ```mermaid
 sequenceDiagram
   autonumber
-  participant API as API: approveApiAccessRequest
+  participant API as API
   participant R_cognito as Resource: cognito
   participant DB as DB
   API->>API: 呼び出し元の role、group、scope を取得する。
@@ -30,24 +30,24 @@ sequenceDiagram
           API->>API: provisioning operation/step event を追記する。
           API->>API: 監査イベントを追記する。
           API->>API: 利用申請承認レスポンスを組み立てる。
-          API->>DB: DBを参照する SQL 001_select_api_access_requests.sql<br/>テーブル api_access_requests, projects, apis, api_gateway_stages, api_cognito_scopes, api_access_reviews
-          API->>DB: DBを参照する SQL 002_select_api_reviewers.sql<br/>テーブル api_reviewers
-          API->>DB: DBを参照する SQL 003_select_subscriptions.sql<br/>テーブル project_api_subscriptions
-          API->>DB: DBを追加する SQL 004_insert_access_request_events.sql<br/>テーブル access_request_events
-          API->>DB: DBを追加する SQL 005_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
-          API->>DB: DBを参照する SQL 006_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients, project_usage_plans
-          API->>DB: DBを追加する SQL 007_insert_api_access_reviews.sql<br/>テーブル api_access_reviews
-          API->>DB: DBを追加する SQL 008_insert_project_api_subscriptions.sql<br/>テーブル project_api_subscriptions
-          API->>DB: DBを追加する SQL 009_insert_project_usage_plan_api_stages.sql<br/>テーブル project_usage_plan_api_stages
-          API->>DB: DBを追加する SQL 010_insert_project_cognito_client_scopes.sql<br/>テーブル project_cognito_client_scopes
-          API->>DB: DBを追加する SQL 011_insert_subscription_events.sql<br/>テーブル subscription_events
-          API->>DB: DBを追加する SQL 012_insert_audit_events.sql<br/>テーブル audit_events
-          API->>DB: DBを追加する SQL 013_insert_idempotency_records.sql<br/>テーブル idempotency_records
-          API->>DB: DBを追加する SQL 014_insert_provisioning_steps.sql<br/>テーブル provisioning_steps
-          API->>DB: DBを追加する SQL 015_insert_usage_plan_stage_events.sql<br/>テーブル usage_plan_stage_events
-          API->>DB: DBを追加する SQL 016_insert_client_scope_events.sql<br/>テーブル client_scope_events
-          API->>DB: DBを追加する SQL 017_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
-          API->>DB: DBを追加する SQL 018_insert_provisioning_step_events.sql<br/>テーブル provisioning_step_events
+          API->>DB: レコードを参照する SQL 001_select_api_access_requests.sql<br/>テーブル api_access_requests, projects, apis, api_gateway_stages, api_cognito_scopes, api_access_reviews
+          API->>DB: レコードを参照する SQL 002_select_api_reviewers.sql<br/>テーブル api_reviewers
+          API->>DB: レコードを参照する SQL 003_select_subscriptions.sql<br/>テーブル project_api_subscriptions
+          API->>DB: レコードを追加する SQL 004_insert_access_request_events.sql<br/>テーブル access_request_events
+          API->>DB: レコードを追加する SQL 005_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
+          API->>DB: レコードを参照する SQL 006_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients, project_usage_plans
+          API->>DB: レコードを追加する SQL 007_insert_api_access_reviews.sql<br/>テーブル api_access_reviews
+          API->>DB: レコードを追加する SQL 008_insert_project_api_subscriptions.sql<br/>テーブル project_api_subscriptions
+          API->>DB: レコードを追加する SQL 009_insert_project_usage_plan_api_stages.sql<br/>テーブル project_usage_plan_api_stages
+          API->>DB: レコードを追加する SQL 010_insert_project_cognito_client_scopes.sql<br/>テーブル project_cognito_client_scopes
+          API->>DB: レコードを追加する SQL 011_insert_subscription_events.sql<br/>テーブル subscription_events
+          API->>DB: レコードを追加する SQL 012_insert_audit_events.sql<br/>テーブル audit_events
+          API->>DB: レコードを追加する SQL 013_insert_idempotency_records.sql<br/>テーブル idempotency_records
+          API->>DB: レコードを追加する SQL 014_insert_provisioning_steps.sql<br/>テーブル provisioning_steps
+          API->>DB: レコードを追加する SQL 015_insert_usage_plan_stage_events.sql<br/>テーブル usage_plan_stage_events
+          API->>DB: レコードを追加する SQL 016_insert_client_scope_events.sql<br/>テーブル client_scope_events
+          API->>DB: レコードを追加する SQL 017_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
+          API->>DB: レコードを追加する SQL 018_insert_provisioning_step_events.sql<br/>テーブル provisioning_step_events
         end
       end
     end

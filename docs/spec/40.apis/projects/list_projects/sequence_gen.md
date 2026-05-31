@@ -5,7 +5,7 @@
 ```mermaid
 sequenceDiagram
   autonumber
-  participant API as API: listProjects
+  participant API as API
   participant DB as DB
   API->>API: Project 一覧取得条件を検証する。
   API->>API: 呼び出し元の sub、group、scope を取得する。
@@ -13,6 +13,6 @@ sequenceDiagram
     API->>API: 呼び出し元が参照可能な Project を検索する。
     API->>API: 一覧取得結果に limit と nextToken を適用する。
     API->>API: Project 一覧レスポンスを組み立てる。
-    API->>DB: DBを参照する SQL 001_select_projects.sql<br/>テーブル projects, project_members, project_api_subscriptions
+    API->>DB: レコードを参照する SQL 001_select_projects.sql<br/>テーブル projects, project_members, project_api_subscriptions
   end
 ```

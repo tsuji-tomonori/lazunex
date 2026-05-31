@@ -5,7 +5,7 @@
 ```mermaid
 sequenceDiagram
   autonumber
-  participant API as API: listApis
+  participant API as API
   participant DB as DB
   API->>API: API 一覧取得条件を検証する。
   API->>API: 呼び出し元の role、group、scope を取得する。
@@ -13,6 +13,6 @@ sequenceDiagram
     API->>API: 呼び出し元が参照可能な公開 API を検索する。
     API->>API: 一覧取得結果に limit と nextToken を適用する。
     API->>API: API 一覧レスポンスを組み立てる。
-    API->>DB: DBを参照する SQL 001_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes
+    API->>DB: レコードを参照する SQL 001_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes
   end
 ```

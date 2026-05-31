@@ -41,11 +41,11 @@ def test_validate_file_accepts_generated_sequence_shape(tmp_path: Path) -> None:
 ```mermaid
 sequenceDiagram
   autonumber
-  participant API as API: listProjects
+  participant API as API
   participant DB as DB
   API->>API: Project 一覧取得条件を検証する。
   alt 呼び出し元が Project 一覧を参照できる場合。
-    API->>DB: DBを参照する SQL 001_select_projects.sql<br/>テーブル projects, project_members
+    API->>DB: レコードを参照する SQL 001_select_projects.sql<br/>テーブル projects, project_members
   end
 ```
 """,
@@ -62,11 +62,11 @@ def test_validate_file_rejects_message_colons_and_split_sql(tmp_path: Path) -> N
 ```mermaid
 sequenceDiagram
   autonumber
-  participant API as API: listProjects
+  participant API as API
   participant DB as DB
   API->>API: Project 一覧取得条件を検証する。(引数 query: ListProjectsQuery)
-  API->>DB: DBを参照する SQL 001_select_projects.sql<br/>テーブル projects
-  API->>DB: DBを参照する SQL 001_select_projects.sql<br/>テーブル project_members
+  API->>DB: レコードを参照する SQL 001_select_projects.sql<br/>テーブル projects
+  API->>DB: レコードを参照する SQL 001_select_projects.sql<br/>テーブル project_members
 ```
 """,
     )

@@ -5,7 +5,7 @@
 ```mermaid
 sequenceDiagram
   autonumber
-  participant API as API: updateProjectPublicClient
+  participant API as API
   participant R_cognito as Resource: cognito
   participant DB as DB
   API->>API: 呼び出し元の sub、group、scope を取得する。
@@ -24,17 +24,17 @@ sequenceDiagram
     API->>API: provisioning operation/step event を追記する。
     API->>API: 監査イベントを追記する。
     API->>API: public App Client 更新レスポンスを組み立てる。
-    API->>DB: DBを参照する SQL 001_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients, projects, project_members
-    API->>DB: DBを参照する SQL 002_select_project_cognito_client_scopes.sql<br/>テーブル project_cognito_client_scopes
-    API->>DB: DBを更新する SQL 003_update_project_cognito_clients.sql<br/>テーブル project_cognito_clients
-    API->>DB: DBを削除する SQL 004_delete_project_cognito_client_urls.sql<br/>テーブル project_cognito_client_urls
-    API->>DB: DBを追加する SQL 005_insert_project_cognito_client_urls.sql<br/>テーブル project_cognito_client_urls
-    API->>DB: DBを追加する SQL 006_insert_project_cognito_client_events.sql<br/>テーブル project_cognito_client_events
-    API->>DB: DBを追加する SQL 007_insert_audit_events.sql<br/>テーブル audit_events
-    API->>DB: DBを追加する SQL 008_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
-    API->>DB: DBを追加する SQL 009_insert_idempotency_records.sql<br/>テーブル idempotency_records
-    API->>DB: DBを追加する SQL 010_insert_provisioning_steps.sql<br/>テーブル provisioning_steps
-    API->>DB: DBを追加する SQL 011_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
-    API->>DB: DBを追加する SQL 012_insert_provisioning_step_events.sql<br/>テーブル provisioning_step_events
+    API->>DB: レコードを参照する SQL 001_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients, projects, project_members
+    API->>DB: レコードを参照する SQL 002_select_project_cognito_client_scopes.sql<br/>テーブル project_cognito_client_scopes
+    API->>DB: レコードを更新する SQL 003_update_project_cognito_clients.sql<br/>テーブル project_cognito_clients
+    API->>DB: レコードを削除する SQL 004_delete_project_cognito_client_urls.sql<br/>テーブル project_cognito_client_urls
+    API->>DB: レコードを追加する SQL 005_insert_project_cognito_client_urls.sql<br/>テーブル project_cognito_client_urls
+    API->>DB: レコードを追加する SQL 006_insert_project_cognito_client_events.sql<br/>テーブル project_cognito_client_events
+    API->>DB: レコードを追加する SQL 007_insert_audit_events.sql<br/>テーブル audit_events
+    API->>DB: レコードを追加する SQL 008_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
+    API->>DB: レコードを追加する SQL 009_insert_idempotency_records.sql<br/>テーブル idempotency_records
+    API->>DB: レコードを追加する SQL 010_insert_provisioning_steps.sql<br/>テーブル provisioning_steps
+    API->>DB: レコードを追加する SQL 011_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
+    API->>DB: レコードを追加する SQL 012_insert_provisioning_step_events.sql<br/>テーブル provisioning_step_events
   end
 ```

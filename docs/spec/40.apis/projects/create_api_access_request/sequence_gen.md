@@ -5,7 +5,7 @@
 ```mermaid
 sequenceDiagram
   autonumber
-  participant API as API: createApiAccessRequest
+  participant API as API
   participant DB as DB
   API->>API: 呼び出し元の sub、group、scope を取得する。
   API->>API: 利用申請作成リクエストを検証する。
@@ -21,15 +21,15 @@ sequenceDiagram
           API->>API: 利用申請作成イベントを追記する。
           API->>API: 監査イベントを追記する。
           API->>API: 利用申請作成レスポンスを組み立てる。
-          API->>DB: DBを参照する SQL 001_select_projects.sql<br/>テーブル projects, project_members
-          API->>DB: DBを参照する SQL 002_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes, api_reviewers
-          API->>DB: DBを参照する SQL 003_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients
-          API->>DB: DBを参照する SQL 004_select_subscriptions.sql<br/>テーブル project_api_subscriptions
-          API->>DB: DBを参照する SQL 005_select_api_access_requests.sql<br/>テーブル api_access_requests, api_access_reviews
-          API->>DB: DBを追加する SQL 006_insert_api_access_requests.sql<br/>テーブル api_access_requests
-          API->>DB: DBを追加する SQL 007_insert_access_request_events.sql<br/>テーブル access_request_events
-          API->>DB: DBを追加する SQL 008_insert_audit_events.sql<br/>テーブル audit_events
-          API->>DB: DBを追加する SQL 009_insert_idempotency_records.sql<br/>テーブル idempotency_records
+          API->>DB: レコードを参照する SQL 001_select_projects.sql<br/>テーブル projects, project_members
+          API->>DB: レコードを参照する SQL 002_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes, api_reviewers
+          API->>DB: レコードを参照する SQL 003_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients
+          API->>DB: レコードを参照する SQL 004_select_subscriptions.sql<br/>テーブル project_api_subscriptions
+          API->>DB: レコードを参照する SQL 005_select_api_access_requests.sql<br/>テーブル api_access_requests, api_access_reviews
+          API->>DB: レコードを追加する SQL 006_insert_api_access_requests.sql<br/>テーブル api_access_requests
+          API->>DB: レコードを追加する SQL 007_insert_access_request_events.sql<br/>テーブル access_request_events
+          API->>DB: レコードを追加する SQL 008_insert_audit_events.sql<br/>テーブル audit_events
+          API->>DB: レコードを追加する SQL 009_insert_idempotency_records.sql<br/>テーブル idempotency_records
         end
       end
     end
