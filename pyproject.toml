@@ -25,6 +25,7 @@ packages = ["src/app"]
 
 [dependency-groups]
 dev = [
+    "aiosqlite>=0.22.1",
     "anyio>=4.13.0",
     "asgi-lifespan>=2.1.0",
     "httpx>=0.28.1",
