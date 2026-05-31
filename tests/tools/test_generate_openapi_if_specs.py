@@ -220,7 +220,7 @@ def test_schema_type_and_constraints() -> None:
     assert schema_constraints(
         {"type": "string", "minLength": 1, "enum": ["active", "deleted"], "title": "UserStatus"},
         schemas,
-    ) == ("minLength=1, active=有効なユーザーです。, deleted=削除済みのユーザーです。")
+    ) == ("minLength=1, active=有効なユーザーです。<br>deleted=削除済みのユーザーです。")
     assert schema_components({"components": {"schemas": []}}) == {}
     assert schema_components({}) == {}
 
@@ -271,7 +271,7 @@ def test_response_summary_and_render_markdown() -> None:
     assert "## Responses" in rendered
     assert (
         "| `status` | `string(active, deleted)` | yes | 状態。 | "
-        "active=有効なユーザーです。, deleted=削除済みのユーザーです。 |" in rendered
+        "active=有効なユーザーです。<br>deleted=削除済みのユーザーです。 |" in rendered
     )
     assert "| `profile.displayName` | `string` | yes | 画面に表示するユーザー名。 | - |" in rendered
     assert "| `addresses[].postalCode` | `string` | yes | 郵便番号。 | - |" in rendered

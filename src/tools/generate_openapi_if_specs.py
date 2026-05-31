@@ -200,7 +200,9 @@ def schema_constraints(schema: JsonObject, components: JsonObject) -> str:
             constraints.append(f"{key}={schema[key]}")
     values = enum_values(schema)
     if values:
-        constraints.extend(f"{value}={enum_value_description(schema, value)}" for value in values)
+        constraints.append(
+            "<br>".join(f"{value}={enum_value_description(schema, value)}" for value in values)
+        )
     return ", ".join(constraints) if constraints else "-"
 
 

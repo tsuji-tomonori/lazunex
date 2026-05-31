@@ -28,7 +28,7 @@ _なし_
 | --- | --- | --- | --- | --- |
 | `apiId` | `string` | yes | APIカタログ上のAPIを一意に識別するIDです。 | - |
 | `apiStageId` | `string` | yes | API Gateway stageに対応するLazunex内のstage IDです。 | - |
-| `requestedAuthMode` | `string(PUBLIC_PKCE, CLIENT_CREDENTIALS, BOTH)` | yes | API利用時に許可する認証方式を表す列挙値です。 | PUBLIC_PKCE=PKCEを使うpublic clientでの認証を許可します。, CLIENT_CREDENTIALS=client credentialsを使うconfidential clientでの認証を許可します。, BOTH=public clientとconfidential clientの両方の認証方式を許可します。 |
+| `requestedAuthMode` | `string(PUBLIC_PKCE, CLIENT_CREDENTIALS, BOTH)` | yes | API利用時に許可する認証方式を表す列挙値です。 | PUBLIC_PKCE=PKCEを使うpublic clientでの認証を許可します。<br>CLIENT_CREDENTIALS=client credentialsを使うconfidential clientでの認証を許可します。<br>BOTH=public clientとconfidential clientの両方の認証方式を許可します。 |
 | `requestedReason` | `string` | yes | 申請者がAPI利用を希望する理由です。 | minLength=1 |
 
 ## Responses
@@ -55,8 +55,8 @@ Media type: `application/json`
 | `projectId` | `string` | yes | API利用単位となるプロジェクトを一意に識別するIDです。 | - |
 | `apiId` | `string` | yes | APIカタログ上のAPIを一意に識別するIDです。 | - |
 | `apiStageId` | `string` | yes | API Gateway stageに対応するLazunex内のstage IDです。 | - |
-| `requestedAuthMode` | `string(PUBLIC_PKCE, CLIENT_CREDENTIALS, BOTH)` | yes | API利用時に許可する認証方式を表す列挙値です。 | PUBLIC_PKCE=PKCEを使うpublic clientでの認証を許可します。, CLIENT_CREDENTIALS=client credentialsを使うconfidential clientでの認証を許可します。, BOTH=public clientとconfidential clientの両方の認証方式を許可します。 |
-| `derivedState` | `string(PENDING, APPROVED, REJECTED)` | yes | API利用申請の現在状態を表す列挙値です。 | PENDING=審査待ちのAPI利用申請です。, APPROVED=承認済みのAPI利用申請です。, REJECTED=否認済みのAPI利用申請です。 |
+| `requestedAuthMode` | `string(PUBLIC_PKCE, CLIENT_CREDENTIALS, BOTH)` | yes | API利用時に許可する認証方式を表す列挙値です。 | PUBLIC_PKCE=PKCEを使うpublic clientでの認証を許可します。<br>CLIENT_CREDENTIALS=client credentialsを使うconfidential clientでの認証を許可します。<br>BOTH=public clientとconfidential clientの両方の認証方式を許可します。 |
+| `derivedState` | `string(PENDING, APPROVED, REJECTED)` | yes | API利用申請の現在状態を表す列挙値です。 | PENDING=審査待ちのAPI利用申請です。<br>APPROVED=承認済みのAPI利用申請です。<br>REJECTED=否認済みのAPI利用申請です。 |
 
 ##### `400` リクエスト本文やヘッダーの組み合わせが業務ルールに合わない場合、または冪等性キーなどの必須入力が不正な場合に返します。
 

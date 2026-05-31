@@ -58,14 +58,14 @@ Media type: `application/json`
 | `usagePlan.defaultRateLimit` | `integer` | yes | Usage Planで許可する平均リクエストレートです。 | minimum=0.0 |
 | `usagePlan.defaultBurstLimit` | `integer` | yes | Usage Planで許可する短時間の最大burstリクエスト数です。 | minimum=0.0 |
 | `usagePlan.defaultQuotaLimit` | `integer` | yes | Usage Planで許可するquota期間内の最大リクエスト数です。 | minimum=0.0 |
-| `usagePlan.defaultQuotaPeriod` | `string(DAY, WEEK, MONTH)` | yes | API Gateway Usage Planのquota集計期間を表す列挙値です。 | DAY=1日単位で利用量上限を集計します。, WEEK=1週間単位で利用量上限を集計します。, MONTH=1か月単位で利用量上限を集計します。 |
+| `usagePlan.defaultQuotaPeriod` | `string(DAY, WEEK, MONTH)` | yes | API Gateway Usage Planのquota集計期間を表す列挙値です。 | DAY=1日単位で利用量上限を集計します。<br>WEEK=1週間単位で利用量上限を集計します。<br>MONTH=1か月単位で利用量上限を集計します。 |
 | `cognito` | `ProjectCognitoClientsResponse` | yes | プロジェクトに紐づくCognito app client一式です。 | - |
 | `cognito.publicClient` | `ProjectPublicClientResponse` | yes | プロジェクト詳細で返却するpublic app client設定です。 | - |
 | `cognito.publicClient.appClientId` | `string` | yes | AWS Cognitoで作成されたapp client IDです。 | minLength=1, maxLength=128 |
 | `cognito.publicClient.callbackUrls` | `array<string>` | yes | Cognito public app clientに許可するOAuth callback URL一覧です。 | - |
 | `cognito.publicClient.logoutUrls` | `array<string>` | yes | Cognito public app clientに許可するlogout URL一覧です。 | - |
 | `cognito.publicClient.accessTokenValidity` | `integer` | yes | 発行されるaccess tokenの有効期間の数値です。 | minimum=1.0 |
-| `cognito.publicClient.accessTokenUnit` | `string(minutes, hours, days)` | yes | Cognito app client token有効期間の単位を表す列挙値です。 | minutes=分単位の有効期間です。, hours=時間単位の有効期間です。, days=日単位の有効期間です。 |
+| `cognito.publicClient.accessTokenUnit` | `string(minutes, hours, days)` | yes | Cognito app client token有効期間の単位を表す列挙値です。 | minutes=分単位の有効期間です。<br>hours=時間単位の有効期間です。<br>days=日単位の有効期間です。 |
 | `cognito.publicClient.refreshTokenRotationEnabled` | `boolean` | yes | refresh token rotationを有効にするかどうかです。 | - |
 | `cognito.confidentialClient` | `ProjectConfidentialClientResponse` | yes | プロジェクト詳細で返却するconfidential app client情報です。 | - |
 | `cognito.confidentialClient.appClientId` | `string` | yes | AWS Cognitoで作成されたapp client IDです。 | minLength=1, maxLength=128 |

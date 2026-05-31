@@ -49,7 +49,7 @@ Media type: `application/json`
 | 項目 | 型 | 必須 | 説明 | 制約 |
 | --- | --- | --- | --- | --- |
 | `accessRequestId` | `string` | yes | API利用申請を一意に識別するIDです。 | - |
-| `derivedState` | `string(PENDING, APPROVED, REJECTED)` | yes | API利用申請の現在状態を表す列挙値です。 | PENDING=審査待ちのAPI利用申請です。, APPROVED=承認済みのAPI利用申請です。, REJECTED=否認済みのAPI利用申請です。 |
+| `derivedState` | `string(PENDING, APPROVED, REJECTED)` | yes | API利用申請の現在状態を表す列挙値です。 | PENDING=審査待ちのAPI利用申請です。<br>APPROVED=承認済みのAPI利用申請です。<br>REJECTED=否認済みのAPI利用申請です。 |
 | `reviewedAt` | `string` | yes | API利用申請が審査された日時です。 | - |
 
 ##### `400` リクエスト本文やヘッダーの組み合わせが業務ルールに合わない場合、または冪等性キーなどの必須入力が不正な場合に返します。

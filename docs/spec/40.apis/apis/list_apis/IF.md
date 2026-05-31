@@ -51,7 +51,7 @@ Media type: `application/json`
 | `items[].name` | `string` | yes | 利用者に表示するリソース名です。 | minLength=1, maxLength=200 |
 | `items[].description` | `string` | yes | 利用者に表示するリソースの概要説明です。 | minLength=1 |
 | `items[].providerName` | `string` | yes | API提供者として表示する組織名またはチーム名です。 | minLength=1, maxLength=200 |
-| `items[].visibility` | `string(INTERNAL, RESTRICTED)` | yes | APIカタログの公開範囲を表す列挙値です。 | INTERNAL=組織内の利用者へ公開するAPIです。, RESTRICTED=許可された利用者またはプロジェクトに限定して公開するAPIです。 |
+| `items[].visibility` | `string(INTERNAL, RESTRICTED)` | yes | APIカタログの公開範囲を表す列挙値です。 | INTERNAL=組織内の利用者へ公開するAPIです。<br>RESTRICTED=許可された利用者またはプロジェクトに限定して公開するAPIです。 |
 | `items[].derivedState` | `string(PUBLISHED)` | yes | APIカタログの現在状態を表す列挙値です。 | PUBLISHED=APIカタログへ公開済みのAPIです。 |
 | `items[].stage` | `ApiListStageResponse` | yes | API一覧で表示する代表stageの接続情報です。 | - |
 | `items[].stage.apiStageId` | `string` | yes | API Gateway stageに対応するLazunex内のstage IDです。 | - |
