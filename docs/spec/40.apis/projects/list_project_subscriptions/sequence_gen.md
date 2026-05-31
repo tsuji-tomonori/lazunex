@@ -7,14 +7,13 @@ sequenceDiagram
   autonumber
   participant API as API: listProjectSubscriptions
   participant DB as DB
-  API->>API: 呼び出し元の sub、group、scope を取得する。 戻り値 CallerIdentity
-  API->>API: Project subscription 一覧取得条件を検証する。 引数 query ListProjectSubscriptionsQuery 戻り値 ListProjectSubscriptionsQuery
-  API->>API: 対象 Project を取得する。 引数 project_id ResourceId 戻り値 ProjectRef
-  alt 呼び出し元が Project subscription 一覧を参照できるかを判定する。
-    API->>API: 呼び出し元が Project subscription 一覧を参照できるかを判定する。 引数 project ProjectRef, caller CallerIdentity 戻り値 bool
+  API->>API: 呼び出し元の sub、group、scope を取得する。
+  API->>API: Project subscription 一覧取得条件を検証する。
+  API->>API: 対象 Project を取得する。
+  alt 呼び出し元が Project subscription 一覧を参照できる場合。
+    API->>API: Project の active subscription を検索する。
+    API->>API: 一覧取得結果に limit と nextToken を適用する。
+    API->>API: secret 値を含めずに Project subscription 一覧レスポンスを組み立てる。
+    API->>DB: DBを参照する SQL 001_select_subscriptions.sql<br/>テーブル project_api_subscriptions, projects, apis, api_gateway_stages, api_cognito_scopes, project_cognito_client_scopes, project_cognito_clients, project_members
   end
-  API->>API: Project の active subscription を検索する。 引数 project ProjectRef, query ListProjectSubscriptionsQuery 戻り値 SequencePage[ProjectSubscriptionItemResponse]
-  API->>API: 一覧取得結果に limit と nextToken を適用する。 引数 page SequencePage[ProjectSubscriptionItemResponse], query ListProjectSubscriptionsQuery 戻り値 SequencePage[ProjectSubscriptionItemResponse]
-  API->>API: secret 値を含めずに Project subscription 一覧レスポンスを組み立てる。 引数 page SequencePage[ProjectSubscriptionItemResponse] 戻り値 ListProjectSubscriptionsResponse
-  API->>DB: DBを参照する SQL 001_select_subscriptions.sql テーブル project_api_subscriptions, projects, apis, api_gateway_stages, api_cognito_scopes, project_cognito_client_scopes, project_cognito_clients, project_members
 ```

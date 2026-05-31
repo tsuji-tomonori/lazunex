@@ -7,35 +7,31 @@ sequenceDiagram
   autonumber
   participant API as API: createApiAccessRequest
   participant DB as DB
-  API->>API: 呼び出し元の sub、group、scope を取得する。 戻り値 CallerIdentity
-  API->>API: 利用申請作成リクエストを検証する。 引数 request CreateApiAccessRequestRequest 戻り値 CreateApiAccessRequestRequest
-  API->>API: 対象 Project を取得する。 引数 project_id ResourceId 戻り値 ProjectRef
-  alt 呼び出し元が Project owner であるかを判定する。
-    API->>API: 呼び出し元が Project owner であるかを判定する。 引数 project ProjectRef, caller CallerIdentity 戻り値 bool
+  API->>API: 呼び出し元の sub、group、scope を取得する。
+  API->>API: 利用申請作成リクエストを検証する。
+  API->>API: 対象 Project を取得する。
+  alt 呼び出し元が Project owner である場合。
+    alt 対象 API が公開済みである場合。
+      API->>API: 対象 API の reviewer 情報を取得する。
+      alt 同一 Project/API の active subscription が存在する場合。
+        alt 同一 Project/API の審査中申請が存在する場合。
+          API->>API: 利用申請を保存する。
+          API->>API: Idempotency-Key に対応する既存レコードを取得する。
+          API->>API: 冪等性レコードを作成または確認する。
+          API->>API: 利用申請作成イベントを追記する。
+          API->>API: 監査イベントを追記する。
+          API->>API: 利用申請作成レスポンスを組み立てる。
+          API->>DB: DBを参照する SQL 001_select_projects.sql<br/>テーブル projects, project_members
+          API->>DB: DBを参照する SQL 002_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes, api_reviewers
+          API->>DB: DBを参照する SQL 003_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients
+          API->>DB: DBを参照する SQL 004_select_subscriptions.sql<br/>テーブル project_api_subscriptions
+          API->>DB: DBを参照する SQL 005_select_api_access_requests.sql<br/>テーブル api_access_requests, api_access_reviews
+          API->>DB: DBを追加する SQL 006_insert_api_access_requests.sql<br/>テーブル api_access_requests
+          API->>DB: DBを追加する SQL 007_insert_access_request_events.sql<br/>テーブル access_request_events
+          API->>DB: DBを追加する SQL 008_insert_audit_events.sql<br/>テーブル audit_events
+          API->>DB: DBを追加する SQL 009_insert_idempotency_records.sql<br/>テーブル idempotency_records
+        end
+      end
+    end
   end
-  alt 対象 API が公開済みであるかを判定する。
-    API->>API: 対象 API が公開済みであるかを判定する。 引数 api_id ResourceId 戻り値 bool
-  end
-  API->>API: 対象 API の reviewer 情報を取得する。 引数 api_id ResourceId 戻り値 ApiReviewerRefs
-  alt 同一 Project/API の active subscription が存在するかを判定する。
-    API->>API: 同一 Project/API の active subscription が存在するかを判定する。 引数 project ProjectRef, api_id ResourceId 戻り値 bool
-  end
-  alt 同一 Project/API の審査中申請が存在するかを判定する。
-    API->>API: 同一 Project/API の審査中申請が存在するかを判定する。 引数 project ProjectRef, api_id ResourceId 戻り値 bool
-  end
-  API->>API: 利用申請を保存する。 引数 project ProjectRef, request CreateApiAccessRequestRequest, caller CallerIdentity 戻り値 ApiAccessRequestRef
-  API->>API: Idempotency-Key に対応する既存レコードを取得する。 引数 idempotency_key str 戻り値 IdempotencyRecordRef
-  API->>API: 冪等性レコードを作成または確認する。 引数 idempotency_key str, access_request ApiAccessRequestRef 戻り値 IdempotencyRecordRef
-  API->>API: 利用申請作成イベントを追記する。 引数 access_request ApiAccessRequestRef 戻り値 EventRef
-  API->>API: 監査イベントを追記する。 引数 access_request ApiAccessRequestRef, caller CallerIdentity 戻り値 EventRef
-  API->>API: 利用申請作成レスポンスを組み立てる。 引数 access_request ApiAccessRequestRef 戻り値 CreateApiAccessRequestResponse
-  API->>DB: DBを参照する SQL 001_select_projects.sql テーブル projects, project_members
-  API->>DB: DBを参照する SQL 002_select_apis.sql テーブル apis, api_gateway_stages, api_cognito_scopes, api_reviewers
-  API->>DB: DBを参照する SQL 003_select_project_cognito_clients.sql テーブル project_cognito_clients
-  API->>DB: DBを参照する SQL 004_select_subscriptions.sql テーブル project_api_subscriptions
-  API->>DB: DBを参照する SQL 005_select_api_access_requests.sql テーブル api_access_requests, api_access_reviews
-  API->>DB: DBを追加する SQL 006_insert_api_access_requests.sql テーブル api_access_requests
-  API->>DB: DBを追加する SQL 007_insert_access_request_events.sql テーブル access_request_events
-  API->>DB: DBを追加する SQL 008_insert_audit_events.sql テーブル audit_events
-  API->>DB: DBを追加する SQL 009_insert_idempotency_records.sql テーブル idempotency_records
 ```

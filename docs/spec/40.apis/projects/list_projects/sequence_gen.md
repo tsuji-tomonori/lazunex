@@ -7,13 +7,12 @@ sequenceDiagram
   autonumber
   participant API as API: listProjects
   participant DB as DB
-  API->>API: Project 一覧取得条件を検証する。 引数 query ListProjectsQuery 戻り値 ListProjectsQuery
-  API->>API: 呼び出し元の sub、group、scope を取得する。 戻り値 CallerIdentity
-  alt 呼び出し元が Project 一覧を参照できるかを判定する。
-    API->>API: 呼び出し元が Project 一覧を参照できるかを判定する。 引数 caller CallerIdentity 戻り値 bool
+  API->>API: Project 一覧取得条件を検証する。
+  API->>API: 呼び出し元の sub、group、scope を取得する。
+  alt 呼び出し元が Project 一覧を参照できる場合。
+    API->>API: 呼び出し元が参照可能な Project を検索する。
+    API->>API: 一覧取得結果に limit と nextToken を適用する。
+    API->>API: Project 一覧レスポンスを組み立てる。
+    API->>DB: DBを参照する SQL 001_select_projects.sql<br/>テーブル projects, project_members, project_api_subscriptions
   end
-  API->>API: 呼び出し元が参照可能な Project を検索する。 引数 query ListProjectsQuery, caller CallerIdentity 戻り値 SequencePage[ProjectListItemResponse]
-  API->>API: 一覧取得結果に limit と nextToken を適用する。 引数 page SequencePage[ProjectListItemResponse], query ListProjectsQuery 戻り値 SequencePage[ProjectListItemResponse]
-  API->>API: Project 一覧レスポンスを組み立てる。 引数 page SequencePage[ProjectListItemResponse] 戻り値 ListProjectsResponse
-  API->>DB: DBを参照する SQL 001_select_projects.sql テーブル projects, project_members, project_api_subscriptions
 ```

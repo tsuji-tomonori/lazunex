@@ -186,15 +186,16 @@ def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
     assert "participant T_projects" not in markdown
     assert "  autonumber" in markdown
     assert "API->>API: プロジェクト情報を取得する。" in markdown
-    assert "引数 project_id ResourceId" in markdown
-    assert "戻り値 ProjectRef" in markdown
     assert "API->>R_api_gateway: API keyを作成する。" in markdown
-    assert "alt プロジェクトを参照できるかを判定する。" in markdown
+    assert "alt プロジェクトを参照できる場合。" in markdown
+    assert "API->>API: プロジェクトを参照できるかを判定する。" not in markdown
+    assert "    API->>API: プロジェクト詳細レスポンスを組み立てる。" in markdown
     assert (
         "API->>DB: DBを参照する"
-        " SQL 001_select_projects.sql テーブル projects, project_members"
+        " SQL 001_select_projects.sql<br/>テーブル projects, project_members"
         in markdown
     )
+    assert markdown.rstrip().endswith("  end\n```")
 
 
 def test_generate_sequences_and_check_mode(

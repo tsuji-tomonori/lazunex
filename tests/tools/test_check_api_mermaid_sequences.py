@@ -43,11 +43,10 @@ sequenceDiagram
   autonumber
   participant API as API: listProjects
   participant DB as DB
-  API->>API: Project 一覧取得条件を検証する。 引数 query ListProjectsQuery
-  alt 呼び出し元が Project 一覧を参照できるかを判定する。
-    API->>API: 呼び出し元が Project 一覧を参照できるかを判定する。 戻り値 bool
+  API->>API: Project 一覧取得条件を検証する。
+  alt 呼び出し元が Project 一覧を参照できる場合。
+    API->>DB: DBを参照する SQL 001_select_projects.sql<br/>テーブル projects, project_members
   end
-  API->>DB: DBを参照する SQL 001_select_projects.sql テーブル projects, project_members
 ```
 """,
     )
@@ -66,8 +65,8 @@ sequenceDiagram
   participant API as API: listProjects
   participant DB as DB
   API->>API: Project 一覧取得条件を検証する。(引数 query: ListProjectsQuery)
-  API->>DB: DBを参照する SQL 001_select_projects.sql テーブル projects
-  API->>DB: DBを参照する SQL 001_select_projects.sql テーブル project_members
+  API->>DB: DBを参照する SQL 001_select_projects.sql<br/>テーブル projects
+  API->>DB: DBを参照する SQL 001_select_projects.sql<br/>テーブル project_members
 ```
 """,
     )
@@ -77,6 +76,7 @@ sequenceDiagram
     assert [issue.message for issue in issues] == [
         "Message label must not contain ':' or fullwidth colon.",
         "Message label must not contain parentheses or semicolons.",
+        "Message label must not contain argument or return details.",
         "SQL file '001_select_projects.sql' is rendered more than once.",
     ]
 

@@ -52,16 +52,19 @@ continue
 
 - router endpoint 名を sequence の API participant とする。
 - `api_functions.{function_name}` の message label は、`functions.py` の docstring から生成する。
-- message label には関数名を出さず、引数と戻り値がある場合は型注釈付きで併記する。
+- message label には関数名、引数、戻り値を出さない。
 - message label の処理順は Mermaid の `autonumber` で表示し、手動採番しない。
 - `api_functions.{function_name}` 1 呼び出しにつき sequence の線は 1 本だけ出す。
 - `{action}_{target}` の `target` が `src/app/integrations/{resource}` または
   `{resource}_*` に一致する場合だけ、該当 integration を Resource participant とする。
 - integration に一致しない `{action}_{target}` は API 内部処理として `API->>API` で出す。
 - `{is|has}_{condition}` は resource participant にせず、docstring 由来の日本語条件を
-  Mermaid の `alt` 条件として出す。
+  「〜場合。」形式に変換して Mermaid の `alt` 条件として出す。
+- `{is|has}_{condition}` 以降の function message と DB message は、その `alt` ブロックの
+  内側に出す。複数条件が続く場合は `alt` をネストする。
 - `src/app/apis/{domain}/{api}/sql/*.sql` に出現する table 名は個別 participant にせず、
   `DB` participant への SQL ファイル単位の message として、SQL ファイル名と table 名を併記する。
+  table 名は SQL ファイル名の後に `<br/>` で改行して出す。
 
 ## 検証
 

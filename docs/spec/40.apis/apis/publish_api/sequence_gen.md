@@ -9,39 +9,37 @@ sequenceDiagram
   participant R_api_gateway as Resource: api gateway
   participant R_cognito as Resource: cognito
   participant DB as DB
-  API->>API: 呼び出し元の role、group、scope を取得する。 戻り値 CallerIdentity
-  API->>API: API 公開登録リクエストを検証する。 引数 request PublishApiRequest 戻り値 PublishApiRequest
-  alt 呼び出し元が API 公開登録できるかを判定する。
-    API->>API: 呼び出し元が API 公開登録できるかを判定する。 引数 request PublishApiRequest, caller CallerIdentity 戻り値 bool
+  API->>API: 呼び出し元の role、group、scope を取得する。
+  API->>API: API 公開登録リクエストを検証する。
+  alt 呼び出し元が API 公開登録できる場合。
+    API->>API: Idempotency-Key に対応する既存レコードを取得する。
+    API->>R_api_gateway: 登録対象 API Gateway stage の登録情報を検証する。
+    alt 登録対象 API が既に登録済み場合。
+      API->>API: API 公開用の provisioning operation を作成する。
+      API->>API: 冪等性レコードを作成または確認する。
+      API->>R_cognito: Cognito Resource Server に custom scope を追加する。
+      API->>API: API metadata、stage、reviewer、OpenAPI metadata、scope を保存する。
+      API->>API: API stage、scope、reviewer の lifecycle event を追記する。
+      API->>API: provisioning operation/step event を追記する。
+      API->>API: 監査イベントを追記する。
+      API->>API: API 公開登録レスポンスを組み立てる。
+      API->>DB: DBを参照する SQL 001_select_apis.sql<br/>テーブル apis
+      API->>DB: DBを参照する SQL 002_select_api_cognito_scopes.sql<br/>テーブル api_cognito_scopes
+      API->>DB: DBを追加する SQL 003_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
+      API->>DB: DBを追加する SQL 004_insert_apis.sql<br/>テーブル apis
+      API->>DB: DBを追加する SQL 005_insert_api_gateway_stages.sql<br/>テーブル api_gateway_stages
+      API->>DB: DBを追加する SQL 006_insert_api_cognito_scopes.sql<br/>テーブル api_cognito_scopes
+      API->>DB: DBを追加する SQL 007_insert_api_documents.sql<br/>テーブル api_documents
+      API->>DB: DBを追加する SQL 008_insert_api_reviewers.sql<br/>テーブル api_reviewers
+      API->>DB: DBを追加する SQL 009_insert_api_events.sql<br/>テーブル api_events
+      API->>DB: DBを追加する SQL 010_insert_audit_events.sql<br/>テーブル audit_events
+      API->>DB: DBを追加する SQL 011_insert_idempotency_records.sql<br/>テーブル idempotency_records
+      API->>DB: DBを追加する SQL 012_insert_provisioning_steps.sql<br/>テーブル provisioning_steps
+      API->>DB: DBを追加する SQL 013_insert_api_stage_events.sql<br/>テーブル api_stage_events
+      API->>DB: DBを追加する SQL 014_insert_api_scope_events.sql<br/>テーブル api_scope_events
+      API->>DB: DBを追加する SQL 015_insert_api_reviewer_events.sql<br/>テーブル api_reviewer_events
+      API->>DB: DBを追加する SQL 016_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
+      API->>DB: DBを追加する SQL 017_insert_provisioning_step_events.sql<br/>テーブル provisioning_step_events
+    end
   end
-  API->>API: Idempotency-Key に対応する既存レコードを取得する。 引数 idempotency_key str 戻り値 IdempotencyRecordRef
-  API->>R_api_gateway: 登録対象 API Gateway stage の登録情報を検証する。 引数 request PublishApiRequest 戻り値 bool
-  alt 登録対象 API が既に登録済みかを判定する。
-    API->>API: 登録対象 API が既に登録済みかを判定する。 引数 request PublishApiRequest 戻り値 bool
-  end
-  API->>API: API 公開用の provisioning operation を作成する。 引数 request PublishApiRequest, idempotency_key str 戻り値 ProvisioningOperationRef
-  API->>API: 冪等性レコードを作成または確認する。 引数 idempotency_key str, operation ProvisioningOperationRef 戻り値 IdempotencyRecordRef
-  API->>R_cognito: Cognito Resource Server に custom scope を追加する。 引数 request PublishApiRequest, operation ProvisioningOperationRef 戻り値 ApiScopeRef
-  API->>API: API metadata、stage、reviewer、OpenAPI metadata、scope を保存する。 引数 request PublishApiRequest, scope ApiScopeRef, operation ProvisioningOperationRef 戻り値 ApiCatalogMetadataRef
-  API->>API: API stage、scope、reviewer の lifecycle event を追記する。 引数 api ApiCatalogMetadataRef 戻り値 list[EventRef]
-  API->>API: provisioning operation/step event を追記する。 引数 operation ProvisioningOperationRef 戻り値 list[EventRef]
-  API->>API: 監査イベントを追記する。 引数 api ApiCatalogMetadataRef, caller CallerIdentity 戻り値 EventRef
-  API->>API: API 公開登録レスポンスを組み立てる。 引数 api ApiCatalogMetadataRef, scope ApiScopeRef, operation ProvisioningOperationRef 戻り値 PublishApiResponse
-  API->>DB: DBを参照する SQL 001_select_apis.sql テーブル apis
-  API->>DB: DBを参照する SQL 002_select_api_cognito_scopes.sql テーブル api_cognito_scopes
-  API->>DB: DBを追加する SQL 003_insert_provisioning_operations.sql テーブル provisioning_operations
-  API->>DB: DBを追加する SQL 004_insert_apis.sql テーブル apis
-  API->>DB: DBを追加する SQL 005_insert_api_gateway_stages.sql テーブル api_gateway_stages
-  API->>DB: DBを追加する SQL 006_insert_api_cognito_scopes.sql テーブル api_cognito_scopes
-  API->>DB: DBを追加する SQL 007_insert_api_documents.sql テーブル api_documents
-  API->>DB: DBを追加する SQL 008_insert_api_reviewers.sql テーブル api_reviewers
-  API->>DB: DBを追加する SQL 009_insert_api_events.sql テーブル api_events
-  API->>DB: DBを追加する SQL 010_insert_audit_events.sql テーブル audit_events
-  API->>DB: DBを追加する SQL 011_insert_idempotency_records.sql テーブル idempotency_records
-  API->>DB: DBを追加する SQL 012_insert_provisioning_steps.sql テーブル provisioning_steps
-  API->>DB: DBを追加する SQL 013_insert_api_stage_events.sql テーブル api_stage_events
-  API->>DB: DBを追加する SQL 014_insert_api_scope_events.sql テーブル api_scope_events
-  API->>DB: DBを追加する SQL 015_insert_api_reviewer_events.sql テーブル api_reviewer_events
-  API->>DB: DBを追加する SQL 016_insert_provisioning_operation_events.sql テーブル provisioning_operation_events
-  API->>DB: DBを追加する SQL 017_insert_provisioning_step_events.sql テーブル provisioning_step_events
 ```

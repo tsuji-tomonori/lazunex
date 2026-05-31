@@ -185,14 +185,18 @@ def function_metadata(functions_path: Path) -> dict[str, FunctionMetadata]:
 
 
 def sequence_label(step: SequenceStep) -> str:
-    details: list[str] = []
-    if step.arguments:
-        details.append(f"引数 {', '.join(step.arguments)}")
-    if step.return_type:
-        details.append(f"戻り値 {step.return_type}")
-    if not details:
-        return step.description
-    return f"{step.description} {' '.join(details)}"
+    return step.description
+
+
+def predicate_condition_label(step: SequenceStep) -> str:
+    description = step.description
+    suffix = "かを判定する。"
+    if not description.endswith(suffix):
+        return description
+    condition = description.removesuffix(suffix)
+    if condition.endswith("可能"):
+        return f"{condition}な場合。"
+    return f"{condition}場合。"
 
 
 def function_target(function_name: str) -> str:
@@ -345,29 +349,36 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
     if sequence.sql_steps:
         lines.append("  participant DB as DB")
 
+    alt_depth = 0
     for step in sequence.steps:
         label = sequence_label(step)
         if is_predicate_function(step.function_name):
-            lines.append(f"  alt {step.description}")
-            lines.append(f"    API->>API: {label}")
-            lines.append("  end")
+            indent = "  " + ("  " * alt_depth)
+            lines.append(f"{indent}alt {predicate_condition_label(step)}")
+            alt_depth += 1
             continue
         resource = integration_resource_for_target(
             step.target,
             sequence.integration_resources,
         )
+        indent = "  " + ("  " * alt_depth)
         if resource is None:
-            lines.append(f"  API->>API: {label}")
+            lines.append(f"{indent}API->>API: {label}")
         else:
             resource_id = participant_id("R", resource)
-            lines.append(f"  API->>{resource_id}: {label}")
+            lines.append(f"{indent}API->>{resource_id}: {label}")
 
     for sql_step in sequence.sql_steps:
         tables = ", ".join(sql_step.tables)
+        indent = "  " + ("  " * alt_depth)
         lines.append(
-            f"  API->>DB: DBを{sql_step.action}する"
-            f" SQL {sql_step.filename} テーブル {tables}"
+            f"{indent}API->>DB: DBを{sql_step.action}する"
+            f" SQL {sql_step.filename}<br/>テーブル {tables}"
         )
+
+    for depth in range(alt_depth - 1, -1, -1):
+        indent = "  " + ("  " * depth)
+        lines.append(f"{indent}end")
 
     lines.extend(["```", ""])
     return "\n".join(lines)
