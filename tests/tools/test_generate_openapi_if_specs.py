@@ -348,9 +348,9 @@ def test_render_operation_markdown_handles_missing_description() -> None:
 
 
 def test_operation_output_path_falls_back_to_default() -> None:
-    assert operation_output_path(Path("out"), {}) == Path("out/default/api/IF.md")
+    assert operation_output_path(Path("out"), {}) == Path("out/default/api/if_gen.md")
     assert operation_output_path(Path("out"), {"summary": "Some API"}) == Path(
-        "out/default/some_api/IF.md"
+        "out/default/some_api/if_gen.md"
     )
 
 
@@ -360,14 +360,14 @@ def test_iter_operations_and_output_path() -> None:
     _path, _method, operation = operations[0]
 
     assert operation_output_path(Path("docs/spec/40.apis"), operation) == (
-        Path("docs/spec/40.apis/admin_users/delete_admin_user/IF.md")
+        Path("docs/spec/40.apis/admin_users/delete_admin_user/if_gen.md")
     )
 
 
 def test_generate_from_openapi_writes_files(tmp_path: Path) -> None:
     written = generate_from_openapi(OPENAPI, tmp_path)
 
-    assert written == [tmp_path / "admin_users" / "delete_admin_user" / "IF.md"]
+    assert written == [tmp_path / "admin_users" / "delete_admin_user" / "if_gen.md"]
     assert written[0].read_text(encoding="utf-8").startswith("# DELETE /admin/users/{userId}")
 
 
@@ -388,7 +388,7 @@ def test_arg_parser_defaults_and_main_output(
     main()
 
     assert capsys.readouterr().out == "Generated 1 IF spec files.\n"
-    assert (tmp_path / "admin_users" / "delete_admin_user" / "IF.md").exists()
+    assert (tmp_path / "admin_users" / "delete_admin_user" / "if_gen.md").exists()
 
 
 def test_load_fastapi_openapi_returns_schema() -> None:

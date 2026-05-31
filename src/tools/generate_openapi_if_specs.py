@@ -432,7 +432,7 @@ def operation_output_path(output_dir: Path, operation: JsonObject) -> Path:
     tags = as_list(operation.get("tags"))
     tag = str(tags[0]) if tags else "default"
     operation_id = str(operation.get("operationId") or operation.get("summary") or "api")
-    return output_dir / snake_case(tag) / snake_case(operation_id) / "IF.md"
+    return output_dir / snake_case(tag) / snake_case(operation_id) / "if_gen.md"
 
 
 def iter_operations(openapi: JsonObject) -> list[tuple[str, str, JsonObject]]:
