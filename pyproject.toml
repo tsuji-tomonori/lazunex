@@ -49,11 +49,20 @@ testpaths = ["tests"]
 addopts = [
     "--strict-config",
     "--strict-markers",
-    "--cov=src",
+    "--cov=src/app",
+    "--cov=src/tools",
+    "--cov-branch",
     "--cov-report=term-missing",
 ]
 markers = [
     "integration: tests requiring external services",
+]
+
+[tool.coverage.run]
+branch = true
+source = [
+    "src/app",
+    "src/tools",
 ]
 
 [tool.ruff]
