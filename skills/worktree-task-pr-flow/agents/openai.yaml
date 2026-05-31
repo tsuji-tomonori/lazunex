@@ -1,0 +1,4 @@
+interface:
+  display_name: "Worktree Task PR Flow"
+  short_description: "Optional repository-work flow through worktree, typed task file, validation, PR, and done state."
+  default_prompt: "Use $worktree-task-pr-flow when the user asks for worktree, task-file, commit, push, or PR handling. Create a dedicated worktree when requested, classify the task as 機能追加, 修正, 調査, or ドキュメント更新 when task tracking is used, write acceptance criteria before implementation, validate before commit, create or update the PR when requested, and record acceptance results without claiming unverified checks."
