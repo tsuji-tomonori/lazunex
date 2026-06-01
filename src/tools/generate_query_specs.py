@@ -27,9 +27,15 @@ GENERATED_COMMENT = (
 
 
 @dataclass(frozen=True)
+class ColumnRef:
+    table_name: str
+    column: Column
+
+
+@dataclass(frozen=True)
 class DocFieldSpec:
     field: FieldSpec
-    source_table: str | None = None
+    column_refs: tuple[ColumnRef, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -68,80 +74,98 @@ def ddl_column_index(tables: dict[str, Table]) -> dict[str, dict[str, Column]]:
     }
 
 
-def unique_column_sources(tables: dict[str, Table]) -> dict[str, str]:
-    sources: dict[str, list[str]] = {}
+def unique_column_refs(tables: dict[str, Table]) -> dict[str, ColumnRef]:
+    refs: dict[str, list[ColumnRef]] = {}
     for table in tables.values():
         for column in table.columns:
-            sources.setdefault(column.name, []).append(table.name)
-    return {name: matches[0] for name, matches in sources.items() if len(matches) == 1}
+            refs.setdefault(column.name, []).append(ColumnRef(table.name, column))
+    return {name: matches[0] for name, matches in refs.items() if len(matches) == 1}
 
 
-def resolve_column_table(
+def resolve_column_ref(
     column: exp.Column,
     aliases: dict[str, str],
     columns: dict[str, dict[str, Column]],
-) -> str | None:
+) -> ColumnRef | None:
     if column.table:
         table = aliases.get(column.table, column.table)
-        if column.name in columns.get(table, {}):
-            return table
+        if resolved_column := columns.get(table, {}).get(column.name):
+            return ColumnRef(table, resolved_column)
         return None
 
     alias_tables = set(aliases.values())
     if len(alias_tables) == 1:
         table = next(iter(alias_tables))
-        if column.name in columns.get(table, {}):
-            return table
+        if resolved_column := columns.get(table, {}).get(column.name):
+            return ColumnRef(table, resolved_column)
 
     matches = [
-        table_name
+        ColumnRef(table_name, table_columns[column.name])
         for table_name, table_columns in columns.items()
         if column.name in table_columns
     ]
     return matches[0] if len(matches) == 1 else None
 
 
-def expression_source_table(
+def expression_column_refs(
     expression: Any,
     aliases: dict[str, str],
     columns: dict[str, dict[str, Column]],
-) -> str | None:
+) -> tuple[ColumnRef, ...]:
     expression = expression.this if isinstance(expression, exp.Alias) else expression
     if isinstance(expression, exp.Column):
-        return resolve_column_table(expression, aliases, columns)
-
-    sources = {
-        source
-        for column in expression.find_all(exp.Column)
-        if (source := resolve_column_table(column, aliases, columns)) is not None
-    }
-    return next(iter(sources)) if len(sources) == 1 else None
+        ref = resolve_column_ref(expression, aliases, columns)
+        return (ref,) if ref is not None else ()
+    return ()
 
 
-def row_source_tables(statements: Iterable[Any], tables: dict[str, Table]) -> list[str | None]:
+def row_column_refs(
+    statements: Iterable[Any],
+    tables: dict[str, Table],
+) -> list[tuple[ColumnRef, ...]]:
     columns = ddl_column_index(tables)
     for statement in statements:
         aliases = table_aliases(statement)
         if isinstance(statement, exp.Select):
             return [
-                expression_source_table(expression, aliases, columns)
+                expression_column_refs(expression, aliases, columns)
                 for expression in statement.expressions
             ]
         if isinstance(statement, (exp.Insert, exp.Update, exp.Delete)):
             returning = statement.args.get("returning")
             if returning is not None:
                 return [
-                    expression_source_table(expression, aliases, columns)
+                    expression_column_refs(expression, aliases, columns)
                     for expression in returning.expressions
                 ]
     return []
 
 
-def add_source(sources: dict[str, set[str]], parameter: str, source: str) -> None:
-    sources.setdefault(parameter, set()).add(source)
+def source_column_ref(
+    table_name: str,
+    column_name: str,
+    columns: dict[str, dict[str, Column]],
+) -> ColumnRef | None:
+    if column := columns.get(table_name, {}).get(column_name):
+        return ColumnRef(table_name, column)
+    return None
 
 
-def insert_param_sources(statement: exp.Insert) -> dict[str, set[str]]:
+def add_column_ref(
+    refs: dict[str, list[ColumnRef]],
+    parameter: str,
+    ref: ColumnRef,
+) -> None:
+    parameter_refs = refs.setdefault(parameter, [])
+    key = (ref.table_name, ref.column.name)
+    if all((existing.table_name, existing.column.name) != key for existing in parameter_refs):
+        parameter_refs.append(ref)
+
+
+def insert_param_refs(
+    statement: exp.Insert,
+    columns: dict[str, dict[str, Column]],
+) -> dict[str, list[ColumnRef]]:
     if not isinstance(statement.this, exp.Schema):
         return {}
 
@@ -157,34 +181,38 @@ def insert_param_sources(statement: exp.Insert) -> dict[str, set[str]]:
     if not isinstance(first_tuple, exp.Tuple):
         return {}
 
-    sources: dict[str, set[str]] = {}
-    for value in first_tuple.expressions:
+    insert_columns = [column.name for column in statement.this.expressions]
+    refs: dict[str, list[ColumnRef]] = {}
+    for column_name, value in zip(insert_columns, first_tuple.expressions, strict=False):
+        ref = source_column_ref(target.name, column_name, columns)
+        if ref is None:
+            continue
         parameters = [
             name
             for placeholder in value.find_all(exp.Placeholder, exp.Parameter)
             if (name := parameter_name(placeholder)) is not None
         ]
         for parameter in parameters:
-            add_source(sources, parameter, target.name)
-    return sources
+            add_column_ref(refs, parameter, ref)
+    return refs
 
 
-def update_param_sources(
+def update_param_refs(
     statement: exp.Update,
     columns: dict[str, dict[str, Column]],
-) -> dict[str, set[str]]:
+) -> dict[str, list[ColumnRef]]:
     aliases = table_aliases(statement)
-    sources: dict[str, set[str]] = {}
+    refs: dict[str, list[ColumnRef]] = {}
     for assignment in statement.expressions:
         if not isinstance(assignment, exp.EQ) or not isinstance(assignment.this, exp.Column):
             continue
-        source = resolve_column_table(assignment.this, aliases, columns)
-        if source is None:
+        ref = resolve_column_ref(assignment.this, aliases, columns)
+        if ref is None:
             continue
         for placeholder in assignment.expression.find_all(exp.Placeholder, exp.Parameter):
             if (name := parameter_name(placeholder)) is not None:
-                add_source(sources, name, source)
-    return sources
+                add_column_ref(refs, name, ref)
+    return refs
 
 
 COMPARISON_EXPRESSIONS = (exp.EQ, exp.GT, exp.GTE, exp.LT, exp.LTE)
@@ -198,60 +226,74 @@ def expression_parameters(expression: Any) -> list[str]:
     ]
 
 
-def comparison_param_sources(
+def comparison_param_refs(
     statement: Any,
     columns: dict[str, dict[str, Column]],
-) -> dict[str, set[str]]:
+) -> dict[str, list[ColumnRef]]:
     aliases = table_aliases(statement)
-    sources: dict[str, set[str]] = {}
+    refs: dict[str, list[ColumnRef]] = {}
     for comparison in statement.find_all(*COMPARISON_EXPRESSIONS):
         left = comparison.this
         right = comparison.expression
         right_parameters = expression_parameters(right)
         left_parameters = expression_parameters(left)
         if isinstance(left, exp.Column) and right_parameters:
-            if source := resolve_column_table(left, aliases, columns):
+            if ref := resolve_column_ref(left, aliases, columns):
                 for parameter in right_parameters:
-                    add_source(sources, parameter, source)
+                    add_column_ref(refs, parameter, ref)
         elif (
             isinstance(right, exp.Column)
             and left_parameters
-            and (source := resolve_column_table(right, aliases, columns))
+            and (ref := resolve_column_ref(right, aliases, columns))
         ):
             for parameter in left_parameters:
-                add_source(sources, parameter, source)
-    return sources
+                add_column_ref(refs, parameter, ref)
+    return refs
 
 
-def param_source_tables(
+def merge_param_refs(
+    refs: dict[str, list[ColumnRef]],
+    additional_refs: dict[str, list[ColumnRef]],
+) -> None:
+    for parameter, parameter_refs in additional_refs.items():
+        for ref in parameter_refs:
+            add_column_ref(refs, parameter, ref)
+
+
+def param_column_refs(
     sql: str,
     statements: Iterable[Any],
     tables: dict[str, Table],
-) -> list[str | None]:
+) -> list[tuple[ColumnRef, ...]]:
     columns = ddl_column_index(tables)
-    unique_sources = unique_column_sources(tables)
-    sources: dict[str, set[str]] = {}
+    unique_refs = unique_column_refs(tables)
+    refs: dict[str, list[ColumnRef]] = {}
 
     for statement in statements:
         if isinstance(statement, exp.Insert):
-            sources.update(insert_param_sources(statement))
+            merge_param_refs(refs, insert_param_refs(statement, columns))
         elif isinstance(statement, exp.Update):
-            sources.update(update_param_sources(statement, columns))
-        sources.update(comparison_param_sources(statement, columns))
+            merge_param_refs(refs, update_param_refs(statement, columns))
+        merge_param_refs(refs, comparison_param_refs(statement, columns))
 
-    resolved: list[str | None] = []
+    resolved: list[tuple[ColumnRef, ...]] = []
     for name in placeholder_names(sql):
-        if name in sources:
-            resolved.append(", ".join(sorted(sources[name])))
+        if name in refs:
+            resolved.append(tuple(refs[name]))
+        elif name in unique_refs:
+            resolved.append((unique_refs[name],))
         else:
-            resolved.append(unique_sources.get(name))
+            resolved.append(())
     return resolved
 
 
-def doc_fields(fields: list[FieldSpec], sources: list[str | None]) -> list[DocFieldSpec]:
+def doc_fields(
+    fields: list[FieldSpec],
+    column_refs: list[tuple[ColumnRef, ...]],
+) -> list[DocFieldSpec]:
     return [
-        DocFieldSpec(field=field, source_table=source)
-        for field, source in zip(fields, sources, strict=False)
+        DocFieldSpec(field=field, column_refs=refs)
+        for field, refs in zip(fields, column_refs, strict=False)
     ]
 
 
@@ -299,8 +341,48 @@ def field_type(field: FieldSpec) -> str:
     return field.type_hint
 
 
+def ref_label(ref: ColumnRef) -> str:
+    return f"{ref.table_name}.{ref.column.name}"
+
+
+def joined_ref_values(refs: tuple[ColumnRef, ...], value: str) -> str:
+    values: list[str] = []
+    for ref in refs:
+        if value == "label":
+            values.append(ref_label(ref))
+        elif value == "type":
+            values.append(ref.column.data_type)
+        elif value == "comment":
+            values.append(ref.column.comment or "-")
+        elif value == "nullable":
+            values.append("yes" if ref.column.nullable else "no")
+    if not values:
+        return "-"
+    return "<br>".join(values)
+
+
+def display_type(field: FieldSpec, refs: tuple[ColumnRef, ...]) -> str:
+    if refs:
+        return joined_ref_values(refs, "type")
+    return field_type(field)
+
+
+def display_nullable(field: FieldSpec, refs: tuple[ColumnRef, ...]) -> str:
+    if refs:
+        return joined_ref_values(refs, "nullable")
+    return "yes" if field.nullable else "no"
+
+
 def code_cell(value: str) -> str:
     return f"<code>{value.replace('|', '&#124;')}</code>"
+
+
+def text_cell(value: str) -> str:
+    return value.replace("|", "&#124;").replace("\n", " ")
+
+
+def render_code_lines(value: str) -> str:
+    return "<br>".join(code_cell(part) for part in value.split("<br>"))
 
 
 def render_field_table(fields: list[DocFieldSpec], empty_label: str) -> list[str]:
@@ -308,16 +390,18 @@ def render_field_table(fields: list[DocFieldSpec], empty_label: str) -> list[str
         return [empty_label]
 
     lines = [
-        "| 取得元テーブル | 項目 | 型 | nullable |",
-        "| --- | --- | --- | --- |",
+        "| DDLカラム | 項目 | 日本語名 | 型 | nullable |",
+        "| --- | --- | --- | --- | --- |",
     ]
     for doc_field in fields:
         field = doc_field.field
-        source_table = doc_field.source_table or "-"
-        nullable = "yes" if field.nullable else "no"
+        refs = doc_field.column_refs
         lines.append(
-            f"| {code_cell(source_table)} | {code_cell(field.name)} | "
-            f"{code_cell(field_type(field))} | {nullable} |"
+            f"| {render_code_lines(joined_ref_values(refs, 'label'))} | "
+            f"{code_cell(field.name)} | "
+            f"{text_cell(joined_ref_values(refs, 'comment'))} | "
+            f"{render_code_lines(display_type(field, refs))} | "
+            f"{display_nullable(field, refs)} |"
         )
     return lines
 
@@ -328,9 +412,23 @@ def render_list(values: tuple[str, ...], empty_label: str) -> list[str]:
     return [f"- `{value}`" for value in values]
 
 
+def operation_label(operation: str) -> str:
+    labels = {
+        "select": "SELECT",
+        "insert": "INSERT",
+        "update": "UPDATE",
+        "delete": "DELETE",
+    }
+    return labels.get(operation, operation.upper())
+
+
 def render_sql_spec(spec: SqlDocSpec) -> list[str]:
     lines = [
         f"## {spec.query.sql_filename}",
+        "",
+        "### SQL種別",
+        "",
+        f"`{operation_label(spec.query.operation)}`",
         "",
         "### SQLの概要",
         "",
@@ -386,8 +484,8 @@ def api_query_doc_from_sql_dir(
             SqlDocSpec(
                 query=query,
                 tables=sql_tables(statements),
-                params=doc_fields(query.params, param_source_tables(sql, statements, tables)),
-                rows=doc_fields(query.rows, row_source_tables(statements, tables)),
+                params=doc_fields(query.params, param_column_refs(sql, statements, tables)),
+                rows=doc_fields(query.rows, row_column_refs(statements, tables)),
                 conditions=sql_conditions(statements),
             )
         )

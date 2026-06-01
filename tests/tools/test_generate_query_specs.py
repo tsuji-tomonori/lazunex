@@ -27,6 +27,10 @@ CREATE TABLE project_events (
     aggregate_id uuid NOT NULL,
     event_payload json
 );
+-- COMMENT ON COLUMN projects.project_id IS 'Project ID。';
+-- COMMENT ON COLUMN projects.project_code IS '人が読めるProjectコード。';
+-- COMMENT ON COLUMN projects.description IS 'プロジェクトの説明。';
+-- COMMENT ON COLUMN project_events.event_id IS 'ProjectイベントID。';
 """
 
 
@@ -82,16 +86,17 @@ def test_generate_query_specs_renders_sql_chapters(tmp_path: Path) -> None:
     assert content.startswith(GENERATED_COMMENT)
     assert "# list_projects query" in content
     assert "## 001_select_projects.sql" in content
+    assert "### SQL種別\n\n`SELECT`" in content
     assert "### SQLの概要" in content
     assert "Project 一覧を取得する。" in content
     assert "### 利用するテーブル\n\n- `projects`" in content
     assert (
-        "| <code>projects</code> | <code>project_code</code> | "
-        "<code>str</code> | no |"
+        "| <code>projects.project_code</code> | <code>project_code</code> | "
+        "人が読めるProjectコード。 | <code>VARCHAR(100)</code> | no |"
     ) in content
     assert (
-        "| <code>projects</code> | <code>description</code> | "
-        "<code>str &#124; None</code> | yes |"
+        "| <code>projects.description</code> | <code>description</code> | "
+        "プロジェクトの説明。 | <code>TEXT</code> | yes |"
     ) in content
     assert "### 条件\n\n- `WHERE project_code = @project_code`" in content
 
@@ -117,16 +122,15 @@ def test_generate_query_specs_renders_source_tables_and_expanded_aliases(
     )
 
     assert (
-        "| <code>projects</code> | <code>project_code</code> | "
-        "<code>str</code> | no |"
+        "| <code>projects.project_code</code> | <code>project_code</code> | "
+        "人が読めるProjectコード。 | <code>VARCHAR(100)</code> | no |"
     ) in content
     assert (
-        "| <code>projects</code> | <code>project_id</code> | "
-        "<code>UUID</code> | no |"
+        "| <code>projects.project_id</code> | <code>project_id</code> | "
+        "Project ID。 | <code>UUID</code> | no |"
     ) in content
     assert (
-        "| <code>project_events</code> | <code>event_count</code> | "
-        "<code>Any</code> | no |"
+        "| <code>-</code> | <code>event_count</code> | - | <code>Any</code> | no |"
     ) in content
     assert (
         "- `JOIN ON project_events.aggregate_id = projects.project_id`"

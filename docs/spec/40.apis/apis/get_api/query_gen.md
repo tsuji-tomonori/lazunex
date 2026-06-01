@@ -4,6 +4,10 @@
 
 ## 001_select_apis.sql
 
+### SQL種別
+
+`SELECT`
+
 ### SQLの概要
 
 API詳細レスポンスを組み立てるため、API catalog情報を取得する。
@@ -17,35 +21,35 @@ API詳細レスポンスを組み立てるため、API catalog情報を取得す
 
 ### 引数
 
-| 取得元テーブル | 項目 | 型 | nullable |
-| --- | --- | --- | --- |
-| <code>apis</code> | <code>api_id</code> | <code>UUID</code> | no |
+| DDLカラム | 項目 | 日本語名 | 型 | nullable |
+| --- | --- | --- | --- | --- |
+| <code>apis.api_id</code> | <code>api_id</code> | Lazunex内API ID。 | <code>UUID</code> | no |
 
 ### 戻り値
 
-| 取得元テーブル | 項目 | 型 | nullable |
-| --- | --- | --- | --- |
-| <code>apis</code> | <code>api_id</code> | <code>UUID</code> | no |
-| <code>apis</code> | <code>api_code</code> | <code>str</code> | no |
-| <code>apis</code> | <code>name</code> | <code>str</code> | no |
-| <code>apis</code> | <code>description</code> | <code>str</code> | no |
-| <code>apis</code> | <code>provider_name</code> | <code>str</code> | no |
-| <code>apis</code> | <code>provider_contact</code> | <code>str</code> | no |
-| <code>apis</code> | <code>owner_principal_id</code> | <code>str</code> | no |
-| <code>apis</code> | <code>visibility</code> | <code>str</code> | no |
-| <code>api_gateway_stages</code> | <code>api_stage_id</code> | <code>UUID</code> | no |
-| <code>api_gateway_stages</code> | <code>aws_account_id</code> | <code>str</code> | no |
-| <code>api_gateway_stages</code> | <code>aws_region</code> | <code>str</code> | no |
-| <code>api_gateway_stages</code> | <code>apigw_rest_api_id</code> | <code>str</code> | no |
-| <code>api_gateway_stages</code> | <code>apigw_stage_name</code> | <code>str</code> | no |
-| <code>api_gateway_stages</code> | <code>invoke_url</code> | <code>str</code> | no |
-| <code>api_gateway_stages</code> | <code>custom_domain_url</code> | <code>str &#124; None</code> | yes |
-| <code>api_gateway_stages</code> | <code>api_key_required_observed</code> | <code>bool</code> | no |
-| <code>api_gateway_stages</code> | <code>scope_config_observed</code> | <code>str</code> | no |
-| <code>api_cognito_scopes</code> | <code>scope_name</code> | <code>str</code> | no |
-| <code>api_cognito_scopes</code> | <code>scope_full_name</code> | <code>str</code> | no |
-| <code>api_reviewers</code> | <code>reviewer_principal_id</code> | <code>str</code> | no |
-| <code>api_reviewers</code> | <code>reviewer_role</code> | <code>str</code> | no |
+| DDLカラム | 項目 | 日本語名 | 型 | nullable |
+| --- | --- | --- | --- | --- |
+| <code>apis.api_id</code> | <code>api_id</code> | Lazunex内API ID。 | <code>UUID</code> | no |
+| <code>apis.api_code</code> | <code>api_code</code> | 人が読めるAPIコード。例: billing-api-v1。 | <code>VARCHAR(100)</code> | no |
+| <code>apis.name</code> | <code>name</code> | API表示名。 | <code>VARCHAR(200)</code> | no |
+| <code>apis.description</code> | <code>description</code> | APIの説明。 | <code>TEXT</code> | no |
+| <code>apis.provider_name</code> | <code>provider_name</code> | API提供チーム名。 | <code>VARCHAR(200)</code> | no |
+| <code>apis.provider_contact</code> | <code>provider_contact</code> | API提供者の問い合わせ先。 | <code>VARCHAR(320)</code> | no |
+| <code>apis.owner_principal_id</code> | <code>owner_principal_id</code> | APIオーナーのprincipal。 | <code>VARCHAR(256)</code> | no |
+| <code>apis.visibility</code> | <code>visibility</code> | 公開範囲。INTERNALまたはRESTRICTED。 | <code>VARCHAR(20)</code> | no |
+| <code>api_gateway_stages.api_stage_id</code> | <code>api_stage_id</code> | API stage ID。 | <code>UUID</code> | no |
+| <code>api_gateway_stages.aws_account_id</code> | <code>aws_account_id</code> | API Gatewayが存在するAWSアカウントID。 | <code>VARCHAR(12)</code> | no |
+| <code>api_gateway_stages.aws_region</code> | <code>aws_region</code> | API Gatewayが存在するAWSリージョン。例: ap-northeast-1。 | <code>VARCHAR(32)</code> | no |
+| <code>api_gateway_stages.apigw_rest_api_id</code> | <code>apigw_rest_api_id</code> | API Gateway REST API ID。 | <code>VARCHAR(128)</code> | no |
+| <code>api_gateway_stages.apigw_stage_name</code> | <code>apigw_stage_name</code> | API Gateway stage名。例: prod。 | <code>VARCHAR(128)</code> | no |
+| <code>api_gateway_stages.invoke_url</code> | <code>invoke_url</code> | execute-apiの呼び出しURL。 | <code>TEXT</code> | no |
+| <code>api_gateway_stages.custom_domain_url</code> | <code>custom_domain_url</code> | カスタムドメインの呼び出しURL。 | <code>TEXT</code> | yes |
+| <code>api_gateway_stages.api_key_required_observed</code> | <code>api_key_required_observed</code> | API Gateway methodでAPI key必須が設定されているかの検証結果。 | <code>BOOLEAN</code> | no |
+| <code>api_gateway_stages.scope_config_observed</code> | <code>scope_config_observed</code> | Cognito scope設定の検証結果。VERIFIED、NOT_CONFIGURED、UNKNOWN。 | <code>VARCHAR(30)</code> | no |
+| <code>api_cognito_scopes.scope_name</code> | <code>scope_name</code> | Resource Server内のscope名。例: api:{apiId}:invoke。 | <code>VARCHAR(256)</code> | no |
+| <code>api_cognito_scopes.scope_full_name</code> | <code>scope_full_name</code> | Resource Server識別子を含むscope名。例: api-hub/api:{apiId}:invoke。 | <code>VARCHAR(600)</code> | no |
+| <code>api_reviewers.reviewer_principal_id</code> | <code>reviewer_principal_id</code> | 審査者のprincipal。 | <code>VARCHAR(256)</code> | no |
+| <code>api_reviewers.reviewer_role</code> | <code>reviewer_role</code> | 審査者の役割。PRIMARY、BACKUP、ADMIN。 | <code>VARCHAR(20)</code> | no |
 
 ### 条件
 
