@@ -8,7 +8,6 @@ sequenceDiagram
   participant API as API
   participant R_identity as Resource: identity
   participant DB as DB
-  API->>API: 呼び出し元の role、group、scope を取得する。
   API->>API: API 公開登録リクエストを検証する。
   alt 呼び出し元が API 公開登録できる場合。
     API->>API: Idempotency-Key に対応する既存レコードを取得する。

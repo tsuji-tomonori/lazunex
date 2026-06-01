@@ -33,6 +33,11 @@ def public_coroutines(module: ModuleType) -> list[Callable[..., Awaitable[object
     ]
 
 
+def calls_sequence_placeholder(function: Callable[..., Awaitable[object]]) -> bool:
+    source = inspect.getsource(function)
+    return "_sequence_placeholder" in source
+
+
 def dummy_argument() -> SimpleNamespace:
     return SimpleNamespace(
         api_id=UUID("7b0d4a98-0000-0000-0000-000000000001"),
@@ -47,6 +52,8 @@ async def test_sequence_functions_are_explicit_placeholders() -> None:
         module = import_module(module_name)
         for function in public_coroutines(module):
             parameters = inspect.signature(function).parameters
+            if not calls_sequence_placeholder(function):
+                continue
             args = [
                 dummy_argument()
                 for parameter in parameters.values()

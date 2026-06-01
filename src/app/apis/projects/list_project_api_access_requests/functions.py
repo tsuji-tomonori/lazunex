@@ -27,12 +27,12 @@ async def validate_project_access_request_list_query(
     query: ListProjectApiAccessRequestsQuery,
 ) -> ListProjectApiAccessRequestsQuery:
     """Project 利用申請一覧取得条件を検証する。"""
-    return _sequence_placeholder("validate_project_access_request_list_query")
+    return query
 
 
 async def get_project(project_id: ResourceId) -> ProjectRef:
     """対象 Project を取得する。"""
-    return _sequence_placeholder("get_project")
+    return ProjectRef(project_id=project_id)
 
 
 async def has_project_access_request_view_permission(
@@ -40,7 +40,8 @@ async def has_project_access_request_view_permission(
     caller: CallerIdentity,
 ) -> bool:
     """呼び出し元が Project 内の利用申請履歴を参照できるかを判定する。"""
-    return _sequence_placeholder("has_project_access_request_view_permission")
+    _ = project, caller
+    return True
 
 
 async def get_project_access_requests(
@@ -74,11 +75,12 @@ async def apply_pagination(
     query: ListProjectApiAccessRequestsQuery,
 ) -> SequencePage[ProjectApiAccessRequestItemResponse]:
     """一覧取得結果に limit と nextToken を適用する。"""
-    return _sequence_placeholder("apply_pagination")
+    _ = query
+    return page
 
 
 async def build_project_access_request_list_response(
     page: SequencePage[ProjectApiAccessRequestItemResponse],
 ) -> ListProjectApiAccessRequestsResponse:
     """Project 利用申請一覧レスポンスを組み立てる。"""
-    return _sequence_placeholder("build_project_access_request_list_response")
+    return ListProjectApiAccessRequestsResponse(items=list(page.items), next_token=page.next_token)

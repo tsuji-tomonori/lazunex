@@ -1,8 +1,10 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Path, status
+from fastapi import APIRouter, Depends, Path, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.base import sample_path_value
+from app.apis.deps import get_caller_identity
 from app.apis.projects.get_project import functions as api_functions
 from app.apis.projects.get_project.samples import GET_PROJECT_RESPONSE_SAMPLE
 from app.apis.projects.get_project.schemas import GetProjectResponse
@@ -10,7 +12,9 @@ from app.apis.responses import (
     error_responses,
     success_response,
 )
+from app.apis.sequence_types import CallerIdentity
 from app.apis.types import ResourceId
+from app.db.session import get_session
 
 router = APIRouter()
 
@@ -47,9 +51,10 @@ async def get_project(
             },
         ),
     ],
+    caller: Annotated[CallerIdentity, Depends(get_caller_identity)],
+    session: Annotated[AsyncSession, Depends(get_session)],
 ) -> GetProjectResponse:
-    caller = await api_functions.get_caller_identity()
     validated_project_id = await api_functions.validate_project_id(project_id)
-    project = await api_functions.get_project_detail(validated_project_id)
+    project = await api_functions.get_project_detail(validated_project_id, caller, session)
     await api_functions.has_project_view_permission(project, caller)
     return await api_functions.build_project_detail_response(project)

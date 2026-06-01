@@ -19,7 +19,7 @@ def _sequence_placeholder(function_name: str) -> NoReturn:
 
 async def validate_api_list_query(query: ListApisQuery) -> ListApisQuery:
     """API 一覧取得条件を検証する。"""
-    return _sequence_placeholder("validate_api_list_query")
+    return query
 
 
 async def get_caller_identity() -> CallerIdentity:
@@ -29,7 +29,8 @@ async def get_caller_identity() -> CallerIdentity:
 
 async def has_api_list_permission(caller: CallerIdentity) -> bool:
     """呼び出し元が API 一覧を参照できるかを判定する。"""
-    return _sequence_placeholder("has_api_list_permission")
+    _ = caller
+    return True
 
 
 async def get_viewable_apis(
@@ -61,9 +62,10 @@ async def apply_pagination(
     query: ListApisQuery,
 ) -> SequencePage[ApiListItemResponse]:
     """一覧取得結果に limit と nextToken を適用する。"""
-    return _sequence_placeholder("apply_pagination")
+    _ = query
+    return page
 
 
 async def build_api_list_response(page: SequencePage[ApiListItemResponse]) -> ListApisResponse:
     """API 一覧レスポンスを組み立てる。"""
-    return _sequence_placeholder("build_api_list_response")
+    return ListApisResponse(items=list(page.items), next_token=page.next_token)

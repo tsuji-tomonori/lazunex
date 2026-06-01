@@ -1,8 +1,10 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Path, Query, status
+from fastapi import APIRouter, Depends, Path, Query, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.base import sample_path_value
+from app.apis.deps import get_caller_identity
 from app.apis.projects.list_project_subscriptions import functions as api_functions
 from app.apis.projects.list_project_subscriptions.samples import (
     LIST_PROJECT_SUBSCRIPTIONS_RESPONSE_SAMPLE,
@@ -15,7 +17,9 @@ from app.apis.responses import (
     error_responses,
     success_response,
 )
+from app.apis.sequence_types import CallerIdentity
 from app.apis.types import ResourceId
+from app.db.session import get_session
 
 router = APIRouter()
 
@@ -54,11 +58,17 @@ async def list_project_subscriptions(
         ),
     ],
     query: Annotated[ListProjectSubscriptionsQuery, Query()],
+    caller: Annotated[CallerIdentity, Depends(get_caller_identity)],
+    session: Annotated[AsyncSession, Depends(get_session)],
 ) -> ListProjectSubscriptionsResponse:
-    caller = await api_functions.get_caller_identity()
     validated_query = await api_functions.validate_project_subscription_list_query(query)
     project = await api_functions.get_project(project_id)
     await api_functions.has_project_subscription_view_permission(project, caller)
-    subscriptions = await api_functions.get_project_subscriptions(project, validated_query)
+    subscriptions = await api_functions.get_project_subscriptions(
+        project,
+        validated_query,
+        caller,
+        session,
+    )
     page = await api_functions.apply_pagination(subscriptions, validated_query)
     return await api_functions.build_project_subscription_list_response(page)

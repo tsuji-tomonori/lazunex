@@ -10,7 +10,6 @@ sequenceDiagram
   participant R_identity as Resource: identity
   participant R_secret_values as Resource: secret values
   participant DB as DB
-  API->>API: 呼び出し元の sub、group、scope を取得する。
   API->>API: Project 作成リクエストを検証する。
   alt 呼び出し元が Project を作成できる場合。
     API->>API: Idempotency-Key に対応する既存レコードを取得する。

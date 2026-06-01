@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Header, Path, status
+from fastapi import APIRouter, Body, Depends, Header, Path, status
 
 from app.apis.api_access_requests.approve_api_access_request import functions as api_functions
 from app.apis.api_access_requests.approve_api_access_request.samples import (
@@ -12,11 +12,17 @@ from app.apis.api_access_requests.approve_api_access_request.schemas import (
     ApproveApiAccessRequestResponse,
 )
 from app.apis.base import sample_path_value, sample_value
+from app.apis.deps import get_caller_identity
 from app.apis.responses import (
     error_responses,
     success_response,
 )
+from app.apis.sequence_types import CallerIdentity
 from app.apis.types import ResourceId
+from app.integrations.api_gateway_control.deps import get_api_gateway_control_client
+from app.integrations.api_gateway_control.port import ApiGatewayControlPort
+from app.integrations.identity.deps import get_identity_admin_client
+from app.integrations.identity.port import IdentityAdminPort
 
 router = APIRouter()
 
@@ -67,8 +73,13 @@ async def approve_api_access_request(
         ),
     ],
     idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    caller: Annotated[CallerIdentity, Depends(get_caller_identity)],
+    api_gateway_control: Annotated[
+        ApiGatewayControlPort,
+        Depends(get_api_gateway_control_client),
+    ],
+    identity_admin: Annotated[IdentityAdminPort, Depends(get_identity_admin_client)],
 ) -> ApproveApiAccessRequestResponse:
-    caller = await api_functions.get_caller_identity()
     access_request = await api_functions.get_access_request(access_request_id)
     await api_functions.is_pending_access_request(access_request)
     await api_functions.has_api_reviewer_permission(access_request, caller)
@@ -82,13 +93,21 @@ async def approve_api_access_request(
     )
     await api_functions.get_idempotency_record(idempotency_key)
     await api_functions.create_idempotency_record(idempotency_key, operation)
-    usage_plan_stage = await api_functions.add_usage_plan_api_stage(access_request, operation)
-    current_client = await api_functions.get_cognito_app_client(access_request)
+    usage_plan_stage = await api_functions.add_usage_plan_api_stage(
+        access_request,
+        operation,
+        api_gateway_control,
+    )
+    current_client = await api_functions.get_cognito_app_client(access_request, identity_admin)
     merged_client = await api_functions.merge_cognito_allowed_scopes(
         current_client,
         access_request,
     )
-    updated_client = await api_functions.update_cognito_app_client(merged_client, operation)
+    updated_client = await api_functions.update_cognito_app_client(
+        merged_client,
+        operation,
+        identity_admin,
+    )
     resources = await api_functions.save_approved_access_resources(
         access_request,
         request,

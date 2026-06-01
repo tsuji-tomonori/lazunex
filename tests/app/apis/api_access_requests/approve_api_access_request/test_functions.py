@@ -3,8 +3,13 @@ from __future__ import annotations
 import pytest
 
 from app.apis.api_access_requests.approve_api_access_request import functions
+from app.apis.api_access_requests.approve_api_access_request.samples import (
+    APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE,
+)
 from app.apis.sequence_types import (
     ApiAccessRequestRef,
+    ApprovedAccessResourceRefs,
+    CallerIdentity,
     CognitoAppClientRef,
     ProvisioningOperationRef,
 )
@@ -72,3 +77,32 @@ async def test_update_cognito_app_client_calls_identity_admin(
     assert isinstance(call, UpdateUserPoolClientInput)
     assert call.client_id == "public-client-id"
     assert call.allowed_scopes == ("openid", "api-hub/api:billing-api-v1:invoke")
+
+
+async def test_approve_helpers_merge_scopes_and_build_response(
+    access_request: ApiAccessRequestRef,
+    operation: ProvisioningOperationRef,
+) -> None:
+    caller = CallerIdentity(principal_id="reviewer-001", groups=("hub-admin",), scopes=())
+    client = CognitoAppClientRef(app_client_id="public-client-id", allowed_scopes=("openid",))
+    resources = ApprovedAccessResourceRefs(
+        review_id=access_request.access_request_id,
+        subscription_id=access_request.project_id,
+        usage_plan_api_stage_id=access_request.api_stage_id,
+        client_scope_ids=(access_request.api_id,),
+    )
+
+    merged = await functions.merge_cognito_allowed_scopes(client, access_request)
+    response = await functions.build_approve_access_request_response(
+        access_request,
+        resources,
+        APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE,
+        operation,
+    )
+
+    assert await functions.is_pending_access_request(access_request) is True
+    assert await functions.has_api_reviewer_permission(access_request, caller) is True
+    assert await functions.is_available_project_api_stage(access_request) is True
+    assert await functions.has_active_subscription(access_request) is False
+    assert merged.allowed_scopes[-1] == f"api-hub/api:{access_request.api_id}:invoke"
+    assert response.project_id == access_request.project_id

@@ -7,7 +7,6 @@ sequenceDiagram
   autonumber
   participant API as API
   participant DB as DB
-  API->>API: 呼び出し元の sub、group、scope を取得する。
   API->>API: Project ID を検証する。
   API->>API: Project 詳細レスポンスに必要な情報を取得する。
   alt 呼び出し元が Project 詳細を参照できる場合。

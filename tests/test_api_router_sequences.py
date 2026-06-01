@@ -8,6 +8,7 @@ from typing import cast
 from uuid import UUID
 
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.api_access_requests.approve_api_access_request import router as approve_router
 from app.apis.api_access_requests.approve_api_access_request.samples import (
@@ -65,6 +66,10 @@ from app.apis.projects.update_project_public_client.samples import (
     UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE,
     UPDATE_PROJECT_PUBLIC_CLIENT_RESPONSE_SAMPLE,
 )
+from app.apis.sequence_types import CallerIdentity
+from app.integrations.api_gateway_control.fake import FakeApiGatewayControlClient
+from app.integrations.identity.fake import FakeIdentityAdminClient
+from app.integrations.secret_values.fake import FakeSecretValuesClient
 
 
 @dataclass(frozen=True)
@@ -217,6 +222,31 @@ def router_cases() -> list[RouterCase]:
     ]
 
 
+def endpoint_kwargs(
+    endpoint: Callable[..., Awaitable[object]], kwargs: dict[str, object]
+) -> dict[str, object]:
+    dependencies: dict[str, object] = {
+        "caller": CallerIdentity(
+            principal_id="user-12345",
+            groups=("hub-admin",),
+            scopes=("api-hub/api:billing-api-v1:invoke",),
+        ),
+        "session": cast(AsyncSession, object()),
+        "api_gateway_control": FakeApiGatewayControlClient(),
+        "identity_admin": FakeIdentityAdminClient(),
+        "secret_values": FakeSecretValuesClient(),
+    }
+    signature = inspect.signature(endpoint)
+    return {
+        **kwargs,
+        **{
+            name: value
+            for name, value in dependencies.items()
+            if name in signature.parameters and name not in kwargs
+        },
+    }
+
+
 @pytest.mark.anyio
 @pytest.mark.parametrize("case", router_cases(), ids=lambda case: case.endpoint.__name__)
 async def test_router_calls_sequence_functions_in_order(
@@ -225,7 +255,7 @@ async def test_router_calls_sequence_functions_in_order(
 ) -> None:
     calls = patch_sequence_functions(monkeypatch, case.router_module, case.expected)
 
-    result = await case.endpoint(**case.kwargs)
+    result = await case.endpoint(**endpoint_kwargs(case.endpoint, case.kwargs))
 
     assert result == case.expected
     assert calls[0].startswith(("get_", "validate_"))

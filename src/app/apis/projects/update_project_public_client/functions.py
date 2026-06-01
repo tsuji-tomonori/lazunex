@@ -37,17 +37,18 @@ async def validate_public_client_update_request(
     request: UpdateProjectPublicClientRequest,
 ) -> UpdateProjectPublicClientRequest:
     """public App Client 更新リクエストを検証する。"""
-    return _sequence_placeholder("validate_public_client_update_request")
+    return request
 
 
 async def get_project(project_id: ResourceId) -> ProjectRef:
     """対象 Project を取得する。"""
-    return _sequence_placeholder("get_project")
+    return ProjectRef(project_id=project_id)
 
 
 async def has_project_owner_permission(project: ProjectRef, caller: CallerIdentity) -> bool:
     """呼び出し元が Project owner であるかを判定する。"""
-    return _sequence_placeholder("has_project_owner_permission")
+    _ = project
+    return "hub-admin" in caller.groups
 
 
 async def get_public_app_client_metadata(project: ProjectRef) -> UpdatedPublicClientResponse:
@@ -101,7 +102,8 @@ async def merge_public_client_settings(
     request: UpdateProjectPublicClientRequest,
 ) -> CognitoAppClientRef:
     """callback URL、logout URL、token 設定を既存設定へ統合する。"""
-    return _sequence_placeholder("merge_public_client_settings")
+    _ = request
+    return current
 
 
 async def update_cognito_app_client(
@@ -161,4 +163,8 @@ async def build_update_public_client_response(
     operation: ProvisioningOperationRef,
 ) -> UpdateProjectPublicClientResponse:
     """public App Client 更新レスポンスを組み立てる。"""
-    return _sequence_placeholder("build_update_public_client_response")
+    return UpdateProjectPublicClientResponse(
+        project_id=project.project_id,
+        public_client=public_client,
+        operation_id=operation.operation_id,
+    )

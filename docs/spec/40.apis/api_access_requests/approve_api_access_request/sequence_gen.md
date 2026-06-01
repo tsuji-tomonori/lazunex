@@ -9,7 +9,6 @@ sequenceDiagram
   participant R_api_gateway_control as Resource: api gateway control
   participant R_identity as Resource: identity
   participant DB as DB
-  API->>API: 呼び出し元の role、group、scope を取得する。
   API->>API: 承認対象の利用申請を取得する。
   alt 利用申請が審査中状態である場合。
     alt 呼び出し元が対象 API の reviewer または Hub 管理者である場合。

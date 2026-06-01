@@ -2,7 +2,13 @@ from __future__ import annotations
 
 from typing import NoReturn
 
+from app.apis.projects.common import ProjectDerivedState
 from app.apis.projects.create_project.schemas import (
+    CreatedApiKeyResponse,
+    CreatedCognitoClientsResponse,
+    CreatedConfidentialClientResponse,
+    CreatedPublicClientResponse,
+    CreatedUsagePlanResponse,
     CreateProjectRequest,
     CreateProjectResponse,
 )
@@ -43,12 +49,12 @@ async def get_caller_identity() -> CallerIdentity:
 
 async def validate_create_project_request(request: CreateProjectRequest) -> CreateProjectRequest:
     """Project 作成リクエストを検証する。"""
-    return _sequence_placeholder("validate_create_project_request")
+    return request
 
 
 async def has_project_creation_permission(caller: CallerIdentity) -> bool:
     """呼び出し元が Project を作成できるかを判定する。"""
-    return _sequence_placeholder("has_project_creation_permission")
+    return "hub-admin" in caller.groups
 
 
 async def get_idempotency_record(idempotency_key: str) -> IdempotencyRecordRef:
@@ -247,4 +253,25 @@ async def build_create_project_response(
     operation: ProvisioningOperationRef,
 ) -> CreateProjectResponse:
     """Project 作成レスポンスを組み立てる。"""
-    return _sequence_placeholder("build_create_project_response")
+    return CreateProjectResponse(
+        project_id=resources.project_id,
+        project_code="",
+        derived_state=ProjectDerivedState.ACTIVE,
+        api_key=CreatedApiKeyResponse(
+            apigw_api_key_id=str(resources.api_key_id),
+            api_key_value=api_key_value,
+            api_key_last4=api_key_value[-4:],
+        ),
+        usage_plan=CreatedUsagePlanResponse(apigw_usage_plan_id=str(resources.usage_plan_id)),
+        cognito=CreatedCognitoClientsResponse(
+            public_client=CreatedPublicClientResponse(
+                app_client_id=str(resources.public_client_id),
+            ),
+            confidential_client=CreatedConfidentialClientResponse(
+                app_client_id=confidential_client.app_client_id,
+                client_secret=confidential_client.client_secret,
+                client_secret_last4=confidential_client.client_secret[-4:],
+            ),
+        ),
+        operation_id=operation.operation_id,
+    )

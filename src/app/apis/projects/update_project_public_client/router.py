@@ -1,8 +1,9 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Header, Path, status
+from fastapi import APIRouter, Body, Depends, Header, Path, status
 
 from app.apis.base import sample_path_value, sample_value
+from app.apis.deps import get_caller_identity
 from app.apis.projects.update_project_public_client import functions as api_functions
 from app.apis.projects.update_project_public_client.samples import (
     UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE,
@@ -16,7 +17,10 @@ from app.apis.responses import (
     error_responses,
     success_response,
 )
+from app.apis.sequence_types import CallerIdentity
 from app.apis.types import ResourceId
+from app.integrations.identity.deps import get_identity_admin_client
+from app.integrations.identity.port import IdentityAdminPort
 
 router = APIRouter()
 
@@ -67,8 +71,9 @@ async def update_project_public_client(
         ),
     ],
     idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    caller: Annotated[CallerIdentity, Depends(get_caller_identity)],
+    identity_admin: Annotated[IdentityAdminPort, Depends(get_identity_admin_client)],
 ) -> UpdateProjectPublicClientResponse:
-    caller = await api_functions.get_caller_identity()
     validated_request = await api_functions.validate_public_client_update_request(request)
     project = await api_functions.get_project(project_id)
     await api_functions.has_project_owner_permission(project, caller)
@@ -80,12 +85,16 @@ async def update_project_public_client(
         idempotency_key,
     )
     await api_functions.create_idempotency_record(idempotency_key, operation)
-    current_client = await api_functions.get_cognito_app_client(public_client)
+    current_client = await api_functions.get_cognito_app_client(public_client, identity_admin)
     merged_client = await api_functions.merge_public_client_settings(
         current_client,
         validated_request,
     )
-    updated_client = await api_functions.update_cognito_app_client(merged_client, operation)
+    updated_client = await api_functions.update_cognito_app_client(
+        merged_client,
+        operation,
+        identity_admin,
+    )
     updated_metadata = await api_functions.update_public_app_client_metadata(
         project,
         updated_client,

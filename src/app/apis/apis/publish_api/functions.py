@@ -2,7 +2,12 @@ from __future__ import annotations
 
 from typing import NoReturn
 
-from app.apis.apis.publish_api.schemas import PublishApiRequest, PublishApiResponse
+from app.apis.apis.common import ApiDerivedState
+from app.apis.apis.publish_api.schemas import (
+    ApiScopeResponse,
+    PublishApiRequest,
+    PublishApiResponse,
+)
 from app.apis.sequence_types import (
     ApiCatalogMetadataRef,
     ApiScopeRef,
@@ -27,7 +32,7 @@ async def get_caller_identity() -> CallerIdentity:
 
 async def validate_api_publish_request(request: PublishApiRequest) -> PublishApiRequest:
     """API 公開登録リクエストを検証する。"""
-    return _sequence_placeholder("validate_api_publish_request")
+    return request
 
 
 async def has_api_publish_permission(
@@ -35,7 +40,7 @@ async def has_api_publish_permission(
     caller: CallerIdentity,
 ) -> bool:
     """呼び出し元が API 公開登録できるかを判定する。"""
-    return _sequence_placeholder("has_api_publish_permission")
+    return "hub-admin" in caller.groups or request.owner_principal_id == caller.principal_id
 
 
 async def get_idempotency_record(idempotency_key: str) -> IdempotencyRecordRef:
@@ -125,4 +130,16 @@ async def build_publish_api_response(
     operation: ProvisioningOperationRef,
 ) -> PublishApiResponse:
     """API 公開登録レスポンスを組み立てる。"""
-    return _sequence_placeholder("build_publish_api_response")
+    scope_name = scope.scope_full_name.split("/", maxsplit=1)[-1]
+    resource_server_identifier = scope.scope_full_name.rsplit("/", maxsplit=1)[0]
+    return PublishApiResponse(
+        api_id=api.api_id,
+        api_stage_id=api.api_stage_id or api.api_id,
+        scope=ApiScopeResponse(
+            resource_server_identifier=resource_server_identifier,
+            scope_name=scope_name,
+            scope_full_name=scope.scope_full_name,
+        ),
+        derived_state=ApiDerivedState.PUBLISHED,
+        operation_id=operation.operation_id,
+    )

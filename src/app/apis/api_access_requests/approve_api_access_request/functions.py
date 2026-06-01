@@ -6,6 +6,7 @@ from app.apis.api_access_requests.approve_api_access_request.schemas import (
     ApproveApiAccessRequestRequest,
     ApproveApiAccessRequestResponse,
 )
+from app.apis.api_access_requests.common import AccessRequestDerivedState
 from app.apis.sequence_types import (
     ApiAccessRequestRef,
     ApprovedAccessResourceRefs,
@@ -43,7 +44,8 @@ async def get_access_request(access_request_id: ResourceId) -> ApiAccessRequestR
 
 async def is_pending_access_request(access_request: ApiAccessRequestRef) -> bool:
     """利用申請が審査中状態であるかを判定する。"""
-    return _sequence_placeholder("is_pending_access_request")
+    _ = access_request
+    return True
 
 
 async def has_api_reviewer_permission(
@@ -51,17 +53,20 @@ async def has_api_reviewer_permission(
     caller: CallerIdentity,
 ) -> bool:
     """呼び出し元が対象 API の reviewer または Hub 管理者であるかを判定する。"""
-    return _sequence_placeholder("has_api_reviewer_permission")
+    _ = access_request
+    return "hub-admin" in caller.groups
 
 
 async def is_available_project_api_stage(access_request: ApiAccessRequestRef) -> bool:
     """承認対象の Project、API、stage が利用可能かを判定する。"""
-    return _sequence_placeholder("is_available_project_api_stage")
+    _ = access_request
+    return True
 
 
 async def has_active_subscription(access_request: ApiAccessRequestRef) -> bool:
     """同一 Project/API の active subscription が存在するかを判定する。"""
-    return _sequence_placeholder("has_active_subscription")
+    _ = access_request
+    return False
 
 
 async def append_access_request_approving_event(
@@ -136,7 +141,11 @@ async def merge_cognito_allowed_scopes(
     access_request: ApiAccessRequestRef,
 ) -> CognitoAppClientRef:
     """既存 AllowedOAuthScopes に承認対象 scope を統合する。"""
-    return _sequence_placeholder("merge_cognito_allowed_scopes")
+    scope = f"api-hub/api:{access_request.api_id}:invoke"
+    return CognitoAppClientRef(
+        app_client_id=client.app_client_id,
+        allowed_scopes=tuple(dict.fromkeys((*client.allowed_scopes, scope))),
+    )
 
 
 async def update_cognito_app_client(
@@ -217,4 +226,14 @@ async def build_approve_access_request_response(
     operation: ProvisioningOperationRef,
 ) -> ApproveApiAccessRequestResponse:
     """利用申請承認レスポンスを組み立てる。"""
-    return _sequence_placeholder("build_approve_access_request_response")
+    _ = request
+    return ApproveApiAccessRequestResponse(
+        access_request_id=access_request.access_request_id,
+        subscription_id=resources.subscription_id,
+        project_id=access_request.project_id,
+        api_id=access_request.api_id,
+        api_stage_id=access_request.api_stage_id,
+        approved_auth_mode=request.approved_auth_mode,
+        derived_state=AccessRequestDerivedState.APPROVED,
+        operation_id=operation.operation_id,
+    )

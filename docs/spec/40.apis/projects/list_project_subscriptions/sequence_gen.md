@@ -7,7 +7,6 @@ sequenceDiagram
   autonumber
   participant API as API
   participant DB as DB
-  API->>API: 呼び出し元の sub、group、scope を取得する。
   API->>API: Project subscription 一覧取得条件を検証する。
   API->>API: 対象 Project を取得する。
   alt 呼び出し元が Project subscription 一覧を参照できる場合。

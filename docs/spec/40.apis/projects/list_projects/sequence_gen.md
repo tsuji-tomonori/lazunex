@@ -8,7 +8,6 @@ sequenceDiagram
   participant API as API
   participant DB as DB
   API->>API: Project 一覧取得条件を検証する。
-  API->>API: 呼び出し元の sub、group、scope を取得する。
   alt 呼び出し元が Project 一覧を参照できる場合。
     API->>API: 呼び出し元が参照可能な Project を検索する。
     API->>API: 一覧取得結果に limit と nextToken を適用する。

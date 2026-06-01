@@ -1,8 +1,9 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Header, status
+from fastapi import APIRouter, Body, Depends, Header, status
 
 from app.apis.base import sample_value
+from app.apis.deps import get_caller_identity
 from app.apis.projects.create_project import functions as api_functions
 from app.apis.projects.create_project.samples import (
     CREATE_PROJECT_REQUEST_SAMPLE,
@@ -13,6 +14,13 @@ from app.apis.responses import (
     error_responses,
     success_response,
 )
+from app.apis.sequence_types import CallerIdentity
+from app.integrations.api_gateway_control.deps import get_api_gateway_control_client
+from app.integrations.api_gateway_control.port import ApiGatewayControlPort
+from app.integrations.identity.deps import get_identity_admin_client
+from app.integrations.identity.port import IdentityAdminPort
+from app.integrations.secret_values.deps import get_secret_values_client
+from app.integrations.secret_values.port import SecretValuesPort
 
 router = APIRouter()
 
@@ -48,8 +56,14 @@ async def create_project(
         Body(openapi_examples={"default": {"value": sample_value(CREATE_PROJECT_REQUEST_SAMPLE)}}),
     ],
     idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    caller: Annotated[CallerIdentity, Depends(get_caller_identity)],
+    api_gateway_control: Annotated[
+        ApiGatewayControlPort,
+        Depends(get_api_gateway_control_client),
+    ],
+    identity_admin: Annotated[IdentityAdminPort, Depends(get_identity_admin_client)],
+    secret_values: Annotated[SecretValuesPort, Depends(get_secret_values_client)],
 ) -> CreateProjectResponse:
-    caller = await api_functions.get_caller_identity()
     validated_request = await api_functions.validate_create_project_request(request)
     await api_functions.has_project_creation_permission(caller)
     await api_functions.get_idempotency_record(idempotency_key)
@@ -58,27 +72,36 @@ async def create_project(
         idempotency_key,
     )
     await api_functions.create_idempotency_record(idempotency_key, operation)
-    api_key_value = await api_functions.create_api_gateway_api_key(validated_request, operation)
+    api_key_value = await api_functions.create_api_gateway_api_key(
+        validated_request,
+        operation,
+        api_gateway_control,
+    )
     usage_plan_id = await api_functions.create_api_gateway_usage_plan(
         validated_request,
         operation,
+        api_gateway_control,
     )
     usage_plan_key_id = await api_functions.create_api_gateway_usage_plan_key(
         api_key_value,
         usage_plan_id,
         operation,
+        api_gateway_control,
     )
     public_client_id = await api_functions.create_cognito_public_app_client(
         validated_request,
         operation,
+        identity_admin,
     )
     confidential_client = await api_functions.create_cognito_confidential_app_client(
         validated_request,
         operation,
+        identity_admin,
     )
     secret_hashes = await api_functions.hash_project_secrets(
         api_key_value,
         confidential_client.client_secret,
+        secret_values,
     )
     resources = await api_functions.save_project_resources(
         validated_request,

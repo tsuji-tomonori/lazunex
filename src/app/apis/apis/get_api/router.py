@@ -1,16 +1,20 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Path, status
+from fastapi import APIRouter, Depends, Path, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.apis.get_api import functions as api_functions
 from app.apis.apis.get_api.samples import GET_API_RESPONSE_SAMPLE
 from app.apis.apis.get_api.schemas import GetApiResponse
 from app.apis.base import sample_path_value
+from app.apis.deps import get_caller_identity
 from app.apis.responses import (
     error_responses,
     success_response,
 )
+from app.apis.sequence_types import CallerIdentity
 from app.apis.types import ResourceId
+from app.db.session import get_session
 
 router = APIRouter()
 
@@ -40,14 +44,13 @@ async def get_api(
         Path(
             alias="apiId",
             description="APIカタログ上のAPIを一意に識別するIDです。",
-            json_schema_extra={
-                "default": sample_path_value(GET_API_RESPONSE_SAMPLE, "apiId")
-            },
+            json_schema_extra={"default": sample_path_value(GET_API_RESPONSE_SAMPLE, "apiId")},
         ),
     ],
+    caller: Annotated[CallerIdentity, Depends(get_caller_identity)],
+    session: Annotated[AsyncSession, Depends(get_session)],
 ) -> GetApiResponse:
-    caller = await api_functions.get_caller_identity()
     validated_api_id = await api_functions.validate_api_id(api_id)
-    api = await api_functions.get_api_detail(validated_api_id)
+    api = await api_functions.get_api_detail(validated_api_id, session)
     await api_functions.is_viewable_api(api, caller)
     return await api_functions.build_api_detail_response(api)

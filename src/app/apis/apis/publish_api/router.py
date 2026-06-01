@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Header, status
+from fastapi import APIRouter, Body, Depends, Header, status
 
 from app.apis.apis.publish_api import functions as api_functions
 from app.apis.apis.publish_api.samples import (
@@ -9,10 +9,14 @@ from app.apis.apis.publish_api.samples import (
 )
 from app.apis.apis.publish_api.schemas import PublishApiRequest, PublishApiResponse
 from app.apis.base import sample_value
+from app.apis.deps import get_caller_identity
 from app.apis.responses import (
     error_responses,
     success_response,
 )
+from app.apis.sequence_types import CallerIdentity
+from app.integrations.identity.deps import get_identity_admin_client
+from app.integrations.identity.port import IdentityAdminPort
 
 router = APIRouter()
 
@@ -46,8 +50,9 @@ async def publish_api(
         Body(openapi_examples={"default": {"value": sample_value(PUBLISH_API_REQUEST_SAMPLE)}}),
     ],
     idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    caller: Annotated[CallerIdentity, Depends(get_caller_identity)],
+    identity_admin: Annotated[IdentityAdminPort, Depends(get_identity_admin_client)],
 ) -> PublishApiResponse:
-    caller = await api_functions.get_caller_identity()
     validated_request = await api_functions.validate_api_publish_request(request)
     await api_functions.has_api_publish_permission(validated_request, caller)
     await api_functions.get_idempotency_record(idempotency_key)
@@ -58,7 +63,11 @@ async def publish_api(
         idempotency_key,
     )
     await api_functions.create_idempotency_record(idempotency_key, operation)
-    scope = await api_functions.add_cognito_custom_scope(validated_request, operation)
+    scope = await api_functions.add_cognito_custom_scope(
+        validated_request,
+        operation,
+        identity_admin,
+    )
     api = await api_functions.save_api_catalog_metadata(validated_request, scope, operation)
     await api_functions.append_api_lifecycle_events(api)
     await api_functions.append_provisioning_events(operation)
