@@ -42,6 +42,14 @@
 
 ### 条件
 
-- `JOIN ON project_members.project_id = projects.project_id AND project_members.member_principal_id = @actor_principal_id`
-- `JOIN ON project_api_subscriptions.project_id = projects.project_id`
-- `WHERE (projects.owner_principal_id = @actor_principal_id OR NOT project_members.project_member_id IS NULL OR @is_hub_admin = TRUE) AND (@after_project_code IS NULL OR projects.project_code > @after_project_code)`
+- `JOIN ON`
+  - `project_members.project_id = projects.project_id`
+  - `AND project_members.member_principal_id = @actor_principal_id`
+- `JOIN ON`
+  - `project_api_subscriptions.project_id = projects.project_id`
+- `WHERE`
+  - `(projects.owner_principal_id = @actor_principal_id`
+  - `OR NOT project_members.project_member_id IS NULL`
+  - `OR @is_hub_admin = TRUE)`
+  - `AND (@after_project_code IS NULL`
+  - `OR projects.project_code > @after_project_code)`

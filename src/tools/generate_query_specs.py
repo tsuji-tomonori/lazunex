@@ -39,12 +39,18 @@ class DocFieldSpec:
 
 
 @dataclass(frozen=True)
+class ConditionSpec:
+    label: str
+    items: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class SqlDocSpec:
     query: QuerySpec
     tables: tuple[str, ...]
     params: list[DocFieldSpec]
     rows: list[DocFieldSpec]
-    conditions: tuple[str, ...]
+    conditions: tuple[ConditionSpec, ...]
 
 
 @dataclass(frozen=True)
@@ -316,22 +322,61 @@ def expression_sql(expression: Any, aliases: dict[str, str] | None = None) -> st
     return " ".join(expression.sql(dialect="mysql").split())
 
 
-def sql_conditions(statements: Iterable[Any]) -> tuple[str, ...]:
-    conditions: list[str] = []
+def condition_items(expression: Any, aliases: dict[str, str]) -> tuple[str, ...]:
+    if isinstance(expression, exp.And):
+        return (
+            *condition_items(expression.this, aliases),
+            *prefixed_condition_items("AND", expression.expression, aliases),
+        )
+    if isinstance(expression, exp.Or):
+        return (
+            *condition_items(expression.this, aliases),
+            *prefixed_condition_items("OR", expression.expression, aliases),
+        )
+    if isinstance(expression, exp.Paren):
+        return parenthesized_condition_items(expression.this, aliases)
+    return (expression_sql(expression, aliases),)
+
+
+def parenthesized_condition_items(expression: Any, aliases: dict[str, str]) -> tuple[str, ...]:
+    items = condition_items(expression, aliases)
+    if not items:
+        return ()
+    if len(items) == 1:
+        return (f"({items[0]})",)
+
+    first, *middle, last = items
+    return (f"({first}", *middle, f"{last})")
+
+
+def prefixed_condition_items(
+    operator: str,
+    expression: Any,
+    aliases: dict[str, str],
+) -> tuple[str, ...]:
+    items = condition_items(expression, aliases)
+    if not items:
+        return ()
+    first, *rest = items
+    return (f"{operator} {first}", *rest)
+
+
+def sql_conditions(statements: Iterable[Any]) -> tuple[ConditionSpec, ...]:
+    conditions: list[ConditionSpec] = []
     for statement in statements:
         aliases = table_aliases(statement)
         for join in statement.find_all(exp.Join):
             on_expression = join.args.get("on")
             if on_expression is not None:
-                conditions.append(f"JOIN ON {expression_sql(on_expression, aliases)}")
+                conditions.append(ConditionSpec("JOIN ON", condition_items(on_expression, aliases)))
 
         where = statement.args.get("where")
         if isinstance(where, exp.Where):
-            conditions.append(f"WHERE {expression_sql(where.this, aliases)}")
+            conditions.append(ConditionSpec("WHERE", condition_items(where.this, aliases)))
 
         having = statement.args.get("having")
         if isinstance(having, exp.Having):
-            conditions.append(f"HAVING {expression_sql(having.this, aliases)}")
+            conditions.append(ConditionSpec("HAVING", condition_items(having.this, aliases)))
     return tuple(conditions)
 
 
@@ -435,6 +480,17 @@ def render_list(values: tuple[str, ...], empty_label: str) -> list[str]:
     return [f"- `{value}`" for value in values]
 
 
+def render_conditions(conditions: tuple[ConditionSpec, ...]) -> list[str]:
+    if not conditions:
+        return ["_なし_"]
+
+    lines: list[str] = []
+    for condition in conditions:
+        lines.append(f"- `{condition.label}`")
+        lines.extend(f"  - `{item}`" for item in condition.items)
+    return lines
+
+
 def operation_label(operation: str) -> str:
     labels = {
         "select": "SELECT",
@@ -471,7 +527,7 @@ def render_sql_spec(spec: SqlDocSpec) -> list[str]:
         "",
         "### 条件",
         "",
-        *render_list(spec.conditions, "_なし_"),
+        *render_conditions(spec.conditions),
     ]
     return lines
 

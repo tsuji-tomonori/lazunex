@@ -44,6 +44,15 @@
 
 ### 条件
 
-- `JOIN ON api_gateway_stages.api_stage_id = apis.default_api_stage_id`
-- `JOIN ON api_cognito_scopes.api_id = apis.api_id`
-- `WHERE (@visibility IS NULL OR apis.visibility = @visibility) AND (@keyword IS NULL OR LOWER(apis.name) LIKE LOWER(@keyword) OR LOWER(apis.api_code) LIKE LOWER(@keyword)) AND (@after_api_code IS NULL OR apis.api_code > @after_api_code)`
+- `JOIN ON`
+  - `api_gateway_stages.api_stage_id = apis.default_api_stage_id`
+- `JOIN ON`
+  - `api_cognito_scopes.api_id = apis.api_id`
+- `WHERE`
+  - `(@visibility IS NULL`
+  - `OR apis.visibility = @visibility)`
+  - `AND (@keyword IS NULL`
+  - `OR LOWER(apis.name) LIKE LOWER(@keyword)`
+  - `OR LOWER(apis.api_code) LIKE LOWER(@keyword))`
+  - `AND (@after_api_code IS NULL`
+  - `OR apis.api_code > @after_api_code)`

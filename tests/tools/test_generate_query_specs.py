@@ -4,6 +4,7 @@ from pathlib import Path
 
 from tools.generate_query_specs import (
     GENERATED_COMMENT,
+    ConditionSpec,
     build_arg_parser,
     generate_query_specs,
     main,
@@ -61,9 +62,12 @@ def test_sql_tables_and_conditions_preserve_sql_order() -> None:
 
     assert sql_tables(statements) == ("projects", "project_events")
     assert sql_conditions(statements) == (
-        "JOIN ON project_events.aggregate_id = projects.project_id",
-        "WHERE projects.project_code = @project_code",
-        "HAVING COUNT(*) > 0",
+        ConditionSpec(
+            "JOIN ON",
+            ("project_events.aggregate_id = projects.project_id",),
+        ),
+        ConditionSpec("WHERE", ("projects.project_code = @project_code",)),
+        ConditionSpec("HAVING", ("COUNT(*) > 0",)),
     )
 
 
@@ -98,7 +102,7 @@ def test_generate_query_specs_renders_sql_chapters(tmp_path: Path) -> None:
         "| <code>projects</code> | <code>description</code> | <code>description</code> | "
         "プロジェクトの説明。 | <code>TEXT</code> | yes |"
     ) in content
-    assert "### 条件\n\n- `WHERE project_code = @project_code`" in content
+    assert "### 条件\n\n- `WHERE`\n  - `project_code = @project_code`" in content
 
 
 def test_generate_query_specs_renders_source_tables_and_expanded_aliases(
@@ -134,10 +138,42 @@ def test_generate_query_specs_renders_source_tables_and_expanded_aliases(
         "- | <code>Any</code> | no |"
     ) in content
     assert (
-        "- `JOIN ON project_events.aggregate_id = projects.project_id`"
+        "- `JOIN ON`\n  - `project_events.aggregate_id = projects.project_id`"
         in content
     )
-    assert "- `WHERE projects.project_code = @project_code`" in content
+    assert "- `WHERE`\n  - `projects.project_code = @project_code`" in content
+
+
+def test_generate_query_specs_splits_and_or_conditions(tmp_path: Path) -> None:
+    api_root = write_api_sql(
+        tmp_path,
+        """
+        SELECT project_id
+        FROM projects AS p
+        JOIN project_events AS e
+            ON e.aggregate_id = p.project_id
+           AND e.event_id = @event_id
+        WHERE (p.project_code = @project_code
+            OR p.description = @description)
+          AND p.project_id = @project_id;
+        """,
+    )
+
+    content = next(
+        iter(generate_query_specs(api_root, tmp_path / "docs", write_ddl(tmp_path)).values())
+    )
+
+    assert (
+        "- `JOIN ON`\n"
+        "  - `project_events.aggregate_id = projects.project_id`\n"
+        "  - `AND project_events.event_id = @event_id`"
+    ) in content
+    assert (
+        "- `WHERE`\n"
+        "  - `(projects.project_code = @project_code`\n"
+        "  - `OR projects.description = @description)`\n"
+        "  - `AND projects.project_id = @project_id`"
+    ) in content
 
 
 def test_render_query_markdown_marks_empty_sections(tmp_path: Path) -> None:

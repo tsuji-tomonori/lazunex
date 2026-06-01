@@ -51,9 +51,16 @@
 
 ### 条件
 
-- `JOIN ON projects.project_id = project_cognito_clients.project_id`
-- `JOIN ON project_members.project_id = projects.project_id AND project_members.member_principal_id = @actor_principal_id`
-- `WHERE project_cognito_clients.project_id = @project_id AND project_cognito_clients.client_type = 'PUBLIC_PKCE' AND (projects.owner_principal_id = @actor_principal_id OR project_members.member_role IN ('OWNER', 'ADMIN'))`
+- `JOIN ON`
+  - `projects.project_id = project_cognito_clients.project_id`
+- `JOIN ON`
+  - `project_members.project_id = projects.project_id`
+  - `AND project_members.member_principal_id = @actor_principal_id`
+- `WHERE`
+  - `project_cognito_clients.project_id = @project_id`
+  - `AND project_cognito_clients.client_type = 'PUBLIC_PKCE'`
+  - `AND (projects.owner_principal_id = @actor_principal_id`
+  - `OR project_members.member_role IN ('OWNER', 'ADMIN'))`
 
 
 ## 002_select_project_cognito_client_scopes.sql
@@ -89,7 +96,8 @@ public client更新後も既存scopeを維持するため、Project Cognito clie
 
 ### 条件
 
-- `WHERE project_cognito_client_scopes.project_cognito_client_id = @project_cognito_client_id`
+- `WHERE`
+  - `project_cognito_client_scopes.project_cognito_client_id = @project_cognito_client_id`
 
 
 ## 003_update_project_cognito_clients.sql
@@ -131,7 +139,9 @@ _なし_
 
 ### 条件
 
-- `WHERE project_cognito_client_id = @project_cognito_client_id AND row_version = @row_version`
+- `WHERE`
+  - `project_cognito_client_id = @project_cognito_client_id`
+  - `AND row_version = @row_version`
 
 
 ## 004_delete_project_cognito_client_urls.sql
@@ -161,7 +171,9 @@ _なし_
 
 ### 条件
 
-- `WHERE project_cognito_client_id = @project_cognito_client_id AND url_type = @url_type`
+- `WHERE`
+  - `project_cognito_client_id = @project_cognito_client_id`
+  - `AND url_type = @url_type`
 
 
 ## 005_insert_project_cognito_client_urls.sql

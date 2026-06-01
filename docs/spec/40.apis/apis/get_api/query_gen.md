@@ -53,7 +53,11 @@ API詳細レスポンスを組み立てるため、API catalog情報を取得す
 
 ### 条件
 
-- `JOIN ON api_gateway_stages.api_id = apis.api_id`
-- `JOIN ON api_cognito_scopes.api_id = apis.api_id`
-- `JOIN ON api_reviewers.api_id = apis.api_id`
-- `WHERE apis.api_id = @api_id`
+- `JOIN ON`
+  - `api_gateway_stages.api_id = apis.api_id`
+- `JOIN ON`
+  - `api_cognito_scopes.api_id = apis.api_id`
+- `JOIN ON`
+  - `api_reviewers.api_id = apis.api_id`
+- `WHERE`
+  - `apis.api_id = @api_id`

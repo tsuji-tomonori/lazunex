@@ -33,7 +33,8 @@ Project codeの重複作成を防ぐため、既存Projectを取得する。
 
 ### 条件
 
-- `WHERE project_code = @project_code`
+- `WHERE`
+  - `project_code = @project_code`
 
 
 ## 002_insert_projects.sql

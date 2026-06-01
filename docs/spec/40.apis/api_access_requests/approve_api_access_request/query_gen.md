@@ -50,11 +50,17 @@
 
 ### 条件
 
-- `JOIN ON projects.project_id = api_access_requests.project_id`
-- `JOIN ON apis.api_id = api_access_requests.api_id`
-- `JOIN ON api_gateway_stages.api_stage_id = api_access_requests.api_stage_id`
-- `JOIN ON api_cognito_scopes.api_id = api_access_requests.api_id`
-- `WHERE api_access_requests.access_request_id = @access_request_id AND NOT EXISTS(SELECT 1 FROM api_access_reviews AS rv WHERE api_access_reviews.access_request_id = api_access_requests.access_request_id)`
+- `JOIN ON`
+  - `projects.project_id = api_access_requests.project_id`
+- `JOIN ON`
+  - `apis.api_id = api_access_requests.api_id`
+- `JOIN ON`
+  - `api_gateway_stages.api_stage_id = api_access_requests.api_stage_id`
+- `JOIN ON`
+  - `api_cognito_scopes.api_id = api_access_requests.api_id`
+- `WHERE`
+  - `api_access_requests.access_request_id = @access_request_id`
+  - `AND NOT EXISTS(SELECT 1 FROM api_access_reviews AS rv WHERE api_access_reviews.access_request_id = api_access_requests.access_request_id)`
 
 
 ## 002_select_api_reviewers.sql
@@ -90,7 +96,10 @@
 
 ### 条件
 
-- `WHERE api_id = @api_id AND (reviewer_principal_id = @actor_principal_id OR @is_hub_admin = TRUE)`
+- `WHERE`
+  - `api_id = @api_id`
+  - `AND (reviewer_principal_id = @actor_principal_id`
+  - `OR @is_hub_admin = TRUE)`
 
 
 ## 003_select_subscriptions.sql
@@ -128,7 +137,9 @@
 
 ### 条件
 
-- `WHERE project_id = @project_id AND api_stage_id = @api_stage_id`
+- `WHERE`
+  - `project_id = @project_id`
+  - `AND api_stage_id = @api_stage_id`
 
 
 ## 004_insert_access_request_events.sql
@@ -244,8 +255,15 @@ _なし_
 
 ### 条件
 
-- `JOIN ON project_usage_plans.project_id = project_cognito_clients.project_id`
-- `WHERE project_cognito_clients.project_id = @project_id AND ((@approved_auth_mode = 'PUBLIC_PKCE' AND project_cognito_clients.client_type = 'PUBLIC_PKCE') OR (@approved_auth_mode = 'CLIENT_CREDENTIALS' AND project_cognito_clients.client_type = 'CONFIDENTIAL_CLIENT_CREDENTIALS') OR (@approved_auth_mode = 'BOTH'))`
+- `JOIN ON`
+  - `project_usage_plans.project_id = project_cognito_clients.project_id`
+- `WHERE`
+  - `project_cognito_clients.project_id = @project_id`
+  - `AND ((@approved_auth_mode = 'PUBLIC_PKCE'`
+  - `AND project_cognito_clients.client_type = 'PUBLIC_PKCE')`
+  - `OR (@approved_auth_mode = 'CLIENT_CREDENTIALS'`
+  - `AND project_cognito_clients.client_type = 'CONFIDENTIAL_CLIENT_CREDENTIALS')`
+  - `OR (@approved_auth_mode = 'BOTH'))`
 
 
 ## 007_insert_api_access_reviews.sql

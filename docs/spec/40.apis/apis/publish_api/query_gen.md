@@ -33,7 +33,8 @@ API codeの重複登録を防ぐため、既存APIを取得する。
 
 ### 条件
 
-- `WHERE api_code = @api_code`
+- `WHERE`
+  - `api_code = @api_code`
 
 
 ## 002_select_api_cognito_scopes.sql
@@ -69,7 +70,8 @@ custom scopeの重複登録を防ぐため、既存API Cognito scopeを取得す
 
 ### 条件
 
-- `WHERE scope_full_name = @scope_full_name`
+- `WHERE`
+  - `scope_full_name = @scope_full_name`
 
 
 ## 003_insert_provisioning_operations.sql

@@ -41,8 +41,11 @@
 
 ### 条件
 
-- `JOIN ON apis.api_id = api_access_requests.api_id`
-- `WHERE api_access_requests.access_request_id = @access_request_id AND NOT EXISTS(SELECT 1 FROM api_access_reviews AS rv WHERE api_access_reviews.access_request_id = api_access_requests.access_request_id)`
+- `JOIN ON`
+  - `apis.api_id = api_access_requests.api_id`
+- `WHERE`
+  - `api_access_requests.access_request_id = @access_request_id`
+  - `AND NOT EXISTS(SELECT 1 FROM api_access_reviews AS rv WHERE api_access_reviews.access_request_id = api_access_requests.access_request_id)`
 
 
 ## 002_select_api_reviewers.sql
@@ -78,7 +81,10 @@
 
 ### 条件
 
-- `WHERE api_id = @api_id AND (reviewer_principal_id = @actor_principal_id OR @is_hub_admin = TRUE)`
+- `WHERE`
+  - `api_id = @api_id`
+  - `AND (reviewer_principal_id = @actor_principal_id`
+  - `OR @is_hub_admin = TRUE)`
 
 
 ## 003_insert_api_access_reviews.sql

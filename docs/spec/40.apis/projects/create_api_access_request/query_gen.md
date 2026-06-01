@@ -35,8 +35,13 @@
 
 ### 条件
 
-- `JOIN ON project_members.project_id = projects.project_id AND project_members.member_principal_id = @actor_principal_id`
-- `WHERE projects.project_id = @project_id AND (projects.owner_principal_id = @actor_principal_id OR project_members.member_role IN ('OWNER', 'ADMIN'))`
+- `JOIN ON`
+  - `project_members.project_id = projects.project_id`
+  - `AND project_members.member_principal_id = @actor_principal_id`
+- `WHERE`
+  - `projects.project_id = @project_id`
+  - `AND (projects.owner_principal_id = @actor_principal_id`
+  - `OR project_members.member_role IN ('OWNER', 'ADMIN'))`
 
 
 ## 002_select_apis.sql
@@ -80,10 +85,16 @@
 
 ### 条件
 
-- `JOIN ON api_gateway_stages.api_stage_id = COALESCE(@api_stage_id, apis.default_api_stage_id) AND api_gateway_stages.api_id = apis.api_id`
-- `JOIN ON api_cognito_scopes.api_id = apis.api_id`
-- `JOIN ON api_reviewers.api_id = apis.api_id AND api_reviewers.reviewer_role = 'PRIMARY'`
-- `WHERE apis.api_id = @api_id`
+- `JOIN ON`
+  - `api_gateway_stages.api_stage_id = COALESCE(@api_stage_id, apis.default_api_stage_id)`
+  - `AND api_gateway_stages.api_id = apis.api_id`
+- `JOIN ON`
+  - `api_cognito_scopes.api_id = apis.api_id`
+- `JOIN ON`
+  - `api_reviewers.api_id = apis.api_id`
+  - `AND api_reviewers.reviewer_role = 'PRIMARY'`
+- `WHERE`
+  - `apis.api_id = @api_id`
 
 
 ## 003_select_project_cognito_clients.sql
@@ -119,7 +130,9 @@
 
 ### 条件
 
-- `WHERE project_id = @project_id AND client_type IN ('PUBLIC_PKCE', 'CONFIDENTIAL_CLIENT_CREDENTIALS')`
+- `WHERE`
+  - `project_id = @project_id`
+  - `AND client_type IN ('PUBLIC_PKCE', 'CONFIDENTIAL_CLIENT_CREDENTIALS')`
 
 
 ## 004_select_subscriptions.sql
@@ -157,7 +170,9 @@
 
 ### 条件
 
-- `WHERE project_id = @project_id AND api_stage_id = @api_stage_id`
+- `WHERE`
+  - `project_id = @project_id`
+  - `AND api_stage_id = @api_stage_id`
 
 
 ## 005_select_api_access_requests.sql
@@ -196,7 +211,10 @@
 
 ### 条件
 
-- `WHERE api_access_requests.project_id = @project_id AND api_access_requests.api_stage_id = @api_stage_id AND NOT EXISTS(SELECT 1 FROM api_access_reviews AS rv WHERE api_access_reviews.access_request_id = api_access_requests.access_request_id)`
+- `WHERE`
+  - `api_access_requests.project_id = @project_id`
+  - `AND api_access_requests.api_stage_id = @api_stage_id`
+  - `AND NOT EXISTS(SELECT 1 FROM api_access_reviews AS rv WHERE api_access_reviews.access_request_id = api_access_requests.access_request_id)`
 
 
 ## 006_insert_api_access_requests.sql
