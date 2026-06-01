@@ -1,7 +1,10 @@
 from __future__ import annotations
 
-from typing import NoReturn
+from typing import NoReturn, cast
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.apis.projects.list_project_subscriptions import queries
 from app.apis.projects.list_project_subscriptions.schemas import (
     ListProjectSubscriptionsQuery,
     ListProjectSubscriptionsResponse,
@@ -43,8 +46,26 @@ async def has_project_subscription_view_permission(
 async def get_project_subscriptions(
     project: ProjectRef,
     query: ListProjectSubscriptionsQuery,
+    caller: CallerIdentity | None = None,
+    session: AsyncSession | None = None,
 ) -> SequencePage[ProjectSubscriptionItemResponse]:
     """Project の active subscription を検索する。"""
+    if session is not None and caller is not None:
+        rows = await queries.select_subscriptions(
+            session,
+            queries.SelectSubscriptionsParams(
+                actor_principal_id=caller.principal_id,
+                project_id=project.project_id,
+                app_client_id="",
+                is_hub_admin="hub-admin" in caller.groups,
+                after_approved_at=getattr(query, "next_token", None),
+                limit=getattr(query, "limit", None),
+            ),
+        )
+        return SequencePage(
+            items=cast(tuple[ProjectSubscriptionItemResponse, ...], tuple(rows)),
+            next_token=None,
+        )
     return _sequence_placeholder("get_project_subscriptions")
 
 

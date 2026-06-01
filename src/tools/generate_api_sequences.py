@@ -38,6 +38,8 @@ class SequenceStep:
     description: str
     arguments: tuple[str, ...] = ()
     return_type: str | None = None
+    integration_resources: tuple[str, ...] = ()
+    query_functions: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -53,6 +55,8 @@ class FunctionMetadata:
     description: str
     arguments: tuple[str, ...]
     return_type: str | None
+    integration_resources: tuple[str, ...] = ()
+    query_functions: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -63,9 +67,7 @@ class ApiSequence:
     operation_id: str
     steps: list[SequenceStep]
     sql_steps: list[SqlStep]
-    integration_resources: frozenset[str] = field(
-        default_factory=lambda: frozenset[str]()
-    )
+    integration_resources: frozenset[str] = field(default_factory=lambda: frozenset[str]())
 
 
 def snake_to_title(value: str) -> str:
@@ -142,6 +144,85 @@ def annotation_text(node: ast.AST | None) -> str | None:
     return ast.unparse(node)
 
 
+def imported_integration_ports(tree: ast.AST) -> dict[str, str]:
+    ports: dict[str, str] = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ImportFrom):
+            continue
+        module = node.module or ""
+        match = re.fullmatch(r"app\.integrations\.([A-Za-z_][A-Za-z0-9_]*)\.port", module)
+        if match is None:
+            continue
+        resource = match.group(1)
+        for alias in node.names:
+            local_name = alias.asname or alias.name
+            ports[local_name] = resource
+    return ports
+
+
+def annotation_name(node: ast.AST | None) -> str | None:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    if isinstance(node, ast.Subscript):
+        return annotation_name(node.value)
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
+        return annotation_name(node.left) or annotation_name(node.right)
+    return None
+
+
+def function_integration_arguments(
+    function: ast.AsyncFunctionDef | ast.FunctionDef,
+    ports: dict[str, str],
+) -> dict[str, str]:
+    resources: dict[str, str] = {}
+    for arg in [
+        *function.args.posonlyargs,
+        *function.args.args,
+        *function.args.kwonlyargs,
+    ]:
+        name = annotation_name(arg.annotation)
+        if name is not None and name in ports:
+            resources[arg.arg] = ports[name]
+    return resources
+
+
+def called_integration_resources(
+    function: ast.AsyncFunctionDef | ast.FunctionDef,
+    ports: dict[str, str],
+) -> tuple[str, ...]:
+    integration_arguments = function_integration_arguments(function, ports)
+    resources: list[str] = []
+    for node in ast.walk(function):
+        if not isinstance(node, ast.Call):
+            continue
+        callee = node.func
+        if not isinstance(callee, ast.Attribute):
+            continue
+        if not isinstance(callee.value, ast.Name):
+            continue
+        resource = integration_arguments.get(callee.value.id)
+        if resource is not None and resource not in resources:
+            resources.append(resource)
+    return tuple(resources)
+
+
+def called_query_functions(function: ast.AsyncFunctionDef | ast.FunctionDef) -> tuple[str, ...]:
+    names: list[str] = []
+    for node in ast.walk(function):
+        if not isinstance(node, ast.Call):
+            continue
+        callee = node.func
+        if not isinstance(callee, ast.Attribute):
+            continue
+        if not isinstance(callee.value, ast.Name) or callee.value.id != "queries":
+            continue
+        if callee.attr not in names:
+            names.append(callee.attr)
+    return tuple(names)
+
+
 def function_arguments(function: ast.AsyncFunctionDef | ast.FunctionDef) -> tuple[str, ...]:
     arguments: list[str] = []
     for arg in [
@@ -177,6 +258,7 @@ def docstring_summary(function: ast.AsyncFunctionDef | ast.FunctionDef) -> str:
 
 def function_metadata(functions_path: Path) -> dict[str, FunctionMetadata]:
     tree = ast.parse(functions_path.read_text(encoding="utf-8"), filename=str(functions_path))
+    ports = imported_integration_ports(tree)
     metadata: dict[str, FunctionMetadata] = {}
     for node in tree.body:
         if not isinstance(node, ast.AsyncFunctionDef | ast.FunctionDef):
@@ -187,6 +269,8 @@ def function_metadata(functions_path: Path) -> dict[str, FunctionMetadata]:
             description=docstring_summary(node),
             arguments=function_arguments(node),
             return_type=annotation_text(node.returns),
+            integration_resources=called_integration_resources(node, ports),
+            query_functions=called_query_functions(node),
         )
     return metadata
 
@@ -257,6 +341,8 @@ def endpoint_sequence_steps(
                 description=function_metadata.description,
                 arguments=function_metadata.arguments,
                 return_type=function_metadata.return_type,
+                integration_resources=function_metadata.integration_resources,
+                query_functions=function_metadata.query_functions,
             )
         )
     return steps
@@ -308,12 +394,32 @@ def query_sql_summaries(queries_path: Path) -> dict[str, str]:
     return summaries
 
 
-def sql_sequence_steps(sql_dir: Path, summaries: dict[str, str] | None = None) -> list[SqlStep]:
+def query_sql_filenames(queries_path: Path) -> dict[str, str]:
+    if not queries_path.exists():
+        return {}
+    tree = ast.parse(queries_path.read_text(encoding="utf-8"), filename=str(queries_path))
+    filenames: dict[str, str] = {}
+    for node in tree.body:
+        if not isinstance(node, ast.AsyncFunctionDef | ast.FunctionDef):
+            continue
+        filename = query_sql_filename(node)
+        if filename is not None:
+            filenames[node.name] = filename
+    return filenames
+
+
+def sql_sequence_steps(
+    sql_dir: Path,
+    summaries: dict[str, str] | None = None,
+    filenames: set[str] | None = None,
+) -> list[SqlStep]:
     if not sql_dir.exists():
         return []
     steps: list[SqlStep] = []
     summaries = summaries or {}
     for path in sorted(sql_dir.glob("*.sql")):
+        if filenames is not None and path.name not in filenames:
+            continue
         tables = sql_tables(path.read_text(encoding="utf-8"))
         if tables:
             steps.append(
@@ -337,6 +443,14 @@ def api_sequence_from_dir(
     tree = ast.parse(router_path.read_text(encoding="utf-8"), filename=str(router_path))
     function = endpoint_function(tree)
     metadata = function_metadata(functions_path)
+    steps = endpoint_sequence_steps(function, metadata)
+    query_filenames = query_sql_filenames(api_dir / "queries.py")
+    called_query_filenames = {
+        query_filenames[query_function]
+        for step in steps
+        for query_function in step.query_functions
+        if query_function in query_filenames
+    }
     relative = api_dir.relative_to(api_root)
     domain, api = relative.parts
     return ApiSequence(
@@ -344,8 +458,12 @@ def api_sequence_from_dir(
         api=api,
         endpoint_name=function.name,
         operation_id=endpoint_operation_id(function),
-        steps=endpoint_sequence_steps(function, metadata),
-        sql_steps=sql_sequence_steps(api_dir / "sql", query_sql_summaries(api_dir / "queries.py")),
+        steps=steps,
+        sql_steps=sql_sequence_steps(
+            api_dir / "sql",
+            query_sql_summaries(api_dir / "queries.py"),
+            called_query_filenames or None,
+        ),
         integration_resources=(
             integration_resources(integrations_root)
             if integrations_root is not None
@@ -356,9 +474,7 @@ def api_sequence_from_dir(
 
 def api_dirs(api_root: Path) -> list[Path]:
     return sorted(
-        path.parent
-        for path in api_root.glob("*/*/router.py")
-        if "__pycache__" not in path.parts
+        path.parent for path in api_root.glob("*/*/router.py") if "__pycache__" not in path.parts
     )
 
 
@@ -367,12 +483,14 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
     for step in sequence.steps:
         if is_predicate_function(step.function_name):
             continue
-        resource = integration_resource_for_target(
-            step.target,
-            sequence.integration_resources,
-        )
-        if resource is not None and resource not in resource_targets:
-            resource_targets.append(resource)
+        for resource in step.integration_resources:
+            if resource not in resource_targets:
+                resource_targets.append(resource)
+
+    def step_resource(step: SequenceStep) -> str | None:
+        if step.integration_resources:
+            return step.integration_resources[0]
+        return None
 
     lines = [
         GENERATED_COMMENT,
@@ -399,10 +517,7 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
             lines.append(f"{indent}alt {predicate_condition_label(step)}")
             alt_depth += 1
             continue
-        resource = integration_resource_for_target(
-            step.target,
-            sequence.integration_resources,
-        )
+        resource = step_resource(step)
         indent = "  " + ("  " * alt_depth)
         if resource is None:
             lines.append(f"{indent}API->>API: {label}")

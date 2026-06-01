@@ -1,7 +1,10 @@
 from __future__ import annotations
 
-from typing import NoReturn
+from typing import NoReturn, cast
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.apis.projects.list_projects import queries
 from app.apis.projects.list_projects.schemas import (
     ListProjectsQuery,
     ListProjectsResponse,
@@ -32,8 +35,23 @@ async def has_project_list_permission(caller: CallerIdentity) -> bool:
 async def get_viewable_projects(
     query: ListProjectsQuery,
     caller: CallerIdentity,
+    session: AsyncSession | None = None,
 ) -> SequencePage[ProjectListItemResponse]:
     """呼び出し元が参照可能な Project を検索する。"""
+    if session is not None:
+        rows = await queries.select_projects(
+            session,
+            queries.SelectProjectsParams(
+                actor_principal_id=caller.principal_id,
+                is_hub_admin="hub-admin" in caller.groups,
+                after_project_code=getattr(query, "next_token", None),
+                limit=getattr(query, "limit", None),
+            ),
+        )
+        return SequencePage(
+            items=cast(tuple[ProjectListItemResponse, ...], tuple(rows)),
+            next_token=None,
+        )
     return _sequence_placeholder("get_viewable_projects")
 
 

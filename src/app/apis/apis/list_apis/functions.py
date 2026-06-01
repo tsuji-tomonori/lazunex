@@ -1,7 +1,10 @@
 from __future__ import annotations
 
-from typing import NoReturn
+from typing import NoReturn, cast
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.apis.apis.list_apis import queries
 from app.apis.apis.list_apis.schemas import (
     ApiListItemResponse,
     ListApisQuery,
@@ -32,8 +35,24 @@ async def has_api_list_permission(caller: CallerIdentity) -> bool:
 async def get_viewable_apis(
     query: ListApisQuery,
     caller: CallerIdentity,
+    session: AsyncSession | None = None,
 ) -> SequencePage[ApiListItemResponse]:
     """呼び出し元が参照可能な公開 API を検索する。"""
+    if session is not None:
+        rows = await queries.select_apis(
+            session,
+            queries.SelectApisParams(
+                visibility="PUBLIC",
+                keyword=getattr(query, "keyword", None),
+                after_api_code=getattr(query, "next_token", None),
+                limit=getattr(query, "limit", None),
+            ),
+        )
+        _ = caller
+        return SequencePage(
+            items=cast(tuple[ApiListItemResponse, ...], tuple(rows)),
+            next_token=None,
+        )
     return _sequence_placeholder("get_viewable_apis")
 
 

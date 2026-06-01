@@ -19,12 +19,14 @@ from tools.generate_api_sequences import (
     function_metadata,
     function_target,
     generate_sequences,
+    imported_integration_ports,
     integration_resource_for_target,
     integration_resources,
     is_predicate_function,
     is_router_decorator,
     literal_string,
     main,
+    query_sql_filenames,
     query_sql_summaries,
     render_sequence_markdown,
     sql_sequence_steps,
@@ -83,9 +85,11 @@ async def get_project(project_id):
         "projects/get_project/functions.py",
         """
 from app.apis.types import ResourceId
+from app.apis.projects.get_project import queries
 
 async def get_project(project_id: ResourceId) -> ProjectRef:
     \"\"\"プロジェクト情報を取得する。\"\"\"
+    return await queries.select_projects(session, params)
 
 async def has_project_view_permission(project: ProjectRef, caller=None) -> bool:
     \"\"\"プロジェクトを参照できるかを判定する。\"\"\"
@@ -127,6 +131,8 @@ async def select_projects(session: AsyncSession, params):
             "プロジェクト情報を取得する。",
             ("project_id ResourceId",),
             "ProjectRef",
+            (),
+            ("select_projects",),
         ),
         SequenceStep(
             "has_project_view_permission",
@@ -154,6 +160,43 @@ async def select_projects(session: AsyncSession, params):
     assert sequence.integration_resources == frozenset({"api_gateway"})
 
 
+def test_function_metadata_reads_called_integration_resources(tmp_path: Path) -> None:
+    functions_path = write_file(
+        tmp_path,
+        "functions.py",
+        """
+from app.integrations.identity.port import IdentityAdminPort
+
+async def update_cognito_app_client(identity_admin: IdentityAdminPort) -> ClientRef:
+    \"\"\"Cognito App Client を更新する。\"\"\"
+    return await identity_admin.update_user_pool_client(request)
+""",
+    )
+    tree = ast.parse(functions_path.read_text(encoding="utf-8"))
+
+    assert imported_integration_ports(tree) == {"IdentityAdminPort": "identity"}
+    assert function_metadata(functions_path)["update_cognito_app_client"].integration_resources == (
+        "identity",
+    )
+
+
+def test_query_sql_filenames_maps_called_query_to_sql(tmp_path: Path) -> None:
+    queries_path = write_file(
+        tmp_path,
+        "queries.py",
+        """
+from pathlib import Path
+
+SQL_DIR = Path(__file__).with_name("sql")
+
+async def select_projects(session, params):
+    return await fetch_all(session, SQL_DIR / "001_select_projects.sql", params, Row)
+""",
+    )
+
+    assert query_sql_filenames(queries_path) == {"select_projects": "001_select_projects.sql"}
+
+
 def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
     markdown = render_sequence_markdown(
         ApiSequence(
@@ -175,6 +218,7 @@ def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
                     "API keyを作成する。",
                     ("project ProjectRef",),
                     "ApiGatewayApiKeyRef",
+                    ("api_gateway_control",),
                 ),
                 SequenceStep(
                     "has_project_view_permission",
@@ -205,26 +249,26 @@ def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
                     "Project 一覧表示に必要な Project を取得する。",
                 ),
             ],
-            integration_resources=frozenset({"api_gateway"}),
+            integration_resources=frozenset({"api_gateway", "api_gateway_control"}),
         )
     )
 
     assert "participant API as API" in markdown
     assert "participant R_project as Resource: project" not in markdown
-    assert markdown.count("participant R_api_gateway as Resource: api gateway") == 1
+    assert "participant R_api_gateway as Resource: api gateway" not in markdown
+    assert "participant R_api_gateway_control as Resource: api gateway control" in markdown
     assert "participant R_project_view_permission" not in markdown
     assert "participant DB as DB" in markdown
     assert "participant T_projects" not in markdown
     assert "  autonumber" in markdown
     assert "API->>API: プロジェクト情報を取得する。" in markdown
-    assert "API->>R_api_gateway: API keyを作成する。" in markdown
+    assert "API->>R_api_gateway_control: API keyを作成する。" in markdown
     assert "alt プロジェクトを参照できる場合。" in markdown
     assert "API->>API: プロジェクトを参照できるかを判定する。" not in markdown
     assert "    API->>API: プロジェクト詳細レスポンスを組み立てる。" in markdown
     assert (
         "API->>DB: Project 詳細表示に必要な Project と member を取得する。"
-        "<br/>SQL 001_select_projects.sql<br/>テーブル projects, project_members"
-        in markdown
+        "<br/>SQL 001_select_projects.sql<br/>テーブル projects, project_members" in markdown
     )
     assert markdown.rstrip().endswith("  end\n```")
 
@@ -465,11 +509,7 @@ async def endpoint():
     await api_functions.get_project()
 """
     )
-    expressions = [
-        node.value
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Expr)
-    ]
+    expressions = [node.value for node in ast.walk(tree) if isinstance(node, ast.Expr)]
 
     assert [awaited_api_function_name(expression) for expression in expressions] == [
         None,

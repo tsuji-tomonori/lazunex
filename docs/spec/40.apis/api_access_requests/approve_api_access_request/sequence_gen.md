@@ -6,7 +6,8 @@
 sequenceDiagram
   autonumber
   participant API as API
-  participant R_cognito as Resource: cognito
+  participant R_api_gateway_control as Resource: api gateway control
+  participant R_identity as Resource: identity
   participant DB as DB
   API->>API: 呼び出し元の role、group、scope を取得する。
   API->>API: 承認対象の利用申請を取得する。
@@ -18,10 +19,10 @@ sequenceDiagram
           API->>API: 承認反映用の provisioning operation を作成する。
           API->>API: Idempotency-Key に対応する既存レコードを取得する。
           API->>API: 冪等性レコードを作成または確認する。
-          API->>API: API Gateway Usage Plan に API stage を追加する。
-          API->>R_cognito: Cognito App Client 設定を取得する。
-          API->>R_cognito: 既存 AllowedOAuthScopes に承認対象 scope を統合する。
-          API->>R_cognito: Cognito App Client を更新する。
+          API->>R_api_gateway_control: API Gateway Usage Plan に API stage を追加する。
+          API->>R_identity: Cognito App Client 設定を取得する。
+          API->>API: 既存 AllowedOAuthScopes に承認対象 scope を統合する。
+          API->>R_identity: Cognito App Client を更新する。
           API->>API: 承認結果、subscription、linkage、client scope を保存する。
           API->>API: Usage Plan stage 追加イベントを追記する。
           API->>API: Cognito App Client scope 付与イベントを追記する。

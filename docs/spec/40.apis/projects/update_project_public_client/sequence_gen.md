@@ -6,7 +6,7 @@
 sequenceDiagram
   autonumber
   participant API as API
-  participant R_cognito as Resource: cognito
+  participant R_identity as Resource: identity
   participant DB as DB
   API->>API: 呼び出し元の sub、group、scope を取得する。
   API->>API: public App Client 更新リクエストを検証する。
@@ -16,9 +16,9 @@ sequenceDiagram
     API->>API: Idempotency-Key に対応する既存レコードを取得する。
     API->>API: public client 更新用の provisioning operation を作成する。
     API->>API: 冪等性レコードを作成または確認する。
-    API->>R_cognito: Cognito App Client 設定を取得する。
+    API->>R_identity: Cognito App Client 設定を取得する。
     API->>API: callback URL、logout URL、token 設定を既存設定へ統合する。
-    API->>R_cognito: Cognito App Client を更新する。
+    API->>R_identity: Cognito App Client を更新する。
     API->>API: public App Client metadata を更新する。
     API->>API: Project public client 更新イベントを追記する。
     API->>API: provisioning operation/step event を追記する。

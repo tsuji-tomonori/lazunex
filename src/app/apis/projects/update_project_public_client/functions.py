@@ -16,6 +16,12 @@ from app.apis.sequence_types import (
     ProvisioningOperationRef,
 )
 from app.apis.types import ResourceId
+from app.core.config import settings
+from app.integrations.identity.port import IdentityAdminPort
+from app.integrations.identity.schemas import (
+    DescribeUserPoolClientInput,
+    UpdateUserPoolClientInput,
+)
 
 
 def _sequence_placeholder(function_name: str) -> NoReturn:
@@ -73,8 +79,20 @@ async def create_idempotency_record(
 
 async def get_cognito_app_client(
     public_client: UpdatedPublicClientResponse,
+    identity_admin: IdentityAdminPort | None = None,
 ) -> CognitoAppClientRef:
     """Cognito App Client 設定を取得する。"""
+    if identity_admin is not None:
+        client = await identity_admin.describe_user_pool_client(
+            DescribeUserPoolClientInput(
+                user_pool_id=settings.cognito_user_pool_id,
+                client_id=public_client.app_client_id,
+            )
+        )
+        return CognitoAppClientRef(
+            app_client_id=client.app_client_id,
+            allowed_scopes=client.allowed_scopes,
+        )
     return _sequence_placeholder("get_cognito_app_client")
 
 
@@ -89,8 +107,22 @@ async def merge_public_client_settings(
 async def update_cognito_app_client(
     merged: CognitoAppClientRef,
     operation: ProvisioningOperationRef,
+    identity_admin: IdentityAdminPort | None = None,
 ) -> CognitoAppClientRef:
     """Cognito App Client を更新する。"""
+    if identity_admin is not None:
+        updated = await identity_admin.update_user_pool_client(
+            UpdateUserPoolClientInput(
+                user_pool_id=settings.cognito_user_pool_id,
+                client_id=merged.app_client_id,
+                allowed_scopes=merged.allowed_scopes,
+            )
+        )
+        _ = operation
+        return CognitoAppClientRef(
+            app_client_id=updated.app_client_id,
+            allowed_scopes=updated.allowed_scopes,
+        )
     return _sequence_placeholder("update_cognito_app_client")
 
 

@@ -11,6 +11,9 @@ from app.apis.sequence_types import (
     IdempotencyRecordRef,
     ProvisioningOperationRef,
 )
+from app.core.config import settings
+from app.integrations.identity.port import IdentityAdminPort
+from app.integrations.identity.schemas import UpdateResourceServerInput
 
 
 def _sequence_placeholder(function_name: str) -> NoReturn:
@@ -69,8 +72,23 @@ async def create_idempotency_record(
 async def add_cognito_custom_scope(
     request: PublishApiRequest,
     operation: ProvisioningOperationRef,
+    identity_admin: IdentityAdminPort | None = None,
 ) -> ApiScopeRef:
     """Cognito Resource Server に custom scope を追加する。"""
+    if identity_admin is not None:
+        scope_name = f"api:{request.api_code}:invoke"
+        await identity_admin.update_resource_server(
+            UpdateResourceServerInput(
+                user_pool_id=settings.cognito_user_pool_id,
+                identifier=settings.cognito_resource_server_identifier,
+                name=settings.cognito_resource_server_identifier,
+                scopes=((scope_name, request.description),),
+            )
+        )
+        _ = operation
+        return ApiScopeRef(
+            scope_full_name=f"{settings.cognito_resource_server_identifier}/{scope_name}"
+        )
     return _sequence_placeholder("add_cognito_custom_scope")
 
 

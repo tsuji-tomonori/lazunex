@@ -1,7 +1,10 @@
 from __future__ import annotations
 
-from typing import NoReturn
+from typing import NoReturn, cast
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.apis.apis.get_api import queries
 from app.apis.apis.get_api.schemas import GetApiResponse
 from app.apis.sequence_types import CallerIdentity
 from app.apis.types import ResourceId
@@ -21,8 +24,17 @@ async def validate_api_id(api_id: ResourceId) -> ResourceId:
     return _sequence_placeholder("validate_api_id")
 
 
-async def get_api_detail(api_id: ResourceId) -> GetApiResponse:
+async def get_api_detail(
+    api_id: ResourceId,
+    session: AsyncSession | None = None,
+) -> GetApiResponse:
     """API 詳細レスポンスに必要な情報を取得する。"""
+    if session is not None:
+        rows = await queries.select_apis(
+            session,
+            queries.SelectApisParams(api_id=api_id),
+        )
+        return cast(GetApiResponse, rows[0])
     return _sequence_placeholder("get_api_detail")
 
 

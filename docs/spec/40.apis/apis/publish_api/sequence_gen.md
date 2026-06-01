@@ -6,18 +6,17 @@
 sequenceDiagram
   autonumber
   participant API as API
-  participant R_api_gateway as Resource: api gateway
-  participant R_cognito as Resource: cognito
+  participant R_identity as Resource: identity
   participant DB as DB
   API->>API: 呼び出し元の role、group、scope を取得する。
   API->>API: API 公開登録リクエストを検証する。
   alt 呼び出し元が API 公開登録できる場合。
     API->>API: Idempotency-Key に対応する既存レコードを取得する。
-    API->>R_api_gateway: 登録対象 API Gateway stage の登録情報を検証する。
+    API->>API: 登録対象 API Gateway stage の登録情報を検証する。
     alt 登録対象 API が既に登録済み場合。
       API->>API: API 公開用の provisioning operation を作成する。
       API->>API: 冪等性レコードを作成または確認する。
-      API->>R_cognito: Cognito Resource Server に custom scope を追加する。
+      API->>R_identity: Cognito Resource Server に custom scope を追加する。
       API->>API: API metadata、stage、reviewer、OpenAPI metadata、scope を保存する。
       API->>API: API stage、scope、reviewer の lifecycle event を追記する。
       API->>API: provisioning operation/step event を追記する。

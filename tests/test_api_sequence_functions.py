@@ -47,7 +47,11 @@ async def test_sequence_functions_are_explicit_placeholders() -> None:
         module = import_module(module_name)
         for function in public_coroutines(module):
             parameters = inspect.signature(function).parameters
-            args = [dummy_argument() for _parameter in parameters.values()]
+            args = [
+                dummy_argument()
+                for parameter in parameters.values()
+                if parameter.default is inspect.Signature.empty
+            ]
 
             with pytest.raises(NotImplementedError, match=function.__name__):
                 await function(*args)

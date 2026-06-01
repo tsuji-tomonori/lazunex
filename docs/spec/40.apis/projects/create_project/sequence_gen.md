@@ -6,8 +6,9 @@
 sequenceDiagram
   autonumber
   participant API as API
-  participant R_api_gateway as Resource: api gateway
-  participant R_cognito as Resource: cognito
+  participant R_api_gateway_control as Resource: api gateway control
+  participant R_identity as Resource: identity
+  participant R_secret_values as Resource: secret values
   participant DB as DB
   API->>API: 呼び出し元の sub、group、scope を取得する。
   API->>API: Project 作成リクエストを検証する。
@@ -15,12 +16,12 @@ sequenceDiagram
     API->>API: Idempotency-Key に対応する既存レコードを取得する。
     API->>API: Project 作成用の provisioning operation を作成する。
     API->>API: 冪等性レコードを作成または確認する。
-    API->>R_api_gateway: API Gateway API key を作成する。
-    API->>R_api_gateway: API Gateway Usage Plan を作成する。
-    API->>R_api_gateway: API Gateway Usage Plan Key 紐づけを作成する。
-    API->>R_cognito: PKCE 用 public App Client を作成する。
-    API->>R_cognito: Client Credentials 用 confidential App Client を作成する。
-    API->>API: API key 値と client secret 値を hash 化する。
+    API->>R_api_gateway_control: API Gateway API key を作成する。
+    API->>R_api_gateway_control: API Gateway Usage Plan を作成する。
+    API->>R_api_gateway_control: API Gateway Usage Plan Key 紐づけを作成する。
+    API->>R_identity: PKCE 用 public App Client を作成する。
+    API->>R_identity: Client Credentials 用 confidential App Client を作成する。
+    API->>R_secret_values: API key 値と client secret 値を hash 化する。
     API->>API: Project、owner、API key、Usage Plan、App Client metadata を保存する。
     API->>API: Project 関連 lifecycle event を追記する。
     API->>API: provisioning operation/step event を追記する。

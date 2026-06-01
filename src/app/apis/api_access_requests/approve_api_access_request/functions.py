@@ -17,6 +17,14 @@ from app.apis.sequence_types import (
     UsagePlanApiStageRef,
 )
 from app.apis.types import ResourceId
+from app.core.config import settings
+from app.integrations.api_gateway_control.port import ApiGatewayControlPort
+from app.integrations.api_gateway_control.schemas import AddUsagePlanStageInput
+from app.integrations.identity.port import IdentityAdminPort
+from app.integrations.identity.schemas import (
+    DescribeUserPoolClientInput,
+    UpdateUserPoolClientInput,
+)
 
 
 def _sequence_placeholder(function_name: str) -> NoReturn:
@@ -88,13 +96,38 @@ async def create_idempotency_record(
 async def add_usage_plan_api_stage(
     access_request: ApiAccessRequestRef,
     operation: ProvisioningOperationRef,
+    api_gateway_control: ApiGatewayControlPort | None = None,
 ) -> UsagePlanApiStageRef:
     """API Gateway Usage Plan に API stage を追加する。"""
+    if api_gateway_control is not None:
+        await api_gateway_control.add_usage_plan_stage(
+            AddUsagePlanStageInput(
+                usage_plan_id=str(access_request.project_id),
+                rest_api_id=str(access_request.api_id),
+                stage_name=str(access_request.api_stage_id),
+            )
+        )
+        _ = operation
+        return UsagePlanApiStageRef(usage_plan_api_stage_id=access_request.api_stage_id)
     return _sequence_placeholder("add_usage_plan_api_stage")
 
 
-async def get_cognito_app_client(access_request: ApiAccessRequestRef) -> CognitoAppClientRef:
+async def get_cognito_app_client(
+    access_request: ApiAccessRequestRef,
+    identity_admin: IdentityAdminPort | None = None,
+) -> CognitoAppClientRef:
     """Cognito App Client 設定を取得する。"""
+    if identity_admin is not None:
+        client = await identity_admin.describe_user_pool_client(
+            DescribeUserPoolClientInput(
+                user_pool_id=settings.cognito_user_pool_id,
+                client_id=str(access_request.project_id),
+            )
+        )
+        return CognitoAppClientRef(
+            app_client_id=client.app_client_id,
+            allowed_scopes=client.allowed_scopes,
+        )
     return _sequence_placeholder("get_cognito_app_client")
 
 
@@ -109,8 +142,22 @@ async def merge_cognito_allowed_scopes(
 async def update_cognito_app_client(
     client: CognitoAppClientRef,
     operation: ProvisioningOperationRef,
+    identity_admin: IdentityAdminPort | None = None,
 ) -> CognitoAppClientRef:
     """Cognito App Client を更新する。"""
+    if identity_admin is not None:
+        updated = await identity_admin.update_user_pool_client(
+            UpdateUserPoolClientInput(
+                user_pool_id=settings.cognito_user_pool_id,
+                client_id=client.app_client_id,
+                allowed_scopes=client.allowed_scopes,
+            )
+        )
+        _ = operation
+        return CognitoAppClientRef(
+            app_client_id=updated.app_client_id,
+            allowed_scopes=updated.allowed_scopes,
+        )
     return _sequence_placeholder("update_cognito_app_client")
 
 
