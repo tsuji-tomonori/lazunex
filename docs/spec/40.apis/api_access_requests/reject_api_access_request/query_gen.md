@@ -20,24 +20,24 @@
 
 ### 引数
 
-| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
-| --- | --- | --- | --- | --- |
-| <code>api_access_requests</code> | <code>access_request_id</code> | 利用申請ID。 | <code>UUID</code> | no |
+| DDLテーブル | DDL項目 | SQL項目 | 日本語名 | 型 | nullable |
+| --- | --- | --- | --- | --- | --- |
+| <code>api_access_requests</code> | <code>access_request_id</code> | <code>access_request_id</code> | 利用申請ID。 | <code>UUID</code> | no |
 
 ### 戻り値
 
-| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
-| --- | --- | --- | --- | --- |
-| <code>api_access_requests</code> | <code>access_request_id</code> | 利用申請ID。 | <code>UUID</code> | no |
-| <code>api_access_requests</code> | <code>project_id</code> | 申請元Project ID。 | <code>UUID</code> | no |
-| <code>api_access_requests</code> | <code>api_id</code> | 申請対象API ID。 | <code>UUID</code> | no |
-| <code>api_access_requests</code> | <code>api_stage_id</code> | 申請対象API stage ID。 | <code>UUID</code> | no |
-| <code>api_access_requests</code> | <code>requested_auth_mode</code> | 申請した認証方式。PUBLIC_PKCE、CLIENT_CREDENTIALS、BOTH。 | <code>VARCHAR(30)</code> | no |
-| <code>api_access_requests</code> | <code>requested_reason</code> | 利用申請理由。 | <code>TEXT</code> | no |
-| <code>api_access_requests</code> | <code>requested_by</code> | 申請者のprincipal。 | <code>VARCHAR(256)</code> | no |
-| <code>api_access_requests</code> | <code>requested_at</code> | 申請日時。 | <code>TIMESTAMPTZ</code> | no |
-| <code>apis</code> | <code>api_code</code> | 人が読めるAPIコード。例: billing-api-v1。 | <code>VARCHAR(100)</code> | no |
-| <code>apis</code> | <code>api_name</code> | API表示名。 | <code>VARCHAR(200)</code> | no |
+| DDLテーブル | DDL項目 | SQL項目 | 日本語名 | 型 | nullable |
+| --- | --- | --- | --- | --- | --- |
+| <code>api_access_requests</code> | <code>access_request_id</code> | <code>access_request_id</code> | 利用申請ID。 | <code>UUID</code> | no |
+| <code>api_access_requests</code> | <code>project_id</code> | <code>project_id</code> | 申請元Project ID。 | <code>UUID</code> | no |
+| <code>api_access_requests</code> | <code>api_id</code> | <code>api_id</code> | 申請対象API ID。 | <code>UUID</code> | no |
+| <code>api_access_requests</code> | <code>api_stage_id</code> | <code>api_stage_id</code> | 申請対象API stage ID。 | <code>UUID</code> | no |
+| <code>api_access_requests</code> | <code>requested_auth_mode</code> | <code>requested_auth_mode</code> | 申請した認証方式。PUBLIC_PKCE、CLIENT_CREDENTIALS、BOTH。 | <code>VARCHAR(30)</code> | no |
+| <code>api_access_requests</code> | <code>requested_reason</code> | <code>requested_reason</code> | 利用申請理由。 | <code>TEXT</code> | no |
+| <code>api_access_requests</code> | <code>requested_by</code> | <code>requested_by</code> | 申請者のprincipal。 | <code>VARCHAR(256)</code> | no |
+| <code>api_access_requests</code> | <code>requested_at</code> | <code>requested_at</code> | 申請日時。 | <code>TIMESTAMPTZ</code> | no |
+| <code>apis</code> | <code>api_code</code> | <code>api_code</code> | 人が読めるAPIコード。例: billing-api-v1。 | <code>VARCHAR(100)</code> | no |
+| <code>apis</code> | <code>name</code> | <code>api_name</code> | API表示名。 | <code>VARCHAR(200)</code> | no |
 
 ### 条件
 
@@ -61,20 +61,20 @@
 
 ### 引数
 
-| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
-| --- | --- | --- | --- | --- |
-| <code>api_reviewers</code> | <code>api_id</code> | 審査対象API ID。 | <code>UUID</code> | no |
-| <code>api_reviewers</code> | <code>actor_principal_id</code> | 審査者のprincipal。 | <code>VARCHAR(256)</code> | no |
-| <code>-</code> | <code>is_hub_admin</code> | - | <code>Any</code> | no |
+| DDLテーブル | DDL項目 | SQL項目 | 日本語名 | 型 | nullable |
+| --- | --- | --- | --- | --- | --- |
+| <code>api_reviewers</code> | <code>api_id</code> | <code>api_id</code> | 審査対象API ID。 | <code>UUID</code> | no |
+| <code>api_reviewers</code> | <code>reviewer_principal_id</code> | <code>actor_principal_id</code> | 審査者のprincipal。 | <code>VARCHAR(256)</code> | no |
+| <code>-</code> | <code>is_hub_admin</code> | <code>is_hub_admin</code> | - | <code>Any</code> | no |
 
 ### 戻り値
 
-| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
-| --- | --- | --- | --- | --- |
-| <code>api_reviewers</code> | <code>api_reviewer_id</code> | API審査者割当ID。 | <code>UUID</code> | no |
-| <code>api_reviewers</code> | <code>api_id</code> | 審査対象API ID。 | <code>UUID</code> | no |
-| <code>api_reviewers</code> | <code>reviewer_principal_id</code> | 審査者のprincipal。 | <code>VARCHAR(256)</code> | no |
-| <code>api_reviewers</code> | <code>reviewer_role</code> | 審査者の役割。PRIMARY、BACKUP、ADMIN。 | <code>VARCHAR(20)</code> | no |
+| DDLテーブル | DDL項目 | SQL項目 | 日本語名 | 型 | nullable |
+| --- | --- | --- | --- | --- | --- |
+| <code>api_reviewers</code> | <code>api_reviewer_id</code> | <code>api_reviewer_id</code> | API審査者割当ID。 | <code>UUID</code> | no |
+| <code>api_reviewers</code> | <code>api_id</code> | <code>api_id</code> | 審査対象API ID。 | <code>UUID</code> | no |
+| <code>api_reviewers</code> | <code>reviewer_principal_id</code> | <code>reviewer_principal_id</code> | 審査者のprincipal。 | <code>VARCHAR(256)</code> | no |
+| <code>api_reviewers</code> | <code>reviewer_role</code> | <code>reviewer_role</code> | 審査者の役割。PRIMARY、BACKUP、ADMIN。 | <code>VARCHAR(20)</code> | no |
 
 ### 条件
 
@@ -97,13 +97,17 @@
 
 ### 引数
 
-| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
-| --- | --- | --- | --- | --- |
-| <code>api_access_reviews</code> | <code>access_review_id</code> | 審査ID。 | <code>UUID</code> | no |
-| <code>api_access_reviews</code> | <code>access_request_id</code> | 審査対象の利用申請ID。 | <code>UUID</code> | no |
-| <code>api_access_reviews</code><br><code>api_access_reviews</code><br><code>api_access_reviews</code> | <code>actor_principal_id</code> | 審査者のprincipal。<br>作成者のprincipal。<br>更新者のprincipal。 | <code>VARCHAR(256)</code><br><code>VARCHAR(256)</code><br><code>VARCHAR(256)</code> | no<br>no<br>no |
-| <code>api_access_reviews</code> | <code>review_comment</code> | 審査コメント。 | <code>TEXT</code> | yes |
-| <code>api_access_reviews</code><br><code>api_access_reviews</code><br><code>api_access_reviews</code> | <code>now</code> | 審査日時。<br>作成日時。<br>更新日時。 | <code>TIMESTAMPTZ</code><br><code>TIMESTAMPTZ</code><br><code>TIMESTAMPTZ</code> | no<br>no<br>no |
+| DDLテーブル | DDL項目 | SQL項目 | 日本語名 | 型 | nullable |
+| --- | --- | --- | --- | --- | --- |
+| <code>api_access_reviews</code> | <code>access_review_id</code> | <code>access_review_id</code> | 審査ID。 | <code>UUID</code> | no |
+| <code>api_access_reviews</code> | <code>access_request_id</code> | <code>access_request_id</code> | 審査対象の利用申請ID。 | <code>UUID</code> | no |
+| <code>api_access_reviews</code> | <code>reviewer_principal_id</code> | <code>actor_principal_id</code> | 審査者のprincipal。 | <code>VARCHAR(256)</code> | no |
+| <code>api_access_reviews</code> | <code>created_by</code> | <code>actor_principal_id</code> | 作成者のprincipal。 | <code>VARCHAR(256)</code> | no |
+| <code>api_access_reviews</code> | <code>updated_by</code> | <code>actor_principal_id</code> | 更新者のprincipal。 | <code>VARCHAR(256)</code> | no |
+| <code>api_access_reviews</code> | <code>review_comment</code> | <code>review_comment</code> | 審査コメント。 | <code>TEXT</code> | yes |
+| <code>api_access_reviews</code> | <code>reviewed_at</code> | <code>now</code> | 審査日時。 | <code>TIMESTAMPTZ</code> | no |
+| <code>api_access_reviews</code> | <code>created_at</code> | <code>now</code> | 作成日時。 | <code>TIMESTAMPTZ</code> | no |
+| <code>api_access_reviews</code> | <code>updated_at</code> | <code>now</code> | 更新日時。 | <code>TIMESTAMPTZ</code> | no |
 
 ### 戻り値
 
@@ -130,18 +134,19 @@ _なし_
 
 ### 引数
 
-| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
-| --- | --- | --- | --- | --- |
-| <code>access_request_events</code> | <code>event_id</code> | イベントID。 | <code>UUID</code> | no |
-| <code>access_request_events</code><br><code>access_request_events</code> | <code>access_request_id</code> | イベント対象の利用申請ID。<br>利用申請ごとのイベント連番。 | <code>UUID</code><br><code>BIGINT</code> | no<br>no |
-| <code>access_request_events</code> | <code>event_name</code> | イベント名。 | <code>VARCHAR(128)</code> | no |
-| <code>access_request_events</code> | <code>actor_principal_id</code> | イベントを発生させた主体のprincipal。 | <code>VARCHAR(256)</code> | no |
-| <code>access_request_events</code> | <code>actor_type</code> | イベント発生主体種別。USER、SYSTEM、CI。 | <code>VARCHAR(32)</code> | no |
-| <code>access_request_events</code> | <code>now</code> | イベント発生日時。 | <code>TIMESTAMPTZ</code> | no |
-| <code>access_request_events</code> | <code>reason</code> | イベントの理由またはコメント。 | <code>TEXT</code> | yes |
-| <code>access_request_events</code> | <code>correlation_id</code> | API requestを横断して追跡する相関ID。 | <code>VARCHAR(128)</code> | no |
-| <code>access_request_events</code> | <code>idempotency_key</code> | 関連する冪等性キー。 | <code>VARCHAR(256)</code> | yes |
-| <code>access_request_events</code> | <code>event_payload</code> | イベント固有情報。secret値は含めない。 | <code>JSON</code> | yes |
+| DDLテーブル | DDL項目 | SQL項目 | 日本語名 | 型 | nullable |
+| --- | --- | --- | --- | --- | --- |
+| <code>access_request_events</code> | <code>event_id</code> | <code>event_id</code> | イベントID。 | <code>UUID</code> | no |
+| <code>access_request_events</code> | <code>aggregate_id</code> | <code>access_request_id</code> | イベント対象の利用申請ID。 | <code>UUID</code> | no |
+| <code>access_request_events</code> | <code>event_seq</code> | <code>access_request_id</code> | 利用申請ごとのイベント連番。 | <code>BIGINT</code> | no |
+| <code>access_request_events</code> | <code>event_name</code> | <code>event_name</code> | イベント名。 | <code>VARCHAR(128)</code> | no |
+| <code>access_request_events</code> | <code>actor_principal_id</code> | <code>actor_principal_id</code> | イベントを発生させた主体のprincipal。 | <code>VARCHAR(256)</code> | no |
+| <code>access_request_events</code> | <code>actor_type</code> | <code>actor_type</code> | イベント発生主体種別。USER、SYSTEM、CI。 | <code>VARCHAR(32)</code> | no |
+| <code>access_request_events</code> | <code>occurred_at</code> | <code>now</code> | イベント発生日時。 | <code>TIMESTAMPTZ</code> | no |
+| <code>access_request_events</code> | <code>reason</code> | <code>reason</code> | イベントの理由またはコメント。 | <code>TEXT</code> | yes |
+| <code>access_request_events</code> | <code>correlation_id</code> | <code>correlation_id</code> | API requestを横断して追跡する相関ID。 | <code>VARCHAR(128)</code> | no |
+| <code>access_request_events</code> | <code>idempotency_key</code> | <code>idempotency_key</code> | 関連する冪等性キー。 | <code>VARCHAR(256)</code> | yes |
+| <code>access_request_events</code> | <code>event_payload</code> | <code>event_payload</code> | イベント固有情報。secret値は含めない。 | <code>JSON</code> | yes |
 
 ### 戻り値
 
@@ -168,15 +173,15 @@ _なし_
 
 ### 引数
 
-| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
-| --- | --- | --- | --- | --- |
-| <code>audit_events</code> | <code>audit_event_id</code> | 監査イベントID。 | <code>UUID</code> | no |
-| <code>audit_events</code> | <code>actor_principal_id</code> | 操作した主体のprincipal。 | <code>VARCHAR(256)</code> | no |
-| <code>audit_events</code> | <code>access_request_id</code> | 操作対象ID。 | <code>UUID</code> | no |
-| <code>audit_events</code> | <code>source_ip</code> | 呼び出し元IPアドレス。 | <code>VARCHAR(64)</code> | yes |
-| <code>audit_events</code> | <code>user_agent</code> | 呼び出し元User-Agent。 | <code>TEXT</code> | yes |
-| <code>audit_events</code> | <code>details</code> | 監査用の詳細情報。secret値は含めない。 | <code>JSON</code> | yes |
-| <code>audit_events</code> | <code>now</code> | 監査イベント発生日時。 | <code>TIMESTAMPTZ</code> | no |
+| DDLテーブル | DDL項目 | SQL項目 | 日本語名 | 型 | nullable |
+| --- | --- | --- | --- | --- | --- |
+| <code>audit_events</code> | <code>audit_event_id</code> | <code>audit_event_id</code> | 監査イベントID。 | <code>UUID</code> | no |
+| <code>audit_events</code> | <code>actor_principal_id</code> | <code>actor_principal_id</code> | 操作した主体のprincipal。 | <code>VARCHAR(256)</code> | no |
+| <code>audit_events</code> | <code>target_id</code> | <code>access_request_id</code> | 操作対象ID。 | <code>UUID</code> | no |
+| <code>audit_events</code> | <code>source_ip</code> | <code>source_ip</code> | 呼び出し元IPアドレス。 | <code>VARCHAR(64)</code> | yes |
+| <code>audit_events</code> | <code>user_agent</code> | <code>user_agent</code> | 呼び出し元User-Agent。 | <code>TEXT</code> | yes |
+| <code>audit_events</code> | <code>details</code> | <code>details</code> | 監査用の詳細情報。secret値は含めない。 | <code>JSON</code> | yes |
+| <code>audit_events</code> | <code>created_at</code> | <code>now</code> | 監査イベント発生日時。 | <code>TIMESTAMPTZ</code> | no |
 
 ### 戻り値
 
@@ -203,15 +208,17 @@ _なし_
 
 ### 引数
 
-| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
-| --- | --- | --- | --- | --- |
-| <code>idempotency_records</code> | <code>idempotency_record_id</code> | 冪等性記録ID。 | <code>UUID</code> | no |
-| <code>idempotency_records</code> | <code>idempotency_key</code> | クライアントが指定した冪等性キー。 | <code>VARCHAR(200)</code> | no |
-| <code>idempotency_records</code> | <code>request_hash</code> | request bodyのハッシュ。 | <code>VARCHAR(128)</code> | no |
-| <code>idempotency_records</code> | <code>response_payload</code> | 成功時レスポンスの記録。secret値は初回以降返さない方針に注意する。 | <code>JSON</code> | yes |
-| <code>idempotency_records</code> | <code>expires_at</code> | 冪等性記録の有効期限。 | <code>TIMESTAMPTZ</code> | no |
-| <code>idempotency_records</code><br><code>idempotency_records</code> | <code>now</code> | 作成日時。<br>更新日時。 | <code>TIMESTAMPTZ</code><br><code>TIMESTAMPTZ</code> | no<br>no |
-| <code>idempotency_records</code><br><code>idempotency_records</code> | <code>actor_principal_id</code> | 作成者のprincipal。<br>更新者のprincipal。 | <code>VARCHAR(256)</code><br><code>VARCHAR(256)</code> | no<br>no |
+| DDLテーブル | DDL項目 | SQL項目 | 日本語名 | 型 | nullable |
+| --- | --- | --- | --- | --- | --- |
+| <code>idempotency_records</code> | <code>idempotency_record_id</code> | <code>idempotency_record_id</code> | 冪等性記録ID。 | <code>UUID</code> | no |
+| <code>idempotency_records</code> | <code>idempotency_key</code> | <code>idempotency_key</code> | クライアントが指定した冪等性キー。 | <code>VARCHAR(200)</code> | no |
+| <code>idempotency_records</code> | <code>request_hash</code> | <code>request_hash</code> | request bodyのハッシュ。 | <code>VARCHAR(128)</code> | no |
+| <code>idempotency_records</code> | <code>response_payload</code> | <code>response_payload</code> | 成功時レスポンスの記録。secret値は初回以降返さない方針に注意する。 | <code>JSON</code> | yes |
+| <code>idempotency_records</code> | <code>expires_at</code> | <code>expires_at</code> | 冪等性記録の有効期限。 | <code>TIMESTAMPTZ</code> | no |
+| <code>idempotency_records</code> | <code>created_at</code> | <code>now</code> | 作成日時。 | <code>TIMESTAMPTZ</code> | no |
+| <code>idempotency_records</code> | <code>updated_at</code> | <code>now</code> | 更新日時。 | <code>TIMESTAMPTZ</code> | no |
+| <code>idempotency_records</code> | <code>created_by</code> | <code>actor_principal_id</code> | 作成者のprincipal。 | <code>VARCHAR(256)</code> | no |
+| <code>idempotency_records</code> | <code>updated_by</code> | <code>actor_principal_id</code> | 更新者のprincipal。 | <code>VARCHAR(256)</code> | no |
 
 ### 戻り値
 

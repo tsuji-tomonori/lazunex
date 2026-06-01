@@ -381,24 +381,51 @@ def render_code_lines(value: str) -> str:
     return "<br>".join(code_cell(part) for part in value.split("<br>"))
 
 
+def field_rows(
+    field: FieldSpec,
+    refs: tuple[ColumnRef, ...],
+) -> list[tuple[str, str, str, str, str, str]]:
+    if not refs:
+        return [
+            (
+                code_cell("-"),
+                code_cell(field.name),
+                code_cell(field.name),
+                "-",
+                code_cell(field_type(field)),
+                "yes" if field.nullable else "no",
+            )
+        ]
+
+    return [
+        (
+            code_cell(ref.table_name),
+            code_cell(ref.column.name),
+            code_cell(field.name),
+            text_cell(ref.column.comment or "-"),
+            code_cell(ref.column.data_type),
+            "yes" if ref.column.nullable else "no",
+        )
+        for ref in refs
+    ]
+
+
 def render_field_table(fields: list[DocFieldSpec], empty_label: str) -> list[str]:
     if not fields:
         return [empty_label]
 
     lines = [
-        "| DDLテーブル | 項目 | 日本語名 | 型 | nullable |",
-        "| --- | --- | --- | --- | --- |",
+        "| DDLテーブル | DDL項目 | SQL項目 | 日本語名 | 型 | nullable |",
+        "| --- | --- | --- | --- | --- | --- |",
     ]
     for doc_field in fields:
-        field = doc_field.field
-        refs = doc_field.column_refs
-        lines.append(
-            f"| {render_code_lines(joined_ref_values(refs, 'table'))} | "
-            f"{code_cell(field.name)} | "
-            f"{text_cell(joined_ref_values(refs, 'comment'))} | "
-            f"{render_code_lines(display_type(field, refs))} | "
-            f"{display_nullable(field, refs)} |"
-        )
+        for table, ddl_item, sql_item, comment, type_name, nullable in field_rows(
+            doc_field.field,
+            doc_field.column_refs,
+        ):
+            lines.append(
+                f"| {table} | {ddl_item} | {sql_item} | {comment} | {type_name} | {nullable} |"
+            )
     return lines
 
 
