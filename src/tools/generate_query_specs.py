@@ -341,15 +341,11 @@ def field_type(field: FieldSpec) -> str:
     return field.type_hint
 
 
-def ref_label(ref: ColumnRef) -> str:
-    return f"{ref.table_name}.{ref.column.name}"
-
-
 def joined_ref_values(refs: tuple[ColumnRef, ...], value: str) -> str:
     values: list[str] = []
     for ref in refs:
-        if value == "label":
-            values.append(ref_label(ref))
+        if value == "table":
+            values.append(ref.table_name)
         elif value == "type":
             values.append(ref.column.data_type)
         elif value == "comment":
@@ -390,14 +386,14 @@ def render_field_table(fields: list[DocFieldSpec], empty_label: str) -> list[str
         return [empty_label]
 
     lines = [
-        "| DDLカラム | 項目 | 日本語名 | 型 | nullable |",
+        "| DDLテーブル | 項目 | 日本語名 | 型 | nullable |",
         "| --- | --- | --- | --- | --- |",
     ]
     for doc_field in fields:
         field = doc_field.field
         refs = doc_field.column_refs
         lines.append(
-            f"| {render_code_lines(joined_ref_values(refs, 'label'))} | "
+            f"| {render_code_lines(joined_ref_values(refs, 'table'))} | "
             f"{code_cell(field.name)} | "
             f"{text_cell(joined_ref_values(refs, 'comment'))} | "
             f"{render_code_lines(display_type(field, refs))} | "

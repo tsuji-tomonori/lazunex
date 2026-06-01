@@ -20,23 +20,23 @@
 
 ### 引数
 
-| DDLカラム | 項目 | 日本語名 | 型 | nullable |
+| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
 | --- | --- | --- | --- | --- |
-| <code>project_members.member_principal_id</code><br><code>projects.owner_principal_id</code> | <code>actor_principal_id</code> | メンバーのprincipal。<br>プロジェクトオーナーのprincipal。 | <code>VARCHAR(256)</code><br><code>VARCHAR(256)</code> | no<br>no |
+| <code>project_members</code><br><code>projects</code> | <code>actor_principal_id</code> | メンバーのprincipal。<br>プロジェクトオーナーのprincipal。 | <code>VARCHAR(256)</code><br><code>VARCHAR(256)</code> | no<br>no |
 | <code>-</code> | <code>is_hub_admin</code> | - | <code>Any</code> | no |
-| <code>projects.project_code</code> | <code>after_project_code</code> | 人が読めるProjectコード。例: payment-frontend。 | <code>VARCHAR(100)</code> | no |
+| <code>projects</code> | <code>after_project_code</code> | 人が読めるProjectコード。例: payment-frontend。 | <code>VARCHAR(100)</code> | no |
 | <code>-</code> | <code>limit</code> | - | <code>Any</code> | no |
 
 ### 戻り値
 
-| DDLカラム | 項目 | 日本語名 | 型 | nullable |
+| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
 | --- | --- | --- | --- | --- |
-| <code>projects.project_id</code> | <code>project_id</code> | Project ID。 | <code>UUID</code> | no |
-| <code>projects.project_code</code> | <code>project_code</code> | 人が読めるProjectコード。例: payment-frontend。 | <code>VARCHAR(100)</code> | no |
-| <code>projects.name</code> | <code>name</code> | プロジェクト名。 | <code>VARCHAR(200)</code> | no |
-| <code>projects.description</code> | <code>description</code> | プロジェクトの説明。 | <code>TEXT</code> | no |
-| <code>projects.owner_principal_id</code> | <code>owner_principal_id</code> | プロジェクトオーナーのprincipal。 | <code>VARCHAR(256)</code> | no |
-| <code>projects.department_code</code> | <code>department_code</code> | 部門コード。 | <code>VARCHAR(64)</code> | no |
+| <code>projects</code> | <code>project_id</code> | Project ID。 | <code>UUID</code> | no |
+| <code>projects</code> | <code>project_code</code> | 人が読めるProjectコード。例: payment-frontend。 | <code>VARCHAR(100)</code> | no |
+| <code>projects</code> | <code>name</code> | プロジェクト名。 | <code>VARCHAR(200)</code> | no |
+| <code>projects</code> | <code>description</code> | プロジェクトの説明。 | <code>TEXT</code> | no |
+| <code>projects</code> | <code>owner_principal_id</code> | プロジェクトオーナーのprincipal。 | <code>VARCHAR(256)</code> | no |
+| <code>projects</code> | <code>department_code</code> | 部門コード。 | <code>VARCHAR(64)</code> | no |
 | <code>-</code> | <code>subscription_count</code> | - | <code>Any</code> | no |
 
 ### 条件

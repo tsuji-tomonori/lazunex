@@ -91,11 +91,11 @@ def test_generate_query_specs_renders_sql_chapters(tmp_path: Path) -> None:
     assert "Project 一覧を取得する。" in content
     assert "### 利用するテーブル\n\n- `projects`" in content
     assert (
-        "| <code>projects.project_code</code> | <code>project_code</code> | "
+        "| <code>projects</code> | <code>project_code</code> | "
         "人が読めるProjectコード。 | <code>VARCHAR(100)</code> | no |"
     ) in content
     assert (
-        "| <code>projects.description</code> | <code>description</code> | "
+        "| <code>projects</code> | <code>description</code> | "
         "プロジェクトの説明。 | <code>TEXT</code> | yes |"
     ) in content
     assert "### 条件\n\n- `WHERE project_code = @project_code`" in content
@@ -122,11 +122,11 @@ def test_generate_query_specs_renders_source_tables_and_expanded_aliases(
     )
 
     assert (
-        "| <code>projects.project_code</code> | <code>project_code</code> | "
+        "| <code>projects</code> | <code>project_code</code> | "
         "人が読めるProjectコード。 | <code>VARCHAR(100)</code> | no |"
     ) in content
     assert (
-        "| <code>projects.project_id</code> | <code>project_id</code> | "
+        "| <code>projects</code> | <code>project_id</code> | "
         "Project ID。 | <code>UUID</code> | no |"
     ) in content
     assert (

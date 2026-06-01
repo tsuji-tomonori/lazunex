@@ -19,18 +19,18 @@
 
 ### 引数
 
-| DDLカラム | 項目 | 日本語名 | 型 | nullable |
+| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
 | --- | --- | --- | --- | --- |
-| <code>project_members.member_principal_id</code><br><code>projects.owner_principal_id</code> | <code>actor_principal_id</code> | メンバーのprincipal。<br>プロジェクトオーナーのprincipal。 | <code>VARCHAR(256)</code><br><code>VARCHAR(256)</code> | no<br>no |
-| <code>projects.project_id</code> | <code>project_id</code> | Project ID。 | <code>UUID</code> | no |
+| <code>project_members</code><br><code>projects</code> | <code>actor_principal_id</code> | メンバーのprincipal。<br>プロジェクトオーナーのprincipal。 | <code>VARCHAR(256)</code><br><code>VARCHAR(256)</code> | no<br>no |
+| <code>projects</code> | <code>project_id</code> | Project ID。 | <code>UUID</code> | no |
 
 ### 戻り値
 
-| DDLカラム | 項目 | 日本語名 | 型 | nullable |
+| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
 | --- | --- | --- | --- | --- |
-| <code>projects.project_id</code> | <code>project_id</code> | Project ID。 | <code>UUID</code> | no |
-| <code>projects.project_code</code> | <code>project_code</code> | 人が読めるProjectコード。例: payment-frontend。 | <code>VARCHAR(100)</code> | no |
-| <code>projects.owner_principal_id</code> | <code>owner_principal_id</code> | プロジェクトオーナーのprincipal。 | <code>VARCHAR(256)</code> | no |
+| <code>projects</code> | <code>project_id</code> | Project ID。 | <code>UUID</code> | no |
+| <code>projects</code> | <code>project_code</code> | 人が読めるProjectコード。例: payment-frontend。 | <code>VARCHAR(100)</code> | no |
+| <code>projects</code> | <code>owner_principal_id</code> | プロジェクトオーナーのprincipal。 | <code>VARCHAR(256)</code> | no |
 
 ### 条件
 
@@ -57,25 +57,25 @@
 
 ### 引数
 
-| DDLカラム | 項目 | 日本語名 | 型 | nullable |
+| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
 | --- | --- | --- | --- | --- |
-| <code>api_gateway_stages.api_stage_id</code> | <code>api_stage_id</code> | API stage ID。 | <code>UUID</code> | no |
-| <code>apis.api_id</code> | <code>api_id</code> | Lazunex内API ID。 | <code>UUID</code> | no |
+| <code>api_gateway_stages</code> | <code>api_stage_id</code> | API stage ID。 | <code>UUID</code> | no |
+| <code>apis</code> | <code>api_id</code> | Lazunex内API ID。 | <code>UUID</code> | no |
 
 ### 戻り値
 
-| DDLカラム | 項目 | 日本語名 | 型 | nullable |
+| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
 | --- | --- | --- | --- | --- |
-| <code>apis.api_id</code> | <code>api_id</code> | Lazunex内API ID。 | <code>UUID</code> | no |
-| <code>apis.api_code</code> | <code>api_code</code> | 人が読めるAPIコード。例: billing-api-v1。 | <code>VARCHAR(100)</code> | no |
-| <code>apis.name</code> | <code>name</code> | API表示名。 | <code>VARCHAR(200)</code> | no |
-| <code>apis.visibility</code> | <code>visibility</code> | 公開範囲。INTERNALまたはRESTRICTED。 | <code>VARCHAR(20)</code> | no |
-| <code>api_gateway_stages.api_stage_id</code> | <code>api_stage_id</code> | API stage ID。 | <code>UUID</code> | no |
-| <code>api_gateway_stages.apigw_rest_api_id</code> | <code>apigw_rest_api_id</code> | API Gateway REST API ID。 | <code>VARCHAR(128)</code> | no |
-| <code>api_gateway_stages.apigw_stage_name</code> | <code>apigw_stage_name</code> | API Gateway stage名。例: prod。 | <code>VARCHAR(128)</code> | no |
-| <code>api_cognito_scopes.api_scope_id</code> | <code>api_scope_id</code> | API scope ID。 | <code>UUID</code> | no |
-| <code>api_cognito_scopes.scope_full_name</code> | <code>scope_full_name</code> | Resource Server識別子を含むscope名。例: api-hub/api:{apiId}:invoke。 | <code>VARCHAR(600)</code> | no |
-| <code>api_reviewers.reviewer_principal_id</code> | <code>reviewer_principal_id</code> | 審査者のprincipal。 | <code>VARCHAR(256)</code> | no |
+| <code>apis</code> | <code>api_id</code> | Lazunex内API ID。 | <code>UUID</code> | no |
+| <code>apis</code> | <code>api_code</code> | 人が読めるAPIコード。例: billing-api-v1。 | <code>VARCHAR(100)</code> | no |
+| <code>apis</code> | <code>name</code> | API表示名。 | <code>VARCHAR(200)</code> | no |
+| <code>apis</code> | <code>visibility</code> | 公開範囲。INTERNALまたはRESTRICTED。 | <code>VARCHAR(20)</code> | no |
+| <code>api_gateway_stages</code> | <code>api_stage_id</code> | API stage ID。 | <code>UUID</code> | no |
+| <code>api_gateway_stages</code> | <code>apigw_rest_api_id</code> | API Gateway REST API ID。 | <code>VARCHAR(128)</code> | no |
+| <code>api_gateway_stages</code> | <code>apigw_stage_name</code> | API Gateway stage名。例: prod。 | <code>VARCHAR(128)</code> | no |
+| <code>api_cognito_scopes</code> | <code>api_scope_id</code> | API scope ID。 | <code>UUID</code> | no |
+| <code>api_cognito_scopes</code> | <code>scope_full_name</code> | Resource Server識別子を含むscope名。例: api-hub/api:{apiId}:invoke。 | <code>VARCHAR(600)</code> | no |
+| <code>api_reviewers</code> | <code>reviewer_principal_id</code> | 審査者のprincipal。 | <code>VARCHAR(256)</code> | no |
 
 ### 条件
 
@@ -101,20 +101,20 @@
 
 ### 引数
 
-| DDLカラム | 項目 | 日本語名 | 型 | nullable |
+| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
 | --- | --- | --- | --- | --- |
-| <code>project_cognito_clients.project_id</code> | <code>project_id</code> | 紐づくProject ID。 | <code>UUID</code> | no |
+| <code>project_cognito_clients</code> | <code>project_id</code> | 紐づくProject ID。 | <code>UUID</code> | no |
 
 ### 戻り値
 
-| DDLカラム | 項目 | 日本語名 | 型 | nullable |
+| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
 | --- | --- | --- | --- | --- |
-| <code>project_cognito_clients.project_cognito_client_id</code> | <code>project_cognito_client_id</code> | Project App Client ID。 | <code>UUID</code> | no |
-| <code>project_cognito_clients.project_id</code> | <code>project_id</code> | 紐づくProject ID。 | <code>UUID</code> | no |
-| <code>project_cognito_clients.client_type</code> | <code>client_type</code> | App Client種別。PUBLIC_PKCEまたはCONFIDENTIAL_CLIENT_CREDENTIALS。 | <code>VARCHAR(40)</code> | no |
-| <code>project_cognito_clients.cognito_user_pool_id</code> | <code>cognito_user_pool_id</code> | Cognito User Pool ID。 | <code>VARCHAR(55)</code> | no |
-| <code>project_cognito_clients.app_client_id</code> | <code>app_client_id</code> | Cognito App Client ID。 | <code>VARCHAR(128)</code> | no |
-| <code>project_cognito_clients.base_allowed_scopes</code> | <code>base_allowed_scopes</code> | 初期状態で許可するscope。例: openid、email、profile。 | <code>JSON</code> | no |
+| <code>project_cognito_clients</code> | <code>project_cognito_client_id</code> | Project App Client ID。 | <code>UUID</code> | no |
+| <code>project_cognito_clients</code> | <code>project_id</code> | 紐づくProject ID。 | <code>UUID</code> | no |
+| <code>project_cognito_clients</code> | <code>client_type</code> | App Client種別。PUBLIC_PKCEまたはCONFIDENTIAL_CLIENT_CREDENTIALS。 | <code>VARCHAR(40)</code> | no |
+| <code>project_cognito_clients</code> | <code>cognito_user_pool_id</code> | Cognito User Pool ID。 | <code>VARCHAR(55)</code> | no |
+| <code>project_cognito_clients</code> | <code>app_client_id</code> | Cognito App Client ID。 | <code>VARCHAR(128)</code> | no |
+| <code>project_cognito_clients</code> | <code>base_allowed_scopes</code> | 初期状態で許可するscope。例: openid、email、profile。 | <code>JSON</code> | no |
 
 ### 条件
 
@@ -137,22 +137,22 @@
 
 ### 引数
 
-| DDLカラム | 項目 | 日本語名 | 型 | nullable |
+| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
 | --- | --- | --- | --- | --- |
-| <code>project_api_subscriptions.project_id</code> | <code>project_id</code> | 利用権を持つProject ID。 | <code>UUID</code> | no |
-| <code>project_api_subscriptions.api_stage_id</code> | <code>api_stage_id</code> | 利用可能なAPI stage ID。 | <code>UUID</code> | no |
+| <code>project_api_subscriptions</code> | <code>project_id</code> | 利用権を持つProject ID。 | <code>UUID</code> | no |
+| <code>project_api_subscriptions</code> | <code>api_stage_id</code> | 利用可能なAPI stage ID。 | <code>UUID</code> | no |
 
 ### 戻り値
 
-| DDLカラム | 項目 | 日本語名 | 型 | nullable |
+| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
 | --- | --- | --- | --- | --- |
-| <code>project_api_subscriptions.subscription_id</code> | <code>subscription_id</code> | 利用権ID。 | <code>UUID</code> | no |
-| <code>project_api_subscriptions.project_id</code> | <code>project_id</code> | 利用権を持つProject ID。 | <code>UUID</code> | no |
-| <code>project_api_subscriptions.api_id</code> | <code>api_id</code> | 利用可能なAPI ID。 | <code>UUID</code> | no |
-| <code>project_api_subscriptions.api_stage_id</code> | <code>api_stage_id</code> | 利用可能なAPI stage ID。 | <code>UUID</code> | no |
-| <code>project_api_subscriptions.approved_auth_mode</code> | <code>approved_auth_mode</code> | 承認された認証方式。PUBLIC_PKCE、CLIENT_CREDENTIALS、BOTH。 | <code>VARCHAR(30)</code> | no |
-| <code>project_api_subscriptions.approved_by</code> | <code>approved_by</code> | 承認者のprincipal。 | <code>VARCHAR(256)</code> | no |
-| <code>project_api_subscriptions.approved_at</code> | <code>approved_at</code> | 承認日時。 | <code>TIMESTAMPTZ</code> | no |
+| <code>project_api_subscriptions</code> | <code>subscription_id</code> | 利用権ID。 | <code>UUID</code> | no |
+| <code>project_api_subscriptions</code> | <code>project_id</code> | 利用権を持つProject ID。 | <code>UUID</code> | no |
+| <code>project_api_subscriptions</code> | <code>api_id</code> | 利用可能なAPI ID。 | <code>UUID</code> | no |
+| <code>project_api_subscriptions</code> | <code>api_stage_id</code> | 利用可能なAPI stage ID。 | <code>UUID</code> | no |
+| <code>project_api_subscriptions</code> | <code>approved_auth_mode</code> | 承認された認証方式。PUBLIC_PKCE、CLIENT_CREDENTIALS、BOTH。 | <code>VARCHAR(30)</code> | no |
+| <code>project_api_subscriptions</code> | <code>approved_by</code> | 承認者のprincipal。 | <code>VARCHAR(256)</code> | no |
+| <code>project_api_subscriptions</code> | <code>approved_at</code> | 承認日時。 | <code>TIMESTAMPTZ</code> | no |
 
 ### 条件
 
@@ -176,22 +176,22 @@
 
 ### 引数
 
-| DDLカラム | 項目 | 日本語名 | 型 | nullable |
+| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
 | --- | --- | --- | --- | --- |
-| <code>api_access_requests.project_id</code> | <code>project_id</code> | 申請元Project ID。 | <code>UUID</code> | no |
-| <code>api_access_requests.api_stage_id</code> | <code>api_stage_id</code> | 申請対象API stage ID。 | <code>UUID</code> | no |
+| <code>api_access_requests</code> | <code>project_id</code> | 申請元Project ID。 | <code>UUID</code> | no |
+| <code>api_access_requests</code> | <code>api_stage_id</code> | 申請対象API stage ID。 | <code>UUID</code> | no |
 
 ### 戻り値
 
-| DDLカラム | 項目 | 日本語名 | 型 | nullable |
+| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
 | --- | --- | --- | --- | --- |
-| <code>api_access_requests.access_request_id</code> | <code>access_request_id</code> | 利用申請ID。 | <code>UUID</code> | no |
-| <code>api_access_requests.project_id</code> | <code>project_id</code> | 申請元Project ID。 | <code>UUID</code> | no |
-| <code>api_access_requests.api_id</code> | <code>api_id</code> | 申請対象API ID。 | <code>UUID</code> | no |
-| <code>api_access_requests.api_stage_id</code> | <code>api_stage_id</code> | 申請対象API stage ID。 | <code>UUID</code> | no |
-| <code>api_access_requests.requested_auth_mode</code> | <code>requested_auth_mode</code> | 申請した認証方式。PUBLIC_PKCE、CLIENT_CREDENTIALS、BOTH。 | <code>VARCHAR(30)</code> | no |
-| <code>api_access_requests.requested_by</code> | <code>requested_by</code> | 申請者のprincipal。 | <code>VARCHAR(256)</code> | no |
-| <code>api_access_requests.requested_at</code> | <code>requested_at</code> | 申請日時。 | <code>TIMESTAMPTZ</code> | no |
+| <code>api_access_requests</code> | <code>access_request_id</code> | 利用申請ID。 | <code>UUID</code> | no |
+| <code>api_access_requests</code> | <code>project_id</code> | 申請元Project ID。 | <code>UUID</code> | no |
+| <code>api_access_requests</code> | <code>api_id</code> | 申請対象API ID。 | <code>UUID</code> | no |
+| <code>api_access_requests</code> | <code>api_stage_id</code> | 申請対象API stage ID。 | <code>UUID</code> | no |
+| <code>api_access_requests</code> | <code>requested_auth_mode</code> | 申請した認証方式。PUBLIC_PKCE、CLIENT_CREDENTIALS、BOTH。 | <code>VARCHAR(30)</code> | no |
+| <code>api_access_requests</code> | <code>requested_by</code> | 申請者のprincipal。 | <code>VARCHAR(256)</code> | no |
+| <code>api_access_requests</code> | <code>requested_at</code> | 申請日時。 | <code>TIMESTAMPTZ</code> | no |
 
 ### 条件
 
@@ -214,16 +214,16 @@
 
 ### 引数
 
-| DDLカラム | 項目 | 日本語名 | 型 | nullable |
+| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
 | --- | --- | --- | --- | --- |
-| <code>api_access_requests.access_request_id</code> | <code>access_request_id</code> | 利用申請ID。 | <code>UUID</code> | no |
-| <code>api_access_requests.project_id</code> | <code>project_id</code> | 申請元Project ID。 | <code>UUID</code> | no |
-| <code>api_access_requests.api_id</code> | <code>api_id</code> | 申請対象API ID。 | <code>UUID</code> | no |
-| <code>api_access_requests.api_stage_id</code> | <code>api_stage_id</code> | 申請対象API stage ID。 | <code>UUID</code> | no |
-| <code>api_access_requests.requested_auth_mode</code> | <code>requested_auth_mode</code> | 申請した認証方式。PUBLIC_PKCE、CLIENT_CREDENTIALS、BOTH。 | <code>VARCHAR(30)</code> | no |
-| <code>api_access_requests.requested_reason</code> | <code>requested_reason</code> | 利用申請理由。 | <code>TEXT</code> | no |
-| <code>api_access_requests.requested_by</code><br><code>api_access_requests.created_by</code><br><code>api_access_requests.updated_by</code> | <code>actor_principal_id</code> | 申請者のprincipal。<br>作成者のprincipal。<br>更新者のprincipal。 | <code>VARCHAR(256)</code><br><code>VARCHAR(256)</code><br><code>VARCHAR(256)</code> | no<br>no<br>no |
-| <code>api_access_requests.requested_at</code><br><code>api_access_requests.created_at</code><br><code>api_access_requests.updated_at</code> | <code>now</code> | 申請日時。<br>作成日時。<br>更新日時。 | <code>TIMESTAMPTZ</code><br><code>TIMESTAMPTZ</code><br><code>TIMESTAMPTZ</code> | no<br>no<br>no |
+| <code>api_access_requests</code> | <code>access_request_id</code> | 利用申請ID。 | <code>UUID</code> | no |
+| <code>api_access_requests</code> | <code>project_id</code> | 申請元Project ID。 | <code>UUID</code> | no |
+| <code>api_access_requests</code> | <code>api_id</code> | 申請対象API ID。 | <code>UUID</code> | no |
+| <code>api_access_requests</code> | <code>api_stage_id</code> | 申請対象API stage ID。 | <code>UUID</code> | no |
+| <code>api_access_requests</code> | <code>requested_auth_mode</code> | 申請した認証方式。PUBLIC_PKCE、CLIENT_CREDENTIALS、BOTH。 | <code>VARCHAR(30)</code> | no |
+| <code>api_access_requests</code> | <code>requested_reason</code> | 利用申請理由。 | <code>TEXT</code> | no |
+| <code>api_access_requests</code><br><code>api_access_requests</code><br><code>api_access_requests</code> | <code>actor_principal_id</code> | 申請者のprincipal。<br>作成者のprincipal。<br>更新者のprincipal。 | <code>VARCHAR(256)</code><br><code>VARCHAR(256)</code><br><code>VARCHAR(256)</code> | no<br>no<br>no |
+| <code>api_access_requests</code><br><code>api_access_requests</code><br><code>api_access_requests</code> | <code>now</code> | 申請日時。<br>作成日時。<br>更新日時。 | <code>TIMESTAMPTZ</code><br><code>TIMESTAMPTZ</code><br><code>TIMESTAMPTZ</code> | no<br>no<br>no |
 
 ### 戻り値
 
@@ -250,18 +250,18 @@ _なし_
 
 ### 引数
 
-| DDLカラム | 項目 | 日本語名 | 型 | nullable |
+| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
 | --- | --- | --- | --- | --- |
-| <code>access_request_events.event_id</code> | <code>event_id</code> | イベントID。 | <code>UUID</code> | no |
-| <code>access_request_events.aggregate_id</code><br><code>access_request_events.event_seq</code> | <code>access_request_id</code> | イベント対象の利用申請ID。<br>利用申請ごとのイベント連番。 | <code>UUID</code><br><code>BIGINT</code> | no<br>no |
-| <code>access_request_events.event_name</code> | <code>event_name</code> | イベント名。 | <code>VARCHAR(128)</code> | no |
-| <code>access_request_events.actor_principal_id</code> | <code>actor_principal_id</code> | イベントを発生させた主体のprincipal。 | <code>VARCHAR(256)</code> | no |
-| <code>access_request_events.actor_type</code> | <code>actor_type</code> | イベント発生主体種別。USER、SYSTEM、CI。 | <code>VARCHAR(32)</code> | no |
-| <code>access_request_events.occurred_at</code> | <code>now</code> | イベント発生日時。 | <code>TIMESTAMPTZ</code> | no |
-| <code>access_request_events.reason</code> | <code>reason</code> | イベントの理由またはコメント。 | <code>TEXT</code> | yes |
-| <code>access_request_events.correlation_id</code> | <code>correlation_id</code> | API requestを横断して追跡する相関ID。 | <code>VARCHAR(128)</code> | no |
-| <code>access_request_events.idempotency_key</code> | <code>idempotency_key</code> | 関連する冪等性キー。 | <code>VARCHAR(256)</code> | yes |
-| <code>access_request_events.event_payload</code> | <code>event_payload</code> | イベント固有情報。secret値は含めない。 | <code>JSON</code> | yes |
+| <code>access_request_events</code> | <code>event_id</code> | イベントID。 | <code>UUID</code> | no |
+| <code>access_request_events</code><br><code>access_request_events</code> | <code>access_request_id</code> | イベント対象の利用申請ID。<br>利用申請ごとのイベント連番。 | <code>UUID</code><br><code>BIGINT</code> | no<br>no |
+| <code>access_request_events</code> | <code>event_name</code> | イベント名。 | <code>VARCHAR(128)</code> | no |
+| <code>access_request_events</code> | <code>actor_principal_id</code> | イベントを発生させた主体のprincipal。 | <code>VARCHAR(256)</code> | no |
+| <code>access_request_events</code> | <code>actor_type</code> | イベント発生主体種別。USER、SYSTEM、CI。 | <code>VARCHAR(32)</code> | no |
+| <code>access_request_events</code> | <code>now</code> | イベント発生日時。 | <code>TIMESTAMPTZ</code> | no |
+| <code>access_request_events</code> | <code>reason</code> | イベントの理由またはコメント。 | <code>TEXT</code> | yes |
+| <code>access_request_events</code> | <code>correlation_id</code> | API requestを横断して追跡する相関ID。 | <code>VARCHAR(128)</code> | no |
+| <code>access_request_events</code> | <code>idempotency_key</code> | 関連する冪等性キー。 | <code>VARCHAR(256)</code> | yes |
+| <code>access_request_events</code> | <code>event_payload</code> | イベント固有情報。secret値は含めない。 | <code>JSON</code> | yes |
 
 ### 戻り値
 
@@ -288,15 +288,15 @@ _なし_
 
 ### 引数
 
-| DDLカラム | 項目 | 日本語名 | 型 | nullable |
+| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
 | --- | --- | --- | --- | --- |
-| <code>audit_events.audit_event_id</code> | <code>audit_event_id</code> | 監査イベントID。 | <code>UUID</code> | no |
-| <code>audit_events.actor_principal_id</code> | <code>actor_principal_id</code> | 操作した主体のprincipal。 | <code>VARCHAR(256)</code> | no |
-| <code>audit_events.target_id</code> | <code>access_request_id</code> | 操作対象ID。 | <code>UUID</code> | no |
-| <code>audit_events.source_ip</code> | <code>source_ip</code> | 呼び出し元IPアドレス。 | <code>VARCHAR(64)</code> | yes |
-| <code>audit_events.user_agent</code> | <code>user_agent</code> | 呼び出し元User-Agent。 | <code>TEXT</code> | yes |
-| <code>audit_events.details</code> | <code>details</code> | 監査用の詳細情報。secret値は含めない。 | <code>JSON</code> | yes |
-| <code>audit_events.created_at</code> | <code>now</code> | 監査イベント発生日時。 | <code>TIMESTAMPTZ</code> | no |
+| <code>audit_events</code> | <code>audit_event_id</code> | 監査イベントID。 | <code>UUID</code> | no |
+| <code>audit_events</code> | <code>actor_principal_id</code> | 操作した主体のprincipal。 | <code>VARCHAR(256)</code> | no |
+| <code>audit_events</code> | <code>access_request_id</code> | 操作対象ID。 | <code>UUID</code> | no |
+| <code>audit_events</code> | <code>source_ip</code> | 呼び出し元IPアドレス。 | <code>VARCHAR(64)</code> | yes |
+| <code>audit_events</code> | <code>user_agent</code> | 呼び出し元User-Agent。 | <code>TEXT</code> | yes |
+| <code>audit_events</code> | <code>details</code> | 監査用の詳細情報。secret値は含めない。 | <code>JSON</code> | yes |
+| <code>audit_events</code> | <code>now</code> | 監査イベント発生日時。 | <code>TIMESTAMPTZ</code> | no |
 
 ### 戻り値
 
@@ -323,15 +323,15 @@ _なし_
 
 ### 引数
 
-| DDLカラム | 項目 | 日本語名 | 型 | nullable |
+| DDLテーブル | 項目 | 日本語名 | 型 | nullable |
 | --- | --- | --- | --- | --- |
-| <code>idempotency_records.idempotency_record_id</code> | <code>idempotency_record_id</code> | 冪等性記録ID。 | <code>UUID</code> | no |
-| <code>idempotency_records.idempotency_key</code> | <code>idempotency_key</code> | クライアントが指定した冪等性キー。 | <code>VARCHAR(200)</code> | no |
-| <code>idempotency_records.request_hash</code> | <code>request_hash</code> | request bodyのハッシュ。 | <code>VARCHAR(128)</code> | no |
-| <code>idempotency_records.response_payload</code> | <code>response_payload</code> | 成功時レスポンスの記録。secret値は初回以降返さない方針に注意する。 | <code>JSON</code> | yes |
-| <code>idempotency_records.expires_at</code> | <code>expires_at</code> | 冪等性記録の有効期限。 | <code>TIMESTAMPTZ</code> | no |
-| <code>idempotency_records.created_at</code><br><code>idempotency_records.updated_at</code> | <code>now</code> | 作成日時。<br>更新日時。 | <code>TIMESTAMPTZ</code><br><code>TIMESTAMPTZ</code> | no<br>no |
-| <code>idempotency_records.created_by</code><br><code>idempotency_records.updated_by</code> | <code>actor_principal_id</code> | 作成者のprincipal。<br>更新者のprincipal。 | <code>VARCHAR(256)</code><br><code>VARCHAR(256)</code> | no<br>no |
+| <code>idempotency_records</code> | <code>idempotency_record_id</code> | 冪等性記録ID。 | <code>UUID</code> | no |
+| <code>idempotency_records</code> | <code>idempotency_key</code> | クライアントが指定した冪等性キー。 | <code>VARCHAR(200)</code> | no |
+| <code>idempotency_records</code> | <code>request_hash</code> | request bodyのハッシュ。 | <code>VARCHAR(128)</code> | no |
+| <code>idempotency_records</code> | <code>response_payload</code> | 成功時レスポンスの記録。secret値は初回以降返さない方針に注意する。 | <code>JSON</code> | yes |
+| <code>idempotency_records</code> | <code>expires_at</code> | 冪等性記録の有効期限。 | <code>TIMESTAMPTZ</code> | no |
+| <code>idempotency_records</code><br><code>idempotency_records</code> | <code>now</code> | 作成日時。<br>更新日時。 | <code>TIMESTAMPTZ</code><br><code>TIMESTAMPTZ</code> | no<br>no |
+| <code>idempotency_records</code><br><code>idempotency_records</code> | <code>actor_principal_id</code> | 作成者のprincipal。<br>更新者のprincipal。 | <code>VARCHAR(256)</code><br><code>VARCHAR(256)</code> | no<br>no |
 
 ### 戻り値
 
