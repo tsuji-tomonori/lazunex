@@ -189,3 +189,9 @@ pip-selfcheck.json
 
 # working space
 .workspace/
+
+# repository local development services
+!local/
+local/*
+!local/aws_mock/
+!local/aws_mock/**
