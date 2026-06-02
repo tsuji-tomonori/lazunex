@@ -59,3 +59,69 @@ class AddUsagePlanStageInput:
 class UsagePlanStageAdded:
     usage_plan_id: ApiGatewayId
     api_stages: Sequence[tuple[ApiGatewayId, StageName]]
+
+
+@dataclass(frozen=True)
+class GetStageInput:
+    rest_api_id: ApiGatewayId
+    stage_name: StageName
+
+
+@dataclass(frozen=True)
+class ApiGatewayStageDescription:
+    rest_api_id: ApiGatewayId
+    stage_name: StageName
+    deployment_id: ApiGatewayId | None
+
+
+@dataclass(frozen=True)
+class GetResourcesInput:
+    rest_api_id: ApiGatewayId
+
+
+@dataclass(frozen=True)
+class ApiGatewayResourceDescription:
+    resource_id: ApiGatewayId
+    path: str
+    resource_methods: Sequence[str] = field(default_factory=tuple)
+
+
+@dataclass(frozen=True)
+class GetMethodInput:
+    rest_api_id: ApiGatewayId
+    resource_id: ApiGatewayId
+    http_method: str
+
+
+@dataclass(frozen=True)
+class ApiGatewayMethodDescription:
+    rest_api_id: ApiGatewayId
+    resource_id: ApiGatewayId
+    http_method: str
+    api_key_required: bool
+    authorization_type: str | None
+    authorization_scopes: Sequence[str] = field(default_factory=tuple)
+    authorizer_id: ApiGatewayId | None = None
+
+
+@dataclass(frozen=True)
+class UpdateMethodInput:
+    rest_api_id: ApiGatewayId
+    resource_id: ApiGatewayId
+    http_method: str
+    api_key_required: bool | None = None
+    authorization_type: str | None = None
+    authorization_scopes: Sequence[str] | None = None
+    authorizer_id: ApiGatewayId | None = None
+
+
+@dataclass(frozen=True)
+class CreateDeploymentInput:
+    rest_api_id: ApiGatewayId
+    stage_name: StageName
+    description: str
+
+
+@dataclass(frozen=True)
+class ApiGatewayDeploymentCreated:
+    deployment_id: ApiGatewayId

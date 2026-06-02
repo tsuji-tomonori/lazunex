@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import hmac
 from typing import NoReturn
 
 from app.apis.projects.common import ProjectDerivedState
@@ -25,6 +27,7 @@ from app.apis.types import ApiGatewayId, SecretValue
 from app.core.config import settings
 from app.integrations.api_gateway_control.port import ApiGatewayControlPort
 from app.integrations.api_gateway_control.schemas import (
+    ApiKeyCreated,
     CreateApiKeyInput,
     CreateUsagePlanInput,
     CreateUsagePlanKeyInput,
@@ -82,10 +85,10 @@ async def create_api_gateway_api_key(
     request: CreateProjectRequest,
     operation: ProvisioningOperationRef,
     api_gateway_control: ApiGatewayControlPort | None = None,
-) -> SecretValue:
+) -> ApiKeyCreated:
     """API Gateway API key を作成する。"""
     if api_gateway_control is not None:
-        created = await api_gateway_control.create_api_key(
+        return await api_gateway_control.create_api_key(
             CreateApiKeyInput(
                 name=request.project_code,
                 description=request.description,
@@ -95,7 +98,6 @@ async def create_api_gateway_api_key(
                 },
             )
         )
-        return created.api_key_value
     return _sequence_placeholder("create_api_gateway_api_key")
 
 
@@ -125,7 +127,7 @@ async def create_api_gateway_usage_plan(
 
 
 async def create_api_gateway_usage_plan_key(
-    api_key_value: SecretValue,
+    api_key: ApiKeyCreated,
     usage_plan_id: ApiGatewayId,
     operation: ProvisioningOperationRef,
     api_gateway_control: ApiGatewayControlPort | None = None,
@@ -135,7 +137,7 @@ async def create_api_gateway_usage_plan_key(
         created = await api_gateway_control.create_usage_plan_key(
             CreateUsagePlanKeyInput(
                 usage_plan_id=usage_plan_id,
-                api_key_id=api_key_value,
+                api_key_id=api_key.apigw_api_key_id,
             )
         )
         _ = operation
@@ -205,19 +207,31 @@ async def hash_project_secrets(
 ) -> SecretHashRefs:
     """API key 値と client secret 値を hash 化する。"""
     if secret_values is not None:
-        await secret_values.get_hash_pepper(
+        pepper = await secret_values.get_hash_pepper(
             GetHashPepperInput(secret_id=settings.hash_pepper_secret_id)
         )
+        pepper_bytes = pepper.secret_value.encode()
         return SecretHashRefs(
             api_key_last4=api_key_value[-4:],
             confidential_client_secret_last4=confidential_client_secret[-4:],
+            api_key_hash=hmac.new(
+                pepper_bytes,
+                api_key_value.encode(),
+                hashlib.sha256,
+            ).hexdigest(),
+            confidential_client_secret_hash=hmac.new(
+                pepper_bytes,
+                confidential_client_secret.encode(),
+                hashlib.sha256,
+            ).hexdigest(),
+            hash_key_version=settings.hash_pepper_secret_id,
         )
     return _sequence_placeholder("hash_project_secrets")
 
 
 async def save_project_resources(
     request: CreateProjectRequest,
-    api_key_value: SecretValue,
+    api_key: ApiKeyCreated,
     usage_plan_id: ApiGatewayId,
     usage_plan_key_id: ApiGatewayId,
     public_client_id: ApiGatewayId,
@@ -225,6 +239,7 @@ async def save_project_resources(
     secret_hashes: SecretHashRefs,
 ) -> ProjectResourceRefs:
     """Project、owner、API key、Usage Plan、App Client metadata を保存する。"""
+    _ = api_key
     return _sequence_placeholder("save_project_resources")
 
 

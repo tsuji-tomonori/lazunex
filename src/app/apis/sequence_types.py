@@ -109,6 +109,9 @@ class SecretHashRefs:
 
     api_key_last4: SecretLast4
     confidential_client_secret_last4: SecretLast4
+    api_key_hash: Sha256Hash | None = None
+    confidential_client_secret_hash: Sha256Hash | None = None
+    hash_key_version: str | None = None
 
 
 @dataclass(frozen=True)
@@ -117,6 +120,18 @@ class CognitoAppClientRef:
 
     app_client_id: ApiGatewayId
     allowed_scopes: Sequence[ScopeFullName]
+    callback_urls: Sequence[UrlText] = ()
+    logout_urls: Sequence[UrlText] = ()
+    access_token_validity: int | None = None
+    access_token_unit: str | None = None
+    id_token_validity: int | None = None
+    id_token_unit: str | None = None
+    refresh_token_validity: int | None = None
+    refresh_token_unit: str | None = None
+    refresh_token_rotation_enabled: bool | None = None
+    retry_grace_period_seconds: int | None = None
+    allowed_oauth_flows: Sequence[str] = ()
+    supported_identity_providers: Sequence[str] = ()
 
 
 @dataclass(frozen=True)

@@ -93,6 +93,18 @@ async def get_cognito_app_client(
         return CognitoAppClientRef(
             app_client_id=client.app_client_id,
             allowed_scopes=client.allowed_scopes,
+            callback_urls=client.callback_urls,
+            logout_urls=client.logout_urls,
+            access_token_validity=client.access_token_validity,
+            access_token_unit=client.access_token_unit,
+            id_token_validity=client.id_token_validity,
+            id_token_unit=client.id_token_unit,
+            refresh_token_validity=client.refresh_token_validity,
+            refresh_token_unit=client.refresh_token_unit,
+            refresh_token_rotation_enabled=client.refresh_token_rotation_enabled,
+            retry_grace_period_seconds=client.retry_grace_period_seconds,
+            allowed_oauth_flows=client.allowed_oauth_flows,
+            supported_identity_providers=client.supported_identity_providers,
         )
     return _sequence_placeholder("get_cognito_app_client")
 
@@ -102,8 +114,22 @@ async def merge_public_client_settings(
     request: UpdateProjectPublicClientRequest,
 ) -> CognitoAppClientRef:
     """callback URL、logout URL、token 設定を既存設定へ統合する。"""
-    _ = request
-    return current
+    return CognitoAppClientRef(
+        app_client_id=current.app_client_id,
+        allowed_scopes=current.allowed_scopes,
+        callback_urls=tuple(request.callback_urls),
+        logout_urls=tuple(request.logout_urls),
+        access_token_validity=request.access_token_validity,
+        access_token_unit=request.access_token_unit,
+        id_token_validity=request.id_token_validity,
+        id_token_unit=request.id_token_unit,
+        refresh_token_validity=request.refresh_token_validity,
+        refresh_token_unit=request.refresh_token_unit,
+        refresh_token_rotation_enabled=request.refresh_token_rotation_enabled,
+        retry_grace_period_seconds=request.retry_grace_period_seconds,
+        allowed_oauth_flows=current.allowed_oauth_flows or ("code",),
+        supported_identity_providers=current.supported_identity_providers or ("COGNITO",),
+    )
 
 
 async def update_cognito_app_client(
@@ -118,12 +144,36 @@ async def update_cognito_app_client(
                 user_pool_id=settings.cognito_user_pool_id,
                 client_id=merged.app_client_id,
                 allowed_scopes=merged.allowed_scopes,
+                callback_urls=merged.callback_urls,
+                logout_urls=merged.logout_urls,
+                access_token_validity=merged.access_token_validity,
+                access_token_unit=merged.access_token_unit,
+                id_token_validity=merged.id_token_validity,
+                id_token_unit=merged.id_token_unit,
+                refresh_token_validity=merged.refresh_token_validity,
+                refresh_token_unit=merged.refresh_token_unit,
+                refresh_token_rotation_enabled=merged.refresh_token_rotation_enabled,
+                retry_grace_period_seconds=merged.retry_grace_period_seconds,
+                allowed_oauth_flows=merged.allowed_oauth_flows,
+                supported_identity_providers=merged.supported_identity_providers,
             )
         )
         _ = operation
         return CognitoAppClientRef(
             app_client_id=updated.app_client_id,
             allowed_scopes=updated.allowed_scopes,
+            callback_urls=updated.callback_urls,
+            logout_urls=updated.logout_urls,
+            access_token_validity=updated.access_token_validity,
+            access_token_unit=updated.access_token_unit,
+            id_token_validity=updated.id_token_validity,
+            id_token_unit=updated.id_token_unit,
+            refresh_token_validity=updated.refresh_token_validity,
+            refresh_token_unit=updated.refresh_token_unit,
+            refresh_token_rotation_enabled=updated.refresh_token_rotation_enabled,
+            retry_grace_period_seconds=updated.retry_grace_period_seconds,
+            allowed_oauth_flows=updated.allowed_oauth_flows,
+            supported_identity_providers=updated.supported_identity_providers,
         )
     return _sequence_placeholder("update_cognito_app_client")
 

@@ -15,6 +15,8 @@ from app.apis.responses import (
     success_response,
 )
 from app.apis.sequence_types import CallerIdentity
+from app.integrations.api_gateway_control.deps import get_api_gateway_control_client
+from app.integrations.api_gateway_control.port import ApiGatewayControlPort
 from app.integrations.identity.deps import get_identity_admin_client
 from app.integrations.identity.port import IdentityAdminPort
 
@@ -51,12 +53,19 @@ async def publish_api(
     ],
     idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
     caller: Annotated[CallerIdentity, Depends(get_caller_identity)],
+    api_gateway_control: Annotated[
+        ApiGatewayControlPort,
+        Depends(get_api_gateway_control_client),
+    ],
     identity_admin: Annotated[IdentityAdminPort, Depends(get_identity_admin_client)],
 ) -> PublishApiResponse:
     validated_request = await api_functions.validate_api_publish_request(request)
     await api_functions.has_api_publish_permission(validated_request, caller)
     await api_functions.get_idempotency_record(idempotency_key)
-    await api_functions.verify_api_gateway_stage_registration(validated_request)
+    await api_functions.verify_api_gateway_stage_registration(
+        validated_request,
+        api_gateway_control,
+    )
     await api_functions.has_registered_api(validated_request)
     operation = await api_functions.create_provisioning_operation(
         validated_request,

@@ -5,7 +5,9 @@ from typing import Protocol
 from app.integrations.identity.schemas import (
     CreateConfidentialUserPoolClientInput,
     CreatePublicUserPoolClientInput,
+    DescribeResourceServerInput,
     DescribeUserPoolClientInput,
+    ResourceServerDescription,
     ResourceServerUpdated,
     UpdateResourceServerInput,
     UpdateUserPoolClientInput,
@@ -35,6 +37,11 @@ class IdentityAdminPort(Protocol):
         self,
         request: UpdateUserPoolClientInput,
     ) -> UserPoolClientUpdated: ...
+
+    async def describe_resource_server(
+        self,
+        request: DescribeResourceServerInput,
+    ) -> ResourceServerDescription: ...
 
     async def update_resource_server(
         self,

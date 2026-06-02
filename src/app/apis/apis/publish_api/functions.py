@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import NoReturn
 
-from app.apis.apis.common import ApiDerivedState
+from app.apis.apis.common import ApiDerivedState, ScopeAttachmentMode
 from app.apis.apis.publish_api.schemas import (
     ApiScopeResponse,
     PublishApiRequest,
@@ -17,8 +17,19 @@ from app.apis.sequence_types import (
     ProvisioningOperationRef,
 )
 from app.core.config import settings
+from app.integrations.api_gateway_control.port import ApiGatewayControlPort
+from app.integrations.api_gateway_control.schemas import (
+    CreateDeploymentInput,
+    GetMethodInput,
+    GetResourcesInput,
+    GetStageInput,
+    UpdateMethodInput,
+)
 from app.integrations.identity.port import IdentityAdminPort
-from app.integrations.identity.schemas import UpdateResourceServerInput
+from app.integrations.identity.schemas import (
+    DescribeResourceServerInput,
+    UpdateResourceServerInput,
+)
 
 
 def _sequence_placeholder(function_name: str) -> NoReturn:
@@ -48,8 +59,62 @@ async def get_idempotency_record(idempotency_key: str) -> IdempotencyRecordRef:
     return _sequence_placeholder("get_idempotency_record")
 
 
-async def verify_api_gateway_stage_registration(request: PublishApiRequest) -> bool:
+async def verify_api_gateway_stage_registration(
+    request: PublishApiRequest,
+    api_gateway_control: ApiGatewayControlPort | None = None,
+) -> bool:
     """登録対象 API Gateway stage の登録情報を検証する。"""
+    if api_gateway_control is not None:
+        await api_gateway_control.get_stage(
+            GetStageInput(
+                rest_api_id=request.apigw.rest_api_id,
+                stage_name=request.apigw.stage_name,
+            )
+        )
+        resources = await api_gateway_control.get_resources(
+            GetResourcesInput(rest_api_id=request.apigw.rest_api_id)
+        )
+        scope_full_name = (
+            f"{settings.cognito_resource_server_identifier}/api:{request.api_code}:invoke"
+        )
+        for resource in resources:
+            for http_method in resource.resource_methods:
+                method = await api_gateway_control.get_method(
+                    GetMethodInput(
+                        rest_api_id=request.apigw.rest_api_id,
+                        resource_id=resource.resource_id,
+                        http_method=http_method,
+                    )
+                )
+                has_scope = scope_full_name in method.authorization_scopes
+                if request.apigw.scope_attachment_mode == ScopeAttachmentMode.VERIFY_ONLY:
+                    if not method.api_key_required or not has_scope:
+                        raise ValueError(
+                            "API Gateway method is not configured for API key and Cognito scope"
+                        )
+                    continue
+                await api_gateway_control.update_method(
+                    UpdateMethodInput(
+                        rest_api_id=request.apigw.rest_api_id,
+                        resource_id=resource.resource_id,
+                        http_method=http_method,
+                        api_key_required=True,
+                        authorization_type="COGNITO_USER_POOLS",
+                        authorization_scopes=tuple(
+                            dict.fromkeys((*method.authorization_scopes, scope_full_name))
+                        ),
+                        authorizer_id=request.apigw.authorizer_id or method.authorizer_id,
+                    )
+                )
+        if request.apigw.scope_attachment_mode == ScopeAttachmentMode.PATCH_ALL_METHODS:
+            await api_gateway_control.create_deployment(
+                CreateDeploymentInput(
+                    rest_api_id=request.apigw.rest_api_id,
+                    stage_name=request.apigw.stage_name,
+                    description=f"Lazunex publishApi scope attachment for {request.api_code}",
+                )
+            )
+        return True
     return _sequence_placeholder("verify_api_gateway_stage_registration")
 
 
@@ -82,12 +147,26 @@ async def add_cognito_custom_scope(
     """Cognito Resource Server に custom scope を追加する。"""
     if identity_admin is not None:
         scope_name = f"api:{request.api_code}:invoke"
+        resource_server = await identity_admin.describe_resource_server(
+            DescribeResourceServerInput(
+                user_pool_id=settings.cognito_user_pool_id,
+                identifier=settings.cognito_resource_server_identifier,
+            )
+        )
+        scopes = tuple(
+            dict.fromkeys(
+                (
+                    *resource_server.scopes,
+                    (scope_name, request.description),
+                )
+            )
+        )
         await identity_admin.update_resource_server(
             UpdateResourceServerInput(
                 user_pool_id=settings.cognito_user_pool_id,
                 identifier=settings.cognito_resource_server_identifier,
-                name=settings.cognito_resource_server_identifier,
-                scopes=((scope_name, request.description),),
+                name=resource_server.name,
+                scopes=scopes,
             )
         )
         _ = operation

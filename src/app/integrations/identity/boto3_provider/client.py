@@ -12,6 +12,7 @@ from botocore.exceptions import (
 from app.integrations._aws_boto3 import run_boto3_call
 from app.integrations.common_errors import map_provider_error
 from app.integrations.identity.boto3_provider.mapper import (
+    map_resource_server_description,
     map_resource_server_updated,
     map_user_pool_client_created,
     map_user_pool_client_description,
@@ -20,7 +21,9 @@ from app.integrations.identity.boto3_provider.mapper import (
 from app.integrations.identity.schemas import (
     CreateConfidentialUserPoolClientInput,
     CreatePublicUserPoolClientInput,
+    DescribeResourceServerInput,
     DescribeUserPoolClientInput,
+    ResourceServerDescription,
     ResourceServerUpdated,
     UpdateResourceServerInput,
     UpdateUserPoolClientInput,
@@ -110,18 +113,60 @@ class Boto3IdentityAdminClient:
         self,
         request: UpdateUserPoolClientInput,
     ) -> UserPoolClientUpdated:
-        payload = {
+        payload: dict[str, Any] = {
             "UserPoolId": request.user_pool_id,
             "ClientId": request.client_id,
             "AllowedOAuthScopes": list(request.allowed_scopes),
             "CallbackURLs": list(request.callback_urls),
             "LogoutURLs": list(request.logout_urls),
         }
+        if request.allowed_oauth_flows:
+            payload["AllowedOAuthFlowsUserPoolClient"] = True
+            payload["AllowedOAuthFlows"] = list(request.allowed_oauth_flows)
+        if request.supported_identity_providers:
+            payload["SupportedIdentityProviders"] = list(request.supported_identity_providers)
+        token_units: dict[str, str] = {}
+        if request.access_token_validity is not None:
+            payload["AccessTokenValidity"] = request.access_token_validity
+        if request.access_token_unit is not None:
+            token_units["AccessToken"] = request.access_token_unit
+        if request.id_token_validity is not None:
+            payload["IdTokenValidity"] = request.id_token_validity
+        if request.id_token_unit is not None:
+            token_units["IdToken"] = request.id_token_unit
+        if request.refresh_token_validity is not None:
+            payload["RefreshTokenValidity"] = request.refresh_token_validity
+        if request.refresh_token_unit is not None:
+            token_units["RefreshToken"] = request.refresh_token_unit
+        if token_units:
+            payload["TokenValidityUnits"] = token_units
+        if request.refresh_token_rotation_enabled is not None:
+            rotation: dict[str, Any] = {
+                "Feature": "ENABLED" if request.refresh_token_rotation_enabled else "DISABLED"
+            }
+            if request.retry_grace_period_seconds is not None:
+                rotation["RetryGracePeriodSeconds"] = request.retry_grace_period_seconds
+            payload["RefreshTokenRotation"] = rotation
         try:
             response = await run_boto3_call(lambda: self._client.update_user_pool_client(**payload))
         except _PROVIDER_ERRORS as error:
             raise map_provider_error(error) from error
         return map_user_pool_client_updated(response)
+
+    async def describe_resource_server(
+        self,
+        request: DescribeResourceServerInput,
+    ) -> ResourceServerDescription:
+        try:
+            response = await run_boto3_call(
+                lambda: self._client.describe_resource_server(
+                    UserPoolId=request.user_pool_id,
+                    Identifier=request.identifier,
+                )
+            )
+        except _PROVIDER_ERRORS as error:
+            raise map_provider_error(error) from error
+        return map_resource_server_description(response)
 
     async def update_resource_server(
         self,

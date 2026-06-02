@@ -72,7 +72,7 @@ async def create_project(
         idempotency_key,
     )
     await api_functions.create_idempotency_record(idempotency_key, operation)
-    api_key_value = await api_functions.create_api_gateway_api_key(
+    api_key = await api_functions.create_api_gateway_api_key(
         validated_request,
         operation,
         api_gateway_control,
@@ -83,7 +83,7 @@ async def create_project(
         api_gateway_control,
     )
     usage_plan_key_id = await api_functions.create_api_gateway_usage_plan_key(
-        api_key_value,
+        api_key,
         usage_plan_id,
         operation,
         api_gateway_control,
@@ -99,13 +99,13 @@ async def create_project(
         identity_admin,
     )
     secret_hashes = await api_functions.hash_project_secrets(
-        api_key_value,
+        api_key.api_key_value,
         confidential_client.client_secret,
         secret_values,
     )
     resources = await api_functions.save_project_resources(
         validated_request,
-        api_key_value,
+        api_key,
         usage_plan_id,
         usage_plan_key_id,
         public_client_id,
@@ -117,7 +117,7 @@ async def create_project(
     await api_functions.append_audit_event(resources, caller)
     return await api_functions.build_create_project_response(
         resources,
-        api_key_value,
+        api_key.api_key_value,
         confidential_client,
         operation,
     )

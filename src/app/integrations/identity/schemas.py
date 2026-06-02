@@ -69,6 +69,16 @@ class UserPoolClientDescription:
     allowed_scopes: Sequence[ScopeFullName]
     callback_urls: Sequence[UrlText] = field(default_factory=tuple)
     logout_urls: Sequence[UrlText] = field(default_factory=tuple)
+    access_token_validity: int | None = None
+    access_token_unit: str | None = None
+    id_token_validity: int | None = None
+    id_token_unit: str | None = None
+    refresh_token_validity: int | None = None
+    refresh_token_unit: str | None = None
+    refresh_token_rotation_enabled: bool | None = None
+    retry_grace_period_seconds: int | None = None
+    allowed_oauth_flows: Sequence[str] = field(default_factory=tuple)
+    supported_identity_providers: Sequence[str] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True)
@@ -78,12 +88,47 @@ class UpdateUserPoolClientInput:
     allowed_scopes: Sequence[ScopeFullName]
     callback_urls: Sequence[UrlText] = field(default_factory=tuple)
     logout_urls: Sequence[UrlText] = field(default_factory=tuple)
+    access_token_validity: int | None = None
+    access_token_unit: str | None = None
+    id_token_validity: int | None = None
+    id_token_unit: str | None = None
+    refresh_token_validity: int | None = None
+    refresh_token_unit: str | None = None
+    refresh_token_rotation_enabled: bool | None = None
+    retry_grace_period_seconds: int | None = None
+    allowed_oauth_flows: Sequence[str] = field(default_factory=tuple)
+    supported_identity_providers: Sequence[str] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True)
 class UserPoolClientUpdated:
     app_client_id: ApiGatewayId
     allowed_scopes: Sequence[ScopeFullName]
+    callback_urls: Sequence[UrlText] = field(default_factory=tuple)
+    logout_urls: Sequence[UrlText] = field(default_factory=tuple)
+    access_token_validity: int | None = None
+    access_token_unit: str | None = None
+    id_token_validity: int | None = None
+    id_token_unit: str | None = None
+    refresh_token_validity: int | None = None
+    refresh_token_unit: str | None = None
+    refresh_token_rotation_enabled: bool | None = None
+    retry_grace_period_seconds: int | None = None
+    allowed_oauth_flows: Sequence[str] = field(default_factory=tuple)
+    supported_identity_providers: Sequence[str] = field(default_factory=tuple)
+
+
+@dataclass(frozen=True)
+class DescribeResourceServerInput:
+    user_pool_id: str
+    identifier: ResourceServerIdentifier
+
+
+@dataclass(frozen=True)
+class ResourceServerDescription:
+    identifier: ResourceServerIdentifier
+    name: str
+    scopes: Sequence[tuple[ScopeName, str]] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True)

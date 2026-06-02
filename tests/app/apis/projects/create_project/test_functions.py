@@ -28,13 +28,14 @@ async def test_create_api_gateway_api_key_calls_integration(
 ) -> None:
     client = FakeApiGatewayControlClient()
 
-    api_key_value = await functions.create_api_gateway_api_key(
+    api_key = await functions.create_api_gateway_api_key(
         CREATE_PROJECT_REQUEST_SAMPLE,
         operation,
         client,
     )
 
-    assert api_key_value == "local-api-key-secret"
+    assert api_key.apigw_api_key_id == "api-key-id"
+    assert api_key.api_key_value == "local-api-key-secret"
     assert len(client.calls) == 1
     call = client.calls[0]
     assert isinstance(call, CreateApiKeyInput)
@@ -74,7 +75,7 @@ async def test_create_api_gateway_usage_plan_key_calls_integration(
     client = FakeApiGatewayControlClient()
 
     usage_plan_key_id = await functions.create_api_gateway_usage_plan_key(
-        "api-key-id",
+        client.api_key,
         "usage-plan-id",
         operation,
         client,
@@ -154,6 +155,9 @@ async def test_hash_project_secrets_reads_hash_pepper() -> None:
 
     assert secret_hashes.api_key_last4 == "cret"
     assert secret_hashes.confidential_client_secret_last4 == "cret"  # noqa: S105
+    assert secret_hashes.api_key_hash
+    assert secret_hashes.confidential_client_secret_hash
+    assert secret_hashes.hash_key_version
     assert len(client.calls) == 1
     call = client.calls[0]
     assert isinstance(call, GetHashPepperInput)

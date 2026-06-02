@@ -13,8 +13,13 @@ from app.integrations.api_gateway_control.boto3_provider.client import (
 from app.integrations.api_gateway_control.schemas import (
     AddUsagePlanStageInput,
     CreateApiKeyInput,
+    CreateDeploymentInput,
     CreateUsagePlanInput,
     CreateUsagePlanKeyInput,
+    GetMethodInput,
+    GetResourcesInput,
+    GetStageInput,
+    UpdateMethodInput,
 )
 from app.integrations.common_errors import ExternalApiConflictError
 
@@ -120,6 +125,139 @@ async def test_add_usage_plan_stage_maps_patch_operation() -> None:
         )
 
     assert result.api_stages == (("rest-api-id", "prod"),)
+
+
+@pytest.mark.anyio
+async def test_stage_resource_method_and_deployment_operations_map_payloads() -> None:
+    client = _client()
+    provider = Boto3ApiGatewayControlClient(client)
+    with Stubber(client) as stubber:
+        stubber.add_response(
+            "get_stage",
+            {"stageName": "prod", "deploymentId": "deployment-id"},
+            {"restApiId": "rest-api-id", "stageName": "prod"},
+        )
+        stubber.add_response(
+            "get_resources",
+            {"items": [{"id": "resource-id", "path": "/items", "resourceMethods": {"GET": {}}}]},
+            {"restApiId": "rest-api-id"},
+        )
+        stubber.add_response(
+            "get_method",
+            {
+                "httpMethod": "GET",
+                "apiKeyRequired": True,
+                "authorizationType": "COGNITO_USER_POOLS",
+                "authorizationScopes": ["api-hub/api:read"],
+                "authorizerId": "authorizer-id",
+            },
+            {"restApiId": "rest-api-id", "resourceId": "resource-id", "httpMethod": "GET"},
+        )
+        stubber.add_response(
+            "update_method",
+            {
+                "httpMethod": "GET",
+                "apiKeyRequired": True,
+                "authorizationType": "COGNITO_USER_POOLS",
+                "authorizationScopes": ["api-hub/api:read"],
+                "authorizerId": "authorizer-id",
+            },
+            {
+                "restApiId": "rest-api-id",
+                "resourceId": "resource-id",
+                "httpMethod": "GET",
+                "patchOperations": [
+                    {"op": "replace", "path": "/apiKeyRequired", "value": "true"},
+                    {
+                        "op": "replace",
+                        "path": "/authorizationType",
+                        "value": "COGNITO_USER_POOLS",
+                    },
+                    {"op": "replace", "path": "/authorizerId", "value": "authorizer-id"},
+                    {
+                        "op": "add",
+                        "path": "/authorizationScopes",
+                        "value": "api-hub/api:read",
+                    },
+                ],
+            },
+        )
+        stubber.add_response(
+            "create_deployment",
+            {"id": "deployment-id"},
+            {
+                "restApiId": "rest-api-id",
+                "stageName": "prod",
+                "description": "publish",
+            },
+        )
+
+        stage = await provider.get_stage(
+            GetStageInput(rest_api_id="rest-api-id", stage_name="prod")
+        )
+        resources = await provider.get_resources(GetResourcesInput(rest_api_id="rest-api-id"))
+        method = await provider.get_method(
+            GetMethodInput(
+                rest_api_id="rest-api-id",
+                resource_id="resource-id",
+                http_method="GET",
+            )
+        )
+        updated = await provider.update_method(
+            UpdateMethodInput(
+                rest_api_id="rest-api-id",
+                resource_id="resource-id",
+                http_method="GET",
+                api_key_required=True,
+                authorization_type="COGNITO_USER_POOLS",
+                authorization_scopes=("api-hub/api:read",),
+                authorizer_id="authorizer-id",
+            )
+        )
+        deployment = await provider.create_deployment(
+            CreateDeploymentInput(
+                rest_api_id="rest-api-id",
+                stage_name="prod",
+                description="publish",
+            )
+        )
+
+    assert stage.deployment_id == "deployment-id"
+    assert resources[0].resource_methods == ("GET",)
+    assert method.authorization_scopes == ("api-hub/api:read",)
+    assert updated.authorizer_id == "authorizer-id"
+    assert deployment.deployment_id == "deployment-id"
+
+
+@pytest.mark.anyio
+async def test_update_method_allows_empty_patch_operations() -> None:
+    client = _client()
+    provider = Boto3ApiGatewayControlClient(client)
+    with Stubber(client) as stubber:
+        stubber.add_response(
+            "update_method",
+            {
+                "httpMethod": "GET",
+                "apiKeyRequired": False,
+                "authorizationType": "NONE",
+            },
+            {
+                "restApiId": "rest-api-id",
+                "resourceId": "resource-id",
+                "httpMethod": "GET",
+                "patchOperations": [],
+            },
+        )
+
+        result = await provider.update_method(
+            UpdateMethodInput(
+                rest_api_id="rest-api-id",
+                resource_id="resource-id",
+                http_method="GET",
+            )
+        )
+
+    assert result.api_key_required is False
 
 
 @pytest.mark.anyio
