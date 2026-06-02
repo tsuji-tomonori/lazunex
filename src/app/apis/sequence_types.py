@@ -26,6 +26,16 @@ class CallerIdentity:
 
 
 @dataclass(frozen=True)
+class RequestContext:
+    """Sequence stepで監査・イベント・冪等性に使うリクエスト文脈です。"""
+
+    correlation_id: str
+    source_ip: str
+    user_agent: str
+    actor_type: str = "USER"
+
+
+@dataclass(frozen=True)
 class SequencePage[T]:
     """Sequence step間で受け渡すページング済み一覧です。"""
 
@@ -120,6 +130,7 @@ class CognitoAppClientRef:
 
     app_client_id: ApiGatewayId
     allowed_scopes: Sequence[ScopeFullName]
+    user_pool_id: str | None = None
     callback_urls: Sequence[UrlText] = ()
     logout_urls: Sequence[UrlText] = ()
     access_token_validity: int | None = None
@@ -157,6 +168,13 @@ class ApiAccessRequestRef:
     project_id: ResourceId
     api_id: ResourceId
     api_stage_id: ResourceId
+    requested_auth_mode: str | None = None
+    requested_reason: str | None = None
+    requested_by: PrincipalId | None = None
+    scope_full_name: ScopeFullName | None = None
+    api_scope_id: ResourceId | None = None
+    apigw_rest_api_id: ApiGatewayId | None = None
+    apigw_stage_name: str | None = None
 
 
 @dataclass(frozen=True)
@@ -164,6 +182,7 @@ class ApiAccessReviewRef:
     """利用申請レビューの参照情報です。"""
 
     review_id: ResourceId
+    reviewed_at: object | None = None
 
 
 @dataclass(frozen=True)

@@ -1,5 +1,6 @@
-from pydantic import Field
-from pydantic import model_validator
+from __future__ import annotations
+
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,10 +28,10 @@ class Settings(BaseSettings):
 
     cognito_user_pool_id: str = "local-user-pool"
     cognito_resource_server_identifier: str = "api-hub"
-    hash_pepper_secret_id: str = "local/hash-pepper"
+    hash_pepper_secret_id: str = "local/hash-pepper"  # noqa: S105
 
     @model_validator(mode="after")
-    def validate_production_endpoint_overrides(self) -> "Settings":
+    def validate_production_endpoint_overrides(self) -> Settings:
         if self.env_name in {"prod", "production"} and any(
             (
                 self.aws_apigateway_endpoint_url,

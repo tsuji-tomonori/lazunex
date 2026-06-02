@@ -517,12 +517,12 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
             lines.append(f"{indent}alt {predicate_condition_label(step)}")
             alt_depth += 1
             continue
-        resource = step_resource(step)
+        selected_resource = step_resource(step)
         indent = "  " + ("  " * alt_depth)
-        if resource is None:
+        if selected_resource is None:
             lines.append(f"{indent}API->>API: {label}")
         else:
-            resource_id = participant_id("R", resource)
+            resource_id = participant_id("R", selected_resource)
             lines.append(f"{indent}API->>{resource_id}: {label}")
 
     for sql_step in sequence.sql_steps:

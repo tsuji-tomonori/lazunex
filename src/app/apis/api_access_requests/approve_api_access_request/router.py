@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, Header, Path, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.api_access_requests.approve_api_access_request import functions as api_functions
 from app.apis.api_access_requests.approve_api_access_request.samples import (
@@ -12,13 +13,14 @@ from app.apis.api_access_requests.approve_api_access_request.schemas import (
     ApproveApiAccessRequestResponse,
 )
 from app.apis.base import sample_path_value, sample_value
-from app.apis.deps import get_caller_identity
+from app.apis.deps import get_caller_identity, get_request_context
 from app.apis.responses import (
     error_responses,
     success_response,
 )
-from app.apis.sequence_types import CallerIdentity
+from app.apis.sequence_types import CallerIdentity, RequestContext
 from app.apis.types import ResourceId
+from app.db.session import get_session
 from app.integrations.api_gateway_control.deps import get_api_gateway_control_client
 from app.integrations.api_gateway_control.port import ApiGatewayControlPort
 from app.integrations.identity.deps import get_identity_admin_client
@@ -79,26 +81,50 @@ async def approve_api_access_request(
         Depends(get_api_gateway_control_client),
     ],
     identity_admin: Annotated[IdentityAdminPort, Depends(get_identity_admin_client)],
+    request_context: Annotated[RequestContext, Depends(get_request_context)],
+    session: Annotated[AsyncSession, Depends(get_session)],
 ) -> ApproveApiAccessRequestResponse:
-    access_request = await api_functions.get_access_request(access_request_id)
+    access_request = await api_functions.get_access_request(access_request_id, session)
     await api_functions.is_pending_access_request(access_request)
-    await api_functions.has_api_reviewer_permission(access_request, caller)
+    await api_functions.has_api_reviewer_permission(access_request, caller, session)
     await api_functions.is_available_project_api_stage(access_request)
-    await api_functions.has_active_subscription(access_request)
-    await api_functions.append_access_request_approving_event(access_request)
+    await api_functions.has_active_subscription(access_request, session)
+    await api_functions.append_access_request_approving_event(
+        access_request,
+        caller,
+        request_context,
+        idempotency_key,
+        session,
+    )
     operation = await api_functions.create_provisioning_operation(
         access_request,
         request,
         idempotency_key,
+        caller,
+        session,
     )
-    await api_functions.get_idempotency_record(idempotency_key)
-    await api_functions.create_idempotency_record(idempotency_key, operation)
+    await api_functions.get_idempotency_record(idempotency_key, session)
+    await api_functions.create_idempotency_record(
+        idempotency_key,
+        operation,
+        access_request,
+        request,
+        caller,
+        session,
+    )
     usage_plan_stage = await api_functions.add_usage_plan_api_stage(
         access_request,
         operation,
         api_gateway_control,
+        request,
+        session,
     )
-    current_client = await api_functions.get_cognito_app_client(access_request, identity_admin)
+    current_client = await api_functions.get_cognito_app_client(
+        access_request,
+        identity_admin,
+        request,
+        session,
+    )
     merged_client = await api_functions.merge_cognito_allowed_scopes(
         current_client,
         access_request,
@@ -113,6 +139,8 @@ async def approve_api_access_request(
         request,
         usage_plan_stage,
         updated_client,
+        caller,
+        session,
     )
     await api_functions.append_usage_plan_stage_event(usage_plan_stage)
     await api_functions.append_client_scope_event(resources)
@@ -120,6 +148,7 @@ async def approve_api_access_request(
     await api_functions.append_subscription_provisioned_event(resources)
     await api_functions.append_provisioning_events(operation)
     await api_functions.append_audit_event(access_request, caller)
+    await session.commit()
     return await api_functions.build_approve_access_request_response(
         access_request,
         resources,

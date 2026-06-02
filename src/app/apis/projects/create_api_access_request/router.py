@@ -1,8 +1,10 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Header, Path, status
+from fastapi import APIRouter, Body, Depends, Header, Path, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.base import sample_path_value, sample_value
+from app.apis.deps import get_caller_identity, get_request_context
 from app.apis.projects.create_api_access_request import functions as api_functions
 from app.apis.projects.create_api_access_request.samples import (
     CREATE_API_ACCESS_REQUEST_REQUEST_SAMPLE,
@@ -16,7 +18,9 @@ from app.apis.responses import (
     error_responses,
     success_response,
 )
+from app.apis.sequence_types import CallerIdentity, RequestContext
 from app.apis.types import ResourceId
+from app.db.session import get_session
 
 router = APIRouter()
 
@@ -66,25 +70,50 @@ async def create_api_access_request(
         ),
     ],
     idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    caller: Annotated[CallerIdentity, Depends(get_caller_identity)],
+    request_context: Annotated[RequestContext, Depends(get_request_context)],
+    session: Annotated[AsyncSession, Depends(get_session)],
 ) -> CreateApiAccessRequestResponse:
-    caller = await api_functions.get_caller_identity()
     validated_request = await api_functions.validate_create_access_request_request(request)
-    project = await api_functions.get_project(project_id)
+    project = await api_functions.get_project(project_id, caller, session)
     await api_functions.has_project_owner_permission(project, caller)
-    await api_functions.is_published_api(validated_request.api_id)
-    await api_functions.get_api_reviewer(validated_request.api_id)
-    await api_functions.has_active_subscription(project, validated_request.api_id)
+    await api_functions.is_published_api(
+        validated_request.api_id,
+        validated_request.api_stage_id,
+        session,
+    )
+    await api_functions.get_api_reviewer(
+        validated_request.api_id,
+        validated_request.api_stage_id,
+        session,
+    )
+    await api_functions.has_active_subscription(
+        project,
+        validated_request.api_id,
+        validated_request.api_stage_id,
+        session,
+    )
     await api_functions.has_pending_access_request_for_project_api(
         project,
         validated_request.api_id,
+        validated_request.api_stage_id,
+        session,
     )
     access_request = await api_functions.save_api_access_request(
         project,
         validated_request,
         caller,
+        session,
     )
-    await api_functions.get_idempotency_record(idempotency_key)
-    await api_functions.create_idempotency_record(idempotency_key, access_request)
-    await api_functions.append_access_request_created_event(access_request)
-    await api_functions.append_audit_event(access_request, caller)
+    await api_functions.get_idempotency_record(idempotency_key, session)
+    await api_functions.create_idempotency_record(idempotency_key, access_request, caller, session)
+    await api_functions.append_access_request_created_event(
+        access_request,
+        caller,
+        request_context,
+        idempotency_key,
+        session,
+    )
+    await api_functions.append_audit_event(access_request, caller, request_context, session)
+    await session.commit()
     return await api_functions.build_create_access_request_response(access_request)

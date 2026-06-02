@@ -37,6 +37,13 @@ Lazunex の初期構築として、社内 API Hub の管理 API、DB、認証・
 - SQLite in-memory と fake integration で unit test を実行できるようにする。
 - 生成仕様と手書き docs の更新ルールを整える。
 
+## 実装状況
+
+- API Gateway stage/method 読み取りと method 更新、Cognito resource server 読み取り、Cognito App Client の token/rotation/OAuth 設定 DTO を resource integration に追加済み。
+- 利用申請作成と却下は、router から `CallerIdentity`、DB session、request context を渡し、生成済み query による DB 保存まで接続済み。
+- 利用申請承認は、DB から AWS ID と scope を解決して API Gateway / Cognito へ渡す経路と、主要な承認結果テーブル保存まで接続済み。
+- 全 `_sequence_placeholder` の削除は未完了。未接続範囲は、既存 idempotency record の read/replay、承認後段 event 永続化、`createProject` の DB 永続化全体、`publishApi` / `updateProjectPublicClient` の catalog/provisioning/audit metadata 保存である。
+
 ## 完了条件
 
 - 初期対象 API の plan、spec、SQL、test 方針が揃っている。

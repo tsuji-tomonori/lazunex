@@ -66,7 +66,7 @@ from app.apis.projects.update_project_public_client.samples import (
     UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE,
     UPDATE_PROJECT_PUBLIC_CLIENT_RESPONSE_SAMPLE,
 )
-from app.apis.sequence_types import CallerIdentity
+from app.apis.sequence_types import CallerIdentity, RequestContext
 from app.integrations.api_gateway_control.fake import FakeApiGatewayControlClient
 from app.integrations.identity.fake import FakeIdentityAdminClient
 from app.integrations.secret_values.fake import FakeSecretValuesClient
@@ -87,6 +87,11 @@ def step_value() -> SimpleNamespace:
         api_key_value="local-api-key-secret",
         client_secret="client-secret-value",  # noqa: S106
     )
+
+
+class DummySession:
+    async def commit(self) -> None:
+        return None
 
 
 async def replacement_function(
@@ -232,7 +237,12 @@ def endpoint_kwargs(
             groups=("hub-admin",),
             scopes=("api-hub/api:billing-api-v1:invoke",),
         ),
-        "session": cast(AsyncSession, object()),
+        "session": cast(AsyncSession, DummySession()),
+        "request_context": RequestContext(
+            correlation_id="corr-12345",
+            source_ip="127.0.0.1",
+            user_agent="pytest",
+        ),
         "api_gateway_control": FakeApiGatewayControlClient(),
         "identity_admin": FakeIdentityAdminClient(),
         "secret_values": FakeSecretValuesClient(),
