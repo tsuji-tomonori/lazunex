@@ -3,6 +3,8 @@ from uuid import UUID
 
 import pytest
 from pydantic import BaseModel
+from sqlalchemy import text
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.query import execute_sql, fetch_all, fetch_one, load_sql, model_parameters
@@ -79,3 +81,45 @@ async def test_fetch_one_returns_none_and_execute_sql(
     row = await fetch_one(db_session, select_sql_path, None, SampleRow)
 
     assert row == SampleRow(value=3)
+
+
+@pytest.mark.anyio
+async def test_execute_sql_rewrites_json_cast_for_sqlite(
+    db_session: AsyncSession,
+    tmp_path: Path,
+) -> None:
+    await db_session.execute(text("CREATE TABLE sample_json_values (payload json NOT NULL)"))
+    insert_sql_path = tmp_path / "insert_json.sql"
+    insert_sql_path.write_text(
+        "INSERT INTO sample_json_values (payload) VALUES (CAST(@payload AS json))",
+        encoding="utf-8",
+    )
+
+    await execute_sql(
+        db_session,
+        insert_sql_path,
+        {"payload": {"values": ["code"]}},
+    )
+
+    result = await db_session.execute(text("SELECT payload FROM sample_json_values"))
+    assert result.scalar_one() == '{"values":["code"]}'
+
+
+@pytest.mark.anyio
+async def test_execute_sql_rejects_invalid_json_for_sqlite(
+    db_session: AsyncSession,
+    tmp_path: Path,
+) -> None:
+    await db_session.execute(text("CREATE TABLE sample_json_values (payload json NOT NULL)"))
+    insert_sql_path = tmp_path / "insert_invalid_json.sql"
+    insert_sql_path.write_text(
+        "INSERT INTO sample_json_values (payload) VALUES (CAST(@payload AS json))",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(DBAPIError):
+        await execute_sql(
+            db_session,
+            insert_sql_path,
+            {"payload": "{not-json"},
+        )

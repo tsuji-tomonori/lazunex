@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 MYSQL_VARIABLE_RE = re.compile(r"(?<![\w@])@(?P<name>[A-Za-z_][A-Za-z0-9_]*)")
 SQLITE_JSON_CAST_RE = re.compile(
-    r"CAST\((?P<placeholder>:[A-Za-z_][A-Za-z0-9_]*) AS json\)",
+    r"CAST\(\s*(?P<placeholder>:[A-Za-z_][A-Za-z0-9_]*)\s+AS\s+json\s*\)",
     re.IGNORECASE,
 )
 
@@ -27,7 +27,7 @@ def _sql_for_session(session: AsyncSession, sql_path: Path) -> str:
     sql = load_sql(sql_path)
     bind = session.get_bind()
     if bind.dialect.name == "sqlite":
-        return SQLITE_JSON_CAST_RE.sub(r"\g<placeholder>", sql)
+        return SQLITE_JSON_CAST_RE.sub(r"json(\g<placeholder>)", sql)
     return sql
 
 
