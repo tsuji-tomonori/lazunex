@@ -87,6 +87,7 @@ async def create_api_access_request(
         validated_request.api_stage_id,
         session,
     )
+    await api_functions.has_requested_auth_mode_clients(project, validated_request, session)
     await api_functions.has_active_subscription(
         project,
         validated_request.api_id,

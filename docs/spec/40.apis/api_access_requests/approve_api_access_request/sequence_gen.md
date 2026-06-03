@@ -40,14 +40,8 @@ sequenceDiagram
           API->>DB: 承認済みAPI利用権を有効化するため、Project API subscriptionを追加する。<br/>SQL 008_insert_project_api_subscriptions.sql<br/>テーブル project_api_subscriptions
           API->>DB: Usage Planから対象stageを利用可能にするため、Usage Plan stage紐づけを追加する。<br/>SQL 009_insert_project_usage_plan_api_stages.sql<br/>テーブル project_usage_plan_api_stages
           API->>DB: Cognito clientにAPI実行scopeを許可するため、Project Cognito client scopeを追加する。<br/>SQL 010_insert_project_cognito_client_scopes.sql<br/>テーブル project_cognito_client_scopes
-          API->>DB: 利用申請承認の処理結果として、subscriptionイベントを追加する。<br/>SQL 011_insert_subscription_events.sql<br/>テーブル subscription_events
-          API->>DB: 利用申請承認の処理結果として、監査イベントを追加する。<br/>SQL 012_insert_audit_events.sql<br/>テーブル audit_events
           API->>DB: 利用申請承認の処理結果として、冪等性レコードを追加する。<br/>SQL 013_insert_idempotency_records.sql<br/>テーブル idempotency_records
-          API->>DB: 利用申請承認の処理結果として、provisioning stepを追加する。<br/>SQL 014_insert_provisioning_steps.sql<br/>テーブル provisioning_steps
-          API->>DB: 利用申請承認の処理結果として、Usage Plan stageイベントを追加する。<br/>SQL 015_insert_usage_plan_stage_events.sql<br/>テーブル usage_plan_stage_events
-          API->>DB: 利用申請承認の処理結果として、client scopeイベントを追加する。<br/>SQL 016_insert_client_scope_events.sql<br/>テーブル client_scope_events
-          API->>DB: 利用申請承認の処理結果として、provisioning operation eventsを追加する。<br/>SQL 017_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
-          API->>DB: 利用申請承認の処理結果として、provisioning step eventsを追加する。<br/>SQL 018_insert_provisioning_step_events.sql<br/>テーブル provisioning_step_events
+          API->>DB: Idempotency-Keyに対応する既存レコードを取得する。<br/>SQL 019_select_idempotency_records.sql<br/>テーブル idempotency_records
         end
       end
     end

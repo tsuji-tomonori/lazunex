@@ -16,6 +16,7 @@
     {"name": "project_view_permission", "description": "Project 詳細を参照できる権限があるかを判定します。"},
     {"name": "published_api", "description": "対象 API が公開済みであるかを判定します。"},
     {"name": "registered_api", "description": "登録対象 API が既に登録済みかを判定します。"},
+    {"name": "requested_auth_mode_clients", "description": "requestedAuthMode に対応する Project client が存在するかを判定します。"},
     {"name": "viewable_api", "description": "対象 API を呼び出し元が参照可能かを判定します。"}
   ]
 }

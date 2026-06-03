@@ -366,3 +366,41 @@ _なし_
 ### 条件
 
 _なし_
+
+
+## 010_select_idempotency_records.sql
+
+### SQL種別
+
+`SELECT`
+
+### SQLの概要
+
+Idempotency-Keyに対応する既存レコードを取得する。
+
+### 利用するテーブル
+
+- `idempotency_records`
+
+### 引数
+
+| DDLテーブル | DDL項目 | SQL項目 | 日本語名 | 型 | nullable |
+| --- | --- | --- | --- | --- | --- |
+| <code>idempotency_records</code> | <code>idempotency_key</code> | <code>idempotency_key</code> | クライアントが指定した冪等性キー。 | <code>VARCHAR(200)</code> | no |
+
+### 戻り値
+
+| DDLテーブル | DDL項目 | SQL項目 | 日本語名 | 型 | nullable |
+| --- | --- | --- | --- | --- | --- |
+| <code>idempotency_records</code> | <code>idempotency_record_id</code> | <code>idempotency_record_id</code> | 冪等性記録ID。 | <code>UUID</code> | no |
+| <code>idempotency_records</code> | <code>idempotency_key</code> | <code>idempotency_key</code> | クライアントが指定した冪等性キー。 | <code>VARCHAR(200)</code> | no |
+| <code>idempotency_records</code> | <code>request_hash</code> | <code>request_hash</code> | request bodyのハッシュ。 | <code>VARCHAR(128)</code> | no |
+| <code>idempotency_records</code> | <code>operation_id</code> | <code>operation_id</code> | 関連するAWS反映operation ID。 | <code>UUID</code> | yes |
+| <code>idempotency_records</code> | <code>response_payload</code> | <code>response_payload</code> | 成功時レスポンスの記録。secret値は初回以降返さない方針に注意する。 | <code>JSON</code> | yes |
+| <code>idempotency_records</code> | <code>expires_at</code> | <code>expires_at</code> | 冪等性記録の有効期限。 | <code>TIMESTAMPTZ</code> | no |
+| <code>idempotency_records</code> | <code>created_at</code> | <code>created_at</code> | 作成日時。 | <code>TIMESTAMPTZ</code> | no |
+
+### 条件
+
+- `WHERE`
+  - `idempotency_key = @idempotency_key`

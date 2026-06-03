@@ -37,12 +37,13 @@ sequenceDiagram
     API->>DB: public clientのcallback/logout URLを保持するため、Project Cognito client URLを追加する。<br/>SQL 009_insert_project_cognito_client_urls.sql<br/>テーブル project_cognito_client_urls
     API->>DB: Project owner/memberを管理するため、Project memberを追加する。<br/>SQL 010_insert_project_members.sql<br/>テーブル project_members
     API->>DB: Project作成の処理結果として、冪等性レコードを追加する。<br/>SQL 011_insert_idempotency_records.sql<br/>テーブル idempotency_records
-    API->>DB: Project作成の処理結果として、provisioning stepを追加する。<br/>SQL 012_insert_provisioning_steps.sql<br/>テーブル provisioning_steps
     API->>DB: Project作成の処理結果として、Project memberイベントを追加する。<br/>SQL 013_insert_project_member_events.sql<br/>テーブル project_member_events
     API->>DB: Project作成の処理結果として、Project API keyイベントを追加する。<br/>SQL 014_insert_project_api_key_events.sql<br/>テーブル project_api_key_events
     API->>DB: Project作成の処理結果として、Project Usage Planイベントを追加する。<br/>SQL 015_insert_project_usage_plan_events.sql<br/>テーブル project_usage_plan_events
     API->>DB: Project作成の処理結果として、Project Usage Plan keyイベントを追加する。<br/>SQL 016_insert_project_usage_plan_key_events.sql<br/>テーブル project_usage_plan_key_events
     API->>DB: Project作成の処理結果として、provisioning operation eventsを追加する。<br/>SQL 017_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
-    API->>DB: Project作成の処理結果として、provisioning step eventsを追加する。<br/>SQL 018_insert_provisioning_step_events.sql<br/>テーブル provisioning_step_events
+    API->>DB: Idempotency-Keyに対応する既存レコードを取得する。<br/>SQL 019_select_idempotency_records.sql<br/>テーブル idempotency_records
+    API->>DB: Project作成の処理結果として、監査イベントを追加する。<br/>SQL 020_insert_audit_events.sql<br/>テーブル audit_events
+    API->>DB: Project作成の処理結果として、Project Cognito clientイベントを追加する。<br/>SQL 021_insert_project_cognito_client_events.sql<br/>テーブル project_cognito_client_events
   end
 ```

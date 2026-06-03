@@ -716,3 +716,116 @@ _なし_
 ### 条件
 
 _なし_
+
+
+## 019_select_idempotency_records.sql
+
+### SQL種別
+
+`SELECT`
+
+### SQLの概要
+
+Idempotency-Keyに対応する既存レコードを取得する。
+
+### 利用するテーブル
+
+- `idempotency_records`
+
+### 引数
+
+| DDLテーブル | DDL項目 | SQL項目 | 日本語名 | 型 | nullable |
+| --- | --- | --- | --- | --- | --- |
+| <code>idempotency_records</code> | <code>idempotency_key</code> | <code>idempotency_key</code> | クライアントが指定した冪等性キー。 | <code>VARCHAR(200)</code> | no |
+
+### 戻り値
+
+| DDLテーブル | DDL項目 | SQL項目 | 日本語名 | 型 | nullable |
+| --- | --- | --- | --- | --- | --- |
+| <code>idempotency_records</code> | <code>idempotency_record_id</code> | <code>idempotency_record_id</code> | 冪等性記録ID。 | <code>UUID</code> | no |
+| <code>idempotency_records</code> | <code>idempotency_key</code> | <code>idempotency_key</code> | クライアントが指定した冪等性キー。 | <code>VARCHAR(200)</code> | no |
+| <code>idempotency_records</code> | <code>request_hash</code> | <code>request_hash</code> | request bodyのハッシュ。 | <code>VARCHAR(128)</code> | no |
+| <code>idempotency_records</code> | <code>operation_id</code> | <code>operation_id</code> | 関連するAWS反映operation ID。 | <code>UUID</code> | yes |
+| <code>idempotency_records</code> | <code>response_payload</code> | <code>response_payload</code> | 成功時レスポンスの記録。secret値は初回以降返さない方針に注意する。 | <code>JSON</code> | yes |
+| <code>idempotency_records</code> | <code>expires_at</code> | <code>expires_at</code> | 冪等性記録の有効期限。 | <code>TIMESTAMPTZ</code> | no |
+| <code>idempotency_records</code> | <code>created_at</code> | <code>created_at</code> | 作成日時。 | <code>TIMESTAMPTZ</code> | no |
+
+### 条件
+
+- `WHERE`
+  - `idempotency_key = @idempotency_key`
+
+
+## 020_insert_audit_events.sql
+
+### SQL種別
+
+`INSERT`
+
+### SQLの概要
+
+Project作成の処理結果として、監査イベントを追加する。
+
+### 利用するテーブル
+
+- `audit_events`
+
+### 引数
+
+| DDLテーブル | DDL項目 | SQL項目 | 日本語名 | 型 | nullable |
+| --- | --- | --- | --- | --- | --- |
+| <code>audit_events</code> | <code>audit_event_id</code> | <code>audit_event_id</code> | 監査イベントID。 | <code>UUID</code> | no |
+| <code>audit_events</code> | <code>actor_principal_id</code> | <code>actor_principal_id</code> | 操作した主体のprincipal。 | <code>VARCHAR(256)</code> | no |
+| <code>audit_events</code> | <code>target_id</code> | <code>project_id</code> | 操作対象ID。 | <code>UUID</code> | no |
+| <code>audit_events</code> | <code>operation_id</code> | <code>operation_id</code> | 関連するAWS反映operation ID。 | <code>UUID</code> | yes |
+| <code>audit_events</code> | <code>source_ip</code> | <code>source_ip</code> | 呼び出し元IPアドレス。 | <code>VARCHAR(64)</code> | yes |
+| <code>audit_events</code> | <code>user_agent</code> | <code>user_agent</code> | 呼び出し元User-Agent。 | <code>TEXT</code> | yes |
+| <code>audit_events</code> | <code>details</code> | <code>details</code> | 監査用の詳細情報。secret値は含めない。 | <code>JSON</code> | yes |
+| <code>audit_events</code> | <code>created_at</code> | <code>now</code> | 監査イベント発生日時。 | <code>TIMESTAMPTZ</code> | no |
+
+### 戻り値
+
+_なし_
+
+### 条件
+
+_なし_
+
+
+## 021_insert_project_cognito_client_events.sql
+
+### SQL種別
+
+`INSERT`
+
+### SQLの概要
+
+Project作成の処理結果として、Project Cognito clientイベントを追加する。
+
+### 利用するテーブル
+
+- `project_cognito_client_events`
+
+### 引数
+
+| DDLテーブル | DDL項目 | SQL項目 | 日本語名 | 型 | nullable |
+| --- | --- | --- | --- | --- | --- |
+| <code>project_cognito_client_events</code> | <code>event_id</code> | <code>event_id</code> | イベントID。 | <code>UUID</code> | no |
+| <code>project_cognito_client_events</code> | <code>aggregate_id</code> | <code>project_cognito_client_id</code> | イベント対象のProject App Client ID。 | <code>UUID</code> | no |
+| <code>project_cognito_client_events</code> | <code>event_seq</code> | <code>project_cognito_client_id</code> | Project App Clientごとのイベント連番。 | <code>BIGINT</code> | no |
+| <code>project_cognito_client_events</code> | <code>event_name</code> | <code>event_name</code> | イベント名。 | <code>VARCHAR(128)</code> | no |
+| <code>project_cognito_client_events</code> | <code>actor_principal_id</code> | <code>actor_principal_id</code> | イベントを発生させた主体のprincipal。 | <code>VARCHAR(256)</code> | no |
+| <code>project_cognito_client_events</code> | <code>actor_type</code> | <code>actor_type</code> | イベント発生主体種別。USER、SYSTEM、CI。 | <code>VARCHAR(32)</code> | no |
+| <code>project_cognito_client_events</code> | <code>occurred_at</code> | <code>now</code> | イベント発生日時。 | <code>TIMESTAMPTZ</code> | no |
+| <code>project_cognito_client_events</code> | <code>reason</code> | <code>reason</code> | イベントの理由またはコメント。 | <code>TEXT</code> | yes |
+| <code>project_cognito_client_events</code> | <code>correlation_id</code> | <code>correlation_id</code> | API requestを横断して追跡する相関ID。 | <code>VARCHAR(128)</code> | no |
+| <code>project_cognito_client_events</code> | <code>idempotency_key</code> | <code>idempotency_key</code> | 関連する冪等性キー。 | <code>VARCHAR(256)</code> | yes |
+| <code>project_cognito_client_events</code> | <code>event_payload</code> | <code>event_payload</code> | イベント固有情報。secret値は含めない。 | <code>JSON</code> | yes |
+
+### 戻り値
+
+_なし_
+
+### 条件
+
+_なし_

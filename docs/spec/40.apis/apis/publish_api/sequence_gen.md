@@ -6,12 +6,13 @@
 sequenceDiagram
   autonumber
   participant API as API
+  participant R_api_gateway_control as Resource: api gateway control
   participant R_identity as Resource: identity
   participant DB as DB
   API->>API: API 公開登録リクエストを検証する。
   alt 呼び出し元が API 公開登録できる場合。
     API->>API: Idempotency-Key に対応する既存レコードを取得する。
-    API->>API: 登録対象 API Gateway stage の登録情報を検証する。
+    API->>R_api_gateway_control: 登録対象 API Gateway stage の登録情報を検証する。
     alt 登録対象 API が既に登録済み場合。
       API->>API: API 公開用の provisioning operation を作成する。
       API->>API: 冪等性レコードを作成または確認する。
@@ -22,7 +23,6 @@ sequenceDiagram
       API->>API: 監査イベントを追記する。
       API->>API: API 公開登録レスポンスを組み立てる。
       API->>DB: API codeの重複登録を防ぐため、既存APIを取得する。<br/>SQL 001_select_apis.sql<br/>テーブル apis
-      API->>DB: custom scopeの重複登録を防ぐため、既存API Cognito scopeを取得する。<br/>SQL 002_select_api_cognito_scopes.sql<br/>テーブル api_cognito_scopes
       API->>DB: API公開登録の処理結果として、provisioning operationを追加する。<br/>SQL 003_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
       API->>DB: 公開対象APIのcatalog metadataを保持するため、API catalogを追加する。<br/>SQL 004_insert_apis.sql<br/>テーブル apis
       API->>DB: 公開対象のAPI Gateway stageをLazunex上で参照するため、API Gateway stageを追加する。<br/>SQL 005_insert_api_gateway_stages.sql<br/>テーブル api_gateway_stages
@@ -32,12 +32,12 @@ sequenceDiagram
       API->>DB: API公開登録の処理結果として、APIイベントを追加する。<br/>SQL 009_insert_api_events.sql<br/>テーブル api_events
       API->>DB: API公開登録の処理結果として、監査イベントを追加する。<br/>SQL 010_insert_audit_events.sql<br/>テーブル audit_events
       API->>DB: API公開登録の処理結果として、冪等性レコードを追加する。<br/>SQL 011_insert_idempotency_records.sql<br/>テーブル idempotency_records
-      API->>DB: API公開登録の処理結果として、provisioning stepを追加する。<br/>SQL 012_insert_provisioning_steps.sql<br/>テーブル provisioning_steps
       API->>DB: API公開登録の処理結果として、API stageイベントを追加する。<br/>SQL 013_insert_api_stage_events.sql<br/>テーブル api_stage_events
       API->>DB: API公開登録の処理結果として、API scopeイベントを追加する。<br/>SQL 014_insert_api_scope_events.sql<br/>テーブル api_scope_events
       API->>DB: API公開登録の処理結果として、API reviewerイベントを追加する。<br/>SQL 015_insert_api_reviewer_events.sql<br/>テーブル api_reviewer_events
       API->>DB: API公開登録の処理結果として、provisioning operation eventsを追加する。<br/>SQL 016_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
-      API->>DB: API公開登録の処理結果として、provisioning step eventsを追加する。<br/>SQL 017_insert_provisioning_step_events.sql<br/>テーブル provisioning_step_events
+      API->>DB: Idempotency-Keyに対応する既存レコードを取得する。<br/>SQL 018_select_idempotency_records.sql<br/>テーブル idempotency_records
+      API->>DB: API Gateway stageの重複登録を防ぐため、既存stageを取得する。<br/>SQL 019_select_api_gateway_stages_by_unique_key.sql<br/>テーブル api_gateway_stages
     end
   end
 ```

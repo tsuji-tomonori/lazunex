@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, Header, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.apis.publish_api import functions as api_functions
 from app.apis.apis.publish_api.samples import (
@@ -9,12 +10,13 @@ from app.apis.apis.publish_api.samples import (
 )
 from app.apis.apis.publish_api.schemas import PublishApiRequest, PublishApiResponse
 from app.apis.base import sample_value
-from app.apis.deps import get_caller_identity
+from app.apis.deps import get_caller_identity, get_request_context
 from app.apis.responses import (
     error_responses,
     success_response,
 )
-from app.apis.sequence_types import CallerIdentity
+from app.apis.sequence_types import CallerIdentity, RequestContext
+from app.db.session import get_session
 from app.integrations.api_gateway_control.deps import get_api_gateway_control_client
 from app.integrations.api_gateway_control.port import ApiGatewayControlPort
 from app.integrations.identity.deps import get_identity_admin_client
@@ -58,29 +60,58 @@ async def publish_api(
         Depends(get_api_gateway_control_client),
     ],
     identity_admin: Annotated[IdentityAdminPort, Depends(get_identity_admin_client)],
+    request_context: Annotated[RequestContext, Depends(get_request_context)],
+    session: Annotated[AsyncSession, Depends(get_session)],
 ) -> PublishApiResponse:
     validated_request = await api_functions.validate_api_publish_request(request)
     await api_functions.has_api_publish_permission(validated_request, caller)
-    await api_functions.get_idempotency_record(idempotency_key)
+    await api_functions.get_idempotency_record(idempotency_key, session)
     await api_functions.verify_api_gateway_stage_registration(
         validated_request,
         api_gateway_control,
     )
-    await api_functions.has_registered_api(validated_request)
+    await api_functions.has_registered_api(validated_request, session)
     operation = await api_functions.create_provisioning_operation(
         validated_request,
         idempotency_key,
+        caller,
+        session,
     )
-    await api_functions.create_idempotency_record(idempotency_key, operation)
+    await api_functions.create_idempotency_record(
+        idempotency_key,
+        operation,
+        validated_request,
+        caller,
+        session,
+    )
     scope = await api_functions.add_cognito_custom_scope(
         validated_request,
         operation,
         identity_admin,
     )
-    api = await api_functions.save_api_catalog_metadata(validated_request, scope, operation)
-    await api_functions.append_api_lifecycle_events(api)
-    await api_functions.append_provisioning_events(operation)
-    await api_functions.append_audit_event(api, caller)
+    api = await api_functions.save_api_catalog_metadata(
+        validated_request,
+        scope,
+        operation,
+        caller,
+        session,
+    )
+    await api_functions.append_api_lifecycle_events(
+        api,
+        caller,
+        request_context,
+        idempotency_key,
+        session,
+    )
+    await api_functions.append_provisioning_events(
+        operation,
+        caller,
+        request_context,
+        idempotency_key,
+        session,
+    )
+    await api_functions.append_audit_event(api, caller, request_context, operation, session)
+    await session.commit()
     return await api_functions.build_publish_api_response(
         api,
         scope,

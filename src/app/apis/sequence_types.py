@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
 
 from app.apis.types import (
     ApiGatewayId,
@@ -49,6 +51,9 @@ class IdempotencyRecordRef:
 
     idempotency_key: str
     operation_id: ResourceId | None
+    request_hash: str | None = None
+    response_payload: dict[str, Any] | None = None
+    expires_at: datetime | None = None
 
 
 @dataclass(frozen=True)
@@ -56,6 +61,7 @@ class ProvisioningOperationRef:
     """AWS反映を追跡するprovisioning operationの参照情報です。"""
 
     operation_id: ResourceId
+    target_id: ResourceId | None = None
 
 
 @dataclass(frozen=True)
@@ -71,6 +77,8 @@ class ApiCatalogMetadataRef:
 
     api_id: ResourceId
     api_stage_id: ResourceId | None = None
+    api_scope_id: ResourceId | None = None
+    api_reviewer_ids: Sequence[ResourceId] = ()
 
 
 @dataclass(frozen=True)
@@ -111,6 +119,17 @@ class ProjectResourceRefs:
     usage_plan_id: ResourceId
     public_client_id: ResourceId
     confidential_client_id: ResourceId
+    project_code: str = ""
+    project_member_id: ResourceId | None = None
+    project_api_key_id: ResourceId | None = None
+    project_usage_plan_id: ResourceId | None = None
+    project_usage_plan_key_id: ResourceId | None = None
+    public_project_cognito_client_id: ResourceId | None = None
+    confidential_project_cognito_client_id: ResourceId | None = None
+    apigw_api_key_id: str = ""
+    apigw_usage_plan_id: str = ""
+    public_app_client_id: str = ""
+    confidential_app_client_id: str = ""
 
 
 @dataclass(frozen=True)

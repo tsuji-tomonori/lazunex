@@ -1,9 +1,10 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, Header, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.base import sample_value
-from app.apis.deps import get_caller_identity
+from app.apis.deps import get_caller_identity, get_request_context
 from app.apis.projects.create_project import functions as api_functions
 from app.apis.projects.create_project.samples import (
     CREATE_PROJECT_REQUEST_SAMPLE,
@@ -14,7 +15,8 @@ from app.apis.responses import (
     error_responses,
     success_response,
 )
-from app.apis.sequence_types import CallerIdentity
+from app.apis.sequence_types import CallerIdentity, RequestContext
+from app.db.session import get_session
 from app.integrations.api_gateway_control.deps import get_api_gateway_control_client
 from app.integrations.api_gateway_control.port import ApiGatewayControlPort
 from app.integrations.identity.deps import get_identity_admin_client
@@ -63,15 +65,25 @@ async def create_project(
     ],
     identity_admin: Annotated[IdentityAdminPort, Depends(get_identity_admin_client)],
     secret_values: Annotated[SecretValuesPort, Depends(get_secret_values_client)],
+    request_context: Annotated[RequestContext, Depends(get_request_context)],
+    session: Annotated[AsyncSession, Depends(get_session)],
 ) -> CreateProjectResponse:
     validated_request = await api_functions.validate_create_project_request(request)
     await api_functions.has_project_creation_permission(caller)
-    await api_functions.get_idempotency_record(idempotency_key)
+    await api_functions.get_idempotency_record(idempotency_key, session)
     operation = await api_functions.create_project_provisioning_operation(
         validated_request,
         idempotency_key,
+        caller,
+        session,
     )
-    await api_functions.create_idempotency_record(idempotency_key, operation)
+    await api_functions.create_idempotency_record(
+        idempotency_key,
+        operation,
+        validated_request,
+        caller,
+        session,
+    )
     api_key = await api_functions.create_api_gateway_api_key(
         validated_request,
         operation,
@@ -111,10 +123,26 @@ async def create_project(
         public_client_id,
         confidential_client,
         secret_hashes,
+        operation,
+        caller,
+        session,
     )
-    await api_functions.append_project_lifecycle_events(resources)
-    await api_functions.append_provisioning_events(operation)
-    await api_functions.append_audit_event(resources, caller)
+    await api_functions.append_project_lifecycle_events(
+        resources,
+        caller,
+        request_context,
+        idempotency_key,
+        session,
+    )
+    await api_functions.append_provisioning_events(
+        operation,
+        caller,
+        request_context,
+        idempotency_key,
+        session,
+    )
+    await api_functions.append_audit_event(resources, caller, request_context, operation, session)
+    await session.commit()
     return await api_functions.build_create_project_response(
         resources,
         api_key.api_key_value,

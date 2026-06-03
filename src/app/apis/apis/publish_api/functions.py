@@ -1,8 +1,15 @@
 from __future__ import annotations
 
+import hashlib
+import json
+from datetime import UTC, datetime, timedelta
 from typing import NoReturn
+from uuid import uuid4
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.apis.common import ApiDerivedState, ScopeAttachmentMode
+from app.apis.apis.publish_api import queries
 from app.apis.apis.publish_api.schemas import (
     ApiScopeResponse,
     PublishApiRequest,
@@ -15,7 +22,9 @@ from app.apis.sequence_types import (
     EventRef,
     IdempotencyRecordRef,
     ProvisioningOperationRef,
+    RequestContext,
 )
+from app.apis.types import ResourceId
 from app.core.config import settings
 from app.integrations.api_gateway_control.port import ApiGatewayControlPort
 from app.integrations.api_gateway_control.schemas import (
@@ -36,6 +45,15 @@ def _sequence_placeholder(function_name: str) -> NoReturn:
     raise NotImplementedError(f"{function_name} is a sequence-level placeholder.")
 
 
+def _now() -> datetime:
+    return datetime.now(UTC)
+
+
+def _request_hash(payload: object) -> str:
+    encoded = json.dumps(payload, sort_keys=True, default=str, separators=(",", ":")).encode()
+    return hashlib.sha256(encoded).hexdigest()
+
+
 async def get_caller_identity() -> CallerIdentity:
     """呼び出し元の role、group、scope を取得する。"""
     return _sequence_placeholder("get_caller_identity")
@@ -54,8 +72,26 @@ async def has_api_publish_permission(
     return "hub-admin" in caller.groups or request.owner_principal_id == caller.principal_id
 
 
-async def get_idempotency_record(idempotency_key: str) -> IdempotencyRecordRef:
+async def get_idempotency_record(
+    idempotency_key: str,
+    session: AsyncSession | None = None,
+) -> IdempotencyRecordRef:
     """Idempotency-Key に対応する既存レコードを取得する。"""
+    if session is not None:
+        rows = await queries.select_idempotency_records(
+            session,
+            queries.SelectIdempotencyRecordsParams(idempotency_key=idempotency_key),
+        )
+        if not rows:
+            return IdempotencyRecordRef(idempotency_key=idempotency_key, operation_id=None)
+        row = rows[0]
+        return IdempotencyRecordRef(
+            idempotency_key=row.idempotency_key,
+            operation_id=row.operation_id,
+            request_hash=row.request_hash,
+            response_payload=row.response_payload,
+            expires_at=row.expires_at,
+        )
     return _sequence_placeholder("get_idempotency_record")
 
 
@@ -118,24 +154,84 @@ async def verify_api_gateway_stage_registration(
     return _sequence_placeholder("verify_api_gateway_stage_registration")
 
 
-async def has_registered_api(request: PublishApiRequest) -> bool:
+async def has_registered_api(
+    request: PublishApiRequest,
+    session: AsyncSession | None = None,
+) -> bool:
     """登録対象 API が既に登録済みかを判定する。"""
+    if session is not None:
+        api_rows = await queries.select_apis(
+            session,
+            queries.SelectApisParams(api_code=request.api_code),
+        )
+        if api_rows:
+            raise ValueError("api code is already registered")
+        stage_rows = await queries.select_api_gateway_stages_by_unique_key(
+            session,
+            queries.SelectApiGatewayStagesByUniqueKeyParams(
+                aws_account_id=request.apigw.aws_account_id,
+                aws_region=request.apigw.aws_region,
+                apigw_rest_api_id=request.apigw.rest_api_id,
+                apigw_stage_name=request.apigw.stage_name,
+            ),
+        )
+        if stage_rows:
+            raise ValueError("API Gateway stage is already registered")
+        return False
     return _sequence_placeholder("has_registered_api")
 
 
 async def create_provisioning_operation(
     request: PublishApiRequest,
     idempotency_key: str,
+    caller: CallerIdentity | None = None,
+    session: AsyncSession | None = None,
 ) -> ProvisioningOperationRef:
     """API 公開用の provisioning operation を作成する。"""
+    if session is not None and caller is not None:
+        api_id = uuid4()
+        operation_id = uuid4()
+        await queries.insert_provisioning_operations(
+            session,
+            queries.InsertProvisioningOperationsParams(
+                operation_id=operation_id,
+                idempotency_key=idempotency_key,
+                api_id=api_id,
+                request_payload=request.model_dump(mode="json", by_alias=True),
+                now=_now(),
+                actor_principal_id=caller.principal_id,
+            ),
+        )
+        return ProvisioningOperationRef(operation_id=operation_id, target_id=api_id)
     return _sequence_placeholder("create_provisioning_operation")
 
 
 async def create_idempotency_record(
     idempotency_key: str,
     operation: ProvisioningOperationRef,
+    request: PublishApiRequest | None = None,
+    caller: CallerIdentity | None = None,
+    session: AsyncSession | None = None,
 ) -> IdempotencyRecordRef:
     """冪等性レコードを作成または確認する。"""
+    if session is not None and request is not None and caller is not None:
+        await queries.insert_idempotency_records(
+            session,
+            queries.InsertIdempotencyRecordsParams(
+                idempotency_record_id=uuid4(),
+                idempotency_key=idempotency_key,
+                request_hash=_request_hash(request.model_dump(mode="json", by_alias=True)),
+                operation_id=operation.operation_id,
+                response_payload={"operationId": str(operation.operation_id)},
+                expires_at=_now() + timedelta(hours=24),
+                now=_now(),
+                actor_principal_id=caller.principal_id,
+            ),
+        )
+        return IdempotencyRecordRef(
+            idempotency_key=idempotency_key,
+            operation_id=operation.operation_id,
+        )
     return _sequence_placeholder("create_idempotency_record")
 
 
@@ -180,26 +276,243 @@ async def save_api_catalog_metadata(
     request: PublishApiRequest,
     scope: ApiScopeRef,
     operation: ProvisioningOperationRef,
+    caller: CallerIdentity | None = None,
+    session: AsyncSession | None = None,
 ) -> ApiCatalogMetadataRef:
     """API metadata、stage、reviewer、OpenAPI metadata、scope を保存する。"""
+    if session is not None and caller is not None and operation.target_id is not None:
+        now = _now()
+        api_id = operation.target_id
+        api_stage_id = uuid4()
+        api_scope_id = uuid4()
+        scope_name = scope.scope_full_name.split("/", maxsplit=1)[-1]
+        resource_server_identifier = scope.scope_full_name.rsplit("/", maxsplit=1)[0]
+        await queries.insert_apis(
+            session,
+            queries.InsertApisParams(
+                api_id=api_id,
+                api_code=request.api_code,
+                name=request.name,
+                description=request.description,
+                provider_name=request.provider_name,
+                provider_contact=request.provider_contact,
+                owner_principal_id=request.owner_principal_id,
+                visibility=request.visibility,
+                api_stage_id=api_stage_id,
+                now=now,
+                actor_principal_id=caller.principal_id,
+            ),
+        )
+        await queries.insert_api_gateway_stages(
+            session,
+            queries.InsertApiGatewayStagesParams(
+                api_stage_id=api_stage_id,
+                api_id=api_id,
+                aws_account_id=request.apigw.aws_account_id,
+                aws_region=request.apigw.aws_region,
+                apigw_rest_api_id=request.apigw.rest_api_id,
+                apigw_stage_name=request.apigw.stage_name,
+                invoke_url=request.apigw.invoke_url,
+                custom_domain_url=request.apigw.custom_domain_url or "",
+                deployment_id="",
+                authorizer_id=request.apigw.authorizer_id or "",
+                api_key_required_observed=True,
+                scope_config_observed=request.apigw.scope_attachment_mode,
+                now=now,
+                actor_principal_id=caller.principal_id,
+            ),
+        )
+        await queries.insert_api_cognito_scopes(
+            session,
+            queries.InsertApiCognitoScopesParams(
+                api_scope_id=api_scope_id,
+                api_id=api_id,
+                cognito_user_pool_id=settings.cognito_user_pool_id,
+                resource_server_identifier=resource_server_identifier,
+                scope_name=scope_name,
+                scope_full_name=scope.scope_full_name,
+                scope_description=request.description,
+                now=now,
+                actor_principal_id=caller.principal_id,
+            ),
+        )
+        await queries.insert_api_documents(
+            session,
+            queries.InsertApiDocumentsParams(
+                api_document_id=uuid4(),
+                api_id=api_id,
+                document_type="OPENAPI",
+                version_label="published",
+                s3_uri=request.openapi_document.s3_uri,
+                sha256=request.openapi_document.sha256,
+                source_filename="openapi",
+                actor_principal_id=caller.principal_id,
+                now=now,
+            ),
+        )
+        reviewer_ids: list[ResourceId] = []
+        for reviewer in request.reviewers:
+            api_reviewer_id = uuid4()
+            reviewer_ids.append(api_reviewer_id)
+            await queries.insert_api_reviewers(
+                session,
+                queries.InsertApiReviewersParams(
+                    api_reviewer_id=api_reviewer_id,
+                    api_id=api_id,
+                    reviewer_principal_id=reviewer.reviewer_principal_id,
+                    reviewer_role=reviewer.reviewer_role,
+                    now=now,
+                    actor_principal_id=caller.principal_id,
+                ),
+            )
+        return ApiCatalogMetadataRef(
+            api_id=api_id,
+            api_stage_id=api_stage_id,
+            api_scope_id=api_scope_id,
+            api_reviewer_ids=tuple(reviewer_ids),
+        )
     return _sequence_placeholder("save_api_catalog_metadata")
 
 
-async def append_api_lifecycle_events(api: ApiCatalogMetadataRef) -> list[EventRef]:
+async def append_api_lifecycle_events(
+    api: ApiCatalogMetadataRef,
+    caller: CallerIdentity | None = None,
+    request_context: RequestContext | None = None,
+    idempotency_key: str | None = None,
+    session: AsyncSession | None = None,
+) -> list[EventRef]:
     """API stage、scope、reviewer の lifecycle event を追記する。"""
+    if session is not None and caller is not None and request_context is not None:
+        now = _now()
+        refs: list[EventRef] = []
+        event_id = uuid4()
+        await queries.insert_api_events(
+            session,
+            queries.InsertApiEventsParams(
+                event_id=event_id,
+                api_id=api.api_id,
+                event_name="API_PUBLISHED",
+                actor_principal_id=caller.principal_id,
+                actor_type=request_context.actor_type,
+                now=now,
+                reason="published",
+                correlation_id=request_context.correlation_id,
+                idempotency_key=idempotency_key or "",
+                event_payload={"apiStageId": str(api.api_stage_id)},
+            ),
+        )
+        refs.append(EventRef(event_id=event_id))
+        if api.api_stage_id is not None:
+            event_id = uuid4()
+            await queries.insert_api_stage_events(
+                session,
+                queries.InsertApiStageEventsParams(
+                    event_id=event_id,
+                    api_stage_id=api.api_stage_id,
+                    event_name="API_STAGE_PUBLISHED",
+                    actor_principal_id=caller.principal_id,
+                    actor_type=request_context.actor_type,
+                    now=now,
+                    reason="published",
+                    correlation_id=request_context.correlation_id,
+                    idempotency_key=idempotency_key or "",
+                    event_payload={"apiId": str(api.api_id)},
+                ),
+            )
+            refs.append(EventRef(event_id=event_id))
+        if api.api_scope_id is not None:
+            event_id = uuid4()
+            await queries.insert_api_scope_events(
+                session,
+                queries.InsertApiScopeEventsParams(
+                    event_id=event_id,
+                    api_scope_id=api.api_scope_id,
+                    event_name="API_SCOPE_CREATED",
+                    actor_principal_id=caller.principal_id,
+                    actor_type=request_context.actor_type,
+                    now=now,
+                    reason="published",
+                    correlation_id=request_context.correlation_id,
+                    idempotency_key=idempotency_key or "",
+                    event_payload={"apiId": str(api.api_id)},
+                ),
+            )
+            refs.append(EventRef(event_id=event_id))
+        for api_reviewer_id in api.api_reviewer_ids:
+            event_id = uuid4()
+            await queries.insert_api_reviewer_events(
+                session,
+                queries.InsertApiReviewerEventsParams(
+                    event_id=event_id,
+                    api_reviewer_id=api_reviewer_id,
+                    event_name="API_REVIEWER_CREATED",
+                    actor_principal_id=caller.principal_id,
+                    actor_type=request_context.actor_type,
+                    now=now,
+                    reason="published",
+                    correlation_id=request_context.correlation_id,
+                    idempotency_key=idempotency_key or "",
+                    event_payload={"apiId": str(api.api_id)},
+                ),
+            )
+            refs.append(EventRef(event_id=event_id))
+        return refs
     return _sequence_placeholder("append_api_lifecycle_events")
 
 
-async def append_provisioning_events(operation: ProvisioningOperationRef) -> list[EventRef]:
+async def append_provisioning_events(
+    operation: ProvisioningOperationRef,
+    caller: CallerIdentity | None = None,
+    request_context: RequestContext | None = None,
+    idempotency_key: str | None = None,
+    session: AsyncSession | None = None,
+) -> list[EventRef]:
     """provisioning operation/step event を追記する。"""
+    if session is not None and caller is not None and request_context is not None:
+        event_id = uuid4()
+        await queries.insert_provisioning_operation_events(
+            session,
+            queries.InsertProvisioningOperationEventsParams(
+                event_id=event_id,
+                operation_id=operation.operation_id,
+                event_name="PROVISIONING_OPERATION_SUCCEEDED",
+                actor_principal_id=caller.principal_id,
+                actor_type=request_context.actor_type,
+                now=_now(),
+                reason="publish api completed",
+                correlation_id=request_context.correlation_id,
+                idempotency_key=idempotency_key or "",
+                event_payload={"targetId": str(operation.target_id)},
+            ),
+        )
+        return [EventRef(event_id=event_id)]
     return _sequence_placeholder("append_provisioning_events")
 
 
 async def append_audit_event(
     api: ApiCatalogMetadataRef,
     caller: CallerIdentity,
+    request_context: RequestContext | None = None,
+    operation: ProvisioningOperationRef | None = None,
+    session: AsyncSession | None = None,
 ) -> EventRef:
     """監査イベントを追記する。"""
+    if session is not None and request_context is not None and operation is not None:
+        event_id = uuid4()
+        await queries.insert_audit_events(
+            session,
+            queries.InsertAuditEventsParams(
+                audit_event_id=event_id,
+                actor_principal_id=caller.principal_id,
+                api_id=api.api_id,
+                operation_id=operation.operation_id,
+                source_ip=request_context.source_ip,
+                user_agent=request_context.user_agent,
+                details={"apiStageId": str(api.api_stage_id)},
+                now=_now(),
+            ),
+        )
+        return EventRef(event_id=event_id)
     return _sequence_placeholder("append_audit_event")
 
 

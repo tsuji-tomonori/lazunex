@@ -491,3 +491,32 @@ async def insert_provisioning_step_events(
         SQL_DIR / "018_insert_provisioning_step_events.sql",
         params,
     )
+
+
+class SelectIdempotencyRecordsParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    idempotency_key: str
+
+
+class SelectIdempotencyRecordsRow(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    idempotency_record_id: UUID
+    idempotency_key: str
+    request_hash: str
+    operation_id: UUID | None = None
+    response_payload: dict[str, Any] | None = None
+    expires_at: datetime
+    created_at: datetime
+
+
+async def select_idempotency_records(
+    session: AsyncSession,
+    params: SelectIdempotencyRecordsParams,
+) -> list[SelectIdempotencyRecordsRow]:
+    """Idempotency-Keyに対応する既存レコードを取得する。"""
+    return await fetch_all(
+        session,
+        SQL_DIR / "019_select_idempotency_records.sql",
+        params,
+        SelectIdempotencyRecordsRow,
+    )

@@ -484,3 +484,82 @@ async def insert_provisioning_step_events(
         SQL_DIR / "018_insert_provisioning_step_events.sql",
         params,
     )
+
+
+class SelectIdempotencyRecordsParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    idempotency_key: str
+
+
+class SelectIdempotencyRecordsRow(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    idempotency_record_id: UUID
+    idempotency_key: str
+    request_hash: str
+    operation_id: UUID | None = None
+    response_payload: dict[str, Any] | None = None
+    expires_at: datetime
+    created_at: datetime
+
+
+async def select_idempotency_records(
+    session: AsyncSession,
+    params: SelectIdempotencyRecordsParams,
+) -> list[SelectIdempotencyRecordsRow]:
+    """Idempotency-Keyに対応する既存レコードを取得する。"""
+    return await fetch_all(
+        session,
+        SQL_DIR / "019_select_idempotency_records.sql",
+        params,
+        SelectIdempotencyRecordsRow,
+    )
+
+
+class InsertAuditEventsParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    audit_event_id: UUID
+    actor_principal_id: str
+    project_id: UUID
+    operation_id: UUID
+    source_ip: str
+    user_agent: str
+    details: dict[str, Any]
+    now: datetime
+
+
+async def insert_audit_events(
+    session: AsyncSession,
+    params: InsertAuditEventsParams,
+) -> None:
+    """Project作成の処理結果として、監査イベントを追加する。"""
+    await execute_sql(
+        session,
+        SQL_DIR / "020_insert_audit_events.sql",
+        params,
+    )
+
+
+class InsertProjectCognitoClientEventsParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    event_id: UUID
+    project_cognito_client_id: UUID
+    event_name: str
+    actor_principal_id: str
+    actor_type: str
+    now: datetime
+    reason: str
+    correlation_id: str
+    idempotency_key: str
+    event_payload: dict[str, Any]
+
+
+async def insert_project_cognito_client_events(
+    session: AsyncSession,
+    params: InsertProjectCognitoClientEventsParams,
+) -> None:
+    """Project作成の処理結果として、Project Cognito clientイベントを追加する。"""
+    await execute_sql(
+        session,
+        SQL_DIR / "021_insert_project_cognito_client_events.sql",
+        params,
+    )

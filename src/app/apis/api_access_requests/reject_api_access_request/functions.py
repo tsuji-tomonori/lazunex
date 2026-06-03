@@ -165,7 +165,20 @@ async def get_idempotency_record(
 ) -> IdempotencyRecordRef:
     """Idempotency-Key に対応する既存レコードを取得する。"""
     if session is not None:
-        return IdempotencyRecordRef(idempotency_key=idempotency_key, operation_id=None)
+        rows = await queries.select_idempotency_records(
+            session,
+            queries.SelectIdempotencyRecordsParams(idempotency_key=idempotency_key),
+        )
+        if not rows:
+            return IdempotencyRecordRef(idempotency_key=idempotency_key, operation_id=None)
+        row = rows[0]
+        return IdempotencyRecordRef(
+            idempotency_key=row.idempotency_key,
+            operation_id=row.operation_id,
+            request_hash=row.request_hash,
+            response_payload=row.response_payload,
+            expires_at=row.expires_at,
+        )
     return _sequence_placeholder("get_idempotency_record")
 
 

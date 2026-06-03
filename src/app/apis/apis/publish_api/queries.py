@@ -451,3 +451,63 @@ async def insert_provisioning_step_events(
         SQL_DIR / "017_insert_provisioning_step_events.sql",
         params,
     )
+
+
+class SelectIdempotencyRecordsParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    idempotency_key: str
+
+
+class SelectIdempotencyRecordsRow(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    idempotency_record_id: UUID
+    idempotency_key: str
+    request_hash: str
+    operation_id: UUID | None = None
+    response_payload: dict[str, Any] | None = None
+    expires_at: datetime
+    created_at: datetime
+
+
+async def select_idempotency_records(
+    session: AsyncSession,
+    params: SelectIdempotencyRecordsParams,
+) -> list[SelectIdempotencyRecordsRow]:
+    """Idempotency-Keyに対応する既存レコードを取得する。"""
+    return await fetch_all(
+        session,
+        SQL_DIR / "018_select_idempotency_records.sql",
+        params,
+        SelectIdempotencyRecordsRow,
+    )
+
+
+class SelectApiGatewayStagesByUniqueKeyParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    aws_account_id: str
+    aws_region: str
+    apigw_rest_api_id: str
+    apigw_stage_name: str
+
+
+class SelectApiGatewayStagesByUniqueKeyRow(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    api_stage_id: UUID
+    api_id: UUID
+    aws_account_id: str
+    aws_region: str
+    apigw_rest_api_id: str
+    apigw_stage_name: str
+
+
+async def select_api_gateway_stages_by_unique_key(
+    session: AsyncSession,
+    params: SelectApiGatewayStagesByUniqueKeyParams,
+) -> list[SelectApiGatewayStagesByUniqueKeyRow]:
+    """API Gateway stageの重複登録を防ぐため、既存stageを取得する。"""
+    return await fetch_all(
+        session,
+        SQL_DIR / "019_select_api_gateway_stages_by_unique_key.sql",
+        params,
+        SelectApiGatewayStagesByUniqueKeyRow,
+    )

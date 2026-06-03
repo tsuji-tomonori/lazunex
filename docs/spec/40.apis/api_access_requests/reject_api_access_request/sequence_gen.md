@@ -7,7 +7,6 @@ sequenceDiagram
   autonumber
   participant API as API
   participant DB as DB
-  API->>API: 呼び出し元の role、group、scope を取得する。
   API->>API: 却下対象の利用申請を取得する。
   alt 利用申請が審査中状態である場合。
     alt 呼び出し元が対象 API の reviewer または Hub 管理者である場合。
@@ -26,6 +25,7 @@ sequenceDiagram
       API->>DB: 却下処理の開始と完了を追跡するため、利用申請イベントを追加する。<br/>SQL 004_insert_access_request_events.sql<br/>テーブル access_request_events
       API->>DB: 利用申請却下の処理結果として、監査イベントを追加する。<br/>SQL 005_insert_audit_events.sql<br/>テーブル audit_events
       API->>DB: 利用申請却下の処理結果として、冪等性レコードを追加する。<br/>SQL 006_insert_idempotency_records.sql<br/>テーブル idempotency_records
+      API->>DB: Idempotency-Keyに対応する既存レコードを取得する。<br/>SQL 007_select_idempotency_records.sql<br/>テーブル idempotency_records
     end
   end
 ```

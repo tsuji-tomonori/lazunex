@@ -105,13 +105,33 @@ async def get_api_reviewer(
             session,
             queries.SelectApisParams(api_id=api_id, api_stage_id=api_stage_id),
         )
-        reviewers = tuple(
-            row.reviewer_principal_id for row in rows if row.reviewer_principal_id
-        )
+        reviewers = tuple(row.reviewer_principal_id for row in rows if row.reviewer_principal_id)
         if not reviewers:
             raise ValueError("api reviewer is not configured")
         return ApiReviewerRefs(reviewer_principal_ids=reviewers)
     return _sequence_placeholder("get_api_reviewer")
+
+
+async def has_requested_auth_mode_clients(
+    project: ProjectRef,
+    request: CreateApiAccessRequestRequest,
+    session: AsyncSession | None = None,
+) -> bool:
+    """requestedAuthMode に対応する Project client が存在するかを判定する。"""
+    if session is not None:
+        rows = await queries.select_project_cognito_clients(
+            session,
+            queries.SelectProjectCognitoClientsParams(project_id=project.project_id),
+        )
+        client_types = {row.client_type for row in rows}
+        if request.requested_auth_mode == AuthMode.BOTH:
+            required = {AuthMode.PUBLIC_PKCE, AuthMode.CLIENT_CREDENTIALS}
+        else:
+            required = {request.requested_auth_mode}
+        if not {str(item) for item in required}.issubset(client_types):
+            raise ValueError("requested auth mode client is not configured")
+        return True
+    return _sequence_placeholder("has_requested_auth_mode_clients")
 
 
 async def has_active_subscription(
@@ -198,7 +218,20 @@ async def get_idempotency_record(
 ) -> IdempotencyRecordRef:
     """Idempotency-Key に対応する既存レコードを取得する。"""
     if session is not None:
-        return IdempotencyRecordRef(idempotency_key=idempotency_key, operation_id=None)
+        rows = await queries.select_idempotency_records(
+            session,
+            queries.SelectIdempotencyRecordsParams(idempotency_key=idempotency_key),
+        )
+        if not rows:
+            return IdempotencyRecordRef(idempotency_key=idempotency_key, operation_id=None)
+        row = rows[0]
+        return IdempotencyRecordRef(
+            idempotency_key=row.idempotency_key,
+            operation_id=row.operation_id,
+            request_hash=row.request_hash,
+            response_payload=row.response_payload,
+            expires_at=row.expires_at,
+        )
     return _sequence_placeholder("get_idempotency_record")
 
 
