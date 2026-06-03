@@ -52,14 +52,29 @@ async def get_project_detail(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
         first = rows[0]
         callback_urls = [
-            row.url for row in rows if row.client_type == "PUBLIC" and row.url_type == "CALLBACK"
+            row.url
+            for row in rows
+            if (
+                row.client_type in {"PUBLIC_PKCE", "PUBLIC"}
+                and row.url_type == "CALLBACK"
+                and row.url
+            )
         ]
         logout_urls = [
-            row.url for row in rows if row.client_type == "PUBLIC" and row.url_type == "LOGOUT"
+            row.url
+            for row in rows
+            if row.client_type in {"PUBLIC_PKCE", "PUBLIC"} and row.url_type == "LOGOUT" and row.url
         ]
-        public_client = next((row for row in rows if row.client_type == "PUBLIC"), first)
+        public_client = next(
+            (row for row in rows if row.client_type in {"PUBLIC_PKCE", "PUBLIC"}),
+            first,
+        )
         confidential_client = next(
-            (row for row in rows if row.client_type == "CONFIDENTIAL"),
+            (
+                row
+                for row in rows
+                if row.client_type in {"CONFIDENTIAL_CLIENT_CREDENTIALS", "CONFIDENTIAL"}
+            ),
             first,
         )
         return GetProjectResponse(

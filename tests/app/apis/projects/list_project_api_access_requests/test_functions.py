@@ -52,6 +52,6 @@ async def test_get_project_access_requests_calls_select_api_access_requests(
     assert params.actor_principal_id == "user-12345"
     assert params.project_id == project_id
     assert params.is_hub_admin is True
-    assert params.decision == "PENDING"
+    assert params.decision is None
     assert params.after_requested_at == "2026-01-01T00:00:00Z"
     assert params.limit == 20

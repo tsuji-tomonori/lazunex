@@ -19,7 +19,7 @@ class SelectApiAccessRequestsParams(BaseModel):
     actor_principal_id: str
     project_id: UUID
     is_hub_admin: Any
-    decision: str
+    decision: str | None
     after_requested_at: Any
     limit: Any
 
@@ -37,12 +37,12 @@ class SelectApiAccessRequestsRow(BaseModel):
     api_code: str
     api_name: str
     apigw_stage_name: str
-    access_review_id: UUID
-    decision: str
+    access_review_id: UUID | None = None
+    decision: str | None = None
     approved_auth_mode: str | None = None
-    reviewer_principal_id: str
+    reviewer_principal_id: str | None = None
     review_comment: str | None = None
-    reviewed_at: datetime
+    reviewed_at: datetime | None = None
 
 
 async def select_api_access_requests(

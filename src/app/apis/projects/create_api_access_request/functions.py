@@ -51,6 +51,12 @@ def _request_hash(payload: object) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
+def _client_type_for_auth_mode(auth_mode: AuthMode) -> str:
+    if auth_mode == AuthMode.CLIENT_CREDENTIALS:
+        return "CONFIDENTIAL_CLIENT_CREDENTIALS"
+    return auth_mode.value
+
+
 async def get_project(
     project_id: ResourceId,
     caller: CallerIdentity | None = None,
@@ -125,10 +131,10 @@ async def has_requested_auth_mode_clients(
         )
         client_types = {row.client_type for row in rows}
         if request.requested_auth_mode == AuthMode.BOTH:
-            required = {AuthMode.PUBLIC_PKCE, AuthMode.CLIENT_CREDENTIALS}
+            required = {AuthMode.PUBLIC_PKCE.value, "CONFIDENTIAL_CLIENT_CREDENTIALS"}
         else:
-            required = {request.requested_auth_mode}
-        if not {str(item) for item in required}.issubset(client_types):
+            required = {_client_type_for_auth_mode(request.requested_auth_mode)}
+        if not required.issubset(client_types):
             raise ValueError("requested auth mode client is not configured")
         return True
     return _sequence_placeholder("has_requested_auth_mode_clients")

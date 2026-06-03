@@ -4,9 +4,11 @@ from typing import NoReturn, cast
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.apis.apis.common import ApiDerivedState, ApiVisibility
 from app.apis.apis.list_apis import queries
 from app.apis.apis.list_apis.schemas import (
     ApiListItemResponse,
+    ApiListStageResponse,
     ListApisQuery,
     ListApisResponse,
 )
@@ -43,17 +45,21 @@ async def get_viewable_apis(
         rows = await queries.select_apis(
             session,
             queries.SelectApisParams(
-                visibility="PUBLIC",
+                visibility=None,
                 keyword=getattr(query, "keyword", None),
                 after_api_code=getattr(query, "next_token", None),
                 limit=getattr(query, "limit", None),
             ),
         )
         _ = caller
-        return SequencePage(
-            items=cast(tuple[ApiListItemResponse, ...], tuple(rows)),
-            next_token=None,
+        row_objects = cast(tuple[object, ...], tuple(rows))
+        items = tuple(
+            _to_response_item(row)
+            if isinstance(row, queries.SelectApisRow)
+            else cast(ApiListItemResponse, row)
+            for row in row_objects
         )
+        return SequencePage(items=items, next_token=None)
     return _sequence_placeholder("get_viewable_apis")
 
 
@@ -69,3 +75,21 @@ async def apply_pagination(
 async def build_api_list_response(page: SequencePage[ApiListItemResponse]) -> ListApisResponse:
     """API 一覧レスポンスを組み立てる。"""
     return ListApisResponse(items=list(page.items), next_token=page.next_token)
+
+
+def _to_response_item(row: queries.SelectApisRow) -> ApiListItemResponse:
+    return ApiListItemResponse(
+        api_id=row.api_id,
+        api_code=row.api_code,
+        name=row.name,
+        description=row.description,
+        provider_name=row.provider_name,
+        visibility=ApiVisibility(row.visibility),
+        derived_state=ApiDerivedState.PUBLISHED,
+        stage=ApiListStageResponse(
+            api_stage_id=row.api_stage_id,
+            stage_name=row.apigw_stage_name,
+            invoke_url=row.invoke_url,
+        ),
+        scope_full_name=row.scope_full_name,
+    )

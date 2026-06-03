@@ -1,4 +1,5 @@
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel
@@ -9,6 +10,11 @@ from app.db.query import execute_sql, fetch_all, fetch_one, load_sql, model_para
 
 class SampleParams(BaseModel):
     value: int
+
+
+class ComplexParams(BaseModel):
+    payload: dict[str, object]
+    identifier: UUID
 
 
 class SampleRow(BaseModel):
@@ -23,6 +29,15 @@ def test_load_sql_and_model_parameters(tmp_path: Path) -> None:
     assert model_parameters(None) == {}
     assert model_parameters({"value": 1}) == {"value": 1}
     assert model_parameters(SampleParams(value=2)) == {"value": 2}
+    assert model_parameters(
+        ComplexParams(
+            payload={"name": "請求", "enabled": True},
+            identifier=UUID("7b0d4a98-0000-0000-0000-000000000001"),
+        )
+    ) == {
+        "payload": '{"enabled": true, "name": "請求"}',
+        "identifier": "7b0d4a98-0000-0000-0000-000000000001",
+    }
 
 
 @pytest.mark.anyio

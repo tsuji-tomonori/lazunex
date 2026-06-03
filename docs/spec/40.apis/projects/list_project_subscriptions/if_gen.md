@@ -8,7 +8,11 @@ Summary: 利用可能API一覧を取得する
 
 ## Headers
 
-_なし_
+| 項目 | 型 | 必須 | 説明 | 制約 |
+| --- | --- | --- | --- | --- |
+| `X-Principal-Id` | `string` | yes | - | - |
+| `X-Groups` | `string \| null` | no | - | - |
+| `X-Scopes` | `string \| null` | no | - | - |
 
 ## Path Parameters
 
@@ -148,7 +152,10 @@ Media type: `application/json`
 ### In
 
 ```bash
-curl -X GET 'https://api.example.com/projects/cb62b5f6-0000-0000-0000-000000000001/subscriptions?limit=<limit>&nextToken=<nextToken>'
+curl -X GET 'https://api.example.com/projects/cb62b5f6-0000-0000-0000-000000000001/subscriptions?limit=<limit>&nextToken=<nextToken>' \
+  -H 'X-Principal-Id: <X-Principal-Id>' \
+  -H 'X-Groups: <X-Groups>' \
+  -H 'X-Scopes: <X-Scopes>'
 ```
 
 ### Out

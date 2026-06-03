@@ -1,5 +1,5 @@
 -- Projectが利用可能なAPI一覧を返すため、承認済みsubscriptionを取得する。
-SELECT
+SELECT DISTINCT
     sub.subscription_id,
     sub.api_id,
     sub.api_stage_id,

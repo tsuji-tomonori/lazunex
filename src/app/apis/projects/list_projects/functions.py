@@ -4,6 +4,7 @@ from typing import NoReturn, cast
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.apis.projects.common import ProjectDerivedState
 from app.apis.projects.list_projects import queries
 from app.apis.projects.list_projects.schemas import (
     ListProjectsQuery,
@@ -49,10 +50,14 @@ async def get_viewable_projects(
                 limit=getattr(query, "limit", None),
             ),
         )
-        return SequencePage(
-            items=cast(tuple[ProjectListItemResponse, ...], tuple(rows)),
-            next_token=None,
+        row_objects = cast(tuple[object, ...], tuple(rows))
+        items = tuple(
+            _to_response_item(row)
+            if isinstance(row, queries.SelectProjectsRow)
+            else cast(ProjectListItemResponse, row)
+            for row in row_objects
         )
+        return SequencePage(items=items, next_token=None)
     return _sequence_placeholder("get_viewable_projects")
 
 
@@ -70,3 +75,16 @@ async def build_project_list_response(
 ) -> ListProjectsResponse:
     """Project 一覧レスポンスを組み立てる。"""
     return ListProjectsResponse(items=list(page.items), next_token=page.next_token)
+
+
+def _to_response_item(row: queries.SelectProjectsRow) -> ProjectListItemResponse:
+    return ProjectListItemResponse(
+        project_id=row.project_id,
+        project_code=row.project_code,
+        name=row.name,
+        description=row.description,
+        owner_principal_id=row.owner_principal_id,
+        department_code=row.department_code,
+        derived_state=ProjectDerivedState.ACTIVE,
+        subscription_count=row.subscription_count or 0,
+    )

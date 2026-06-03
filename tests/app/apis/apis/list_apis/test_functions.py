@@ -38,7 +38,7 @@ async def test_get_viewable_apis_calls_select_apis(
     assert captured["session"] is session
     params = captured["params"]
     assert isinstance(params, queries.SelectApisParams)
-    assert params.visibility == "PUBLIC"
+    assert params.visibility is None
     assert params.keyword == "billing"
     assert params.after_api_code == "billing-api-v1"
     assert params.limit == 25

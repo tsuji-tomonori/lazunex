@@ -63,7 +63,7 @@ async def get_api_detail(
                 invoke_url=first.invoke_url,
                 custom_domain_url=first.custom_domain_url,
                 api_key_required_observed=first.api_key_required_observed,
-                scope_config_observed=ScopeConfigObserved(first.scope_config_observed),
+                scope_config_observed=_scope_config_observed(first.scope_config_observed),
             ),
             scope=ApiScopeResponse(
                 scope_name=first.scope_name,
@@ -97,3 +97,9 @@ async def is_viewable_api(
 async def build_api_detail_response(api: GetApiResponse) -> GetApiResponse:
     """API 詳細レスポンスを組み立てる。"""
     return api
+
+
+def _scope_config_observed(value: str) -> ScopeConfigObserved:
+    if value in {"VERIFY_ONLY", "PATCH_ALL_METHODS"}:
+        return ScopeConfigObserved.VERIFIED
+    return ScopeConfigObserved(value)

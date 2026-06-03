@@ -4,6 +4,8 @@ from typing import NoReturn, cast
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.apis.api_access_requests.common import AuthMode
+from app.apis.projects.common import SubscriptionDerivedState
 from app.apis.projects.list_project_subscriptions import queries
 from app.apis.projects.list_project_subscriptions.schemas import (
     ListProjectSubscriptionsQuery,
@@ -63,10 +65,14 @@ async def get_project_subscriptions(
                 limit=getattr(query, "limit", None),
             ),
         )
-        return SequencePage(
-            items=cast(tuple[ProjectSubscriptionItemResponse, ...], tuple(rows)),
-            next_token=None,
+        row_objects = cast(tuple[object, ...], tuple(rows))
+        items = tuple(
+            _to_response_item(row)
+            if isinstance(row, queries.SelectSubscriptionsRow)
+            else cast(ProjectSubscriptionItemResponse, row)
+            for row in row_objects
         )
+        return SequencePage(items=items, next_token=None)
     return _sequence_placeholder("get_project_subscriptions")
 
 
@@ -84,3 +90,21 @@ async def build_project_subscription_list_response(
 ) -> ListProjectSubscriptionsResponse:
     """secret 値を含めずに Project subscription 一覧レスポンスを組み立てる。"""
     return ListProjectSubscriptionsResponse(items=list(page.items), next_token=page.next_token)
+
+
+def _to_response_item(
+    row: queries.SelectSubscriptionsRow,
+) -> ProjectSubscriptionItemResponse:
+    return ProjectSubscriptionItemResponse(
+        subscription_id=row.subscription_id,
+        api_id=row.api_id,
+        api_code=row.api_code,
+        api_name=row.api_name,
+        api_stage_id=row.api_stage_id,
+        stage_name=row.stage_name,
+        invoke_url=row.invoke_url,
+        scope_full_name=row.scope_full_name,
+        approved_auth_mode=AuthMode(row.approved_auth_mode),
+        derived_state=SubscriptionDerivedState.ACTIVE,
+        approved_at=row.approved_at,
+    )

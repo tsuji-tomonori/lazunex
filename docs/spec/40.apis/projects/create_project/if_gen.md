@@ -11,6 +11,11 @@ API利用単位となるプロジェクトを作成し、API keyとCognito app c
 | 項目 | 型 | 必須 | 説明 | 制約 |
 | --- | --- | --- | --- | --- |
 | `Idempotency-Key` | `string` | yes | 同じ更新系リクエストの重複処理を防ぐためにクライアントが指定する一意なキーです。同じキーで再送された場合、サーバーは同一リクエストとして扱います。 | - |
+| `X-Principal-Id` | `string` | yes | - | - |
+| `X-Groups` | `string \| null` | no | - | - |
+| `X-Scopes` | `string \| null` | no | - | - |
+| `X-Correlation-Id` | `string \| null` | no | - | - |
+| `User-Agent` | `string \| null` | no | - | - |
 
 ## Path Parameters
 
@@ -221,6 +226,11 @@ Media type: `application/json`
 ```bash
 curl -X POST 'https://api.example.com/projects' \
   -H 'Idempotency-Key: <Idempotency-Key>' \
+  -H 'X-Principal-Id: <X-Principal-Id>' \
+  -H 'X-Groups: <X-Groups>' \
+  -H 'X-Scopes: <X-Scopes>' \
+  -H 'X-Correlation-Id: <X-Correlation-Id>' \
+  -H 'User-Agent: <User-Agent>' \
   -H 'Content-Type: application/json' \
   -d '{
   "projectCode": "payment-frontend",

@@ -42,8 +42,8 @@ class SelectProjectsRow(BaseModel):
     access_token_validity: int
     access_token_unit: str
     refresh_token_rotation_enabled: bool
-    url_type: str
-    url: str
+    url_type: str | None = None
+    url: str | None = None
 
 
 async def select_projects(
