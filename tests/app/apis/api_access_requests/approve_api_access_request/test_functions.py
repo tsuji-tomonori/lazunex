@@ -19,6 +19,7 @@ from app.apis.sequence_types import (
     CognitoAppClientRef,
     ProvisioningOperationRef,
     RequestContext,
+    UsagePlanApiStageRef,
 )
 from app.integrations.api_gateway_control.fake import FakeApiGatewayControlClient
 from app.integrations.api_gateway_control.schemas import AddUsagePlanStageInput
@@ -113,6 +114,40 @@ async def test_approve_helpers_merge_scopes_and_build_response(
     assert await functions.has_active_subscription(access_request) is False
     assert merged.allowed_scopes[-1] == f"api-hub/api:{access_request.api_id}:invoke"
     assert response.project_id == access_request.project_id
+
+
+async def test_approve_event_helpers_and_placeholders(
+    access_request: ApiAccessRequestRef,
+    operation: ProvisioningOperationRef,
+) -> None:
+    resources = ApprovedAccessResourceRefs(
+        review_id=access_request.access_request_id,
+        subscription_id=access_request.project_id,
+        usage_plan_api_stage_id=access_request.api_stage_id,
+        client_scope_ids=(access_request.api_id,),
+    )
+
+    assert functions._request_hash({"b": 2, "a": 1})
+    assert functions._now().tzinfo is UTC
+    usage_plan_stage = UsagePlanApiStageRef(
+        usage_plan_api_stage_id=access_request.api_stage_id,
+    )
+
+    assert (await functions.append_usage_plan_stage_event(usage_plan_stage)).event_id
+    assert len(await functions.append_client_scope_event(resources)) == 1
+    assert (await functions.append_access_request_approved_event(access_request)).event_id
+    assert (await functions.append_subscription_provisioned_event(resources)).event_id
+    assert len(await functions.append_provisioning_events(operation)) == 1
+    assert (
+        await functions.append_audit_event(
+            access_request,
+            CallerIdentity(principal_id="reviewer-001", groups=(), scopes=()),
+        )
+    ).event_id
+    with pytest.raises(NotImplementedError):
+        await functions.get_caller_identity()
+    with pytest.raises(NotImplementedError):
+        await functions.get_idempotency_record("idem-key")
 
 
 async def test_approve_access_request_db_mapping_sequence(

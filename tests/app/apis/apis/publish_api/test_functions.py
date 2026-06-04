@@ -31,6 +31,35 @@ from app.integrations.identity.schemas import DescribeResourceServerInput, Updat
 pytestmark = pytest.mark.anyio
 
 
+async def test_validate_api_publish_request_rejects_missing_or_duplicate_reviewers() -> None:
+    assert await functions.validate_api_publish_request(PUBLISH_API_REQUEST_SAMPLE)
+
+    missing_reviewers = PUBLISH_API_REQUEST_SAMPLE.model_copy(update={"reviewers": []})
+    duplicate_reviewers = PUBLISH_API_REQUEST_SAMPLE.model_copy(
+        update={
+            "reviewers": [
+                PUBLISH_API_REQUEST_SAMPLE.reviewers[0],
+                PUBLISH_API_REQUEST_SAMPLE.reviewers[0],
+            ]
+        }
+    )
+
+    with pytest.raises(ValueError, match="reviewers"):
+        await functions.validate_api_publish_request(missing_reviewers)
+    with pytest.raises(ValueError, match="duplicate"):
+        await functions.validate_api_publish_request(duplicate_reviewers)
+
+
+async def test_publish_api_permission_and_placeholder_functions() -> None:
+    owner = CallerIdentity(principal_id="user-12345", groups=(), scopes=())
+    other = CallerIdentity(principal_id="user-99999", groups=(), scopes=())
+
+    assert await functions.has_api_publish_permission(PUBLISH_API_REQUEST_SAMPLE, owner) is True
+    assert await functions.has_api_publish_permission(PUBLISH_API_REQUEST_SAMPLE, other) is False
+    with pytest.raises(NotImplementedError):
+        await functions.get_caller_identity()
+
+
 async def test_verify_api_gateway_stage_registration_patches_methods() -> None:
     client = FakeApiGatewayControlClient()
     request = PUBLISH_API_REQUEST_SAMPLE.model_copy(

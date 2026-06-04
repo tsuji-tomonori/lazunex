@@ -61,6 +61,15 @@ async def get_caller_identity() -> CallerIdentity:
 
 async def validate_api_publish_request(request: PublishApiRequest) -> PublishApiRequest:
     """API 公開登録リクエストを検証する。"""
+    if not request.api_code.strip():
+        raise ValueError("api_code must not be blank")
+    if not request.owner_principal_id.strip():
+        raise ValueError("owner_principal_id must not be blank")
+    if not request.reviewers:
+        raise ValueError("reviewers must contain at least one reviewer")
+    reviewer_principal_ids = [reviewer.reviewer_principal_id for reviewer in request.reviewers]
+    if len(set(reviewer_principal_ids)) != len(reviewer_principal_ids):
+        raise ValueError("reviewers must not contain duplicate reviewer_principal_id values")
     return request
 
 

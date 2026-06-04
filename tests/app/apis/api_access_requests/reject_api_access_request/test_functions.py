@@ -17,6 +17,23 @@ from app.apis.sequence_types import ApiAccessRequestRef, CallerIdentity, Request
 pytestmark = pytest.mark.anyio
 
 
+async def test_reject_access_request_helpers_and_placeholders(
+    access_request: ApiAccessRequestRef,
+) -> None:
+    assert await functions.is_pending_access_request(access_request) is True
+    assert await functions.validate_rejection_reason(REJECT_API_ACCESS_REQUEST_REQUEST_SAMPLE)
+
+    blank_comment = REJECT_API_ACCESS_REQUEST_REQUEST_SAMPLE.model_copy(
+        update={"review_comment": "   "}
+    )
+    with pytest.raises(ValueError, match="review_comment"):
+        await functions.validate_rejection_reason(blank_comment)
+    with pytest.raises(NotImplementedError):
+        await functions.get_caller_identity()
+    with pytest.raises(NotImplementedError):
+        await functions.get_idempotency_record("idem-key")
+
+
 async def test_reject_access_request_db_sequence(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: list[str] = []
     session = cast(AsyncSession, object())

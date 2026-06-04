@@ -8,7 +8,13 @@ from uuid import uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.apis.projects.common import TokenValidityUnit
+from app.apis.projects.common import (
+    TokenValidityUnit,
+    validate_access_or_id_token_validity,
+    validate_cognito_url_list,
+    validate_refresh_token_validity,
+    validate_retry_grace_period_seconds,
+)
 from app.apis.projects.update_project_public_client import queries
 from app.apis.projects.update_project_public_client.schemas import (
     UpdatedPublicClientResponse,
@@ -55,6 +61,23 @@ async def validate_public_client_update_request(
     request: UpdateProjectPublicClientRequest,
 ) -> UpdateProjectPublicClientRequest:
     """public App Client 更新リクエストを検証する。"""
+    validate_cognito_url_list("callback_urls", request.callback_urls)
+    validate_cognito_url_list("logout_urls", request.logout_urls)
+    validate_access_or_id_token_validity(
+        "access_token_validity",
+        request.access_token_validity,
+        request.access_token_unit,
+    )
+    validate_access_or_id_token_validity(
+        "id_token_validity",
+        request.id_token_validity,
+        request.id_token_unit,
+    )
+    validate_refresh_token_validity(
+        request.refresh_token_validity,
+        request.refresh_token_unit,
+    )
+    validate_retry_grace_period_seconds(request.retry_grace_period_seconds)
     return request
 
 

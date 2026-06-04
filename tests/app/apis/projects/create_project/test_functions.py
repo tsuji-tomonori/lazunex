@@ -33,6 +33,53 @@ from app.integrations.secret_values.schemas import GetHashPepperInput
 pytestmark = pytest.mark.anyio
 
 
+async def test_validate_create_project_request_rejects_cognito_limits() -> None:
+    assert await functions.validate_create_project_request(CREATE_PROJECT_REQUEST_SAMPLE)
+
+    duplicate_logout = CREATE_PROJECT_REQUEST_SAMPLE.model_copy(
+        update={
+            "public_client": CREATE_PROJECT_REQUEST_SAMPLE.public_client.model_copy(
+                update={
+                    "logout_urls": [
+                        "https://payment.example.internal/logout",
+                        "https://payment.example.internal/logout",
+                    ]
+                }
+            )
+        }
+    )
+    short_confidential_token = CREATE_PROJECT_REQUEST_SAMPLE.model_copy(
+        update={
+            "confidential_client": CREATE_PROJECT_REQUEST_SAMPLE.confidential_client.model_copy(
+                update={"access_token_validity": 1}
+            )
+        }
+    )
+    long_grace = CREATE_PROJECT_REQUEST_SAMPLE.model_copy(
+        update={
+            "public_client": CREATE_PROJECT_REQUEST_SAMPLE.public_client.model_copy(
+                update={"retry_grace_period_seconds": 61}
+            )
+        }
+    )
+
+    with pytest.raises(ValueError, match="duplicate"):
+        await functions.validate_create_project_request(duplicate_logout)
+    with pytest.raises(ValueError, match=r"confidential_client\.access_token_validity"):
+        await functions.validate_create_project_request(short_confidential_token)
+    with pytest.raises(ValueError, match="retry_grace_period_seconds"):
+        await functions.validate_create_project_request(long_grace)
+
+
+async def test_create_project_permission_and_placeholder_functions() -> None:
+    caller = CallerIdentity(principal_id="admin-001", groups=("hub-admin",), scopes=())
+
+    assert await functions.has_project_creation_permission(caller) is True
+    assert functions._hash_key_version("pepper-v12") == 12
+    with pytest.raises(NotImplementedError):
+        await functions.get_caller_identity()
+
+
 async def test_create_api_gateway_api_key_calls_integration(
     operation: ProvisioningOperationRef,
 ) -> None:

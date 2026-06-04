@@ -99,6 +99,8 @@ async def validate_rejection_reason(
     request: RejectApiAccessRequestRequest,
 ) -> RejectApiAccessRequestRequest:
     """利用申請却下理由を検証する。"""
+    if not request.review_comment.strip():
+        raise ValueError("review_comment must not be blank")
     return request
 
 

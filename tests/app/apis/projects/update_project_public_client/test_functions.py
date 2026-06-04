@@ -64,6 +64,46 @@ async def test_update_cognito_app_client_calls_identity_admin(
     assert call.allowed_scopes == ("openid", "profile")
 
 
+async def test_validate_public_client_update_request_rejects_cognito_limits() -> None:
+    assert (
+        await functions.validate_public_client_update_request(
+            UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE
+        )
+        == UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE
+    )
+
+    duplicate_callback = UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE.model_copy(
+        update={
+            "callback_urls": [
+                "https://payment.example.internal/callback",
+                "https://payment.example.internal/callback",
+            ]
+        }
+    )
+    short_access_token = UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE.model_copy(
+        update={"access_token_validity": 1, "access_token_unit": TokenValidityUnit.MINUTES}
+    )
+    long_grace = UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE.model_copy(
+        update={"retry_grace_period_seconds": 61}
+    )
+
+    with pytest.raises(ValueError, match="duplicate"):
+        await functions.validate_public_client_update_request(duplicate_callback)
+    with pytest.raises(ValueError, match="access_token_validity"):
+        await functions.validate_public_client_update_request(short_access_token)
+    with pytest.raises(ValueError, match="retry_grace_period_seconds"):
+        await functions.validate_public_client_update_request(long_grace)
+
+
+async def test_update_public_client_sequence_placeholders_raise() -> None:
+    caller = CallerIdentity(principal_id="owner-001", groups=("hub-admin",), scopes=())
+    project = ProjectRef(project_id=UUID("cb62b5f6-0000-0000-0000-000000000001"))
+
+    assert await functions.has_project_owner_permission(project, caller) is True
+    with pytest.raises(NotImplementedError):
+        await functions.get_caller_identity()
+
+
 async def test_update_public_client_db_sequence(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: list[str] = []
     session = cast(AsyncSession, object())

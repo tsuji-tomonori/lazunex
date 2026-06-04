@@ -21,6 +21,31 @@ def rid(value: str) -> UUID:
     return UUID(value)
 
 
+async def test_validate_create_access_request_request_rejects_blank_reason() -> None:
+    assert await functions.validate_create_access_request_request(
+        CREATE_API_ACCESS_REQUEST_REQUEST_SAMPLE
+    )
+
+    blank_reason = CREATE_API_ACCESS_REQUEST_REQUEST_SAMPLE.model_copy(
+        update={"requested_reason": "   "}
+    )
+
+    with pytest.raises(ValueError, match="requested_reason"):
+        await functions.validate_create_access_request_request(blank_reason)
+
+
+async def test_create_access_request_permission_helpers_and_placeholders() -> None:
+    caller = CallerIdentity(principal_id="owner-001", groups=(), scopes=())
+    project = ProjectRef(project_id=rid("cb62b5f6-0000-0000-0000-000000000001"))
+
+    assert functions._client_type_for_auth_mode(AuthMode.CLIENT_CREDENTIALS) == (
+        "CONFIDENTIAL_CLIENT_CREDENTIALS"
+    )
+    assert await functions.has_project_owner_permission(project, caller) is True
+    with pytest.raises(NotImplementedError):
+        await functions.get_caller_identity()
+
+
 async def test_create_access_request_db_sequence(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: list[str] = []
     session = cast(AsyncSession, object())

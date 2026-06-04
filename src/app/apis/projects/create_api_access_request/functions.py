@@ -39,6 +39,8 @@ async def validate_create_access_request_request(
     request: CreateApiAccessRequestRequest,
 ) -> CreateApiAccessRequestRequest:
     """利用申請作成リクエストを検証する。"""
+    if not request.requested_reason.strip():
+        raise ValueError("requested_reason must not be blank")
     return request
 
 

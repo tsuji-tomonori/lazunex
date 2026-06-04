@@ -9,7 +9,13 @@ from uuid import uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.apis.projects.common import ProjectDerivedState
+from app.apis.projects.common import (
+    ProjectDerivedState,
+    validate_access_or_id_token_validity,
+    validate_cognito_url_list,
+    validate_refresh_token_validity,
+    validate_retry_grace_period_seconds,
+)
 from app.apis.projects.create_project import queries
 from app.apis.projects.create_project.schemas import (
     CreatedApiKeyResponse,
@@ -75,6 +81,32 @@ async def get_caller_identity() -> CallerIdentity:
 
 async def validate_create_project_request(request: CreateProjectRequest) -> CreateProjectRequest:
     """Project 作成リクエストを検証する。"""
+    if not request.project_code.strip():
+        raise ValueError("project_code must not be blank")
+    if not request.owner_principal_id.strip():
+        raise ValueError("owner_principal_id must not be blank")
+    validate_cognito_url_list("public_client.callback_urls", request.public_client.callback_urls)
+    validate_cognito_url_list("public_client.logout_urls", request.public_client.logout_urls)
+    validate_access_or_id_token_validity(
+        "public_client.access_token_validity",
+        request.public_client.access_token_validity,
+        request.public_client.access_token_unit,
+    )
+    validate_access_or_id_token_validity(
+        "public_client.id_token_validity",
+        request.public_client.id_token_validity,
+        request.public_client.id_token_unit,
+    )
+    validate_refresh_token_validity(
+        request.public_client.refresh_token_validity,
+        request.public_client.refresh_token_unit,
+    )
+    validate_retry_grace_period_seconds(request.public_client.retry_grace_period_seconds)
+    validate_access_or_id_token_validity(
+        "confidential_client.access_token_validity",
+        request.confidential_client.access_token_validity,
+        request.confidential_client.access_token_unit,
+    )
     return request
 
 

@@ -59,3 +59,5 @@ async def test_list_project_helpers_return_validated_page_and_response(
     assert await functions.validate_project_list_query(query) is query
     assert await functions.has_project_list_permission(caller) is True
     assert (await functions.build_project_list_response(page)).items == []
+    with pytest.raises(NotImplementedError):
+        await functions.get_caller_identity()
