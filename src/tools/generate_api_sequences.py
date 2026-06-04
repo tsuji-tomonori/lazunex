@@ -15,6 +15,7 @@ SQL_TABLE_PATTERN = re.compile(
     r"\b(?:FROM|JOIN|INTO|UPDATE)\s+([A-Za-z_][A-Za-z0-9_]*)",
     re.IGNORECASE,
 )
+HTTP_STATUS_CODE_PATTERN = re.compile(r"HTTP_(?P<code>[0-9]{3})_(?P<reason>[A-Z0-9_]+)")
 SQL_ACTIONS = {
     "select": "参照",
     "insert": "追加",
@@ -28,6 +29,20 @@ SQL_RECORD_ACTIONS = {
     "削除": "レコードを削除する",
 }
 ROUTER_METHODS = {"delete", "get", "patch", "post", "put"}
+HTTP_STATUS_REASON_PHRASES = {
+    200: "OK",
+    201: "Created",
+    400: "Bad Request",
+    401: "Unauthorized",
+    403: "Forbidden",
+    404: "Not Found",
+    409: "Conflict",
+    422: "Unprocessable Content",
+    429: "Too Many Requests",
+    500: "Internal Server Error",
+    502: "Bad Gateway",
+    503: "Service Unavailable",
+}
 PREDICATES = {"has", "is"}
 
 
@@ -68,6 +83,9 @@ class ApiSequence:
     steps: list[SequenceStep]
     sql_steps: list[SqlStep]
     integration_resources: frozenset[str] = field(default_factory=lambda: frozenset[str]())
+    method: str = "GET"
+    path: str = "/"
+    status_codes: tuple[int, ...] = (200,)
 
 
 def snake_to_title(value: str) -> str:
@@ -120,6 +138,82 @@ def endpoint_operation_id(function: ast.AsyncFunctionDef | ast.FunctionDef) -> s
             if operation_id:
                 return operation_id
     return function.name
+
+
+def endpoint_route_method(function: ast.AsyncFunctionDef | ast.FunctionDef) -> str:
+    for decorator in function.decorator_list:
+        if is_router_decorator(decorator) and isinstance(decorator, ast.Call):
+            function_ref = decorator.func
+            if isinstance(function_ref, ast.Attribute):
+                return function_ref.attr.upper()
+    return "GET"
+
+
+def endpoint_route_path(function: ast.AsyncFunctionDef | ast.FunctionDef) -> str:
+    for decorator in function.decorator_list:
+        if not is_router_decorator(decorator) or not isinstance(decorator, ast.Call):
+            continue
+        if decorator.args:
+            path = literal_string(decorator.args[0])
+            if path is not None:
+                return path
+        path = literal_string(keyword_value(decorator, "path"))
+        if path is not None:
+            return path
+    return "/"
+
+
+def http_status_code(node: ast.AST | None) -> int | None:
+    if isinstance(node, ast.Constant) and isinstance(node.value, int):
+        return node.value
+    if isinstance(node, ast.Attribute):
+        match = HTTP_STATUS_CODE_PATTERN.fullmatch(node.attr)
+        if match is not None:
+            return int(match.group("code"))
+    return None
+
+
+def response_status_codes(node: ast.AST | None) -> tuple[int, ...]:
+    if node is None:
+        return ()
+    codes: list[int] = []
+    if isinstance(node, ast.Dict):
+        for key, value in zip(node.keys, node.values, strict=True):
+            if key is None:
+                codes.extend(response_status_codes(value))
+                continue
+            if code := http_status_code(key):
+                codes.append(code)
+    if isinstance(node, ast.Call):
+        callee = node.func
+        callee_name: str | None = None
+        if isinstance(callee, ast.Name):
+            callee_name = callee.id
+        if isinstance(callee, ast.Attribute):
+            callee_name = callee.attr
+        if callee_name == "error_responses":
+            for argument in node.args:
+                if code := http_status_code(argument):
+                    codes.append(code)
+    return tuple(dict.fromkeys(codes))
+
+
+def endpoint_status_codes(function: ast.AsyncFunctionDef | ast.FunctionDef) -> tuple[int, ...]:
+    codes: list[int] = []
+    for decorator in function.decorator_list:
+        if not is_router_decorator(decorator) or not isinstance(decorator, ast.Call):
+            continue
+        if code := http_status_code(keyword_value(decorator, "status_code")):
+            codes.append(code)
+        codes.extend(response_status_codes(keyword_value(decorator, "responses")))
+    return tuple(dict.fromkeys(codes or [200]))
+
+
+def http_status_code_label(status_code: int) -> str:
+    reason_phrase = HTTP_STATUS_REASON_PHRASES.get(status_code)
+    if reason_phrase is None:
+        return f"HTTP {status_code}"
+    return f"HTTP {status_code} {reason_phrase}"
 
 
 def awaited_api_function_name(node: ast.AST) -> str | None:
@@ -469,6 +563,9 @@ def api_sequence_from_dir(
             if integrations_root is not None
             else frozenset()
         ),
+        method=endpoint_route_method(function),
+        path=endpoint_route_path(function),
+        status_codes=endpoint_status_codes(function),
     )
 
 
@@ -500,6 +597,7 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
         "```mermaid",
         "sequenceDiagram",
         "  autonumber",
+        "  participant User as User",
         "  participant API as API",
     ]
     for target in resource_targets:
@@ -508,6 +606,8 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
         )
     if sequence.sql_steps:
         lines.append("  participant DB as DB")
+
+    lines.append(f"  User->>API: {sequence.method} {sequence.path}")
 
     alt_depth = 0
     for step in sequence.steps:
@@ -536,6 +636,9 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
     for depth in range(alt_depth - 1, -1, -1):
         indent = "  " + ("  " * depth)
         lines.append(f"{indent}end")
+
+    for status_code in sequence.status_codes:
+        lines.append(f"  API-->>User: {http_status_code_label(status_code)}")
 
     lines.extend(["```", ""])
     return "\n".join(lines)

@@ -4,10 +4,10 @@ from app.main import create_app
 def test_api_error_responses_are_selected_per_operation() -> None:
     schema = create_app().openapi()
     expected_statuses = {
-        "listApis": {"200", "401", "403", "422", "429", "500"},
-        "getApi": {"200", "401", "403", "404", "422", "429", "500"},
+        "listApis": {"200", "400", "401", "403", "422", "429", "500"},
+        "getApi": {"200", "400", "401", "403", "404", "422", "429", "500"},
         "publishApi": {"201", "400", "401", "403", "409", "422", "429", "500", "502", "503"},
-        "listProjects": {"200", "401", "403", "422", "429", "500"},
+        "listProjects": {"200", "400", "401", "403", "422", "429", "500"},
         "createProject": {
             "201",
             "400",
@@ -20,9 +20,18 @@ def test_api_error_responses_are_selected_per_operation() -> None:
             "502",
             "503",
         },
-        "getProject": {"200", "401", "403", "404", "422", "429", "500"},
-        "listProjectSubscriptions": {"200", "401", "403", "404", "422", "429", "500"},
-        "listProjectApiAccessRequests": {"200", "401", "403", "404", "422", "429", "500"},
+        "getProject": {"200", "400", "401", "403", "404", "422", "429", "500"},
+        "listProjectSubscriptions": {"200", "400", "401", "403", "404", "422", "429", "500"},
+        "listProjectApiAccessRequests": {
+            "200",
+            "400",
+            "401",
+            "403",
+            "404",
+            "422",
+            "429",
+            "500",
+        },
         "createApiAccessRequest": {"201", "400", "401", "403", "404", "409", "422", "429", "500"},
         "updateProjectPublicClient": {
             "200",

@@ -5,10 +5,12 @@
 ```mermaid
 sequenceDiagram
   autonumber
+  participant User as User
   participant API as API
   participant R_api_gateway_control as Resource: api gateway control
   participant R_identity as Resource: identity
   participant DB as DB
+  User->>API: POST /apis
   API->>API: API 公開登録リクエストを検証する。
   alt 呼び出し元が API 公開登録できる場合。
     API->>API: Idempotency-Key に対応する既存レコードを取得する。
@@ -40,4 +42,14 @@ sequenceDiagram
       API->>DB: API Gateway stageの重複登録を防ぐため、既存stageを取得する。<br/>SQL 019_select_api_gateway_stages_by_unique_key.sql<br/>テーブル api_gateway_stages
     end
   end
+  API-->>User: HTTP 201 Created
+  API-->>User: HTTP 400 Bad Request
+  API-->>User: HTTP 401 Unauthorized
+  API-->>User: HTTP 403 Forbidden
+  API-->>User: HTTP 409 Conflict
+  API-->>User: HTTP 422 Unprocessable Content
+  API-->>User: HTTP 429 Too Many Requests
+  API-->>User: HTTP 500 Internal Server Error
+  API-->>User: HTTP 502 Bad Gateway
+  API-->>User: HTTP 503 Service Unavailable
 ```

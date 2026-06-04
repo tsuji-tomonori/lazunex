@@ -5,8 +5,10 @@
 ```mermaid
 sequenceDiagram
   autonumber
+  participant User as User
   participant API as API
   participant DB as DB
+  User->>API: GET /projects
   API->>API: Project 一覧取得条件を検証する。
   alt 呼び出し元が Project 一覧を参照できる場合。
     API->>API: 呼び出し元が参照可能な Project を検索する。
@@ -14,4 +16,11 @@ sequenceDiagram
     API->>API: Project 一覧レスポンスを組み立てる。
     API->>DB: 参照可能なProject一覧を返すため、検索条件に合うProjectを取得する。<br/>SQL 001_select_projects.sql<br/>テーブル projects, project_members, project_api_subscriptions
   end
+  API-->>User: HTTP 200 OK
+  API-->>User: HTTP 400 Bad Request
+  API-->>User: HTTP 401 Unauthorized
+  API-->>User: HTTP 403 Forbidden
+  API-->>User: HTTP 422 Unprocessable Content
+  API-->>User: HTTP 429 Too Many Requests
+  API-->>User: HTTP 500 Internal Server Error
 ```

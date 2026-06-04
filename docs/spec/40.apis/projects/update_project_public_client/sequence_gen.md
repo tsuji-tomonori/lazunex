@@ -5,9 +5,11 @@
 ```mermaid
 sequenceDiagram
   autonumber
+  participant User as User
   participant API as API
   participant R_identity as Resource: identity
   participant DB as DB
+  User->>API: PATCH /projects/{projectId}/public-client
   API->>API: public App Client 更新リクエストを検証する。
   API->>API: 対象 Project を取得する。
   alt 呼び出し元が Project owner である場合。
@@ -34,4 +36,15 @@ sequenceDiagram
     API->>DB: Project public client更新の処理結果として、provisioning operation eventsを追加する。<br/>SQL 011_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
     API->>DB: Idempotency-Keyに対応する既存レコードを取得する。<br/>SQL 013_select_idempotency_records.sql<br/>テーブル idempotency_records
   end
+  API-->>User: HTTP 200 OK
+  API-->>User: HTTP 400 Bad Request
+  API-->>User: HTTP 401 Unauthorized
+  API-->>User: HTTP 403 Forbidden
+  API-->>User: HTTP 404 Not Found
+  API-->>User: HTTP 409 Conflict
+  API-->>User: HTTP 422 Unprocessable Content
+  API-->>User: HTTP 429 Too Many Requests
+  API-->>User: HTTP 500 Internal Server Error
+  API-->>User: HTTP 502 Bad Gateway
+  API-->>User: HTTP 503 Service Unavailable
 ```

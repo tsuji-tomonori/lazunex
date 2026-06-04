@@ -16,9 +16,13 @@ from tools.generate_api_sequences import (
     changed_outputs,
     endpoint_function,
     endpoint_operation_id,
+    endpoint_route_method,
+    endpoint_route_path,
+    endpoint_status_codes,
     function_metadata,
     function_target,
     generate_sequences,
+    http_status_code_label,
     imported_integration_ports,
     integration_resource_for_target,
     integration_resources,
@@ -124,6 +128,9 @@ async def select_projects(session: AsyncSession, params):
     assert sequence.domain == "projects"
     assert sequence.api == "get_project"
     assert sequence.operation_id == "getProject"
+    assert sequence.method == "GET"
+    assert sequence.path == "/projects/{projectId}"
+    assert sequence.status_codes == (200,)
     assert sequence.steps == [
         SequenceStep(
             "get_project",
@@ -197,6 +204,72 @@ async def select_projects(session, params):
     assert query_sql_filenames(queries_path) == {"select_projects": "001_select_projects.sql"}
 
 
+def test_endpoint_route_metadata_reads_path_method_and_responses() -> None:
+    tree = ast.parse(
+        """
+@router.post(
+    '/apis',
+    operation_id='publishApi',
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_201_CREATED: {},
+        **error_responses(
+            status.HTTP_400_BAD_REQUEST,
+            status.HTTP_409_CONFLICT,
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+        ),
+    },
+)
+async def publish_api():
+    return {}
+"""
+    )
+    function = endpoint_function(tree)
+
+    assert endpoint_route_method(function) == "POST"
+    assert endpoint_route_path(function) == "/apis"
+    assert endpoint_status_codes(function) == (201, 400, 409, 503)
+    assert http_status_code_label(400) == "HTTP 400 Bad Request"
+
+
+def test_endpoint_route_metadata_handles_defaults_keyword_path_and_unknown_status() -> None:
+    tree = ast.parse(
+        """
+@tracer.wrap()
+@router.get(
+    path='/health',
+    status_code=202,
+    responses={
+        418: {},
+        status.HTTP_OK: {},
+        **responses.error_responses(status.HTTP_404_NOT_FOUND),
+    },
+)
+async def health():
+    return {}
+"""
+    )
+    function = endpoint_function(tree)
+
+    assert endpoint_operation_id(function) == "health"
+    assert endpoint_route_method(function) == "GET"
+    assert endpoint_route_path(function) == "/health"
+    assert endpoint_status_codes(function) == (202, 418, 404)
+    assert http_status_code_label(418) == "HTTP 418"
+
+    fallback_tree = ast.parse(
+        """
+@router.get()
+async def fallback():
+    return {}
+"""
+    )
+    fallback_function = endpoint_function(fallback_tree)
+
+    assert endpoint_route_path(fallback_function) == "/"
+    assert endpoint_status_codes(fallback_function) == (200,)
+
+
 def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
     markdown = render_sequence_markdown(
         ApiSequence(
@@ -250,10 +323,15 @@ def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
                 ),
             ],
             integration_resources=frozenset({"api_gateway", "api_gateway_control"}),
+            method="GET",
+            path="/projects/{projectId}",
+            status_codes=(200, 404),
         )
     )
 
     assert "participant API as API" in markdown
+    assert "participant User as User" in markdown
+    assert "User->>API: GET /projects/{projectId}" in markdown
     assert "participant R_project as Resource: project" not in markdown
     assert "participant R_api_gateway as Resource: api gateway" not in markdown
     assert "participant R_api_gateway_control as Resource: api gateway control" in markdown
@@ -270,7 +348,9 @@ def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
         "API->>DB: Project 詳細表示に必要な Project と member を取得する。"
         "<br/>SQL 001_select_projects.sql<br/>テーブル projects, project_members" in markdown
     )
-    assert markdown.rstrip().endswith("  end\n```")
+    assert "API-->>User: HTTP 200 OK" in markdown
+    assert "API-->>User: HTTP 404 Not Found" in markdown
+    assert markdown.rstrip().endswith("  API-->>User: HTTP 404 Not Found\n```")
 
 
 def test_generate_sequences_and_check_mode(

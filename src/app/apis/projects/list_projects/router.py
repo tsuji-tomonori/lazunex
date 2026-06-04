@@ -26,6 +26,7 @@ router = APIRouter()
     responses={
         status.HTTP_200_OK: success_response(LIST_PROJECTS_RESPONSE_SAMPLE),
         **error_responses(
+            status.HTTP_400_BAD_REQUEST,
             status.HTTP_401_UNAUTHORIZED,
             status.HTTP_403_FORBIDDEN,
             status.HTTP_422_UNPROCESSABLE_CONTENT,

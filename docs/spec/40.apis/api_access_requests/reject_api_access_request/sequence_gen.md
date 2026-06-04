@@ -5,8 +5,10 @@
 ```mermaid
 sequenceDiagram
   autonumber
+  participant User as User
   participant API as API
   participant DB as DB
+  User->>API: POST /api-access-requests/{accessRequestId}/reject
   API->>API: 却下対象の利用申請を取得する。
   alt 利用申請が審査中状態である場合。
     alt 呼び出し元が対象 API の reviewer または Hub 管理者である場合。
@@ -28,4 +30,13 @@ sequenceDiagram
       API->>DB: Idempotency-Keyに対応する既存レコードを取得する。<br/>SQL 007_select_idempotency_records.sql<br/>テーブル idempotency_records
     end
   end
+  API-->>User: HTTP 200 OK
+  API-->>User: HTTP 400 Bad Request
+  API-->>User: HTTP 401 Unauthorized
+  API-->>User: HTTP 403 Forbidden
+  API-->>User: HTTP 404 Not Found
+  API-->>User: HTTP 409 Conflict
+  API-->>User: HTTP 422 Unprocessable Content
+  API-->>User: HTTP 429 Too Many Requests
+  API-->>User: HTTP 500 Internal Server Error
 ```

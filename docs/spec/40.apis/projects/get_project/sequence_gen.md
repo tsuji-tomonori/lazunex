@@ -5,12 +5,22 @@
 ```mermaid
 sequenceDiagram
   autonumber
+  participant User as User
   participant API as API
   participant DB as DB
+  User->>API: GET /projects/{projectId}
   API->>API: Project ID を検証する。
   API->>API: Project 詳細レスポンスに必要な情報を取得する。
   alt 呼び出し元が Project 詳細を参照できる場合。
     API->>API: secret 値を含めずに Project 詳細レスポンスを組み立てる。
     API->>DB: Project詳細レスポンスを組み立てるため、Projectと関連metadataを取得する。<br/>SQL 001_select_projects.sql<br/>テーブル projects, project_api_keys, project_usage_plans, project_cognito_clients, project_cognito_client_urls, project_members
   end
+  API-->>User: HTTP 200 OK
+  API-->>User: HTTP 400 Bad Request
+  API-->>User: HTTP 401 Unauthorized
+  API-->>User: HTTP 403 Forbidden
+  API-->>User: HTTP 404 Not Found
+  API-->>User: HTTP 422 Unprocessable Content
+  API-->>User: HTTP 429 Too Many Requests
+  API-->>User: HTTP 500 Internal Server Error
 ```

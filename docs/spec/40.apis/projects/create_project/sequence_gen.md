@@ -5,11 +5,13 @@
 ```mermaid
 sequenceDiagram
   autonumber
+  participant User as User
   participant API as API
   participant R_api_gateway_control as Resource: api gateway control
   participant R_identity as Resource: identity
   participant R_secret_values as Resource: secret values
   participant DB as DB
+  User->>API: POST /projects
   API->>API: Project 作成リクエストを検証する。
   alt 呼び出し元が Project を作成できる場合。
     API->>API: Idempotency-Key に対応する既存レコードを取得する。
@@ -46,4 +48,14 @@ sequenceDiagram
     API->>DB: Project作成の処理結果として、監査イベントを追加する。<br/>SQL 020_insert_audit_events.sql<br/>テーブル audit_events
     API->>DB: Project作成の処理結果として、Project Cognito clientイベントを追加する。<br/>SQL 021_insert_project_cognito_client_events.sql<br/>テーブル project_cognito_client_events
   end
+  API-->>User: HTTP 201 Created
+  API-->>User: HTTP 400 Bad Request
+  API-->>User: HTTP 401 Unauthorized
+  API-->>User: HTTP 403 Forbidden
+  API-->>User: HTTP 409 Conflict
+  API-->>User: HTTP 422 Unprocessable Content
+  API-->>User: HTTP 429 Too Many Requests
+  API-->>User: HTTP 500 Internal Server Error
+  API-->>User: HTTP 502 Bad Gateway
+  API-->>User: HTTP 503 Service Unavailable
 ```

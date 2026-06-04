@@ -5,8 +5,10 @@
 ```mermaid
 sequenceDiagram
   autonumber
+  participant User as User
   participant API as API
   participant DB as DB
+  User->>API: POST /projects/{projectId}/api-access-requests
   API->>API: 利用申請作成リクエストを検証する。
   API->>API: 対象 Project を取得する。
   alt 呼び出し元が Project owner である場合。
@@ -36,4 +38,13 @@ sequenceDiagram
       end
     end
   end
+  API-->>User: HTTP 201 Created
+  API-->>User: HTTP 400 Bad Request
+  API-->>User: HTTP 401 Unauthorized
+  API-->>User: HTTP 403 Forbidden
+  API-->>User: HTTP 404 Not Found
+  API-->>User: HTTP 409 Conflict
+  API-->>User: HTTP 422 Unprocessable Content
+  API-->>User: HTTP 429 Too Many Requests
+  API-->>User: HTTP 500 Internal Server Error
 ```
