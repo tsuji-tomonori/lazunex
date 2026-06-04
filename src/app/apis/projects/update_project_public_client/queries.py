@@ -40,6 +40,8 @@ class SelectProjectCognitoClientsRow(BaseModel):
     retry_grace_period_seconds: int | None = None
     enable_token_revocation: bool
     row_version: int
+    owner_principal_id: str
+    caller_project_role: str
 
 
 async def select_project_cognito_clients(

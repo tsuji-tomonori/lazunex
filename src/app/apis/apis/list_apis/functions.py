@@ -31,8 +31,7 @@ async def get_caller_identity() -> CallerIdentity:
 
 async def has_api_list_permission(caller: CallerIdentity) -> bool:
     """呼び出し元が API 一覧を参照できるかを判定する。"""
-    _ = caller
-    return True
+    return bool(caller.principal_id.strip())
 
 
 async def get_viewable_apis(

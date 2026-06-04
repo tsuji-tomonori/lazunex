@@ -108,6 +108,8 @@ class ProjectRef:
     """Projectの参照情報です。"""
 
     project_id: ResourceId
+    owner_principal_id: PrincipalId | None = None
+    caller_project_role: str | None = None
 
 
 @dataclass(frozen=True)

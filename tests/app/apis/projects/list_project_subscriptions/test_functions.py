@@ -16,21 +16,51 @@ from app.apis.sequence_types import CallerIdentity, ProjectRef, SequencePage
 pytestmark = pytest.mark.anyio
 
 
-async def test_list_project_subscription_helpers(
+async def test_validate_project_subscription_list_query_returns_query() -> None:
+    query = ListProjectSubscriptionsQuery(limit=20)
+
+    assert await functions.validate_project_subscription_list_query(query) == query
+
+
+async def test_get_project_returns_project_ref(project_id: UUID) -> None:
+    assert await functions.get_project(project_id) == ProjectRef(project_id=project_id)
+
+
+@pytest.mark.parametrize(
+    ("caller", "expected"),
+    [
+        (CallerIdentity(principal_id="user-12345", groups=(), scopes=()), True),
+        (CallerIdentity(principal_id="", groups=(), scopes=()), False),
+    ],
+)
+async def test_has_project_subscription_view_permission(
     project_id: UUID,
     caller: CallerIdentity,
+    expected: bool,
 ) -> None:
-    query = ListProjectSubscriptionsQuery(limit=20)
     project = ProjectRef(project_id=project_id)
+
+    assert await functions.has_project_subscription_view_permission(project, caller) is expected
+
+
+async def test_apply_pagination_returns_page() -> None:
+    query = ListProjectSubscriptionsQuery(limit=20)
     item = LIST_PROJECT_SUBSCRIPTIONS_RESPONSE_SAMPLE.items[0]
     page = SequencePage(items=(item,), next_token=None)
 
-    assert await functions.validate_project_subscription_list_query(query) == query
-    assert await functions.get_project(project_id) == project
-    assert await functions.has_project_subscription_view_permission(project, caller) is True
     assert await functions.apply_pagination(page, query) == page
+
+
+async def test_build_project_subscription_list_response_returns_items() -> None:
+    item = LIST_PROJECT_SUBSCRIPTIONS_RESPONSE_SAMPLE.items[0]
+    page = SequencePage(items=(item,), next_token=None)
+
     response = await functions.build_project_subscription_list_response(page)
+
     assert response.items == [item]
+
+
+async def test_get_caller_identity_placeholder_raises() -> None:
     with pytest.raises(NotImplementedError):
         await functions.get_caller_identity()
 

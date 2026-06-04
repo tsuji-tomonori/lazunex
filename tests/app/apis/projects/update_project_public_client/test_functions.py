@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID
@@ -95,11 +96,45 @@ async def test_validate_public_client_update_request_rejects_cognito_limits() ->
         await functions.validate_public_client_update_request(long_grace)
 
 
-async def test_update_public_client_sequence_placeholders_raise() -> None:
-    caller = CallerIdentity(principal_id="owner-001", groups=("hub-admin",), scopes=())
-    project = ProjectRef(project_id=UUID("cb62b5f6-0000-0000-0000-000000000001"))
+@pytest.mark.parametrize(
+    ("project", "caller", "expected"),
+    [
+        (
+            ProjectRef(
+                project_id=UUID("cb62b5f6-0000-0000-0000-000000000001"),
+                owner_principal_id="owner-001",
+            ),
+            CallerIdentity(principal_id="owner-001", groups=("hub-admin",), scopes=()),
+            True,
+        ),
+        (
+            ProjectRef(
+                project_id=UUID("cb62b5f6-0000-0000-0000-000000000001"),
+                owner_principal_id="owner-999",
+                caller_project_role="ADMIN",
+            ),
+            CallerIdentity(principal_id="member-001", groups=(), scopes=()),
+            True,
+        ),
+        (
+            ProjectRef(
+                project_id=UUID("cb62b5f6-0000-0000-0000-000000000001"),
+                owner_principal_id="owner-001",
+            ),
+            CallerIdentity(principal_id="other-001", groups=(), scopes=()),
+            False,
+        ),
+    ],
+)
+async def test_has_project_owner_permission(
+    project: ProjectRef,
+    caller: CallerIdentity,
+    expected: bool,
+) -> None:
+    assert await functions.has_project_owner_permission(project, caller) is expected
 
-    assert await functions.has_project_owner_permission(project, caller) is True
+
+async def test_get_caller_identity_placeholder_raises() -> None:
     with pytest.raises(NotImplementedError):
         await functions.get_caller_identity()
 
@@ -138,6 +173,8 @@ async def test_update_public_client_db_sequence(monkeypatch: pytest.MonkeyPatch)
                 retry_grace_period_seconds=60,
                 enable_token_revocation=True,
                 row_version=UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE.expected_row_version,
+                owner_principal_id="owner-001",
+                caller_project_role="OWNER",
             )
         ]
 
@@ -208,6 +245,38 @@ async def test_update_public_client_db_sequence(monkeypatch: pytest.MonkeyPatch)
     assert response.public_client.row_version == request.expected_row_version + 1
     assert "insert_project_cognito_client_events" in calls
     assert "insert_audit_events" in calls
+
+
+async def test_update_public_client_get_project_without_session_returns_ref() -> None:
+    project_id = UUID("cb62b5f6-0000-0000-0000-000000000001")
+
+    assert await functions.get_project(project_id) == ProjectRef(project_id=project_id)
+
+
+async def test_update_public_client_get_idempotency_record_loads_existing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session = cast(AsyncSession, object())
+    operation_id = UUID("8f5a1f0a-0000-0000-0000-000000000001")
+    expires_at = datetime(2026, 1, 1, tzinfo=UTC)
+
+    async def select_idempotency_records(*args: object) -> list[SimpleNamespace]:
+        return [
+            SimpleNamespace(
+                idempotency_key="idem-key",
+                operation_id=operation_id,
+                request_hash="hash",
+                response_payload={"status": "ok"},
+                expires_at=expires_at,
+            )
+        ]
+
+    monkeypatch.setattr(queries, "select_idempotency_records", select_idempotency_records)
+
+    record = await functions.get_idempotency_record("idem-key", session)
+
+    assert record.operation_id == operation_id
+    assert record.response_payload == {"status": "ok"}
 
 
 async def test_update_public_client_db_functions_require_integrations() -> None:

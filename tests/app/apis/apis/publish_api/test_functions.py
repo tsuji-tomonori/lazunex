@@ -34,6 +34,8 @@ pytestmark = pytest.mark.anyio
 async def test_validate_api_publish_request_rejects_missing_or_duplicate_reviewers() -> None:
     assert await functions.validate_api_publish_request(PUBLISH_API_REQUEST_SAMPLE)
 
+    blank_api_code = PUBLISH_API_REQUEST_SAMPLE.model_copy(update={"api_code": "   "})
+    blank_owner = PUBLISH_API_REQUEST_SAMPLE.model_copy(update={"owner_principal_id": "   "})
     missing_reviewers = PUBLISH_API_REQUEST_SAMPLE.model_copy(update={"reviewers": []})
     duplicate_reviewers = PUBLISH_API_REQUEST_SAMPLE.model_copy(
         update={
@@ -44,18 +46,32 @@ async def test_validate_api_publish_request_rejects_missing_or_duplicate_reviewe
         }
     )
 
+    with pytest.raises(ValueError, match="api_code"):
+        await functions.validate_api_publish_request(blank_api_code)
+    with pytest.raises(ValueError, match="owner_principal_id"):
+        await functions.validate_api_publish_request(blank_owner)
     with pytest.raises(ValueError, match="reviewers"):
         await functions.validate_api_publish_request(missing_reviewers)
     with pytest.raises(ValueError, match="duplicate"):
         await functions.validate_api_publish_request(duplicate_reviewers)
 
 
-async def test_publish_api_permission_and_placeholder_functions() -> None:
-    owner = CallerIdentity(principal_id="user-12345", groups=(), scopes=())
-    other = CallerIdentity(principal_id="user-99999", groups=(), scopes=())
+@pytest.mark.parametrize(
+    ("caller", "expected"),
+    [
+        (CallerIdentity(principal_id="user-12345", groups=(), scopes=()), True),
+        (CallerIdentity(principal_id="admin-001", groups=("hub-admin",), scopes=()), True),
+        (CallerIdentity(principal_id="user-99999", groups=(), scopes=()), False),
+    ],
+)
+async def test_has_api_publish_permission(caller: CallerIdentity, expected: bool) -> None:
+    assert (
+        await functions.has_api_publish_permission(PUBLISH_API_REQUEST_SAMPLE, caller)
+        is expected
+    )
 
-    assert await functions.has_api_publish_permission(PUBLISH_API_REQUEST_SAMPLE, owner) is True
-    assert await functions.has_api_publish_permission(PUBLISH_API_REQUEST_SAMPLE, other) is False
+
+async def test_get_caller_identity_placeholder_raises() -> None:
     with pytest.raises(NotImplementedError):
         await functions.get_caller_identity()
 

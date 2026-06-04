@@ -25,6 +25,7 @@ class SelectProjectsRow(BaseModel):
     project_id: UUID
     project_code: str
     owner_principal_id: str
+    caller_project_role: str
 
 
 async def select_projects(

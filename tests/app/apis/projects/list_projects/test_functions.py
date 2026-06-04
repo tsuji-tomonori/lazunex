@@ -47,17 +47,40 @@ async def test_get_viewable_projects_calls_select_projects(
     assert params.limit == 10
 
 
-async def test_list_project_helpers_return_validated_page_and_response(
-    caller: CallerIdentity,
-) -> None:
+async def test_validate_project_list_query_returns_query() -> None:
+    query = ListProjectsQuery()
+
+    assert await functions.validate_project_list_query(query) is query
+
+
+@pytest.mark.parametrize(
+    ("caller", "expected"),
+    [
+        (CallerIdentity(principal_id="user-12345", groups=(), scopes=()), True),
+        (CallerIdentity(principal_id="", groups=(), scopes=()), False),
+    ],
+)
+async def test_has_project_list_permission(caller: CallerIdentity, expected: bool) -> None:
+    assert await functions.has_project_list_permission(caller) is expected
+
+
+async def test_apply_pagination_returns_page() -> None:
     query = ListProjectsQuery()
     page = await functions.apply_pagination(
         SequencePage(items=(), next_token=None),
         query,
     )
 
-    assert await functions.validate_project_list_query(query) is query
-    assert await functions.has_project_list_permission(caller) is True
+    assert page.items == ()
+    assert page.next_token is None
+
+
+async def test_build_project_list_response_returns_items() -> None:
+    page = SequencePage(items=(), next_token=None)
+
     assert (await functions.build_project_list_response(page)).items == []
+
+
+async def test_get_caller_identity_placeholder_raises() -> None:
     with pytest.raises(NotImplementedError):
         await functions.get_caller_identity()

@@ -97,14 +97,21 @@ async def get_project(
         )
         if not rows:
             raise ValueError("project public client is not found or caller cannot access it")
-        return ProjectRef(project_id=project_id)
+        row = rows[0]
+        return ProjectRef(
+            project_id=project_id,
+            owner_principal_id=row.owner_principal_id,
+            caller_project_role=row.caller_project_role,
+        )
     return ProjectRef(project_id=project_id)
 
 
 async def has_project_owner_permission(project: ProjectRef, caller: CallerIdentity) -> bool:
     """呼び出し元が Project owner であるかを判定する。"""
-    _ = project
-    return "hub-admin" in caller.groups
+    return (
+        project.owner_principal_id == caller.principal_id
+        or project.caller_project_role in {"OWNER", "ADMIN"}
+    )
 
 
 async def get_public_app_client_metadata(

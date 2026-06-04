@@ -42,8 +42,8 @@ async def has_project_subscription_view_permission(
     caller: CallerIdentity,
 ) -> bool:
     """呼び出し元が Project subscription 一覧を参照できるかを判定する。"""
-    _ = project, caller
-    return True
+    _ = project
+    return bool(caller.principal_id.strip())
 
 
 async def get_project_subscriptions(

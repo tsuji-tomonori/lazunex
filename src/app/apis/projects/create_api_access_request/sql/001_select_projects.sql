@@ -2,7 +2,11 @@
 SELECT
     p.project_id,
     p.project_code,
-    p.owner_principal_id
+    p.owner_principal_id,
+    CASE
+        WHEN p.owner_principal_id = @actor_principal_id THEN 'OWNER'
+        ELSE pm.member_role
+    END AS caller_project_role
 FROM projects AS p
 LEFT JOIN project_members AS pm
     ON pm.project_id = p.project_id

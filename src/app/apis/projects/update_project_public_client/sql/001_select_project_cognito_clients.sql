@@ -17,7 +17,12 @@ SELECT
     c.refresh_token_rotation_enabled,
     c.retry_grace_period_seconds,
     c.enable_token_revocation,
-    c.row_version
+    c.row_version,
+    p.owner_principal_id,
+    CASE
+        WHEN p.owner_principal_id = @actor_principal_id THEN 'OWNER'
+        ELSE pm.member_role
+    END AS caller_project_role
 FROM project_cognito_clients AS c
 INNER JOIN projects AS p
     ON p.project_id = c.project_id

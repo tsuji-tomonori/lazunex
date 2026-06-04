@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID
@@ -34,14 +35,51 @@ async def test_validate_create_access_request_request_rejects_blank_reason() -> 
         await functions.validate_create_access_request_request(blank_reason)
 
 
-async def test_create_access_request_permission_helpers_and_placeholders() -> None:
-    caller = CallerIdentity(principal_id="owner-001", groups=(), scopes=())
-    project = ProjectRef(project_id=rid("cb62b5f6-0000-0000-0000-000000000001"))
-
+def test_client_type_for_auth_mode_returns_expected_client_type() -> None:
     assert functions._client_type_for_auth_mode(AuthMode.CLIENT_CREDENTIALS) == (
         "CONFIDENTIAL_CLIENT_CREDENTIALS"
     )
-    assert await functions.has_project_owner_permission(project, caller) is True
+
+
+@pytest.mark.parametrize(
+    ("project", "caller", "expected"),
+    [
+        (
+            ProjectRef(
+                project_id=rid("cb62b5f6-0000-0000-0000-000000000001"),
+                owner_principal_id="owner-001",
+            ),
+            CallerIdentity(principal_id="owner-001", groups=(), scopes=()),
+            True,
+        ),
+        (
+            ProjectRef(
+                project_id=rid("cb62b5f6-0000-0000-0000-000000000001"),
+                owner_principal_id="owner-999",
+                caller_project_role="ADMIN",
+            ),
+            CallerIdentity(principal_id="member-001", groups=(), scopes=()),
+            True,
+        ),
+        (
+            ProjectRef(
+                project_id=rid("cb62b5f6-0000-0000-0000-000000000001"),
+                owner_principal_id="owner-001",
+            ),
+            CallerIdentity(principal_id="other-001", groups=(), scopes=()),
+            False,
+        ),
+    ],
+)
+async def test_has_project_owner_permission(
+    project: ProjectRef,
+    caller: CallerIdentity,
+    expected: bool,
+) -> None:
+    assert await functions.has_project_owner_permission(project, caller) is expected
+
+
+async def test_get_caller_identity_placeholder_raises() -> None:
     with pytest.raises(NotImplementedError):
         await functions.get_caller_identity()
 
@@ -60,7 +98,13 @@ async def test_create_access_request_db_sequence(monkeypatch: pytest.MonkeyPatch
 
     async def select_projects(*args: object) -> list[SimpleNamespace]:
         calls.append("select_projects")
-        return [SimpleNamespace(project_id=project_id)]
+        return [
+            SimpleNamespace(
+                project_id=project_id,
+                owner_principal_id="owner-001",
+                caller_project_role="OWNER",
+            )
+        ]
 
     async def select_apis(*args: object) -> list[SimpleNamespace]:
         calls.append("select_apis")
@@ -155,6 +199,34 @@ async def test_create_access_request_rejects_missing_project(
         await functions.get_project(UUID("cb62b5f6-0000-0000-0000-000000000001"), caller, session)
 
 
+async def test_create_access_request_rejects_unpublished_or_unreviewed_api(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session = cast(AsyncSession, object())
+
+    async def select_empty(*args: object) -> list[SimpleNamespace]:
+        return []
+
+    async def select_api_without_reviewer(*args: object) -> list[SimpleNamespace]:
+        return [SimpleNamespace(reviewer_principal_id="")]
+
+    monkeypatch.setattr(queries, "select_apis", select_empty)
+    with pytest.raises(ValueError, match="published"):
+        await functions.is_published_api(
+            UUID("7b0d4a98-0000-0000-0000-000000000001"),
+            UUID("7b0d4a98-0000-0000-0000-000000000101"),
+            session,
+        )
+
+    monkeypatch.setattr(queries, "select_apis", select_api_without_reviewer)
+    with pytest.raises(ValueError, match="reviewer"):
+        await functions.get_api_reviewer(
+            UUID("7b0d4a98-0000-0000-0000-000000000001"),
+            UUID("7b0d4a98-0000-0000-0000-000000000101"),
+            session,
+        )
+
+
 async def test_create_access_request_rejects_duplicate_subscription(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -173,6 +245,44 @@ async def test_create_access_request_rejects_duplicate_subscription(
             UUID("7b0d4a98-0000-0000-0000-000000000101"),
             session,
         )
+
+
+async def test_create_access_request_rejects_pending_duplicate_and_loads_idempotency(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session = cast(AsyncSession, object())
+    project = ProjectRef(project_id=UUID("cb62b5f6-0000-0000-0000-000000000001"))
+    operation_id = UUID("8f5a1f0a-0000-0000-0000-000000000001")
+    expires_at = datetime(2026, 1, 1, tzinfo=UTC)
+
+    async def select_access_requests(*args: object) -> list[SimpleNamespace]:
+        return [SimpleNamespace(access_request_id=UUID(int=1))]
+
+    async def select_idempotency_records(*args: object) -> list[SimpleNamespace]:
+        return [
+            SimpleNamespace(
+                idempotency_key="idem-key",
+                operation_id=operation_id,
+                request_hash="hash",
+                response_payload={"status": "ok"},
+                expires_at=expires_at,
+            )
+        ]
+
+    monkeypatch.setattr(queries, "select_api_access_requests", select_access_requests)
+    monkeypatch.setattr(queries, "select_idempotency_records", select_idempotency_records)
+
+    with pytest.raises(ValueError, match="pending access request"):
+        await functions.has_pending_access_request_for_project_api(
+            project,
+            UUID("7b0d4a98-0000-0000-0000-000000000001"),
+            UUID("7b0d4a98-0000-0000-0000-000000000101"),
+            session,
+        )
+
+    record = await functions.get_idempotency_record("idem-key", session)
+    assert record.operation_id == operation_id
+    assert record.response_payload == {"status": "ok"}
 
 
 async def test_create_access_request_checks_requested_auth_mode_clients(

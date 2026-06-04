@@ -71,11 +71,25 @@ async def test_validate_create_project_request_rejects_cognito_limits() -> None:
         await functions.validate_create_project_request(long_grace)
 
 
-async def test_create_project_permission_and_placeholder_functions() -> None:
-    caller = CallerIdentity(principal_id="admin-001", groups=("hub-admin",), scopes=())
+@pytest.mark.parametrize(
+    ("caller", "expected"),
+    [
+        (CallerIdentity(principal_id="admin-001", groups=("hub-admin",), scopes=()), True),
+        (CallerIdentity(principal_id="user-001", groups=(), scopes=()), False),
+    ],
+)
+async def test_has_project_creation_permission(
+    caller: CallerIdentity,
+    expected: bool,
+) -> None:
+    assert await functions.has_project_creation_permission(caller) is expected
 
-    assert await functions.has_project_creation_permission(caller) is True
+
+def test_hash_key_version_returns_numeric_suffix() -> None:
     assert functions._hash_key_version("pepper-v12") == 12
+
+
+async def test_get_caller_identity_placeholder_raises() -> None:
     with pytest.raises(NotImplementedError):
         await functions.get_caller_identity()
 
