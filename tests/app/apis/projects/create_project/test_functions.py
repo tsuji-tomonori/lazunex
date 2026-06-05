@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from collections.abc import Awaitable
 from types import SimpleNamespace
 from typing import cast
 from uuid import uuid4
 
 import pytest
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.projects.create_project import functions, queries
@@ -31,6 +33,16 @@ from app.integrations.secret_values.fake import FakeSecretValuesClient
 from app.integrations.secret_values.schemas import GetHashPepperInput
 
 pytestmark = pytest.mark.anyio
+
+
+async def assert_runtime_dependency_error(
+    awaitable: Awaitable[object],
+    function_name: str,
+) -> None:
+    with pytest.raises(HTTPException) as error:
+        await awaitable
+    assert error.value.status_code == 500
+    assert error.value.detail == f"{function_name} requires runtime dependencies."
 
 
 async def test_validate_create_project_request_rejects_cognito_limits() -> None:
@@ -381,14 +393,20 @@ async def test_create_project_db_functions_require_integrations() -> None:
     )
     caller = CallerIdentity(principal_id="admin-001", groups=(), scopes=())
 
-    with pytest.raises(NotImplementedError):
-        await functions.get_idempotency_record("idem-key")
-    with pytest.raises(NotImplementedError):
-        await functions.create_project_provisioning_operation(request, "idem-key")
-    with pytest.raises(NotImplementedError):
-        await functions.create_idempotency_record("idem-key", operation)
-    with pytest.raises(NotImplementedError):
-        await functions.save_project_resources(
+    await assert_runtime_dependency_error(
+        functions.get_idempotency_record("idem-key"),
+        "get_idempotency_record",
+    )
+    await assert_runtime_dependency_error(
+        functions.create_project_provisioning_operation(request, "idem-key"),
+        "create_project_provisioning_operation",
+    )
+    await assert_runtime_dependency_error(
+        functions.create_idempotency_record("idem-key", operation),
+        "create_idempotency_record",
+    )
+    await assert_runtime_dependency_error(
+        functions.save_project_resources(
             request,
             api_key,
             "usage-plan-id",
@@ -396,9 +414,11 @@ async def test_create_project_db_functions_require_integrations() -> None:
             "public-client-id",
             confidential_client,
             secret_hashes,
-        )
-    with pytest.raises(NotImplementedError):
-        await functions.append_project_lifecycle_events(
+        ),
+        "save_project_resources",
+    )
+    await assert_runtime_dependency_error(
+        functions.append_project_lifecycle_events(
             ProjectResourceRefs(
                 project_id=resources.project_id,
                 api_key_id=uuid4(),
@@ -406,11 +426,15 @@ async def test_create_project_db_functions_require_integrations() -> None:
                 public_client_id=uuid4(),
                 confidential_client_id=uuid4(),
             )
-        )
-    with pytest.raises(NotImplementedError):
-        await functions.append_provisioning_events(operation)
-    with pytest.raises(NotImplementedError):
-        await functions.append_audit_event(
+        ),
+        "append_project_lifecycle_events",
+    )
+    await assert_runtime_dependency_error(
+        functions.append_provisioning_events(operation),
+        "append_provisioning_events",
+    )
+    await assert_runtime_dependency_error(
+        functions.append_audit_event(
             ProjectResourceRefs(
                 project_id=resources.project_id,
                 api_key_id=uuid4(),
@@ -419,7 +443,9 @@ async def test_create_project_db_functions_require_integrations() -> None:
                 confidential_client_id=uuid4(),
             ),
             caller,
-        )
+        ),
+        "append_audit_event",
+    )
 
 
 async def test_create_project_lifecycle_events_skip_optional_children(

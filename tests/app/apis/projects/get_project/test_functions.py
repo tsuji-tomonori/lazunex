@@ -123,3 +123,13 @@ async def test_get_project_detail_raises_not_found(monkeypatch: pytest.MonkeyPat
         await functions.get_project_detail(project_id, caller, cast(AsyncSession, object()))
 
     assert error.value.status_code == 404
+
+
+async def test_get_project_detail_requires_session_and_caller() -> None:
+    project_id = UUID("cb62b5f6-0000-0000-0000-000000000001")
+
+    with pytest.raises(HTTPException) as error:
+        await functions.get_project_detail(project_id)
+
+    assert error.value.status_code == 500
+    assert error.value.detail == "get_project_detail requires session and caller."

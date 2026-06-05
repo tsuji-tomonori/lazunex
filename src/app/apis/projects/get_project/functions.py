@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import NoReturn
-
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,10 +16,6 @@ from app.apis.projects.get_project.schemas import (
 )
 from app.apis.sequence_types import CallerIdentity
 from app.apis.types import ResourceId
-
-
-def _sequence_placeholder(function_name: str) -> NoReturn:
-    raise NotImplementedError(f"{function_name} is a sequence-level placeholder.")
 
 
 async def get_caller_identity(
@@ -112,7 +106,10 @@ async def get_project_detail(
                 ),
             ),
         )
-    return _sequence_placeholder("get_project_detail")
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail="get_project_detail requires session and caller.",
+    )
 
 
 async def has_project_view_permission(project: GetProjectResponse, caller: CallerIdentity) -> bool:

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from collections.abc import Awaitable
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID
 
 import pytest
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.api_access_requests.reject_api_access_request import functions, queries
@@ -15,6 +17,16 @@ from app.apis.api_access_requests.reject_api_access_request.samples import (
 from app.apis.sequence_types import ApiAccessRequestRef, CallerIdentity, RequestContext
 
 pytestmark = pytest.mark.anyio
+
+
+async def assert_runtime_dependency_error(
+    awaitable: Awaitable[object],
+    function_name: str,
+) -> None:
+    with pytest.raises(HTTPException) as error:
+        await awaitable
+    assert error.value.status_code == 500
+    assert error.value.detail == f"{function_name} requires runtime dependencies."
 
 
 async def test_reject_access_request_helpers_and_placeholders(
@@ -38,8 +50,10 @@ async def test_reject_access_request_helpers_and_placeholders(
         groups=("reviewers",),
         scopes=("api-hub/access-request:review",),
     )
-    with pytest.raises(NotImplementedError):
-        await functions.get_idempotency_record("idem-key")
+    await assert_runtime_dependency_error(
+        functions.get_idempotency_record("idem-key"),
+        "get_idempotency_record",
+    )
 
 
 async def test_reject_access_request_db_sequence(monkeypatch: pytest.MonkeyPatch) -> None:

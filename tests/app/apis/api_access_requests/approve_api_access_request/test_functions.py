@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from collections.abc import Awaitable
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID
 
 import pytest
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.api_access_requests.approve_api_access_request import functions, queries
@@ -30,6 +32,16 @@ from app.integrations.identity.schemas import (
 )
 
 pytestmark = pytest.mark.anyio
+
+
+async def assert_runtime_dependency_error(
+    awaitable: Awaitable[object],
+    function_name: str,
+) -> None:
+    with pytest.raises(HTTPException) as error:
+        await awaitable
+    assert error.value.status_code == 500
+    assert error.value.detail == f"{function_name} requires runtime dependencies."
 
 
 async def test_add_usage_plan_api_stage_calls_api_gateway_control(
@@ -154,8 +166,10 @@ async def test_approve_event_helpers_and_placeholders(
         groups=("reviewers",),
         scopes=("api-hub/access-request:review",),
     )
-    with pytest.raises(NotImplementedError):
-        await functions.get_idempotency_record("idem-key")
+    await assert_runtime_dependency_error(
+        functions.get_idempotency_record("idem-key"),
+        "get_idempotency_record",
+    )
 
 
 async def test_approve_access_request_db_mapping_sequence(

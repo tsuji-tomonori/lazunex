@@ -7,6 +7,7 @@ from datetime import UTC, datetime, timedelta
 from typing import NoReturn
 from uuid import uuid4
 
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.deps import build_caller_identity
@@ -56,7 +57,10 @@ from app.integrations.secret_values.schemas import GetHashPepperInput
 
 
 def _sequence_placeholder(function_name: str) -> NoReturn:
-    raise NotImplementedError(f"{function_name} is a sequence-level placeholder.")
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail=f"{function_name} requires runtime dependencies.",
+    )
 
 
 def _now() -> datetime:

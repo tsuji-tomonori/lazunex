@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import NoReturn
-
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,10 +14,6 @@ from app.apis.apis.get_api.schemas import (
 from app.apis.deps import build_caller_identity
 from app.apis.sequence_types import CallerIdentity
 from app.apis.types import ResourceId
-
-
-def _sequence_placeholder(function_name: str) -> NoReturn:
-    raise NotImplementedError(f"{function_name} is a sequence-level placeholder.")
 
 
 async def get_caller_identity(
@@ -77,7 +71,10 @@ async def get_api_detail(
                 for row in rows
             ],
         )
-    return _sequence_placeholder("get_api_detail")
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail="get_api_detail requires session.",
+    )
 
 
 async def is_viewable_api(

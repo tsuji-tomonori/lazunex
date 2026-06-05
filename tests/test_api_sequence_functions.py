@@ -8,6 +8,7 @@ from typing import cast
 from uuid import UUID
 
 import pytest
+from fastapi import HTTPException
 
 FUNCTION_MODULES = [
     "app.apis.api_access_requests.approve_api_access_request.functions",
@@ -60,5 +61,7 @@ async def test_sequence_functions_are_explicit_placeholders() -> None:
                 if parameter.default is inspect.Signature.empty
             ]
 
-            with pytest.raises(NotImplementedError, match=function.__name__):
+            with pytest.raises(HTTPException) as error:
                 await function(*args)
+            assert error.value.status_code == 500
+            assert error.value.detail == f"{function.__name__} requires runtime dependencies."

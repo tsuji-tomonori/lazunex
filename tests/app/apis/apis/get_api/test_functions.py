@@ -84,6 +84,14 @@ async def test_get_api_detail_raises_not_found(
     assert error.value.status_code == 404
 
 
+async def test_get_api_detail_requires_session(api_id: UUID) -> None:
+    with pytest.raises(HTTPException) as error:
+        await functions.get_api_detail(api_id)
+
+    assert error.value.status_code == 500
+    assert error.value.detail == "get_api_detail requires session."
+
+
 async def test_get_api_helpers_validate_visibility_and_build_response() -> None:
     caller = CallerIdentity(
         principal_id="reviewer-001",

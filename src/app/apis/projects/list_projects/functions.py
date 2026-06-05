@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import NoReturn, cast
 
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.deps import build_caller_identity
@@ -16,7 +17,10 @@ from app.apis.sequence_types import CallerIdentity, SequencePage
 
 
 def _sequence_placeholder(function_name: str) -> NoReturn:
-    raise NotImplementedError(f"{function_name} is a sequence-level placeholder.")
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail=f"{function_name} requires runtime dependencies.",
+    )
 
 
 async def get_caller_identity(

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from collections.abc import Awaitable
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID
 
 import pytest
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.projects.common import TokenValidityUnit
@@ -28,6 +30,16 @@ from app.integrations.identity.schemas import (
 )
 
 pytestmark = pytest.mark.anyio
+
+
+async def assert_runtime_dependency_error(
+    awaitable: Awaitable[object],
+    function_name: str,
+) -> None:
+    with pytest.raises(HTTPException) as error:
+        await awaitable
+    assert error.value.status_code == 500
+    assert error.value.detail == f"{function_name} requires runtime dependencies."
 
 
 async def test_get_cognito_app_client_calls_identity_admin() -> None:
@@ -296,22 +308,38 @@ async def test_update_public_client_db_functions_require_integrations() -> None:
     merged = CognitoAppClientRef(app_client_id="public-client-id", allowed_scopes=())
     caller = CallerIdentity(principal_id="owner-001", groups=(), scopes=())
 
-    with pytest.raises(NotImplementedError):
-        await functions.get_public_app_client_metadata(project)
-    with pytest.raises(NotImplementedError):
-        await functions.get_idempotency_record("idem-key")
-    with pytest.raises(NotImplementedError):
-        await functions.create_provisioning_operation(project, request, "idem-key")
-    with pytest.raises(NotImplementedError):
-        await functions.create_idempotency_record("idem-key", operation)
-    with pytest.raises(NotImplementedError):
-        await functions.update_public_app_client_metadata(project, merged)
-    with pytest.raises(NotImplementedError):
-        await functions.append_project_public_client_updated_event(project, client)
-    with pytest.raises(NotImplementedError):
-        await functions.append_provisioning_events(operation)
-    with pytest.raises(NotImplementedError):
-        await functions.append_audit_event(project, caller)
+    await assert_runtime_dependency_error(
+        functions.get_public_app_client_metadata(project),
+        "get_public_app_client_metadata",
+    )
+    await assert_runtime_dependency_error(
+        functions.get_idempotency_record("idem-key"),
+        "get_idempotency_record",
+    )
+    await assert_runtime_dependency_error(
+        functions.create_provisioning_operation(project, request, "idem-key"),
+        "create_provisioning_operation",
+    )
+    await assert_runtime_dependency_error(
+        functions.create_idempotency_record("idem-key", operation),
+        "create_idempotency_record",
+    )
+    await assert_runtime_dependency_error(
+        functions.update_public_app_client_metadata(project, merged),
+        "update_public_app_client_metadata",
+    )
+    await assert_runtime_dependency_error(
+        functions.append_project_public_client_updated_event(project, client),
+        "append_project_public_client_updated_event",
+    )
+    await assert_runtime_dependency_error(
+        functions.append_provisioning_events(operation),
+        "append_provisioning_events",
+    )
+    await assert_runtime_dependency_error(
+        functions.append_audit_event(project, caller),
+        "append_audit_event",
+    )
 
 
 async def test_update_public_client_rejects_missing_or_conflicting_metadata(

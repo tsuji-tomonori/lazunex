@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from collections.abc import Awaitable
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID
 
 import pytest
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.apis.common import ScopeAttachmentMode
@@ -29,6 +31,16 @@ from app.integrations.identity.fake import FakeIdentityAdminClient
 from app.integrations.identity.schemas import DescribeResourceServerInput, UpdateResourceServerInput
 
 pytestmark = pytest.mark.anyio
+
+
+async def assert_runtime_dependency_error(
+    awaitable: Awaitable[object],
+    function_name: str,
+) -> None:
+    with pytest.raises(HTTPException) as error:
+        await awaitable
+    assert error.value.status_code == 500
+    assert error.value.detail == f"{function_name} requires runtime dependencies."
 
 
 async def test_validate_api_publish_request_rejects_missing_or_duplicate_reviewers() -> None:
@@ -244,22 +256,38 @@ async def test_publish_api_db_functions_require_integrations() -> None:
     api = ApiCatalogMetadataRef(api_id=UUID(int=2), api_stage_id=UUID(int=3))
     caller = CallerIdentity(principal_id="owner-001", groups=(), scopes=())
 
-    with pytest.raises(NotImplementedError):
-        await functions.get_idempotency_record("idem-key")
-    with pytest.raises(NotImplementedError):
-        await functions.has_registered_api(request)
-    with pytest.raises(NotImplementedError):
-        await functions.create_provisioning_operation(request, "idem-key")
-    with pytest.raises(NotImplementedError):
-        await functions.create_idempotency_record("idem-key", operation)
-    with pytest.raises(NotImplementedError):
-        await functions.save_api_catalog_metadata(request, scope, operation)
-    with pytest.raises(NotImplementedError):
-        await functions.append_api_lifecycle_events(api)
-    with pytest.raises(NotImplementedError):
-        await functions.append_provisioning_events(operation)
-    with pytest.raises(NotImplementedError):
-        await functions.append_audit_event(api, caller)
+    await assert_runtime_dependency_error(
+        functions.get_idempotency_record("idem-key"),
+        "get_idempotency_record",
+    )
+    await assert_runtime_dependency_error(
+        functions.has_registered_api(request),
+        "has_registered_api",
+    )
+    await assert_runtime_dependency_error(
+        functions.create_provisioning_operation(request, "idem-key"),
+        "create_provisioning_operation",
+    )
+    await assert_runtime_dependency_error(
+        functions.create_idempotency_record("idem-key", operation),
+        "create_idempotency_record",
+    )
+    await assert_runtime_dependency_error(
+        functions.save_api_catalog_metadata(request, scope, operation),
+        "save_api_catalog_metadata",
+    )
+    await assert_runtime_dependency_error(
+        functions.append_api_lifecycle_events(api),
+        "append_api_lifecycle_events",
+    )
+    await assert_runtime_dependency_error(
+        functions.append_provisioning_events(operation),
+        "append_provisioning_events",
+    )
+    await assert_runtime_dependency_error(
+        functions.append_audit_event(api, caller),
+        "append_audit_event",
+    )
 
 
 async def test_publish_api_lifecycle_events_skip_optional_children(
