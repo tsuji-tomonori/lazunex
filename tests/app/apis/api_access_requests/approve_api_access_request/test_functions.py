@@ -144,8 +144,16 @@ async def test_approve_event_helpers_and_placeholders(
             CallerIdentity(principal_id="reviewer-001", groups=(), scopes=()),
         )
     ).event_id
-    with pytest.raises(NotImplementedError):
-        await functions.get_caller_identity()
+    caller = await functions.get_caller_identity(
+        principal_id=" reviewer-001 ",
+        groups="reviewers",
+        scopes="api-hub/access-request:review",
+    )
+    assert caller == CallerIdentity(
+        principal_id="reviewer-001",
+        groups=("reviewers",),
+        scopes=("api-hub/access-request:review",),
+    )
     with pytest.raises(NotImplementedError):
         await functions.get_idempotency_record("idem-key")
 

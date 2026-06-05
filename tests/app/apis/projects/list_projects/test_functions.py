@@ -81,6 +81,15 @@ async def test_build_project_list_response_returns_items() -> None:
     assert (await functions.build_project_list_response(page)).items == []
 
 
-async def test_get_caller_identity_placeholder_raises() -> None:
-    with pytest.raises(NotImplementedError):
-        await functions.get_caller_identity()
+async def test_get_caller_identity_returns_common_identity() -> None:
+    caller = await functions.get_caller_identity(
+        principal_id=" user-12345 ",
+        groups="hub-admin, owners",
+        scopes="api-hub/project:read",
+    )
+
+    assert caller == CallerIdentity(
+        principal_id="user-12345",
+        groups=("hub-admin", "owners"),
+        scopes=("api-hub/project:read",),
+    )

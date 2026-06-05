@@ -79,9 +79,18 @@ async def test_has_project_owner_permission(
     assert await functions.has_project_owner_permission(project, caller) is expected
 
 
-async def test_get_caller_identity_placeholder_raises() -> None:
-    with pytest.raises(NotImplementedError):
-        await functions.get_caller_identity()
+async def test_get_caller_identity_returns_common_identity() -> None:
+    caller = await functions.get_caller_identity(
+        principal_id=" owner-001 ",
+        groups="owners, hub-admin",
+        scopes="api-hub/api:read, api-hub/api:write",
+    )
+
+    assert caller == CallerIdentity(
+        principal_id="owner-001",
+        groups=("owners", "hub-admin"),
+        scopes=("api-hub/api:read", "api-hub/api:write"),
+    )
 
 
 async def test_create_access_request_db_sequence(monkeypatch: pytest.MonkeyPatch) -> None:

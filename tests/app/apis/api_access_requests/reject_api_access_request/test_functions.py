@@ -28,8 +28,16 @@ async def test_reject_access_request_helpers_and_placeholders(
     )
     with pytest.raises(ValueError, match="review_comment"):
         await functions.validate_rejection_reason(blank_comment)
-    with pytest.raises(NotImplementedError):
-        await functions.get_caller_identity()
+    caller = await functions.get_caller_identity(
+        principal_id=" reviewer-001 ",
+        groups="reviewers",
+        scopes="api-hub/access-request:review",
+    )
+    assert caller == CallerIdentity(
+        principal_id="reviewer-001",
+        groups=("reviewers",),
+        scopes=("api-hub/access-request:review",),
+    )
     with pytest.raises(NotImplementedError):
         await functions.get_idempotency_record("idem-key")
 

@@ -102,5 +102,13 @@ async def test_get_api_helpers_validate_visibility_and_build_response() -> None:
     assert await functions.is_viewable_api(restricted, caller) is True
     assert await functions.build_api_detail_response(restricted) is restricted
     assert functions._scope_config_observed("VERIFY_ONLY").value == "VERIFIED"
-    with pytest.raises(NotImplementedError):
-        await functions.get_caller_identity()
+    identity = await functions.get_caller_identity(
+        principal_id=" reviewer-001 ",
+        groups="reviewers",
+        scopes="api-hub/api:read",
+    )
+    assert identity == CallerIdentity(
+        principal_id="reviewer-001",
+        groups=("reviewers",),
+        scopes=("api-hub/api:read",),
+    )

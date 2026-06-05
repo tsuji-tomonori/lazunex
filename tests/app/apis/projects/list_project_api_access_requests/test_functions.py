@@ -75,9 +75,18 @@ async def test_build_project_access_request_list_response_returns_items() -> Non
     assert response.items == [item]
 
 
-async def test_get_caller_identity_placeholder_raises() -> None:
-    with pytest.raises(NotImplementedError):
-        await functions.get_caller_identity()
+async def test_get_caller_identity_returns_common_identity() -> None:
+    caller = await functions.get_caller_identity(
+        principal_id=" user-12345 ",
+        groups="hub-admin, owners",
+        scopes="api-hub/access-request:read",
+    )
+
+    assert caller == CallerIdentity(
+        principal_id="user-12345",
+        groups=("hub-admin", "owners"),
+        scopes=("api-hub/access-request:read",),
+    )
 
 
 async def test_get_project_access_requests_calls_select_api_access_requests(

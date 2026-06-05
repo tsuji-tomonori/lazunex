@@ -12,6 +12,7 @@ from app.apis.apis.list_apis.schemas import (
     ListApisQuery,
     ListApisResponse,
 )
+from app.apis.deps import build_caller_identity
 from app.apis.sequence_types import CallerIdentity, SequencePage
 
 
@@ -24,9 +25,13 @@ async def validate_api_list_query(query: ListApisQuery) -> ListApisQuery:
     return query
 
 
-async def get_caller_identity() -> CallerIdentity:
+async def get_caller_identity(
+    principal_id: str | None = None,
+    groups: str | None = None,
+    scopes: str | None = None,
+) -> CallerIdentity:
     """呼び出し元の role、group、scope を取得する。"""
-    return _sequence_placeholder("get_caller_identity")
+    return build_caller_identity(principal_id=principal_id, groups=groups, scopes=scopes)
 
 
 async def has_api_list_permission(caller: CallerIdentity) -> bool:

@@ -95,8 +95,16 @@ async def test_get_project_detail_maps_project_rows(monkeypatch: pytest.MonkeyPa
     assert await functions.validate_project_id(project_id) == project_id
     assert await functions.has_project_view_permission(response, caller) is True
     assert await functions.build_project_detail_response(response) is response
-    with pytest.raises(NotImplementedError):
-        await functions.get_caller_identity()
+    identity = await functions.get_caller_identity(
+        principal_id=" user-12345 ",
+        groups="hub-admin",
+        scopes="api-hub/project:read",
+    )
+    assert identity == CallerIdentity(
+        principal_id="user-12345",
+        groups=("hub-admin",),
+        scopes=("api-hub/project:read",),
+    )
 
 
 async def test_get_project_detail_raises_not_found(monkeypatch: pytest.MonkeyPatch) -> None:

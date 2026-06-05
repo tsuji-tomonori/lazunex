@@ -66,14 +66,22 @@ async def test_validate_api_publish_request_rejects_missing_or_duplicate_reviewe
 )
 async def test_has_api_publish_permission(caller: CallerIdentity, expected: bool) -> None:
     assert (
-        await functions.has_api_publish_permission(PUBLISH_API_REQUEST_SAMPLE, caller)
-        is expected
+        await functions.has_api_publish_permission(PUBLISH_API_REQUEST_SAMPLE, caller) is expected
     )
 
 
-async def test_get_caller_identity_placeholder_raises() -> None:
-    with pytest.raises(NotImplementedError):
-        await functions.get_caller_identity()
+async def test_get_caller_identity_returns_common_identity() -> None:
+    caller = await functions.get_caller_identity(
+        principal_id=" owner-001 ",
+        groups="hub-admin, reviewers",
+        scopes="api-hub/api:publish",
+    )
+
+    assert caller == CallerIdentity(
+        principal_id="owner-001",
+        groups=("hub-admin", "reviewers"),
+        scopes=("api-hub/api:publish",),
+    )
 
 
 async def test_verify_api_gateway_stage_registration_patches_methods() -> None:

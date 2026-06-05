@@ -4,6 +4,7 @@ from typing import NoReturn, cast
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.apis.deps import build_caller_identity
 from app.apis.projects.common import ProjectDerivedState
 from app.apis.projects.list_projects import queries
 from app.apis.projects.list_projects.schemas import (
@@ -23,9 +24,13 @@ async def validate_project_list_query(query: ListProjectsQuery) -> ListProjectsQ
     return query
 
 
-async def get_caller_identity() -> CallerIdentity:
+async def get_caller_identity(
+    principal_id: str | None = None,
+    groups: str | None = None,
+    scopes: str | None = None,
+) -> CallerIdentity:
     """呼び出し元の sub、group、scope を取得する。"""
-    return _sequence_placeholder("get_caller_identity")
+    return build_caller_identity(principal_id=principal_id, groups=groups, scopes=scopes)
 
 
 async def has_project_list_permission(caller: CallerIdentity) -> bool:

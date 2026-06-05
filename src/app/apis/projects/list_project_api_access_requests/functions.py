@@ -5,6 +5,7 @@ from typing import NoReturn, cast
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.api_access_requests.common import AccessRequestDerivedState, AuthMode
+from app.apis.deps import build_caller_identity
 from app.apis.projects.list_project_api_access_requests import queries
 from app.apis.projects.list_project_api_access_requests.schemas import (
     AccessRequestReviewResponse,
@@ -20,9 +21,13 @@ def _sequence_placeholder(function_name: str) -> NoReturn:
     raise NotImplementedError(f"{function_name} is a sequence-level placeholder.")
 
 
-async def get_caller_identity() -> CallerIdentity:
+async def get_caller_identity(
+    principal_id: str | None = None,
+    groups: str | None = None,
+    scopes: str | None = None,
+) -> CallerIdentity:
     """呼び出し元の sub、group、scope を取得する。"""
-    return _sequence_placeholder("get_caller_identity")
+    return build_caller_identity(principal_id=principal_id, groups=groups, scopes=scopes)
 
 
 async def validate_project_access_request_list_query(

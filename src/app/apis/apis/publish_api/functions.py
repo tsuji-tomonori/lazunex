@@ -15,6 +15,7 @@ from app.apis.apis.publish_api.schemas import (
     PublishApiRequest,
     PublishApiResponse,
 )
+from app.apis.deps import build_caller_identity
 from app.apis.sequence_types import (
     ApiCatalogMetadataRef,
     ApiScopeRef,
@@ -54,9 +55,13 @@ def _request_hash(payload: object) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
-async def get_caller_identity() -> CallerIdentity:
+async def get_caller_identity(
+    principal_id: str | None = None,
+    groups: str | None = None,
+    scopes: str | None = None,
+) -> CallerIdentity:
     """呼び出し元の role、group、scope を取得する。"""
-    return _sequence_placeholder("get_caller_identity")
+    return build_caller_identity(principal_id=principal_id, groups=groups, scopes=scopes)
 
 
 async def validate_api_publish_request(request: PublishApiRequest) -> PublishApiRequest:
