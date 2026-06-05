@@ -119,4 +119,40 @@ async def has_project_view_permission(project: GetProjectResponse, caller: Calle
 
 async def build_project_detail_response(project: GetProjectResponse) -> GetProjectResponse:
     """secret 値を含めずに Project 詳細レスポンスを組み立てる。"""
-    return project
+    return GetProjectResponse(
+        project_id=project.project_id,
+        project_code=project.project_code,
+        name=project.name,
+        description=project.description,
+        owner_principal_id=project.owner_principal_id,
+        department_code=project.department_code,
+        derived_state=project.derived_state,
+        api_key=ProjectApiKeyResponse(
+            apigw_api_key_id=project.api_key.apigw_api_key_id,
+            api_key_last4=project.api_key.api_key_last4,
+            observed_enabled=project.api_key.observed_enabled,
+        ),
+        usage_plan=ProjectUsagePlanResponse(
+            apigw_usage_plan_id=project.usage_plan.apigw_usage_plan_id,
+            default_rate_limit=project.usage_plan.default_rate_limit,
+            default_burst_limit=project.usage_plan.default_burst_limit,
+            default_quota_limit=project.usage_plan.default_quota_limit,
+            default_quota_period=project.usage_plan.default_quota_period,
+        ),
+        cognito=ProjectCognitoClientsResponse(
+            public_client=ProjectPublicClientResponse(
+                app_client_id=project.cognito.public_client.app_client_id,
+                callback_urls=list(project.cognito.public_client.callback_urls),
+                logout_urls=list(project.cognito.public_client.logout_urls),
+                access_token_validity=project.cognito.public_client.access_token_validity,
+                access_token_unit=project.cognito.public_client.access_token_unit,
+                refresh_token_rotation_enabled=(
+                    project.cognito.public_client.refresh_token_rotation_enabled
+                ),
+            ),
+            confidential_client=ProjectConfidentialClientResponse(
+                app_client_id=project.cognito.confidential_client.app_client_id,
+                has_client_secret=project.cognito.confidential_client.has_client_secret,
+            ),
+        ),
+    )

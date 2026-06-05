@@ -93,7 +93,21 @@ async def test_get_project_detail_maps_project_rows(monkeypatch: pytest.MonkeyPa
     ]
     assert response.cognito.confidential_client.has_client_secret is True
     assert await functions.has_project_view_permission(response, caller) is True
-    assert await functions.build_project_detail_response(response) is response
+    detail_response = await functions.build_project_detail_response(response)
+    assert detail_response == response
+    assert detail_response is not response
+    assert detail_response.api_key is not response.api_key
+    assert detail_response.usage_plan is not response.usage_plan
+    assert detail_response.cognito is not response.cognito
+    assert detail_response.cognito.public_client is not response.cognito.public_client
+    assert detail_response.cognito.confidential_client is not response.cognito.confidential_client
+    assert "apiKeyValue" not in detail_response.model_dump(by_alias=True, mode="json")["apiKey"]
+    assert (
+        "clientSecret"
+        not in detail_response.model_dump(by_alias=True, mode="json")["cognito"][
+            "confidentialClient"
+        ]
+    )
     identity = await functions.get_caller_identity(
         principal_id=" user-12345 ",
         groups="hub-admin",

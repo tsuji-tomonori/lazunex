@@ -93,7 +93,39 @@ async def is_viewable_api(
 
 async def build_api_detail_response(api: GetApiResponse) -> GetApiResponse:
     """API 詳細レスポンスを組み立てる。"""
-    return api
+    return GetApiResponse(
+        api_id=api.api_id,
+        api_code=api.api_code,
+        name=api.name,
+        description=api.description,
+        provider_name=api.provider_name,
+        provider_contact=api.provider_contact,
+        owner_principal_id=api.owner_principal_id,
+        visibility=api.visibility,
+        derived_state=api.derived_state,
+        stage=ApiDetailStageResponse(
+            api_stage_id=api.stage.api_stage_id,
+            aws_account_id=api.stage.aws_account_id,
+            aws_region=api.stage.aws_region,
+            rest_api_id=api.stage.rest_api_id,
+            stage_name=api.stage.stage_name,
+            invoke_url=api.stage.invoke_url,
+            custom_domain_url=api.stage.custom_domain_url,
+            api_key_required_observed=api.stage.api_key_required_observed,
+            scope_config_observed=api.stage.scope_config_observed,
+        ),
+        scope=ApiScopeResponse(
+            scope_name=api.scope.scope_name,
+            scope_full_name=api.scope.scope_full_name,
+        ),
+        reviewers=[
+            ApiReviewerResponse(
+                reviewer_principal_id=reviewer.reviewer_principal_id,
+                reviewer_role=reviewer.reviewer_role,
+            )
+            for reviewer in api.reviewers
+        ],
+    )
 
 
 def _scope_config_observed(value: str) -> ScopeConfigObserved:

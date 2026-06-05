@@ -7,7 +7,7 @@ import pytest
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.apis.apis.common import ApiVisibility
+from app.apis.apis.common import ApiVisibility, ScopeConfigObserved
 from app.apis.apis.get_api import functions, queries
 from app.apis.apis.get_api.samples import GET_API_RESPONSE_SAMPLE
 from app.apis.apis.get_api.schemas import GetApiResponse
@@ -38,7 +38,7 @@ async def test_get_api_detail_calls_select_apis(
         invoke_url="https://abc123def4.execute-api.ap-northeast-1.amazonaws.com/prod",
         custom_domain_url=None,
         api_key_required_observed=True,
-        scope_config_observed="VERIFIED",
+        scope_config_observed="VERIFY_ONLY",
         scope_name="api:billing-api-v1:invoke",
         scope_full_name="api-hub/api:billing-api-v1:invoke",
         reviewer_principal_id="reviewer-001",
@@ -60,6 +60,7 @@ async def test_get_api_detail_calls_select_apis(
 
     assert result.api_id == api_id
     assert result.reviewers[0].reviewer_principal_id == "reviewer-001"
+    assert result.stage.scope_config_observed == ScopeConfigObserved.VERIFIED
     assert captured["session"] is session
     params = captured["params"]
     assert isinstance(params, queries.SelectApisParams)
@@ -107,8 +108,13 @@ async def test_get_api_helpers_validate_visibility_and_build_response() -> None:
 
     assert await functions.is_viewable_api(GET_API_RESPONSE_SAMPLE, caller) is True
     assert await functions.is_viewable_api(restricted, caller) is True
-    assert await functions.build_api_detail_response(restricted) is restricted
-    assert functions._scope_config_observed("VERIFY_ONLY").value == "VERIFIED"
+    response = await functions.build_api_detail_response(restricted)
+    assert response == restricted
+    assert response is not restricted
+    assert response.stage is not restricted.stage
+    assert response.scope is not restricted.scope
+    assert response.reviewers == restricted.reviewers
+    assert response.reviewers is not restricted.reviewers
     identity = await functions.get_caller_identity(
         principal_id=" reviewer-001 ",
         groups="reviewers",
