@@ -10,6 +10,7 @@ import pytest
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from apis.helpers import record_async_call
 from app.apis.common import IdentityGroup
 from app.apis.projects.common import ProjectCognitoClientType, TokenValidityUnit
 from app.apis.projects.update_project_public_client import functions, queries
@@ -204,9 +205,6 @@ async def test_update_public_client_db_sequence(monkeypatch: pytest.MonkeyPatch)
         calls.append("select_empty")
         return []
 
-    async def insert(name: str, *args: object) -> None:
-        calls.append(name)
-
     monkeypatch.setattr(
         queries,
         "select_project_cognito_clients",
@@ -223,7 +221,7 @@ async def test_update_public_client_db_sequence(monkeypatch: pytest.MonkeyPatch)
         "insert_provisioning_operation_events",
         "insert_audit_events",
     ):
-        monkeypatch.setattr(queries, name, lambda *args, _name=name: insert(_name, *args))
+        monkeypatch.setattr(queries, name, record_async_call(calls, name))
 
     request = UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE
     project = await functions.get_project(project_id, caller, session)

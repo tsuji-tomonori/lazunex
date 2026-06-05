@@ -10,6 +10,7 @@ import pytest
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from apis.helpers import record_async_call
 from app.apis.apis.common import ScopeAttachmentMode
 from app.apis.apis.publish_api import functions, queries
 from app.apis.apis.publish_api.samples import PUBLISH_API_REQUEST_SAMPLE
@@ -177,9 +178,6 @@ async def test_publish_api_db_sequence(monkeypatch: pytest.MonkeyPatch) -> None:
         calls.append("select_empty")
         return []
 
-    async def insert(name: str, *args: object) -> None:
-        calls.append(name)
-
     monkeypatch.setattr(queries, "select_idempotency_records", select_empty)
     monkeypatch.setattr(queries, "select_apis", select_empty)
     monkeypatch.setattr(queries, "select_api_gateway_stages_by_unique_key", select_empty)
@@ -198,7 +196,7 @@ async def test_publish_api_db_sequence(monkeypatch: pytest.MonkeyPatch) -> None:
         "insert_provisioning_operation_events",
         "insert_audit_events",
     ):
-        monkeypatch.setattr(queries, name, lambda *args, _name=name: insert(_name, *args))
+        monkeypatch.setattr(queries, name, record_async_call(calls, name))
 
     request = PUBLISH_API_REQUEST_SAMPLE
     record = await functions.get_idempotency_record("idem-key", session)
@@ -307,16 +305,13 @@ async def test_publish_api_lifecycle_events_skip_optional_children(
         user_agent="pytest",
     )
 
-    async def insert(name: str, *args: object) -> None:
-        calls.append(name)
-
     for name in (
         "insert_api_events",
         "insert_api_stage_events",
         "insert_api_scope_events",
         "insert_api_reviewer_events",
     ):
-        monkeypatch.setattr(queries, name, lambda *args, _name=name: insert(_name, *args))
+        monkeypatch.setattr(queries, name, record_async_call(calls, name))
 
     refs = await functions.append_api_lifecycle_events(
         api,

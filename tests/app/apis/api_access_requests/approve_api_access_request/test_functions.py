@@ -10,6 +10,7 @@ import pytest
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from apis.helpers import record_async_call
 from app.apis.api_access_requests.approve_api_access_request import functions, queries
 from app.apis.api_access_requests.approve_api_access_request.samples import (
     APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE,
@@ -142,8 +143,6 @@ async def test_approve_event_helpers_and_placeholders(
         client_scope_ids=(access_request.api_id,),
     )
 
-    assert functions._request_hash({"b": 2, "a": 1})
-    assert functions._now().tzinfo is UTC
     usage_plan_stage = UsagePlanApiStageRef(
         usage_plan_api_stage_id=access_request.api_stage_id,
     )
@@ -235,9 +234,6 @@ async def test_approve_access_request_db_mapping_sequence(
             )
         ]
 
-    async def insert(name: str, *args: object) -> None:
-        calls.append(name)
-
     monkeypatch.setattr(
         queries,
         "select_api_access_requests",
@@ -259,7 +255,7 @@ async def test_approve_access_request_db_mapping_sequence(
         "insert_project_usage_plan_api_stages",
         "insert_project_cognito_client_scopes",
     ):
-        monkeypatch.setattr(queries, name, lambda *args, _name=name: insert(_name, *args))
+        monkeypatch.setattr(queries, name, record_async_call(calls, name))
 
     api_gateway = FakeApiGatewayControlClient()
     identity = FakeIdentityAdminClient()

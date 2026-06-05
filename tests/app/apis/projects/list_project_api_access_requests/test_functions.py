@@ -57,8 +57,49 @@ async def test_apply_pagination_returns_page() -> None:
         ("REJECTED", "REJECTED"),
     ],
 )
-def test_derived_state(decision: str | None, expected: str) -> None:
-    assert functions._derived_state(decision).value == expected
+async def test_get_project_access_requests_derives_state(
+    monkeypatch: pytest.MonkeyPatch,
+    project_id: UUID,
+    caller: CallerIdentity,
+    api_id: UUID,
+    api_stage_id: UUID,
+    decision: str | None,
+    expected: str,
+) -> None:
+    session = cast(AsyncSession, object())
+
+    async def select_api_access_requests(
+        session: AsyncSession,
+        params: queries.SelectApiAccessRequestsParams,
+    ) -> list[queries.SelectApiAccessRequestsRow]:
+        _ = session, params
+        return [
+            queries.SelectApiAccessRequestsRow(
+                access_request_id=UUID("e540d3e8-0000-0000-0000-000000000001"),
+                project_id=project_id,
+                api_id=api_id,
+                api_stage_id=api_stage_id,
+                requested_auth_mode="CLIENT_CREDENTIALS",
+                requested_reason="need billing api",
+                requested_by="user-12345",
+                requested_at=datetime(2026, 1, 1, tzinfo=UTC),
+                api_code="billing-api-v1",
+                api_name="Billing API",
+                apigw_stage_name="prod",
+                decision=decision,
+            )
+        ]
+
+    monkeypatch.setattr(queries, "select_api_access_requests", select_api_access_requests)
+
+    page = await functions.get_project_access_requests(
+        ProjectRef(project_id=project_id),
+        ListProjectApiAccessRequestsQuery(limit=20),
+        caller,
+        session,
+    )
+
+    assert page.items[0].derived_state.value == expected
 
 
 async def test_build_project_access_request_list_response_returns_items() -> None:

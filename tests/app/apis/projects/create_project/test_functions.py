@@ -9,6 +9,7 @@ import pytest
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from apis.helpers import record_async_call
 from app.apis.common import IdentityGroup
 from app.apis.projects.create_project import functions, queries
 from app.apis.projects.create_project.samples import CREATE_PROJECT_REQUEST_SAMPLE
@@ -99,10 +100,6 @@ async def test_has_project_creation_permission(
     expected: bool,
 ) -> None:
     assert await functions.has_project_creation_permission(caller) is expected
-
-
-def test_hash_key_version_returns_numeric_suffix() -> None:
-    assert functions._hash_key_version("pepper-v12") == 12
 
 
 async def test_get_caller_identity_returns_common_identity() -> None:
@@ -274,9 +271,6 @@ async def test_create_project_db_sequence(monkeypatch: pytest.MonkeyPatch) -> No
         calls.append("select_empty")
         return []
 
-    async def insert(name: str, *args: object) -> None:
-        calls.append(name)
-
     monkeypatch.setattr(queries, "select_idempotency_records", select_empty)
     monkeypatch.setattr(queries, "select_projects", select_empty)
     for name in (
@@ -298,7 +292,7 @@ async def test_create_project_db_sequence(monkeypatch: pytest.MonkeyPatch) -> No
         "insert_provisioning_operation_events",
         "insert_audit_events",
     ):
-        monkeypatch.setattr(queries, name, lambda *args, _name=name: insert(_name, *args))
+        monkeypatch.setattr(queries, name, record_async_call(calls, name))
 
     request = CREATE_PROJECT_REQUEST_SAMPLE
     await functions.get_idempotency_record("idem-key", session)
@@ -471,9 +465,6 @@ async def test_create_project_lifecycle_events_skip_optional_children(
         confidential_client_id=uuid4(),
     )
 
-    async def insert(name: str, *args: object) -> None:
-        calls.append(name)
-
     for name in (
         "insert_project_events",
         "insert_project_member_events",
@@ -482,7 +473,7 @@ async def test_create_project_lifecycle_events_skip_optional_children(
         "insert_project_usage_plan_key_events",
         "insert_project_cognito_client_events",
     ):
-        monkeypatch.setattr(queries, name, lambda *args, _name=name: insert(_name, *args))
+        monkeypatch.setattr(queries, name, record_async_call(calls, name))
 
     refs = await functions.append_project_lifecycle_events(
         resources,

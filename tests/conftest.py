@@ -1,10 +1,11 @@
 import json
 import tempfile
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Sequence
 from pathlib import Path
 from typing import cast
 
 import pytest
+from _pytest.terminal import TerminalReporter
 from coverage import Coverage
 from coverage.exceptions import CoverageException, NoDataError
 from httpx import ASGITransport, AsyncClient
@@ -43,9 +44,16 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int | pytest.ExitC
     if no_cov or collect_only:
         return
 
-    cov_sources = [Path(source).as_posix() for source in config.getoption("--cov", default=())]
+    raw_cov_sources = cast(
+        "Sequence[str | Path] | None",
+        config.getoption("--cov", default=()),
+    )
+    cov_sources = [Path(source).as_posix() for source in (raw_cov_sources or ())]
     if "src/tools" not in cov_sources:
-        terminal = config.pluginmanager.getplugin("terminalreporter")
+        terminal = cast(
+            "TerminalReporter | None",
+            config.pluginmanager.getplugin("terminalreporter"),
+        )
         if terminal is not None:
             terminal.write(
                 "\nERROR: coverage target must include src/tools.\n",
@@ -58,7 +66,10 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int | pytest.ExitC
     try:
         totals = _coverage_totals()
     except (CoverageException, NoDataError, OSError, json.JSONDecodeError) as exc:
-        terminal = config.pluginmanager.getplugin("terminalreporter")
+        terminal = cast(
+            "TerminalReporter | None",
+            config.pluginmanager.getplugin("terminalreporter"),
+        )
         if terminal is not None:
             terminal.write(
                 f"\nERROR: failed to read coverage totals for C0/C1 thresholds: {exc}\n",
@@ -70,13 +81,16 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int | pytest.ExitC
 
     c0 = _percent(totals["covered_lines"], totals["num_statements"])
     c1 = _percent(totals["covered_branches"], totals["num_branches"])
-    failures = []
+    failures: list[str] = []
     if c0 < C0_FAIL_UNDER:
         failures.append(f"C0 {c0:.2f}% is less than {C0_FAIL_UNDER:.2f}%")
     if c1 < C1_FAIL_UNDER:
         failures.append(f"C1 {c1:.2f}% is less than {C1_FAIL_UNDER:.2f}%")
 
-    terminal = config.pluginmanager.getplugin("terminalreporter")
+    terminal = cast(
+        "TerminalReporter | None",
+        config.pluginmanager.getplugin("terminalreporter"),
+    )
     if terminal is not None:
         terminal.write_sep("=", "coverage thresholds")
         terminal.write(f"C0 statement coverage: {c0:.2f}% / required {C0_FAIL_UNDER:.2f}%\n")

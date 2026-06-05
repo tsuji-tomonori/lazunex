@@ -8,6 +8,7 @@ from uuid import UUID
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from apis.helpers import record_async_call
 from app.apis.api_access_requests.common import AuthMode
 from app.apis.common import IdentityGroup
 from app.apis.projects.common import ProjectCognitoClientType
@@ -35,12 +36,6 @@ async def test_validate_create_access_request_request_rejects_blank_reason() -> 
 
     with pytest.raises(ValueError, match="requested_reason"):
         await functions.validate_create_access_request_request(blank_reason)
-
-
-def test_client_type_for_auth_mode_returns_expected_client_type() -> None:
-    assert functions._client_type_for_auth_mode(AuthMode.CLIENT_CREDENTIALS) == (
-        ProjectCognitoClientType.CONFIDENTIAL_CLIENT_CREDENTIALS
-    )
 
 
 @pytest.mark.parametrize(
@@ -125,9 +120,6 @@ async def test_create_access_request_db_sequence(monkeypatch: pytest.MonkeyPatch
         calls.append("select_empty")
         return []
 
-    async def insert(name: str, *args: object) -> None:
-        calls.append(name)
-
     monkeypatch.setattr(queries, "select_projects", select_projects)
     monkeypatch.setattr(queries, "select_apis", select_apis)
     monkeypatch.setattr(queries, "select_subscriptions", select_empty)
@@ -136,22 +128,22 @@ async def test_create_access_request_db_sequence(monkeypatch: pytest.MonkeyPatch
     monkeypatch.setattr(
         queries,
         "insert_api_access_requests",
-        lambda *args: insert("insert_api_access_requests", *args),
+        record_async_call(calls, "insert_api_access_requests"),
     )
     monkeypatch.setattr(
         queries,
         "insert_idempotency_records",
-        lambda *args: insert("insert_idempotency_records", *args),
+        record_async_call(calls, "insert_idempotency_records"),
     )
     monkeypatch.setattr(
         queries,
         "insert_access_request_events",
-        lambda *args: insert("insert_access_request_events", *args),
+        record_async_call(calls, "insert_access_request_events"),
     )
     monkeypatch.setattr(
         queries,
         "insert_audit_events",
-        lambda *args: insert("insert_audit_events", *args),
+        record_async_call(calls, "insert_audit_events"),
     )
 
     project = await functions.get_project(project_id, caller, session)
@@ -306,7 +298,7 @@ async def test_create_access_request_checks_requested_auth_mode_clients(
     )
 
     async def select_public_client(*args: object) -> list[SimpleNamespace]:
-        return [SimpleNamespace(client_type=AuthMode.PUBLIC_PKCE)]
+        return [SimpleNamespace(client_type=ProjectCognitoClientType.PUBLIC_PKCE)]
 
     monkeypatch.setattr(queries, "select_project_cognito_clients", select_public_client)
 

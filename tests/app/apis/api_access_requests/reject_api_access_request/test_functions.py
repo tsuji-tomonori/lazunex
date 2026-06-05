@@ -10,6 +10,7 @@ import pytest
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from apis.helpers import record_async_call
 from app.apis.api_access_requests.reject_api_access_request import functions, queries
 from app.apis.api_access_requests.reject_api_access_request.samples import (
     REJECT_API_ACCESS_REQUEST_REQUEST_SAMPLE,
@@ -89,9 +90,6 @@ async def test_reject_access_request_db_sequence(monkeypatch: pytest.MonkeyPatch
         calls.append("select_api_reviewers")
         return [SimpleNamespace(api_reviewer_id=UUID(int=1))]
 
-    async def insert(name: str, *args: object) -> None:
-        calls.append(name)
-
     monkeypatch.setattr(
         queries,
         "select_api_access_requests",
@@ -101,22 +99,22 @@ async def test_reject_access_request_db_sequence(monkeypatch: pytest.MonkeyPatch
     monkeypatch.setattr(
         queries,
         "insert_access_request_events",
-        lambda *args: insert("insert_access_request_events", *args),
+        record_async_call(calls, "insert_access_request_events"),
     )
     monkeypatch.setattr(
         queries,
         "insert_api_access_reviews",
-        lambda *args: insert("insert_api_access_reviews", *args),
+        record_async_call(calls, "insert_api_access_reviews"),
     )
     monkeypatch.setattr(
         queries,
         "insert_idempotency_records",
-        lambda *args: insert("insert_idempotency_records", *args),
+        record_async_call(calls, "insert_idempotency_records"),
     )
     monkeypatch.setattr(
         queries,
         "insert_audit_events",
-        lambda *args: insert("insert_audit_events", *args),
+        record_async_call(calls, "insert_audit_events"),
     )
 
     access_request = await functions.get_access_request(access_request_id, session)
