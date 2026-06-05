@@ -1,0 +1,201 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+from _pytest.capture import CaptureFixture
+from _pytest.monkeypatch import MonkeyPatch
+
+from tools.generate_db_er_diagram import (
+    Relationship,
+    build_arg_parser,
+    child_columns_are_unique,
+    generate,
+    infer_output_format,
+    main,
+    parse_reference_target,
+    parse_relationships,
+    relationship_cardinality,
+    render_markdown,
+    render_mermaid,
+)
+from tools.generate_db_table_specs import parse_tables
+
+DDL_WITH_RELATIONSHIPS = """
+CREATE TABLE parents (
+    parent_id uuid PRIMARY KEY,
+    parent_code varchar(64) NOT NULL UNIQUE
+);
+
+CREATE TABLE children (
+    child_id uuid PRIMARY KEY,
+    parent_id uuid NOT NULL REFERENCES parents (parent_id),
+    alt_parent_id uuid,
+    profile_id uuid UNIQUE,
+    CONSTRAINT fk_children_alt_parent
+        FOREIGN KEY (alt_parent_id) REFERENCES parents (parent_id)
+);
+
+CREATE TABLE profiles (
+    profile_id uuid PRIMARY KEY,
+    parent_id uuid NOT NULL UNIQUE REFERENCES parents (parent_id)
+);
+
+ALTER TABLE children
+    ADD CONSTRAINT fk_children_profile
+    FOREIGN KEY (profile_id) REFERENCES profiles (profile_id);
+"""
+
+
+def test_parse_reference_target_normalizes_identifier_and_optional_columns() -> None:
+    assert parse_reference_target('"public"."apis" ("api_id")') == ("apis", ("api_id",))
+    assert parse_reference_target("REFERENCES projects") == ("projects", ())
+    assert parse_reference_target("not a reference") is None
+
+
+def test_parse_relationships_extracts_inline_table_and_alter_foreign_keys() -> None:
+    tables = parse_tables(DDL_WITH_RELATIONSHIPS)
+
+    relationships = parse_relationships(DDL_WITH_RELATIONSHIPS, tables)
+
+    assert relationships == [
+        Relationship(
+            child_table="children",
+            child_columns=("alt_parent_id",),
+            parent_table="parents",
+            parent_columns=("parent_id",),
+            constraint_name="fk_children_alt_parent",
+        ),
+        Relationship(
+            child_table="children",
+            child_columns=("parent_id",),
+            parent_table="parents",
+            parent_columns=("parent_id",),
+        ),
+        Relationship(
+            child_table="profiles",
+            child_columns=("parent_id",),
+            parent_table="parents",
+            parent_columns=("parent_id",),
+        ),
+        Relationship(
+            child_table="children",
+            child_columns=("profile_id",),
+            parent_table="profiles",
+            parent_columns=("profile_id",),
+            constraint_name="fk_children_profile",
+        ),
+    ]
+
+
+def test_relationship_cardinality_uses_nullability_and_uniqueness() -> None:
+    tables = parse_tables(DDL_WITH_RELATIONSHIPS)
+
+    assert relationship_cardinality(
+        Relationship("children", ("parent_id",), "parents", ("parent_id",)),
+        tables,
+    ) == ("||", "o{")
+    assert relationship_cardinality(
+        Relationship("children", ("alt_parent_id",), "parents", ("parent_id",)),
+        tables,
+    ) == ("o|", "o{")
+    assert relationship_cardinality(
+        Relationship("profiles", ("parent_id",), "parents", ("parent_id",)),
+        tables,
+    ) == ("||", "o|")
+    assert relationship_cardinality(
+        Relationship("children", ("profile_id",), "profiles", ("profile_id",)),
+        tables,
+    ) == ("o|", "o|")
+
+
+def test_child_columns_are_unique_supports_composite_table_constraints() -> None:
+    table = parse_tables(
+        """
+        CREATE TABLE members (
+            project_id uuid NOT NULL,
+            principal_id varchar(256) NOT NULL,
+            member_role varchar(20) NOT NULL,
+            UNIQUE (project_id, principal_id)
+        );
+        """
+    )["members"]
+
+    assert child_columns_are_unique(table, ("project_id", "principal_id")) is True
+    assert child_columns_are_unique(table, ("project_id",)) is False
+
+
+def test_render_mermaid_includes_tables_keys_and_relationships() -> None:
+    tables = parse_tables(DDL_WITH_RELATIONSHIPS)
+    relationships = parse_relationships(DDL_WITH_RELATIONSHIPS, tables)
+
+    mermaid = render_mermaid(tables, relationships)
+
+    assert mermaid.startswith("erDiagram\n")
+    assert "  children {" in mermaid
+    assert "    uuid child_id PK" in mermaid
+    assert "    uuid parent_id FK" in mermaid
+    assert "    uuid profile_id UK, FK" in mermaid
+    assert "  parents ||--o{ children : parent_id" in mermaid
+    assert "  parents o|--o{ children : fk_children_alt_parent" in mermaid
+    assert "  parents ||--o| profiles : parent_id" in mermaid
+    assert "  profiles o|--o| children : fk_children_profile" in mermaid
+
+
+def test_render_markdown_wraps_mermaid_with_source_ddl_path() -> None:
+    tables = parse_tables(DDL_WITH_RELATIONSHIPS)
+    relationships = parse_relationships(DDL_WITH_RELATIONSHIPS, tables)
+
+    markdown = render_markdown(tables, relationships, Path("src/db/ddl.sql"))
+
+    assert markdown.startswith(
+        "<!-- AUTO-GENERATED by src/tools/generate_db_er_diagram.py. DO NOT EDIT. -->"
+    )
+    assert "正本DDL: `src/db/ddl.sql`" in markdown
+    assert "```mermaid" in markdown
+    assert "erDiagram" in markdown
+
+
+def test_generate_writes_markdown_or_mermaid_by_output_suffix(tmp_path: Path) -> None:
+    ddl_path = tmp_path / "ddl.sql"
+    ddl_path.write_text(DDL_WITH_RELATIONSHIPS, encoding="utf-8")
+
+    markdown_path = tmp_path / "er.gen.md"
+    mermaid_path = tmp_path / "er.mmd"
+
+    assert generate(ddl_path, markdown_path) == markdown_path
+    assert generate(ddl_path, mermaid_path) == mermaid_path
+
+    assert markdown_path.read_text(encoding="utf-8").startswith("<!-- AUTO-GENERATED")
+    assert mermaid_path.read_text(encoding="utf-8").startswith("erDiagram\n")
+
+
+def test_arg_parser_defaults_format_inference_and_main_output(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+    capsys: CaptureFixture[str],
+) -> None:
+    default_args = build_arg_parser().parse_args([])
+
+    assert default_args.ddl.as_posix() == "src/db/ddl.sql"
+    assert default_args.output.as_posix() == "docs/spec/20.db/er.gen.md"
+    assert infer_output_format(Path("er.gen.md")) == "markdown"
+    assert infer_output_format(Path("er.mermaid")) == "mermaid"
+
+    ddl_path = tmp_path / "ddl.sql"
+    output_path = tmp_path / "custom.er.md"
+    ddl_path.write_text(DDL_WITH_RELATIONSHIPS, encoding="utf-8")
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "generate_db_er_diagram",
+            "--ddl",
+            str(ddl_path),
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    main()
+
+    assert capsys.readouterr().out == f"Generated ER diagram: {output_path.as_posix()}\n"
+    assert output_path.exists()
