@@ -6,7 +6,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.projects.list_projects import functions, queries
-from app.apis.projects.list_projects.schemas import ListProjectsQuery
+from app.apis.projects.list_projects.schemas import ListProjectsQuery, ProjectListItemResponse
 from app.apis.sequence_types import CallerIdentity, SequencePage
 
 pytestmark = pytest.mark.anyio
@@ -47,12 +47,6 @@ async def test_get_viewable_projects_calls_select_projects(
     assert params.limit == 10
 
 
-async def test_validate_project_list_query_returns_query() -> None:
-    query = ListProjectsQuery()
-
-    assert await functions.validate_project_list_query(query) is query
-
-
 @pytest.mark.parametrize(
     ("caller", "expected"),
     [
@@ -76,7 +70,7 @@ async def test_apply_pagination_returns_page() -> None:
 
 
 async def test_build_project_list_response_returns_items() -> None:
-    page = SequencePage(items=(), next_token=None)
+    page: SequencePage[ProjectListItemResponse] = SequencePage(items=(), next_token=None)
 
     assert (await functions.build_project_list_response(page)).items == []
 

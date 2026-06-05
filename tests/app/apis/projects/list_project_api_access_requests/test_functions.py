@@ -19,12 +19,6 @@ from app.apis.sequence_types import CallerIdentity, ProjectRef, SequencePage
 pytestmark = pytest.mark.anyio
 
 
-async def test_validate_project_access_request_list_query_returns_query() -> None:
-    query = ListProjectApiAccessRequestsQuery(limit=20)
-
-    assert await functions.validate_project_access_request_list_query(query) == query
-
-
 async def test_get_project_returns_project_ref(project_id: UUID) -> None:
     assert await functions.get_project(project_id) == ProjectRef(project_id=project_id)
 

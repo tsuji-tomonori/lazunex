@@ -6,7 +6,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.apis.list_apis import functions, queries
-from app.apis.apis.list_apis.schemas import ListApisQuery
+from app.apis.apis.list_apis.schemas import ApiListItemResponse, ListApisQuery
 from app.apis.sequence_types import CallerIdentity, SequencePage
 
 pytestmark = pytest.mark.anyio
@@ -44,12 +44,6 @@ async def test_get_viewable_apis_calls_select_apis(
     assert params.limit == 25
 
 
-async def test_validate_api_list_query_returns_query() -> None:
-    query = ListApisQuery()
-
-    assert await functions.validate_api_list_query(query) is query
-
-
 @pytest.mark.parametrize(
     ("caller", "expected"),
     [
@@ -73,7 +67,7 @@ async def test_apply_pagination_returns_page() -> None:
 
 
 async def test_build_api_list_response_returns_items() -> None:
-    page = SequencePage(items=(), next_token=None)
+    page: SequencePage[ApiListItemResponse] = SequencePage(items=(), next_token=None)
 
     assert (await functions.build_api_list_response(page)).items == []
 

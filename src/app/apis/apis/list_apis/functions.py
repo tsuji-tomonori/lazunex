@@ -20,11 +20,6 @@ def _sequence_placeholder(function_name: str) -> NoReturn:
     raise NotImplementedError(f"{function_name} is a sequence-level placeholder.")
 
 
-async def validate_api_list_query(query: ListApisQuery) -> ListApisQuery:
-    """API 一覧取得条件を検証する。"""
-    return query
-
-
 async def get_caller_identity(
     principal_id: str | None = None,
     groups: str | None = None,

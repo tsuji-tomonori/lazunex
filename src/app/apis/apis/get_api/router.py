@@ -28,7 +28,6 @@ router = APIRouter()
     responses={
         status.HTTP_200_OK: success_response(GET_API_RESPONSE_SAMPLE),
         **error_responses(
-            status.HTTP_400_BAD_REQUEST,
             status.HTTP_401_UNAUTHORIZED,
             status.HTTP_403_FORBIDDEN,
             status.HTTP_404_NOT_FOUND,
@@ -51,7 +50,6 @@ async def get_api(
     caller: Annotated[CallerIdentity, Depends(get_caller_identity)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> GetApiResponse:
-    validated_api_id = await api_functions.validate_api_id(api_id)
-    api = await api_functions.get_api_detail(validated_api_id, session)
+    api = await api_functions.get_api_detail(api_id, session)
     await api_functions.is_viewable_api(api, caller)
     return await api_functions.build_api_detail_response(api)

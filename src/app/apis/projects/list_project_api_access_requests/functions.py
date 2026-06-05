@@ -30,13 +30,6 @@ async def get_caller_identity(
     return build_caller_identity(principal_id=principal_id, groups=groups, scopes=scopes)
 
 
-async def validate_project_access_request_list_query(
-    query: ListProjectApiAccessRequestsQuery,
-) -> ListProjectApiAccessRequestsQuery:
-    """Project 利用申請一覧取得条件を検証する。"""
-    return query
-
-
 async def get_project(project_id: ResourceId) -> ProjectRef:
     """対象 Project を取得する。"""
     return ProjectRef(project_id=project_id)

@@ -30,7 +30,6 @@ router = APIRouter()
     responses={
         status.HTTP_200_OK: success_response(GET_PROJECT_RESPONSE_SAMPLE),
         **error_responses(
-            status.HTTP_400_BAD_REQUEST,
             status.HTTP_401_UNAUTHORIZED,
             status.HTTP_403_FORBIDDEN,
             status.HTTP_404_NOT_FOUND,
@@ -55,7 +54,6 @@ async def get_project(
     caller: Annotated[CallerIdentity, Depends(get_caller_identity)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> GetProjectResponse:
-    validated_project_id = await api_functions.validate_project_id(project_id)
-    project = await api_functions.get_project_detail(validated_project_id, caller, session)
+    project = await api_functions.get_project_detail(project_id, caller, session)
     await api_functions.has_project_view_permission(project, caller)
     return await api_functions.build_project_detail_response(project)

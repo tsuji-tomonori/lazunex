@@ -92,7 +92,6 @@ async def test_get_project_detail_maps_project_rows(monkeypatch: pytest.MonkeyPa
         "https://payment.example.internal/callback"
     ]
     assert response.cognito.confidential_client.has_client_secret is True
-    assert await functions.validate_project_id(project_id) == project_id
     assert await functions.has_project_view_permission(response, caller) is True
     assert await functions.build_project_detail_response(response) is response
     identity = await functions.get_caller_identity(

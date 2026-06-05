@@ -9,7 +9,6 @@ sequenceDiagram
   participant API as API
   participant DB as DB
   User->>API: GET /projects/{projectId}/subscriptions
-  API->>API: Project subscription 一覧取得条件を検証する。
   API->>API: 対象 Project を取得する。
   alt 呼び出し元が Project subscription 一覧を参照できる場合。
     API->>API: Project の active subscription を検索する。
@@ -18,7 +17,6 @@ sequenceDiagram
     API->>DB: Projectが利用可能なAPI一覧を返すため、承認済みsubscriptionを取得する。<br/>SQL 001_select_subscriptions.sql<br/>テーブル project_api_subscriptions, projects, apis, api_gateway_stages, api_cognito_scopes, project_cognito_client_scopes, project_cognito_clients, project_members
   end
   API-->>User: HTTP 200 OK
-  API-->>User: HTTP 400 Bad Request
   API-->>User: HTTP 401 Unauthorized
   API-->>User: HTTP 403 Forbidden
   API-->>User: HTTP 404 Not Found

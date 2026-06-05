@@ -33,7 +33,6 @@ router = APIRouter()
     responses={
         status.HTTP_200_OK: success_response(LIST_PROJECT_SUBSCRIPTIONS_RESPONSE_SAMPLE),
         **error_responses(
-            status.HTTP_400_BAD_REQUEST,
             status.HTTP_401_UNAUTHORIZED,
             status.HTTP_403_FORBIDDEN,
             status.HTTP_404_NOT_FOUND,
@@ -62,14 +61,13 @@ async def list_project_subscriptions(
     caller: Annotated[CallerIdentity, Depends(get_caller_identity)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> ListProjectSubscriptionsResponse:
-    validated_query = await api_functions.validate_project_subscription_list_query(query)
     project = await api_functions.get_project(project_id)
     await api_functions.has_project_subscription_view_permission(project, caller)
     subscriptions = await api_functions.get_project_subscriptions(
         project,
-        validated_query,
+        query,
         caller,
         session,
     )
-    page = await api_functions.apply_pagination(subscriptions, validated_query)
+    page = await api_functions.apply_pagination(subscriptions, query)
     return await api_functions.build_project_subscription_list_response(page)

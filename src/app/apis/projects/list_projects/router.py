@@ -26,7 +26,6 @@ router = APIRouter()
     responses={
         status.HTTP_200_OK: success_response(LIST_PROJECTS_RESPONSE_SAMPLE),
         **error_responses(
-            status.HTTP_400_BAD_REQUEST,
             status.HTTP_401_UNAUTHORIZED,
             status.HTTP_403_FORBIDDEN,
             status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -41,8 +40,7 @@ async def list_projects(
     caller: Annotated[CallerIdentity, Depends(get_caller_identity)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> ListProjectsResponse:
-    validated_query = await api_functions.validate_project_list_query(query)
     await api_functions.has_project_list_permission(caller)
-    projects = await api_functions.get_viewable_projects(validated_query, caller, session)
-    page = await api_functions.apply_pagination(projects, validated_query)
+    projects = await api_functions.get_viewable_projects(query, caller, session)
+    page = await api_functions.apply_pagination(projects, query)
     return await api_functions.build_project_list_response(page)

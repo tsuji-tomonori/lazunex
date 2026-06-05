@@ -13,13 +13,12 @@
 
 ## 実装計画
 
-1. API ID を検証する。
-2. 対象 API を取得する。
-3. API が公開済みまたは呼び出し元が参照可能な状態であることを確認する。
-4. API Gateway REST API ID、stage、scope、reviewer を取得する。
-5. OpenAPI metadata と利用条件を取得する。
-6. 参照可能な項目だけを response に整形する。
-7. API 詳細を返す。
+1. 対象 API を取得する。
+2. API が公開済みまたは呼び出し元が参照可能な状態であることを確認する。
+3. API Gateway REST API ID、stage、scope、reviewer を取得する。
+4. OpenAPI metadata と利用条件を取得する。
+5. 参照可能な項目だけを response に整形する。
+6. API 詳細を返す。
 
 ## 作業
 

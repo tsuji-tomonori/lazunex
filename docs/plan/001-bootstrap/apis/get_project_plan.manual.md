@@ -13,14 +13,13 @@ Project owner または Hub 管理者が、Project 詳細、API key metadata、U
 
 ## 実装計画
 
-1. Project ID を検証する。
-2. 対象 Project を取得する。
-3. 呼び出し元が Project owner または Hub 管理者であることを確認する。
-4. API key metadata を取得する。
-5. Usage Plan metadata を取得する。
-6. Cognito App Client metadata を取得する。
-7. secret 値を含めずに response を整形する。
-8. Project 詳細を返す。
+1. 対象 Project を取得する。
+2. 呼び出し元が Project owner または Hub 管理者であることを確認する。
+3. API key metadata を取得する。
+4. Usage Plan metadata を取得する。
+5. Cognito App Client metadata を取得する。
+6. secret 値を含めずに response を整形する。
+7. Project 詳細を返す。
 
 ## 作業
 

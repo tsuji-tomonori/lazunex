@@ -269,5 +269,5 @@ async def test_router_calls_sequence_functions_in_order(
     result = await case.endpoint(**endpoint_kwargs(case.endpoint, case.kwargs))
 
     assert result == case.expected
-    assert calls[0].startswith(("get_", "validate_"))
+    assert calls[0].startswith(("get_", "has_", "validate_"))
     assert calls[-1].startswith("build_")

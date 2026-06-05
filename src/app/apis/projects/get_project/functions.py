@@ -33,11 +33,6 @@ async def get_caller_identity(
     return build_caller_identity(principal_id=principal_id, groups=groups, scopes=scopes)
 
 
-async def validate_project_id(project_id: ResourceId) -> ResourceId:
-    """Project ID を検証する。"""
-    return project_id
-
-
 async def get_project_detail(
     project_id: ResourceId,
     caller: CallerIdentity | None = None,

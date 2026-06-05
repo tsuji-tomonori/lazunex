@@ -11,7 +11,7 @@ Summary: APIを公開登録する
 | 項目 | 型 | 必須 | 説明 | 制約 |
 | --- | --- | --- | --- | --- |
 | `Idempotency-Key` | `string` | yes | 同じ更新系リクエストの重複処理を防ぐためにクライアントが指定する一意なキーです。同じキーで再送された場合、サーバーは同一リクエストとして扱います。 | - |
-| `X-Principal-Id` | `string` | yes | - | - |
+| `X-Principal-Id` | `string \| null` | no | - | - |
 | `X-Groups` | `string \| null` | no | - | - |
 | `X-Scopes` | `string \| null` | no | - | - |
 | `X-Correlation-Id` | `string \| null` | no | - | - |

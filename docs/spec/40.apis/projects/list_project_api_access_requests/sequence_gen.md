@@ -9,7 +9,6 @@ sequenceDiagram
   participant API as API
   participant DB as DB
   User->>API: GET /projects/{projectId}/api-access-requests
-  API->>API: Project 利用申請一覧取得条件を検証する。
   API->>API: 対象 Project を取得する。
   alt 呼び出し元が Project 内の利用申請履歴を参照できる場合。
     API->>API: Project に紐づく access request を検索する。
@@ -18,7 +17,6 @@ sequenceDiagram
     API->>DB: Projectの利用申請履歴を一覧表示するため、利用申請と審査結果を取得する。<br/>SQL 001_select_api_access_requests.sql<br/>テーブル api_access_requests, projects, apis, api_gateway_stages, api_access_reviews, api_reviewers, project_members
   end
   API-->>User: HTTP 200 OK
-  API-->>User: HTTP 400 Bad Request
   API-->>User: HTTP 401 Unauthorized
   API-->>User: HTTP 403 Forbidden
   API-->>User: HTTP 404 Not Found

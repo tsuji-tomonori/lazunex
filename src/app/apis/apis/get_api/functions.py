@@ -31,11 +31,6 @@ async def get_caller_identity(
     return build_caller_identity(principal_id=principal_id, groups=groups, scopes=scopes)
 
 
-async def validate_api_id(api_id: ResourceId) -> ResourceId:
-    """API ID を検証する。"""
-    return api_id
-
-
 async def get_api_detail(
     api_id: ResourceId,
     session: AsyncSession | None = None,

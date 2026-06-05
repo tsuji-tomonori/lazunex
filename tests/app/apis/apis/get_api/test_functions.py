@@ -97,7 +97,6 @@ async def test_get_api_helpers_validate_visibility_and_build_response() -> None:
         }
     )
 
-    assert await functions.validate_api_id(restricted.api_id) == restricted.api_id
     assert await functions.is_viewable_api(GET_API_RESPONSE_SAMPLE, caller) is True
     assert await functions.is_viewable_api(restricted, caller) is True
     assert await functions.build_api_detail_response(restricted) is restricted
