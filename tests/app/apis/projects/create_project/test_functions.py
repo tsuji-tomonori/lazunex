@@ -162,15 +162,12 @@ async def test_create_api_gateway_usage_plan_calls_integration(
     assert call.quota_period == "MONTH"
 
 
-async def test_create_api_gateway_usage_plan_key_calls_integration(
-    operation: ProvisioningOperationRef,
-) -> None:
+async def test_create_api_gateway_usage_plan_key_calls_integration() -> None:
     client = FakeApiGatewayControlClient()
 
     usage_plan_key_id = await functions.create_api_gateway_usage_plan_key(
         client.api_key,
         "usage-plan-id",
-        operation,
         client,
     )
 
@@ -182,14 +179,11 @@ async def test_create_api_gateway_usage_plan_key_calls_integration(
     assert call.api_key_id == "api-key-id"
 
 
-async def test_create_cognito_public_app_client_calls_integration(
-    operation: ProvisioningOperationRef,
-) -> None:
+async def test_create_cognito_public_app_client_calls_integration() -> None:
     client = FakeIdentityAdminClient()
 
     app_client_id = await functions.create_cognito_public_app_client(
         CREATE_PROJECT_REQUEST_SAMPLE,
-        operation,
         client,
     )
 
@@ -202,14 +196,11 @@ async def test_create_cognito_public_app_client_calls_integration(
     assert call.allowed_scopes == ("openid", "email", "profile")
 
 
-async def test_create_cognito_confidential_app_client_calls_integration(
-    operation: ProvisioningOperationRef,
-) -> None:
+async def test_create_cognito_confidential_app_client_calls_integration() -> None:
     client = FakeIdentityAdminClient()
 
     app_client = await functions.create_cognito_confidential_app_client(
         CREATE_PROJECT_REQUEST_SAMPLE,
-        operation,
         client,
     )
 
@@ -222,9 +213,7 @@ async def test_create_cognito_confidential_app_client_calls_integration(
     assert call.allowed_scopes == ()
 
 
-async def test_create_cognito_confidential_app_client_rejects_missing_secret(
-    operation: ProvisioningOperationRef,
-) -> None:
+async def test_create_cognito_confidential_app_client_rejects_missing_secret() -> None:
     client = FakeIdentityAdminClient(
         confidential_client=UserPoolClientCreated(app_client_id="confidential-client-id")
     )
@@ -232,7 +221,6 @@ async def test_create_cognito_confidential_app_client_rejects_missing_secret(
     with pytest.raises(RuntimeError, match="confidential app client secret is missing"):
         await functions.create_cognito_confidential_app_client(
             CREATE_PROJECT_REQUEST_SAMPLE,
-            operation,
             client,
         )
 
@@ -315,17 +303,14 @@ async def test_create_project_db_sequence(monkeypatch: pytest.MonkeyPatch) -> No
     usage_plan_key_id = await functions.create_api_gateway_usage_plan_key(
         api_key,
         usage_plan_id,
-        operation,
         api_gateway,
     )
     public_client_id = await functions.create_cognito_public_app_client(
         request,
-        operation,
         identity,
     )
     confidential_client = await functions.create_cognito_confidential_app_client(
         request,
-        operation,
         identity,
     )
     secret_hashes = await functions.hash_project_secrets(
@@ -374,7 +359,6 @@ async def test_create_project_db_functions_require_integrations() -> None:
     api_key = api_gateway.api_key
     confidential_client = await functions.create_cognito_confidential_app_client(
         request,
-        operation,
         FakeIdentityAdminClient(),
     )
     secret_hashes = await functions.hash_project_secrets(

@@ -114,7 +114,6 @@ async def approve_api_access_request(
     )
     usage_plan_stage = await api_functions.add_usage_plan_api_stage(
         access_request,
-        operation,
         api_gateway_control,
         request,
         session,
@@ -131,7 +130,6 @@ async def approve_api_access_request(
     )
     updated_client = await api_functions.update_cognito_app_client(
         merged_client,
-        operation,
         identity_admin,
     )
     resources = await api_functions.save_approved_access_resources(
@@ -146,7 +144,7 @@ async def approve_api_access_request(
     await api_functions.append_client_scope_event(resources)
     await api_functions.append_access_request_approved_event(access_request)
     await api_functions.append_subscription_provisioned_event(resources)
-    await api_functions.append_provisioning_events(operation)
+    await api_functions.append_provisioning_events()
     await api_functions.append_audit_event(access_request, caller)
     await session.commit()
     return await api_functions.build_approve_access_request_response(

@@ -60,16 +60,14 @@ async def test_get_cognito_app_client_calls_identity_admin() -> None:
     assert call.client_id == "public-client-id"
 
 
-async def test_update_cognito_app_client_calls_identity_admin(
-    operation: ProvisioningOperationRef,
-) -> None:
+async def test_update_cognito_app_client_calls_identity_admin() -> None:
     client = FakeIdentityAdminClient()
     app_client = CognitoAppClientRef(
         app_client_id="public-client-id",
         allowed_scopes=("openid", "profile"),
     )
 
-    updated = await functions.update_cognito_app_client(app_client, operation, client)
+    updated = await functions.update_cognito_app_client(app_client, client)
 
     assert updated == app_client
     assert len(client.calls) == 1
@@ -239,7 +237,6 @@ async def test_update_public_client_db_sequence(monkeypatch: pytest.MonkeyPatch)
     merged = await functions.merge_public_client_settings(current, request)
     updated = await functions.update_cognito_app_client(
         merged,
-        operation,
         FakeIdentityAdminClient(),
     )
     metadata = await functions.update_public_app_client_metadata(

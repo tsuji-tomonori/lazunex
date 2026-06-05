@@ -48,13 +48,11 @@ async def assert_runtime_dependency_error(
 
 async def test_add_usage_plan_api_stage_calls_api_gateway_control(
     access_request: ApiAccessRequestRef,
-    operation: ProvisioningOperationRef,
 ) -> None:
     client = FakeApiGatewayControlClient()
 
     usage_plan_stage = await functions.add_usage_plan_api_stage(
         access_request,
-        operation,
         client,
     )
 
@@ -82,16 +80,14 @@ async def test_get_cognito_app_client_calls_identity_admin(
     assert call.client_id == str(access_request.project_id)
 
 
-async def test_update_cognito_app_client_calls_identity_admin(
-    operation: ProvisioningOperationRef,
-) -> None:
+async def test_update_cognito_app_client_calls_identity_admin() -> None:
     client = FakeIdentityAdminClient()
     app_client = CognitoAppClientRef(
         app_client_id="public-client-id",
         allowed_scopes=("openid", "api-hub/api:billing-api-v1:invoke"),
     )
 
-    updated = await functions.update_cognito_app_client(app_client, operation, client)
+    updated = await functions.update_cognito_app_client(app_client, client)
 
     assert updated == app_client
     assert len(client.calls) == 1
@@ -134,7 +130,6 @@ async def test_approve_helpers_merge_scopes_and_build_response(
 
 async def test_approve_event_helpers_and_placeholders(
     access_request: ApiAccessRequestRef,
-    operation: ProvisioningOperationRef,
 ) -> None:
     resources = ApprovedAccessResourceRefs(
         review_id=access_request.access_request_id,
@@ -151,7 +146,7 @@ async def test_approve_event_helpers_and_placeholders(
     assert len(await functions.append_client_scope_event(resources)) == 1
     assert (await functions.append_access_request_approved_event(access_request)).event_id
     assert (await functions.append_subscription_provisioned_event(resources)).event_id
-    assert len(await functions.append_provisioning_events(operation)) == 1
+    assert len(await functions.append_provisioning_events()) == 1
     assert (
         await functions.append_audit_event(
             access_request,
@@ -288,14 +283,13 @@ async def test_approve_access_request_db_mapping_sequence(
     )
     usage_plan_stage = await functions.add_usage_plan_api_stage(
         access_request,
-        operation,
         api_gateway,
         request,
         session,
     )
     current = await functions.get_cognito_app_client(access_request, identity, request, session)
     merged = await functions.merge_cognito_allowed_scopes(current, access_request)
-    updated = await functions.update_cognito_app_client(merged, operation, identity)
+    updated = await functions.update_cognito_app_client(merged, identity)
     resources = await functions.save_approved_access_resources(
         access_request,
         request,
@@ -349,7 +343,6 @@ async def test_approve_access_request_rejects_missing_cognito_client(
     with pytest.raises(ValueError, match="project cognito client"):
         await functions.add_usage_plan_api_stage(
             access_request,
-            operation,
             FakeApiGatewayControlClient(),
             APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE,
             session,

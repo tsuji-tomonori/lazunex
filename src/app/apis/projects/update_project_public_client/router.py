@@ -104,7 +104,6 @@ async def update_project_public_client(
     )
     updated_client = await api_functions.update_cognito_app_client(
         merged_client,
-        operation,
         identity_admin,
     )
     updated_metadata = await api_functions.update_public_app_client_metadata(

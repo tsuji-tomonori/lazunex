@@ -257,7 +257,6 @@ async def create_idempotency_record(
 
 async def add_cognito_custom_scope(
     request: PublishApiRequest,
-    operation: ProvisioningOperationRef,
     identity_admin: IdentityAdminPort | None = None,
 ) -> ApiScopeRef:
     """Cognito Resource Server に custom scope を追加する。"""
@@ -285,7 +284,6 @@ async def add_cognito_custom_scope(
                 scopes=scopes,
             )
         )
-        _ = operation
         return ApiScopeRef(
             scope_full_name=f"{settings.cognito_resource_server_identifier}/{scope_name}"
         )

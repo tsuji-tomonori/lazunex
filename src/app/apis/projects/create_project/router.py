@@ -97,17 +97,14 @@ async def create_project(
     usage_plan_key_id = await api_functions.create_api_gateway_usage_plan_key(
         api_key,
         usage_plan_id,
-        operation,
         api_gateway_control,
     )
     public_client_id = await api_functions.create_cognito_public_app_client(
         validated_request,
-        operation,
         identity_admin,
     )
     confidential_client = await api_functions.create_cognito_confidential_app_client(
         validated_request,
-        operation,
         identity_admin,
     )
     secret_hashes = await api_functions.hash_project_secrets(

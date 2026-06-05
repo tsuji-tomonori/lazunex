@@ -249,7 +249,6 @@ async def create_api_gateway_usage_plan(
 async def create_api_gateway_usage_plan_key(
     api_key: ApiKeyCreated,
     usage_plan_id: ApiGatewayId,
-    operation: ProvisioningOperationRef,
     api_gateway_control: ApiGatewayControlPort | None = None,
 ) -> ApiGatewayId:
     """API Gateway Usage Plan Key 紐づけを作成する。"""
@@ -260,14 +259,12 @@ async def create_api_gateway_usage_plan_key(
                 api_key_id=api_key.apigw_api_key_id,
             )
         )
-        _ = operation
         return created.apigw_usage_plan_key_id
     return raise_missing_runtime_dependency("create_api_gateway_usage_plan_key")
 
 
 async def create_cognito_public_app_client(
     request: CreateProjectRequest,
-    operation: ProvisioningOperationRef,
     identity_admin: IdentityAdminPort | None = None,
 ) -> ApiGatewayId:
     """PKCE 用 public App Client を作成する。"""
@@ -289,14 +286,12 @@ async def create_cognito_public_app_client(
                 retry_grace_period_seconds=request.public_client.retry_grace_period_seconds,
             )
         )
-        _ = operation
         return created.app_client_id
     return raise_missing_runtime_dependency("create_cognito_public_app_client")
 
 
 async def create_cognito_confidential_app_client(
     request: CreateProjectRequest,
-    operation: ProvisioningOperationRef,
     identity_admin: IdentityAdminPort | None = None,
 ) -> CognitoConfidentialClientRef:
     """Client Credentials 用 confidential App Client を作成する。"""
@@ -312,7 +307,6 @@ async def create_cognito_confidential_app_client(
         )
         if created.client_secret is None:
             raise RuntimeError("confidential app client secret is missing")
-        _ = operation
         return CognitoConfidentialClientRef(
             app_client_id=created.app_client_id,
             client_secret=created.client_secret,

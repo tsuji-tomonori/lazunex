@@ -280,7 +280,6 @@ async def merge_public_client_settings(
 
 async def update_cognito_app_client(
     merged: CognitoAppClientRef,
-    operation: ProvisioningOperationRef,
     identity_admin: IdentityAdminPort | None = None,
 ) -> CognitoAppClientRef:
     """Cognito App Client を更新する。"""
@@ -304,7 +303,6 @@ async def update_cognito_app_client(
                 supported_identity_providers=merged.supported_identity_providers,
             )
         )
-        _ = operation
         return CognitoAppClientRef(
             app_client_id=updated.app_client_id,
             allowed_scopes=updated.allowed_scopes,

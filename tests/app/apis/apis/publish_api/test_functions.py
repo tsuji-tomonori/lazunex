@@ -142,14 +142,11 @@ async def test_verify_api_gateway_stage_registration_rejects_missing_scope() -> 
         await functions.verify_api_gateway_stage_registration(request, MissingScopeClient())
 
 
-async def test_add_cognito_custom_scope_calls_identity_admin(
-    operation: ProvisioningOperationRef,
-) -> None:
+async def test_add_cognito_custom_scope_calls_identity_admin() -> None:
     client = FakeIdentityAdminClient()
 
     scope = await functions.add_cognito_custom_scope(
         PUBLISH_API_REQUEST_SAMPLE,
-        operation,
         client,
     )
 
@@ -211,7 +208,6 @@ async def test_publish_api_db_sequence(monkeypatch: pytest.MonkeyPatch) -> None:
     await functions.create_idempotency_record("idem-key", operation, request, caller, session)
     scope = await functions.add_cognito_custom_scope(
         request,
-        operation,
         FakeIdentityAdminClient(),
     )
     api = await functions.save_api_catalog_metadata(request, scope, operation, caller, session)

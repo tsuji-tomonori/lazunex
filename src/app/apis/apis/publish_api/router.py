@@ -86,7 +86,6 @@ async def publish_api(
     )
     scope = await api_functions.add_cognito_custom_scope(
         validated_request,
-        operation,
         identity_admin,
     )
     api = await api_functions.save_api_catalog_metadata(

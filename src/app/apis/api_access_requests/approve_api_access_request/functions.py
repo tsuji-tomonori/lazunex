@@ -282,7 +282,6 @@ async def create_idempotency_record(
 
 async def add_usage_plan_api_stage(
     access_request: ApiAccessRequestRef,
-    operation: ProvisioningOperationRef,
     api_gateway_control: ApiGatewayControlPort | None = None,
     request: ApproveApiAccessRequestRequest | None = None,
     session: AsyncSession | None = None,
@@ -301,7 +300,6 @@ async def add_usage_plan_api_stage(
                 stage_name=access_request.apigw_stage_name or str(access_request.api_stage_id),
             )
         )
-        _ = operation
         return UsagePlanApiStageRef(usage_plan_api_stage_id=access_request.api_stage_id)
     return raise_missing_runtime_dependency("add_usage_plan_api_stage")
 
@@ -374,7 +372,6 @@ async def merge_cognito_allowed_scopes(
 
 async def update_cognito_app_client(
     client: CognitoAppClientRef,
-    operation: ProvisioningOperationRef,
     identity_admin: IdentityAdminPort | None = None,
 ) -> CognitoAppClientRef:
     """Cognito App Client を更新する。"""
@@ -398,7 +395,6 @@ async def update_cognito_app_client(
                 supported_identity_providers=client.supported_identity_providers,
             )
         )
-        _ = operation
         return CognitoAppClientRef(
             app_client_id=updated.app_client_id,
             allowed_scopes=updated.allowed_scopes,
@@ -537,9 +533,8 @@ async def append_subscription_provisioned_event(
     return EventRef(event_id=uuid4())
 
 
-async def append_provisioning_events(operation: ProvisioningOperationRef) -> list[EventRef]:
+async def append_provisioning_events() -> list[EventRef]:
     """provisioning operation/step event を追記する。"""
-    _ = operation
     return [EventRef(event_id=uuid4())]
 
 
