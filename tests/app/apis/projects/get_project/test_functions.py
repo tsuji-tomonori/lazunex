@@ -7,6 +7,8 @@ import pytest
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.apis.common import IdentityGroup
+from app.apis.projects.common import ProjectCognitoClientType, ProjectCognitoClientUrlType
 from app.apis.projects.get_project import functions, queries
 from app.apis.sequence_types import CallerIdentity
 
@@ -37,7 +39,7 @@ def project_row(
         default_quota_period="MONTH",
         client_type=client_type,
         app_client_id=f"{client_type.lower()}-client-id",
-        has_client_secret=client_type == "CONFIDENTIAL",
+        has_client_secret=client_type == ProjectCognitoClientType.CONFIDENTIAL,
         access_token_validity=15,
         access_token_unit="minutes",  # noqa: S106
         refresh_token_rotation_enabled=True,
@@ -61,20 +63,20 @@ async def test_get_project_detail_maps_project_rows(monkeypatch: pytest.MonkeyPa
         return [
             project_row(
                 project_id=project_id,
-                client_type="PUBLIC",
-                url_type="CALLBACK",
+                client_type=ProjectCognitoClientType.PUBLIC,
+                url_type=ProjectCognitoClientUrlType.CALLBACK,
                 url="https://payment.example.internal/callback",
             ),
             project_row(
                 project_id=project_id,
-                client_type="PUBLIC",
-                url_type="LOGOUT",
+                client_type=ProjectCognitoClientType.PUBLIC,
+                url_type=ProjectCognitoClientUrlType.LOGOUT,
                 url="https://payment.example.internal/logout",
             ),
             project_row(
                 project_id=project_id,
-                client_type="CONFIDENTIAL",
-                url_type="CALLBACK",
+                client_type=ProjectCognitoClientType.CONFIDENTIAL,
+                url_type=ProjectCognitoClientUrlType.CALLBACK,
                 url="",
             ),
         ]
@@ -110,19 +112,19 @@ async def test_get_project_detail_maps_project_rows(monkeypatch: pytest.MonkeyPa
     )
     identity = await functions.get_caller_identity(
         principal_id=" user-12345 ",
-        groups="hub-admin",
+        groups=IdentityGroup.HUB_ADMIN,
         scopes="api-hub/project:read",
     )
     assert identity == CallerIdentity(
         principal_id="user-12345",
-        groups=("hub-admin",),
+        groups=(IdentityGroup.HUB_ADMIN,),
         scopes=("api-hub/project:read",),
     )
 
 
 async def test_get_project_detail_raises_not_found(monkeypatch: pytest.MonkeyPatch) -> None:
     project_id = UUID("cb62b5f6-0000-0000-0000-000000000001")
-    caller = CallerIdentity(principal_id="user-12345", groups=("hub-admin",), scopes=())
+    caller = CallerIdentity(principal_id="user-12345", groups=(IdentityGroup.HUB_ADMIN,), scopes=())
 
     async def select_projects(
         session: AsyncSession,

@@ -10,7 +10,8 @@ import pytest
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.apis.projects.common import TokenValidityUnit
+from app.apis.common import IdentityGroup
+from app.apis.projects.common import ProjectCognitoClientType, TokenValidityUnit
 from app.apis.projects.update_project_public_client import functions, queries
 from app.apis.projects.update_project_public_client.samples import (
     UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE,
@@ -116,7 +117,7 @@ async def test_validate_public_client_update_request_rejects_cognito_limits() ->
                 project_id=UUID("cb62b5f6-0000-0000-0000-000000000001"),
                 owner_principal_id="owner-001",
             ),
-            CallerIdentity(principal_id="owner-001", groups=("hub-admin",), scopes=()),
+            CallerIdentity(principal_id="owner-001", groups=(IdentityGroup.HUB_ADMIN,), scopes=()),
             True,
         ),
         (
@@ -149,13 +150,13 @@ async def test_has_project_owner_permission(
 async def test_get_caller_identity_returns_common_identity() -> None:
     caller = await functions.get_caller_identity(
         principal_id=" owner-001 ",
-        groups="hub-admin, owners",
+        groups=f"{IdentityGroup.HUB_ADMIN}, owners",
         scopes="api-hub/project:update",
     )
 
     assert caller == CallerIdentity(
         principal_id="owner-001",
-        groups=("hub-admin", "owners"),
+        groups=(IdentityGroup.HUB_ADMIN, "owners"),
         scopes=("api-hub/project:update",),
     )
 
@@ -163,7 +164,7 @@ async def test_get_caller_identity_returns_common_identity() -> None:
 async def test_update_public_client_db_sequence(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: list[str] = []
     session = cast(AsyncSession, object())
-    caller = CallerIdentity(principal_id="owner-001", groups=("hub-admin",), scopes=())
+    caller = CallerIdentity(principal_id="owner-001", groups=(IdentityGroup.HUB_ADMIN,), scopes=())
     context = RequestContext(
         correlation_id="corr-001",
         source_ip="127.0.0.1",
@@ -178,7 +179,7 @@ async def test_update_public_client_db_sequence(monkeypatch: pytest.MonkeyPatch)
             SimpleNamespace(
                 project_cognito_client_id=project_cognito_client_id,
                 project_id=project_id,
-                client_type="PUBLIC_PKCE",
+                client_type=ProjectCognitoClientType.PUBLIC_PKCE,
                 cognito_user_pool_id="user-pool-id",
                 app_client_id="public-client-id",
                 app_client_name="payment-frontend-public",
@@ -346,7 +347,7 @@ async def test_update_public_client_rejects_missing_or_conflicting_metadata(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     session = cast(AsyncSession, object())
-    caller = CallerIdentity(principal_id="owner-001", groups=("hub-admin",), scopes=())
+    caller = CallerIdentity(principal_id="owner-001", groups=(IdentityGroup.HUB_ADMIN,), scopes=())
     project = ProjectRef(project_id=UUID("cb62b5f6-0000-0000-0000-000000000001"))
     request = UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE
     merged = CognitoAppClientRef(app_client_id="public-client-id", allowed_scopes=())

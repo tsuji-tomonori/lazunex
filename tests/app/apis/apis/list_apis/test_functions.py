@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.apis.list_apis import functions, queries
 from app.apis.apis.list_apis.schemas import ApiListItemResponse, ListApisQuery
+from app.apis.common import IdentityGroup
 from app.apis.sequence_types import CallerIdentity, SequencePage
 
 pytestmark = pytest.mark.anyio
@@ -75,12 +76,12 @@ async def test_build_api_list_response_returns_items() -> None:
 async def test_get_caller_identity_returns_common_identity() -> None:
     caller = await functions.get_caller_identity(
         principal_id=" user-12345 ",
-        groups="hub-admin, owners",
+        groups=f"{IdentityGroup.HUB_ADMIN}, owners",
         scopes="api-hub/api:read, api-hub/api:write",
     )
 
     assert caller == CallerIdentity(
         principal_id="user-12345",
-        groups=("hub-admin", "owners"),
+        groups=(IdentityGroup.HUB_ADMIN, "owners"),
         scopes=("api-hub/api:read", "api-hub/api:write"),
     )

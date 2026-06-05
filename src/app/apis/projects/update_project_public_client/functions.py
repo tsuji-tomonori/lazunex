@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.deps import build_caller_identity
 from app.apis.projects.common import (
+    ProjectCognitoClientUrlType,
     TokenValidityUnit,
     validate_access_or_id_token_validity,
     validate_cognito_url_list,
@@ -376,8 +377,8 @@ async def update_public_app_client_metadata(
             ),
         )
         for url_type, urls in (
-            ("CALLBACK", request.callback_urls),
-            ("LOGOUT", request.logout_urls),
+            (ProjectCognitoClientUrlType.CALLBACK, request.callback_urls),
+            (ProjectCognitoClientUrlType.LOGOUT, request.logout_urls),
         ):
             await queries.delete_project_cognito_client_urls(
                 session,

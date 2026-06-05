@@ -6,6 +6,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.api_access_requests.common import AccessRequestDerivedState, AuthMode
+from app.apis.common import IdentityGroup
 from app.apis.deps import build_caller_identity
 from app.apis.projects.list_project_api_access_requests import queries
 from app.apis.projects.list_project_api_access_requests.schemas import (
@@ -61,7 +62,7 @@ async def get_project_access_requests(
             queries.SelectApiAccessRequestsParams(
                 actor_principal_id=caller.principal_id,
                 project_id=project.project_id,
-                is_hub_admin="hub-admin" in caller.groups,
+                is_hub_admin=IdentityGroup.HUB_ADMIN in caller.groups,
                 decision=getattr(query, "decision", None),
                 after_requested_at=getattr(query, "next_token", None),
                 limit=getattr(query, "limit", None),

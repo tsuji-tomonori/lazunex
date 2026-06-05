@@ -7,6 +7,7 @@ from uuid import UUID
 import pytest
 from sqlalchemy.ext.asyncio import AsyncEngine
 
+from app.apis.common import IdentityGroup
 from app.apis.sequence_types import ApiAccessRequestRef, CallerIdentity, ProvisioningOperationRef
 
 from .router_db import (
@@ -93,7 +94,7 @@ def operation() -> ProvisioningOperationRef:
 def caller() -> CallerIdentity:
     return CallerIdentity(
         principal_id="user-12345",
-        groups=("hub-admin",),
+        groups=(IdentityGroup.HUB_ADMIN,),
         scopes=("api-hub/api:billing-api-v1:invoke",),
     )
 

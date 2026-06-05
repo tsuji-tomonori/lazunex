@@ -9,6 +9,8 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.api_access_requests.common import AuthMode
+from app.apis.common import IdentityGroup
+from app.apis.projects.common import ProjectCognitoClientType
 from app.apis.projects.create_api_access_request import functions, queries
 from app.apis.projects.create_api_access_request.samples import (
     CREATE_API_ACCESS_REQUEST_REQUEST_SAMPLE,
@@ -37,7 +39,7 @@ async def test_validate_create_access_request_request_rejects_blank_reason() -> 
 
 def test_client_type_for_auth_mode_returns_expected_client_type() -> None:
     assert functions._client_type_for_auth_mode(AuthMode.CLIENT_CREDENTIALS) == (
-        "CONFIDENTIAL_CLIENT_CREDENTIALS"
+        ProjectCognitoClientType.CONFIDENTIAL_CLIENT_CREDENTIALS
     )
 
 
@@ -82,13 +84,13 @@ async def test_has_project_owner_permission(
 async def test_get_caller_identity_returns_common_identity() -> None:
     caller = await functions.get_caller_identity(
         principal_id=" owner-001 ",
-        groups="owners, hub-admin",
+        groups=f"owners, {IdentityGroup.HUB_ADMIN}",
         scopes="api-hub/api:read, api-hub/api:write",
     )
 
     assert caller == CallerIdentity(
         principal_id="owner-001",
-        groups=("owners", "hub-admin"),
+        groups=("owners", IdentityGroup.HUB_ADMIN),
         scopes=("api-hub/api:read", "api-hub/api:write"),
     )
 

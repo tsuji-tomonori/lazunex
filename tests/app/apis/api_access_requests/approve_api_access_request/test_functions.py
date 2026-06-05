@@ -14,6 +14,7 @@ from app.apis.api_access_requests.approve_api_access_request import functions, q
 from app.apis.api_access_requests.approve_api_access_request.samples import (
     APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE,
 )
+from app.apis.common import IdentityGroup
 from app.apis.sequence_types import (
     ApiAccessRequestRef,
     ApprovedAccessResourceRefs,
@@ -103,7 +104,9 @@ async def test_approve_helpers_merge_scopes_and_build_response(
     access_request: ApiAccessRequestRef,
     operation: ProvisioningOperationRef,
 ) -> None:
-    caller = CallerIdentity(principal_id="reviewer-001", groups=("hub-admin",), scopes=())
+    caller = CallerIdentity(
+        principal_id="reviewer-001", groups=(IdentityGroup.HUB_ADMIN,), scopes=()
+    )
     client = CognitoAppClientRef(app_client_id="public-client-id", allowed_scopes=("openid",))
     resources = ApprovedAccessResourceRefs(
         review_id=access_request.access_request_id,
@@ -177,7 +180,9 @@ async def test_approve_access_request_db_mapping_sequence(
 ) -> None:
     calls: list[str] = []
     session = cast(AsyncSession, object())
-    caller = CallerIdentity(principal_id="reviewer-001", groups=("hub-admin",), scopes=())
+    caller = CallerIdentity(
+        principal_id="reviewer-001", groups=(IdentityGroup.HUB_ADMIN,), scopes=()
+    )
     context = RequestContext(
         correlation_id="corr-001",
         source_ip="127.0.0.1",

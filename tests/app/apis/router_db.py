@@ -15,6 +15,7 @@ from app.apis.api_access_requests.approve_api_access_request.samples import (
 )
 from app.apis.apis.publish_api.samples import PUBLISH_API_REQUEST_SAMPLE
 from app.apis.base import sample_value
+from app.apis.common import IdentityGroup
 from app.apis.projects.create_api_access_request.samples import (
     CREATE_API_ACCESS_REQUEST_REQUEST_SAMPLE,
 )
@@ -114,7 +115,7 @@ def auth_headers(idempotency_key: str) -> dict[str, str]:
     return {
         "Idempotency-Key": idempotency_key,
         "X-Principal-Id": "user-12345",
-        "X-Groups": "hub-admin",
+        "X-Groups": IdentityGroup.HUB_ADMIN,
         "X-Correlation-Id": f"corr-{idempotency_key}",
         "User-Agent": "router-db-test",
     }

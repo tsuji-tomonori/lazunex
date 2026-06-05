@@ -5,6 +5,7 @@ from typing import NoReturn, cast
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.apis.common import IdentityGroup
 from app.apis.deps import build_caller_identity
 from app.apis.projects.common import ProjectDerivedState
 from app.apis.projects.list_projects import queries
@@ -48,7 +49,7 @@ async def get_viewable_projects(
             session,
             queries.SelectProjectsParams(
                 actor_principal_id=caller.principal_id,
-                is_hub_admin="hub-admin" in caller.groups,
+                is_hub_admin=IdentityGroup.HUB_ADMIN in caller.groups,
                 after_project_code=getattr(query, "next_token", None),
                 limit=getattr(query, "limit", None),
             ),

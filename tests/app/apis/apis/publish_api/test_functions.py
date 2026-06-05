@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.apis.apis.common import ScopeAttachmentMode
 from app.apis.apis.publish_api import functions, queries
 from app.apis.apis.publish_api.samples import PUBLISH_API_REQUEST_SAMPLE
+from app.apis.common import IdentityGroup
 from app.apis.sequence_types import (
     ApiCatalogMetadataRef,
     ApiScopeRef,
@@ -72,7 +73,10 @@ async def test_validate_api_publish_request_rejects_missing_or_duplicate_reviewe
     ("caller", "expected"),
     [
         (CallerIdentity(principal_id="user-12345", groups=(), scopes=()), True),
-        (CallerIdentity(principal_id="admin-001", groups=("hub-admin",), scopes=()), True),
+        (
+            CallerIdentity(principal_id="admin-001", groups=(IdentityGroup.HUB_ADMIN,), scopes=()),
+            True,
+        ),
         (CallerIdentity(principal_id="user-99999", groups=(), scopes=()), False),
     ],
 )
@@ -85,13 +89,13 @@ async def test_has_api_publish_permission(caller: CallerIdentity, expected: bool
 async def test_get_caller_identity_returns_common_identity() -> None:
     caller = await functions.get_caller_identity(
         principal_id=" owner-001 ",
-        groups="hub-admin, reviewers",
+        groups=f"{IdentityGroup.HUB_ADMIN}, reviewers",
         scopes="api-hub/api:publish",
     )
 
     assert caller == CallerIdentity(
         principal_id="owner-001",
-        groups=("hub-admin", "reviewers"),
+        groups=(IdentityGroup.HUB_ADMIN, "reviewers"),
         scopes=("api-hub/api:publish",),
     )
 
@@ -162,7 +166,7 @@ async def test_add_cognito_custom_scope_calls_identity_admin(
 async def test_publish_api_db_sequence(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: list[str] = []
     session = cast(AsyncSession, object())
-    caller = CallerIdentity(principal_id="owner-001", groups=("hub-admin",), scopes=())
+    caller = CallerIdentity(principal_id="owner-001", groups=(IdentityGroup.HUB_ADMIN,), scopes=())
     context = RequestContext(
         correlation_id="corr-001",
         source_ip="127.0.0.1",

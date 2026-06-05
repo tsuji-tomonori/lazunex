@@ -15,6 +15,7 @@ from app.apis.api_access_requests.reject_api_access_request.schemas import (
     RejectApiAccessRequestRequest,
     RejectApiAccessRequestResponse,
 )
+from app.apis.common import IdentityGroup
 from app.apis.deps import build_caller_identity
 from app.apis.sequence_types import (
     ApiAccessRequestRef,
@@ -95,7 +96,7 @@ async def has_api_reviewer_permission(
             queries.SelectApiReviewersParams(
                 api_id=access_request.api_id,
                 actor_principal_id=caller.principal_id,
-                is_hub_admin="hub-admin" in caller.groups,
+                is_hub_admin=IdentityGroup.HUB_ADMIN in caller.groups,
             ),
         )
         if not rows:

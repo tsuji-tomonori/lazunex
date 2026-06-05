@@ -1,3 +1,5 @@
+from enum import StrEnum
+
 from app.apis.api_access_requests.common import AccessRequestDerivedState, AuthMode
 from app.apis.apis.common import (
     ApiDerivedState,
@@ -8,6 +10,8 @@ from app.apis.apis.common import (
 )
 from app.apis.base import ApiBaseModel, sample_value
 from app.apis.projects.common import (
+    ProjectCognitoClientType,
+    ProjectCognitoClientUrlType,
     ProjectDerivedState,
     QuotaPeriod,
     SubscriptionDerivedState,
@@ -57,6 +61,14 @@ from app.apis.types import (
     UrlText,
 )
 
+
+class IdentityGroup(StrEnum):
+    """CallerIdentity.groups に含まれる認可グループです。"""
+
+    # Lazunex Hub 全体の管理者です。
+    HUB_ADMIN = "hub-admin"
+
+
 __all__ = [
     "COMMON_ERROR_SAMPLE",
     "ERROR_RESPONSES",
@@ -78,11 +90,14 @@ __all__ = [
     "ErrorBody",
     "ErrorResponse",
     "IdTokenValidity",
+    "IdentityGroup",
     "NonNegativeCount",
     "PageQuery",
     "PageToken",
     "PrincipalId",
     "ProjectCode",
+    "ProjectCognitoClientType",
+    "ProjectCognitoClientUrlType",
     "ProjectDerivedState",
     "QuotaPeriod",
     "RefreshTokenValidity",

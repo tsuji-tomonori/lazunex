@@ -10,8 +10,11 @@ from uuid import uuid4
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.apis.common import IdentityGroup
 from app.apis.deps import build_caller_identity
 from app.apis.projects.common import (
+    ProjectCognitoClientType,
+    ProjectCognitoClientUrlType,
     ProjectDerivedState,
     validate_access_or_id_token_validity,
     validate_cognito_url_list,
@@ -121,7 +124,7 @@ async def validate_create_project_request(request: CreateProjectRequest) -> Crea
 
 async def has_project_creation_permission(caller: CallerIdentity) -> bool:
     """呼び出し元が Project を作成できるかを判定する。"""
-    return "hub-admin" in caller.groups
+    return IdentityGroup.HUB_ADMIN in caller.groups
 
 
 async def get_idempotency_record(
@@ -445,7 +448,7 @@ async def save_project_resources(
             queries.InsertProjectCognitoClientsParams(
                 project_cognito_client_id=public_project_cognito_client_id,
                 project_id=project_id,
-                client_type="PUBLIC_PKCE",
+                client_type=ProjectCognitoClientType.PUBLIC_PKCE,
                 cognito_user_pool_id=settings.cognito_user_pool_id,
                 app_client_id=public_client_id,
                 app_client_name=f"{request.project_code}-public",
@@ -473,7 +476,7 @@ async def save_project_resources(
             queries.InsertProjectCognitoClientsParams(
                 project_cognito_client_id=confidential_project_cognito_client_id,
                 project_id=project_id,
-                client_type="CONFIDENTIAL_CLIENT_CREDENTIALS",
+                client_type=ProjectCognitoClientType.CONFIDENTIAL_CLIENT_CREDENTIALS,
                 cognito_user_pool_id=settings.cognito_user_pool_id,
                 app_client_id=confidential_client.app_client_id,
                 app_client_name=f"{request.project_code}-confidential",
@@ -502,7 +505,7 @@ async def save_project_resources(
                 queries.InsertProjectCognitoClientUrlsParams(
                     client_url_id=uuid4(),
                     project_cognito_client_id=public_project_cognito_client_id,
-                    url_type="CALLBACK",
+                    url_type=ProjectCognitoClientUrlType.CALLBACK,
                     url=url,
                     now=now,
                     actor_principal_id=caller.principal_id,
@@ -514,7 +517,7 @@ async def save_project_resources(
                 queries.InsertProjectCognitoClientUrlsParams(
                     client_url_id=uuid4(),
                     project_cognito_client_id=public_project_cognito_client_id,
-                    url_type="LOGOUT",
+                    url_type=ProjectCognitoClientUrlType.LOGOUT,
                     url=url,
                     now=now,
                     actor_principal_id=caller.principal_id,

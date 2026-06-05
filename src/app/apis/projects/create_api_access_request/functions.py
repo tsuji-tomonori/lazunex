@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.api_access_requests.common import AccessRequestDerivedState, AuthMode
 from app.apis.deps import build_caller_identity
+from app.apis.projects.common import ProjectCognitoClientType
 from app.apis.projects.create_api_access_request import queries
 from app.apis.projects.create_api_access_request.schemas import (
     CreateApiAccessRequestRequest,
@@ -62,10 +63,12 @@ def _request_hash(payload: object) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
-def _client_type_for_auth_mode(auth_mode: AuthMode) -> str:
+def _client_type_for_auth_mode(auth_mode: AuthMode) -> ProjectCognitoClientType:
     if auth_mode == AuthMode.CLIENT_CREDENTIALS:
-        return "CONFIDENTIAL_CLIENT_CREDENTIALS"
-    return auth_mode.value
+        return ProjectCognitoClientType.CONFIDENTIAL_CLIENT_CREDENTIALS
+    if auth_mode == AuthMode.PUBLIC_PKCE:
+        return ProjectCognitoClientType.PUBLIC_PKCE
+    raise ValueError("auth mode must map to one project cognito client type")
 
 
 async def get_project(
@@ -149,7 +152,10 @@ async def has_requested_auth_mode_clients(
         )
         client_types = {row.client_type for row in rows}
         if request.requested_auth_mode == AuthMode.BOTH:
-            required = {AuthMode.PUBLIC_PKCE.value, "CONFIDENTIAL_CLIENT_CREDENTIALS"}
+            required = {
+                ProjectCognitoClientType.PUBLIC_PKCE,
+                ProjectCognitoClientType.CONFIDENTIAL_CLIENT_CREDENTIALS,
+            }
         else:
             required = {_client_type_for_auth_mode(request.requested_auth_mode)}
         if not required.issubset(client_types):

@@ -6,6 +6,7 @@ from uuid import UUID
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.apis.common import IdentityGroup
 from app.apis.projects.list_project_subscriptions import functions, queries
 from app.apis.projects.list_project_subscriptions.samples import (
     LIST_PROJECT_SUBSCRIPTIONS_RESPONSE_SAMPLE,
@@ -57,13 +58,13 @@ async def test_build_project_subscription_list_response_returns_items() -> None:
 async def test_get_caller_identity_returns_common_identity() -> None:
     caller = await functions.get_caller_identity(
         principal_id=" user-12345 ",
-        groups="hub-admin, owners",
+        groups=f"{IdentityGroup.HUB_ADMIN}, owners",
         scopes="api-hub/api:read, api-hub/api:write",
     )
 
     assert caller == CallerIdentity(
         principal_id="user-12345",
-        groups=("hub-admin", "owners"),
+        groups=(IdentityGroup.HUB_ADMIN, "owners"),
         scopes=("api-hub/api:read", "api-hub/api:write"),
     )
 

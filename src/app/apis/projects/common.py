@@ -16,6 +16,28 @@ class SubscriptionDerivedState(StrEnum):
     ACTIVE = "ACTIVE"
 
 
+class ProjectCognitoClientType(StrEnum):
+    """Project に紐づく Cognito app client 種別です。"""
+
+    # PKCE を利用する public client です。
+    PUBLIC_PKCE = "PUBLIC_PKCE"
+    # 旧データ互換の public client 種別です。
+    PUBLIC = "PUBLIC"
+    # client credentials を利用する confidential client です。
+    CONFIDENTIAL_CLIENT_CREDENTIALS = "CONFIDENTIAL_CLIENT_CREDENTIALS"
+    # 旧データ互換の confidential client 種別です。
+    CONFIDENTIAL = "CONFIDENTIAL"
+
+
+class ProjectCognitoClientUrlType(StrEnum):
+    """Project Cognito app client に紐づく URL 種別です。"""
+
+    # OAuth callback URL です。
+    CALLBACK = "CALLBACK"
+    # logout URL です。
+    LOGOUT = "LOGOUT"
+
+
 class QuotaPeriod(StrEnum):
     """API Gateway Usage Planのquota集計期間を表す列挙値です。"""
 

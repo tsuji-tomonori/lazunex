@@ -3,8 +3,15 @@ from __future__ import annotations
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.apis.common import IdentityGroup
 from app.apis.deps import build_caller_identity
-from app.apis.projects.common import ProjectDerivedState, QuotaPeriod, TokenValidityUnit
+from app.apis.projects.common import (
+    ProjectCognitoClientType,
+    ProjectCognitoClientUrlType,
+    ProjectDerivedState,
+    QuotaPeriod,
+    TokenValidityUnit,
+)
 from app.apis.projects.get_project import queries
 from app.apis.projects.get_project.schemas import (
     GetProjectResponse,
@@ -16,6 +23,19 @@ from app.apis.projects.get_project.schemas import (
 )
 from app.apis.sequence_types import CallerIdentity
 from app.apis.types import ResourceId
+
+PUBLIC_CLIENT_TYPES = frozenset(
+    {
+        ProjectCognitoClientType.PUBLIC_PKCE,
+        ProjectCognitoClientType.PUBLIC,
+    }
+)
+CONFIDENTIAL_CLIENT_TYPES = frozenset(
+    {
+        ProjectCognitoClientType.CONFIDENTIAL_CLIENT_CREDENTIALS,
+        ProjectCognitoClientType.CONFIDENTIAL,
+    }
+)
 
 
 async def get_caller_identity(
@@ -39,7 +59,7 @@ async def get_project_detail(
             queries.SelectProjectsParams(
                 actor_principal_id=caller.principal_id,
                 project_id=project_id,
-                is_hub_admin="hub-admin" in caller.groups,
+                is_hub_admin=IdentityGroup.HUB_ADMIN in caller.groups,
             ),
         )
         if not rows:
@@ -49,26 +69,26 @@ async def get_project_detail(
             row.url
             for row in rows
             if (
-                row.client_type in {"PUBLIC_PKCE", "PUBLIC"}
-                and row.url_type == "CALLBACK"
+                row.client_type in PUBLIC_CLIENT_TYPES
+                and row.url_type == ProjectCognitoClientUrlType.CALLBACK
                 and row.url
             )
         ]
         logout_urls = [
             row.url
             for row in rows
-            if row.client_type in {"PUBLIC_PKCE", "PUBLIC"} and row.url_type == "LOGOUT" and row.url
+            if (
+                row.client_type in PUBLIC_CLIENT_TYPES
+                and row.url_type == ProjectCognitoClientUrlType.LOGOUT
+                and row.url
+            )
         ]
         public_client = next(
-            (row for row in rows if row.client_type in {"PUBLIC_PKCE", "PUBLIC"}),
+            (row for row in rows if row.client_type in PUBLIC_CLIENT_TYPES),
             first,
         )
         confidential_client = next(
-            (
-                row
-                for row in rows
-                if row.client_type in {"CONFIDENTIAL_CLIENT_CREDENTIALS", "CONFIDENTIAL"}
-            ),
+            (row for row in rows if row.client_type in CONFIDENTIAL_CLIENT_TYPES),
             first,
         )
         return GetProjectResponse(
@@ -114,7 +134,10 @@ async def get_project_detail(
 
 async def has_project_view_permission(project: GetProjectResponse, caller: CallerIdentity) -> bool:
     """呼び出し元が Project 詳細を参照できるかを判定する。"""
-    return "hub-admin" in caller.groups or project.owner_principal_id == caller.principal_id
+    return (
+        IdentityGroup.HUB_ADMIN in caller.groups
+        or project.owner_principal_id == caller.principal_id
+    )
 
 
 async def build_project_detail_response(project: GetProjectResponse) -> GetProjectResponse:

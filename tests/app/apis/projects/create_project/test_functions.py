@@ -9,6 +9,7 @@ import pytest
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.apis.common import IdentityGroup
 from app.apis.projects.create_project import functions, queries
 from app.apis.projects.create_project.samples import CREATE_PROJECT_REQUEST_SAMPLE
 from app.apis.sequence_types import (
@@ -86,7 +87,10 @@ async def test_validate_create_project_request_rejects_cognito_limits() -> None:
 @pytest.mark.parametrize(
     ("caller", "expected"),
     [
-        (CallerIdentity(principal_id="admin-001", groups=("hub-admin",), scopes=()), True),
+        (
+            CallerIdentity(principal_id="admin-001", groups=(IdentityGroup.HUB_ADMIN,), scopes=()),
+            True,
+        ),
         (CallerIdentity(principal_id="user-001", groups=(), scopes=()), False),
     ],
 )
@@ -104,13 +108,13 @@ def test_hash_key_version_returns_numeric_suffix() -> None:
 async def test_get_caller_identity_returns_common_identity() -> None:
     caller = await functions.get_caller_identity(
         principal_id=" admin-001 ",
-        groups="hub-admin, owners",
+        groups=f"{IdentityGroup.HUB_ADMIN}, owners",
         scopes="api-hub/project:create",
     )
 
     assert caller == CallerIdentity(
         principal_id="admin-001",
-        groups=("hub-admin", "owners"),
+        groups=(IdentityGroup.HUB_ADMIN, "owners"),
         scopes=("api-hub/project:create",),
     )
 
@@ -259,7 +263,7 @@ async def test_hash_project_secrets_reads_hash_pepper() -> None:
 async def test_create_project_db_sequence(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: list[str] = []
     session = cast(AsyncSession, object())
-    caller = CallerIdentity(principal_id="admin-001", groups=("hub-admin",), scopes=())
+    caller = CallerIdentity(principal_id="admin-001", groups=(IdentityGroup.HUB_ADMIN,), scopes=())
     context = RequestContext(
         correlation_id="corr-001",
         source_ip="127.0.0.1",

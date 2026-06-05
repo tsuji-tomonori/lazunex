@@ -16,6 +16,7 @@ from app.apis.apis.publish_api.schemas import (
     PublishApiRequest,
     PublishApiResponse,
 )
+from app.apis.common import IdentityGroup
 from app.apis.deps import build_caller_identity
 from app.apis.sequence_types import (
     ApiCatalogMetadataRef,
@@ -87,7 +88,10 @@ async def has_api_publish_permission(
     caller: CallerIdentity,
 ) -> bool:
     """呼び出し元が API 公開登録できるかを判定する。"""
-    return "hub-admin" in caller.groups or request.owner_principal_id == caller.principal_id
+    return (
+        IdentityGroup.HUB_ADMIN in caller.groups
+        or request.owner_principal_id == caller.principal_id
+    )
 
 
 async def get_idempotency_record(

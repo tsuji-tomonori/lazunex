@@ -11,6 +11,7 @@ from app.apis.apis.get_api.schemas import (
     ApiScopeResponse,
     GetApiResponse,
 )
+from app.apis.common import IdentityGroup
 from app.apis.deps import build_caller_identity
 from app.apis.sequence_types import CallerIdentity
 from app.apis.types import ResourceId
@@ -85,7 +86,7 @@ async def is_viewable_api(
     if api.visibility == ApiVisibility.INTERNAL:
         return True
     return (
-        "hub-admin" in caller.groups
+        IdentityGroup.HUB_ADMIN in caller.groups
         or api.owner_principal_id == caller.principal_id
         or any(reviewer.reviewer_principal_id == caller.principal_id for reviewer in api.reviewers)
     )
