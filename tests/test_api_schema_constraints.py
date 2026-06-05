@@ -35,9 +35,7 @@ def test_openapi_path_parameters_include_sample_defaults() -> None:
     get_api = openapi["paths"]["/apis/{apiId}"]["get"]
     create_access_request = openapi["paths"]["/projects/{projectId}/api-access-requests"]["post"]
 
-    assert get_api["parameters"][0]["schema"]["default"] == (
-        "7b0d4a98-0000-0000-0000-000000000001"
-    )
+    assert get_api["parameters"][0]["schema"]["default"] == ("7b0d4a98-0000-0000-0000-000000000001")
     assert create_access_request["parameters"][0]["schema"]["default"] == (
         "cb62b5f6-0000-0000-0000-000000000001"
     )

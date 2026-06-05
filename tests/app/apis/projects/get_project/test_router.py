@@ -31,10 +31,14 @@ async def test_get_project_router_returns_seeded_project_detail_with_sqlite_db(
 
     assert body["projectId"] == seeded["projectId"]
     assert body["apiKey"]["apigwApiKeyId"] == seeded["apiKey"]["apigwApiKeyId"]
-    assert body["cognito"]["publicClient"]["appClientId"] == seeded["cognito"]["publicClient"][
-        "appClientId"
-    ]
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "project_cognito_clients",
-    ) == 2
+    assert (
+        body["cognito"]["publicClient"]["appClientId"]
+        == seeded["cognito"]["publicClient"]["appClientId"]
+    )
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "project_cognito_clients",
+        )
+        == 2
+    )

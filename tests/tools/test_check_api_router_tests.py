@@ -33,11 +33,14 @@ def test_expected_router_test_path_mirrors_api_root(tmp_path: Path) -> None:
     test_root = tmp_path / "tests" / "app" / "apis"
     router_path = write_router(api_root, "projects/get_project")
 
-    assert expected_router_test_path(
-        router_path,
-        api_root=api_root,
-        test_root=test_root,
-    ) == test_root / "projects" / "get_project" / "test_router.py"
+    assert (
+        expected_router_test_path(
+            router_path,
+            api_root=api_root,
+            test_root=test_root,
+        )
+        == test_root / "projects" / "get_project" / "test_router.py"
+    )
 
 
 def test_check_api_router_tests_reports_missing_test_router(tmp_path: Path) -> None:

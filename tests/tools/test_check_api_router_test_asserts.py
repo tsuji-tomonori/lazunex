@@ -76,11 +76,14 @@ async def test_router() -> None:
 
 
 def test_check_api_router_test_asserts_accepts_repository_layout() -> None:
-    assert check_api_router_test_asserts(
-        Path("src/app/apis"),
-        Path("tests/app/apis"),
-        Path("docs/spec/30.crud/db_crud.gen.csv"),
-    ) == []
+    assert (
+        check_api_router_test_asserts(
+            Path("src/app/apis"),
+            Path("tests/app/apis"),
+            Path("docs/spec/30.crud/db_crud.gen.csv"),
+        )
+        == []
+    )
 
 
 def test_main_and_arg_parser(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:

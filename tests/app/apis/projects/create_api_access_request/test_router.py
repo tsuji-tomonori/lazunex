@@ -55,8 +55,6 @@ async def test_create_api_access_request_router_persists_request_with_sqlite_db(
     assert access_request["access_request_id"] == body["accessRequestId"]
     assert access_request["project_id"] == project["projectId"]
     assert access_request["api_id"] == api["apiId"]
-    assert json.loads(idempotency["response_payload"])["accessRequestId"] == body[
-        "accessRequestId"
-    ]
+    assert json.loads(idempotency["response_payload"])["accessRequestId"] == body["accessRequestId"]
     assert await router_count_rows(router_db_harness.session_factory, "access_request_events") == 1
     assert await router_count_rows(router_db_harness.session_factory, "audit_events") == 3

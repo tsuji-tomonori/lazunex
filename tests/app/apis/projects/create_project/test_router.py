@@ -88,12 +88,12 @@ async def test_create_project_router_persists_resources_and_events_with_sqlite_d
     assert public_client["app_client_id"] == body["cognito"]["publicClient"]["appClientId"]
     assert json.loads(public_client["allowed_oauth_flows"]) == {"values": ["code"]}
     assert (
-        confidential_client["app_client_id"]
-        == body["cognito"]["confidentialClient"]["appClientId"]
+        confidential_client["app_client_id"] == body["cognito"]["confidentialClient"]["appClientId"]
     )
-    assert confidential_client["client_secret_last4"] == body["cognito"]["confidentialClient"][
-        "clientSecretLast4"
-    ]
+    assert (
+        confidential_client["client_secret_last4"]
+        == body["cognito"]["confidentialClient"]["clientSecretLast4"]
+    )
     assert member["member_principal_id"] == "user-12345"
     assert idempotency["operation_id"] == operation_id
     assert json.loads(idempotency["response_payload"]) == {"operationId": operation_id}
@@ -102,35 +102,56 @@ async def test_create_project_router_persists_resources_and_events_with_sqlite_d
     assert await router_count_rows(router_db_harness.session_factory, "project_events") == 1
     assert await router_count_rows(router_db_harness.session_factory, "project_member_events") == 1
     assert await router_count_rows(router_db_harness.session_factory, "project_api_key_events") == 1
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "project_usage_plan_events",
-    ) == 1
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "project_usage_plan_key_events",
-    ) == 1
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "project_cognito_client_events",
-    ) == 2
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "project_cognito_client_urls",
-    ) == 2
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "provisioning_operation_events",
-    ) == 1
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "provisioning_operations",
-    ) == 1
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "project_usage_plan_events",
+        )
+        == 1
+    )
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "project_usage_plan_key_events",
+        )
+        == 1
+    )
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "project_cognito_client_events",
+        )
+        == 2
+    )
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "project_cognito_client_urls",
+        )
+        == 2
+    )
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "provisioning_operation_events",
+        )
+        == 1
+    )
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "provisioning_operations",
+        )
+        == 1
+    )
     assert await router_count_rows(router_db_harness.session_factory, "provisioning_steps") == 0
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "provisioning_step_events",
-    ) == 0
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "provisioning_step_events",
+        )
+        == 0
+    )
     assert len(router_db_harness.api_gateway.calls) == 3
     assert len(router_db_harness.identity.calls) == 2
     assert len(router_db_harness.secret_values.calls) == 1

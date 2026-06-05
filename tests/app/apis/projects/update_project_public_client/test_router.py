@@ -53,29 +53,47 @@ async def test_update_project_public_client_router_updates_metadata_with_sqlite_
     assert body["publicClient"]["rowVersion"] == 2
     assert public_client["row_version"] == 2
     assert idempotency["operation_id"] == body["operationId"]
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "project_cognito_client_urls",
-    ) == 3
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "project_cognito_client_events",
-    ) == 3
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "project_cognito_client_scopes",
-    ) == 0
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "project_cognito_client_urls",
+        )
+        == 3
+    )
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "project_cognito_client_events",
+        )
+        == 3
+    )
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "project_cognito_client_scopes",
+        )
+        == 0
+    )
     assert await router_count_rows(router_db_harness.session_factory, "audit_events") == 2
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "provisioning_operations",
-    ) == 2
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "provisioning_operations",
+        )
+        == 2
+    )
     assert await router_count_rows(router_db_harness.session_factory, "provisioning_steps") == 0
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "provisioning_operation_events",
-    ) == 2
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "provisioning_step_events",
-    ) == 0
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "provisioning_operation_events",
+        )
+        == 2
+    )
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "provisioning_step_events",
+        )
+        == 0
+    )

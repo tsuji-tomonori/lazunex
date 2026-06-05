@@ -73,18 +73,27 @@ async def test_publish_api_router_persists_catalog_and_events_with_sqlite_db(
     assert await router_count_rows(router_db_harness.session_factory, "api_stage_events") == 1
     assert await router_count_rows(router_db_harness.session_factory, "api_scope_events") == 1
     assert await router_count_rows(router_db_harness.session_factory, "api_reviewer_events") == 1
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "provisioning_operation_events",
-    ) == 1
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "provisioning_operations",
-    ) == 1
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "provisioning_operation_events",
+        )
+        == 1
+    )
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "provisioning_operations",
+        )
+        == 1
+    )
     assert await router_count_rows(router_db_harness.session_factory, "provisioning_steps") == 0
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "provisioning_step_events",
-    ) == 0
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "provisioning_step_events",
+        )
+        == 0
+    )
     assert len(router_db_harness.api_gateway.calls) == 3
     assert len(router_db_harness.identity.calls) == 2

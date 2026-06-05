@@ -41,8 +41,7 @@ def test_find_function_coverage_issues_accepts_parametrized_case_names(
     source_dir.mkdir(parents=True)
     test_dir.mkdir(parents=True)
     (source_dir / "functions.py").write_text(
-        "async def get_caller_identity():\n"
-        "    raise NotImplementedError\n",
+        "async def get_caller_identity():\n    raise NotImplementedError\n",
         encoding="utf-8",
     )
     (test_dir / "test_functions.py").write_text(

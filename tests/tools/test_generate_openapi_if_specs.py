@@ -387,12 +387,15 @@ def test_sample_renderers_format_curl_and_json() -> None:
         operation,
         {"reason": "不要"},
     )
-    assert render_samples_section(
-        "/admin/users/{userId}",
-        "delete",
-        operation,
-        OperationSamples(request=None, response=None),
-    )[-2] == "_なし_"
+    assert (
+        render_samples_section(
+            "/admin/users/{userId}",
+            "delete",
+            operation,
+            OperationSamples(request=None, response=None),
+        )[-2]
+        == "_なし_"
+    )
 
 
 def test_operation_output_path_falls_back_to_default() -> None:
@@ -458,9 +461,12 @@ def test_operation_samples_are_loaded_from_samples_module() -> None:
     assert sample.response is not None
     assert sample.request["requestedReason"] == "決済画面から請求情報を参照するため"
     assert sample.response["derivedState"] == "PENDING"
-    assert implementation_operation_samples({"createApiAccessRequest": api_path})[
-        "createApiAccessRequest"
-    ] == sample
+    assert (
+        implementation_operation_samples({"createApiAccessRequest": api_path})[
+            "createApiAccessRequest"
+        ]
+        == sample
+    )
     assert load_operation_sample(Path("missing/api")) is None
 
 
@@ -491,16 +497,20 @@ async def bad():
     assert literal_string(None) is None
     assert keyword_value(call, "operation_id") is None
     assert router_operation_id(source, router_path) is None
-    assert router_operation_id(
-        """
+    assert (
+        router_operation_id(
+            """
 @decorator
 async def bad():
     return {}
 """,
-        router_path,
-    ) is None
-    assert router_operation_id(
-        """
+            router_path,
+        )
+        is None
+    )
+    assert (
+        router_operation_id(
+            """
 from fastapi import APIRouter
 router = APIRouter()
 
@@ -508,8 +518,10 @@ router = APIRouter()
 async def bad():
     return {}
 """,
-        router_path,
-    ) is None
+            router_path,
+        )
+        is None
+    )
     assert router_operation_id("VALUE = 'not a function'", router_path) is None
     assert implementation_operation_paths(api_root) == {}
 

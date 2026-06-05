@@ -52,10 +52,7 @@ def load_rule_names(path: Path) -> set[str]:
 
 
 def load_rules(rule_dir: Path) -> dict[str, set[str]]:
-    return {
-        key: load_rule_names(rule_dir / filename)
-        for key, filename in RULE_FILENAMES.items()
-    }
+    return {key: load_rule_names(rule_dir / filename) for key, filename in RULE_FILENAMES.items()}
 
 
 def api_function_files(api_root: Path) -> list[Path]:
@@ -98,8 +95,7 @@ def check_function_name(
                     line=function.lineno,
                     target=name,
                     message=(
-                        f"condition {tail!r} is not defined in "
-                        "sequence_function_conditions.json"
+                        f"condition {tail!r} is not defined in sequence_function_conditions.json"
                     ),
                 )
             )
@@ -153,8 +149,7 @@ def check_api_function_names(api_root: Path, rule_dir: Path) -> list[FunctionNam
 
 def render_issues(issues: Sequence[FunctionNameIssue]) -> str:
     return "\n".join(
-        f"{issue.path}:{issue.line}: {issue.target}: {issue.message}"
-        for issue in issues
+        f"{issue.path}:{issue.line}: {issue.target}: {issue.message}" for issue in issues
     )
 
 

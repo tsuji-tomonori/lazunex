@@ -36,7 +36,10 @@ async def test_list_project_subscriptions_router_returns_approved_subscription_w
 
     assert body["items"][0]["subscriptionId"] == approval["subscriptionId"]
     assert body["items"][0]["apiId"] == access_request["apiId"]
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "project_api_subscriptions",
-    ) == 1
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "project_api_subscriptions",
+        )
+        == 1
+    )

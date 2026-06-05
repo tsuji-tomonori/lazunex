@@ -201,9 +201,7 @@ def validate_paths(paths: Iterable[Path]) -> list[MermaidIssue]:
 
 
 def render_issues(issues: Iterable[MermaidIssue]) -> str:
-    return "\n".join(
-        f"{issue.path}:{issue.line}: {issue.message}" for issue in issues
-    )
+    return "\n".join(f"{issue.path}:{issue.line}: {issue.message}" for issue in issues)
 
 
 def build_arg_parser() -> argparse.ArgumentParser:

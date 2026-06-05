@@ -130,10 +130,13 @@ async def is_enabled_project() -> bool:
 
 
 def test_check_api_function_names_accepts_repository_definitions() -> None:
-    assert check_api_function_names(
-        Path("src/app/apis"),
-        Path("docs/rule/docs"),
-    ) == []
+    assert (
+        check_api_function_names(
+            Path("src/app/apis"),
+            Path("docs/rule/docs"),
+        )
+        == []
+    )
 
 
 def test_render_issues_and_main(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:

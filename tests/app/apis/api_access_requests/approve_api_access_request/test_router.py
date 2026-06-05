@@ -58,35 +58,56 @@ async def test_approve_api_access_request_router_persists_approval_resources_wit
     assert subscription["subscription_id"] == body["subscriptionId"]
     assert review["decision"] == "APPROVED"
     assert idempotency["operation_id"] == body["operationId"]
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "project_usage_plan_api_stages",
-    ) == 1
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "project_cognito_client_scopes",
-    ) == 2
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "project_usage_plan_api_stages",
+        )
+        == 1
+    )
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "project_cognito_client_scopes",
+        )
+        == 2
+    )
     assert await router_count_rows(router_db_harness.session_factory, "access_request_events") == 2
     assert await router_count_rows(router_db_harness.session_factory, "audit_events") == 3
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "client_scope_events",
-    ) == 0
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "provisioning_operations",
-    ) == 3
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "client_scope_events",
+        )
+        == 0
+    )
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "provisioning_operations",
+        )
+        == 3
+    )
     assert await router_count_rows(router_db_harness.session_factory, "provisioning_steps") == 0
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "provisioning_operation_events",
-    ) == 2
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "provisioning_step_events",
-    ) == 0
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "provisioning_operation_events",
+        )
+        == 2
+    )
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "provisioning_step_events",
+        )
+        == 0
+    )
     assert await router_count_rows(router_db_harness.session_factory, "subscription_events") == 0
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "usage_plan_stage_events",
-    ) == 0
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "usage_plan_stage_events",
+        )
+        == 0
+    )

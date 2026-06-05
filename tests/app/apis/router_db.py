@@ -4,7 +4,7 @@ import re
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
@@ -131,7 +131,7 @@ async def seed_published_api(
         headers=auth_headers(idempotency_key),
     )
     assert response.status_code == 201, response.text
-    return response.json()
+    return cast("dict[str, Any]", response.json())
 
 
 async def seed_project(
@@ -145,7 +145,7 @@ async def seed_project(
         headers=auth_headers(idempotency_key),
     )
     assert response.status_code == 201, response.text
-    return response.json()
+    return cast("dict[str, Any]", response.json())
 
 
 async def seed_project_and_api(
@@ -171,7 +171,7 @@ async def seed_access_request(
         headers=auth_headers(idempotency_key),
     )
     assert response.status_code == 201, response.text
-    return response.json()
+    return cast("dict[str, Any]", response.json())
 
 
 async def seed_approved_access_request(

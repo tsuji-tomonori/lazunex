@@ -50,11 +50,14 @@ async def test_reject_api_access_request_router_persists_review_with_sqlite_db(
     assert body["accessRequestId"] == seeded["accessRequestId"]
     assert body["derivedState"] == "REJECTED"
     assert review["decision"] == "REJECTED"
-    assert json.loads(idempotency["response_payload"])["accessRequestId"] == seeded[
-        "accessRequestId"
-    ]
-    assert await router_count_rows(
-        router_db_harness.session_factory,
-        "access_request_events",
-    ) == 3
+    assert (
+        json.loads(idempotency["response_payload"])["accessRequestId"] == seeded["accessRequestId"]
+    )
+    assert (
+        await router_count_rows(
+            router_db_harness.session_factory,
+            "access_request_events",
+        )
+        == 3
+    )
     assert await router_count_rows(router_db_harness.session_factory, "audit_events") == 4
