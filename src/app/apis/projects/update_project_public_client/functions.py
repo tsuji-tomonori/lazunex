@@ -3,12 +3,11 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import UTC, datetime, timedelta
-from typing import NoReturn
 from uuid import uuid4
 
-from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.apis.common import raise_missing_runtime_dependency
 from app.apis.deps import build_caller_identity
 from app.apis.projects.common import (
     ProjectCognitoClientUrlType,
@@ -40,13 +39,6 @@ from app.integrations.identity.schemas import (
     DescribeUserPoolClientInput,
     UpdateUserPoolClientInput,
 )
-
-
-def _sequence_placeholder(function_name: str) -> NoReturn:
-    raise HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail=f"{function_name} requires runtime dependencies.",
-    )
 
 
 def _now() -> datetime:
@@ -152,7 +144,7 @@ async def get_public_app_client_metadata(
             refresh_token_rotation_enabled=row.refresh_token_rotation_enabled,
             row_version=row.row_version,
         )
-    return _sequence_placeholder("get_public_app_client_metadata")
+    return raise_missing_runtime_dependency("get_public_app_client_metadata")
 
 
 async def get_idempotency_record(
@@ -175,7 +167,7 @@ async def get_idempotency_record(
             response_payload=row.response_payload,
             expires_at=row.expires_at,
         )
-    return _sequence_placeholder("get_idempotency_record")
+    return raise_missing_runtime_dependency("get_idempotency_record")
 
 
 async def create_provisioning_operation(
@@ -200,7 +192,7 @@ async def create_provisioning_operation(
             ),
         )
         return ProvisioningOperationRef(operation_id=operation_id, target_id=project.project_id)
-    return _sequence_placeholder("create_provisioning_operation")
+    return raise_missing_runtime_dependency("create_provisioning_operation")
 
 
 async def create_idempotency_record(
@@ -229,7 +221,7 @@ async def create_idempotency_record(
             idempotency_key=idempotency_key,
             operation_id=operation.operation_id,
         )
-    return _sequence_placeholder("create_idempotency_record")
+    return raise_missing_runtime_dependency("create_idempotency_record")
 
 
 async def get_cognito_app_client(
@@ -260,7 +252,7 @@ async def get_cognito_app_client(
             allowed_oauth_flows=client.allowed_oauth_flows,
             supported_identity_providers=client.supported_identity_providers,
         )
-    return _sequence_placeholder("get_cognito_app_client")
+    return raise_missing_runtime_dependency("get_cognito_app_client")
 
 
 async def merge_public_client_settings(
@@ -329,7 +321,7 @@ async def update_cognito_app_client(
             allowed_oauth_flows=updated.allowed_oauth_flows,
             supported_identity_providers=updated.supported_identity_providers,
         )
-    return _sequence_placeholder("update_cognito_app_client")
+    return raise_missing_runtime_dependency("update_cognito_app_client")
 
 
 async def update_public_app_client_metadata(
@@ -410,7 +402,7 @@ async def update_public_app_client_metadata(
             refresh_token_rotation_enabled=bool(merged.refresh_token_rotation_enabled),
             row_version=request.expected_row_version + 1,
         )
-    return _sequence_placeholder("update_public_app_client_metadata")
+    return raise_missing_runtime_dependency("update_public_app_client_metadata")
 
 
 async def append_project_public_client_updated_event(
@@ -452,7 +444,7 @@ async def append_project_public_client_updated_event(
             ),
         )
         return EventRef(event_id=event_id)
-    return _sequence_placeholder("append_project_public_client_updated_event")
+    return raise_missing_runtime_dependency("append_project_public_client_updated_event")
 
 
 async def append_provisioning_events(
@@ -481,7 +473,7 @@ async def append_provisioning_events(
             ),
         )
         return [EventRef(event_id=event_id)]
-    return _sequence_placeholder("append_provisioning_events")
+    return raise_missing_runtime_dependency("append_provisioning_events")
 
 
 async def append_audit_event(
@@ -508,7 +500,7 @@ async def append_audit_event(
             ),
         )
         return EventRef(event_id=event_id)
-    return _sequence_placeholder("append_audit_event")
+    return raise_missing_runtime_dependency("append_audit_event")
 
 
 async def build_update_public_client_response(

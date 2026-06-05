@@ -15,6 +15,9 @@ MANAGED_LITERALS = frozenset(
         "CONFIDENTIAL",
         "CALLBACK",
         "LOGOUT",
+        "OPENAPI",
+        "published",
+        "openapi",
     }
 )
 
@@ -31,6 +34,9 @@ ALLOWED_LITERAL_PATHS = {
     "CONFIDENTIAL": frozenset({Path("projects/common.py")}),
     "CALLBACK": frozenset({Path("projects/common.py")}),
     "LOGOUT": frozenset({Path("projects/common.py")}),
+    "OPENAPI": frozenset({Path("apis/common.py")}),
+    "published": frozenset({Path("apis/common.py")}),
+    "openapi": frozenset({Path("apis/common.py")}),
 }
 
 

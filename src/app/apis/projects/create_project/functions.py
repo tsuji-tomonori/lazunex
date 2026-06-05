@@ -4,13 +4,11 @@ import hashlib
 import hmac
 import json
 from datetime import UTC, datetime, timedelta
-from typing import NoReturn
 from uuid import uuid4
 
-from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.apis.common import IdentityGroup
+from app.apis.common import IdentityGroup, raise_missing_runtime_dependency
 from app.apis.deps import build_caller_identity
 from app.apis.projects.common import (
     ProjectCognitoClientType,
@@ -57,13 +55,6 @@ from app.integrations.identity.schemas import (
 )
 from app.integrations.secret_values.port import SecretValuesPort
 from app.integrations.secret_values.schemas import GetHashPepperInput
-
-
-def _sequence_placeholder(function_name: str) -> NoReturn:
-    raise HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail=f"{function_name} requires runtime dependencies.",
-    )
 
 
 def _now() -> datetime:
@@ -147,7 +138,7 @@ async def get_idempotency_record(
             response_payload=row.response_payload,
             expires_at=row.expires_at,
         )
-    return _sequence_placeholder("get_idempotency_record")
+    return raise_missing_runtime_dependency("get_idempotency_record")
 
 
 async def create_project_provisioning_operation(
@@ -178,7 +169,7 @@ async def create_project_provisioning_operation(
             ),
         )
         return ProvisioningOperationRef(operation_id=operation_id, target_id=project_id)
-    return _sequence_placeholder("create_project_provisioning_operation")
+    return raise_missing_runtime_dependency("create_project_provisioning_operation")
 
 
 async def create_idempotency_record(
@@ -207,7 +198,7 @@ async def create_idempotency_record(
             idempotency_key=idempotency_key,
             operation_id=operation.operation_id,
         )
-    return _sequence_placeholder("create_idempotency_record")
+    return raise_missing_runtime_dependency("create_idempotency_record")
 
 
 async def create_api_gateway_api_key(
@@ -227,7 +218,7 @@ async def create_api_gateway_api_key(
                 },
             )
         )
-    return _sequence_placeholder("create_api_gateway_api_key")
+    return raise_missing_runtime_dependency("create_api_gateway_api_key")
 
 
 async def create_api_gateway_usage_plan(
@@ -252,7 +243,7 @@ async def create_api_gateway_usage_plan(
             )
         )
         return created.apigw_usage_plan_id
-    return _sequence_placeholder("create_api_gateway_usage_plan")
+    return raise_missing_runtime_dependency("create_api_gateway_usage_plan")
 
 
 async def create_api_gateway_usage_plan_key(
@@ -271,7 +262,7 @@ async def create_api_gateway_usage_plan_key(
         )
         _ = operation
         return created.apigw_usage_plan_key_id
-    return _sequence_placeholder("create_api_gateway_usage_plan_key")
+    return raise_missing_runtime_dependency("create_api_gateway_usage_plan_key")
 
 
 async def create_cognito_public_app_client(
@@ -300,7 +291,7 @@ async def create_cognito_public_app_client(
         )
         _ = operation
         return created.app_client_id
-    return _sequence_placeholder("create_cognito_public_app_client")
+    return raise_missing_runtime_dependency("create_cognito_public_app_client")
 
 
 async def create_cognito_confidential_app_client(
@@ -326,7 +317,7 @@ async def create_cognito_confidential_app_client(
             app_client_id=created.app_client_id,
             client_secret=created.client_secret,
         )
-    return _sequence_placeholder("create_cognito_confidential_app_client")
+    return raise_missing_runtime_dependency("create_cognito_confidential_app_client")
 
 
 async def hash_project_secrets(
@@ -355,7 +346,7 @@ async def hash_project_secrets(
             ).hexdigest(),
             hash_key_version=settings.hash_pepper_secret_id,
         )
-    return _sequence_placeholder("hash_project_secrets")
+    return raise_missing_runtime_dependency("hash_project_secrets")
 
 
 async def save_project_resources(
@@ -552,7 +543,7 @@ async def save_project_resources(
             public_app_client_id=public_client_id,
             confidential_app_client_id=confidential_client.app_client_id,
         )
-    return _sequence_placeholder("save_project_resources")
+    return raise_missing_runtime_dependency("save_project_resources")
 
 
 async def append_project_lifecycle_events(
@@ -679,7 +670,7 @@ async def append_project_lifecycle_events(
             )
             refs.append(EventRef(event_id=event_id))
         return refs
-    return _sequence_placeholder("append_project_lifecycle_events")
+    return raise_missing_runtime_dependency("append_project_lifecycle_events")
 
 
 async def append_provisioning_events(
@@ -708,7 +699,7 @@ async def append_provisioning_events(
             ),
         )
         return [EventRef(event_id=event_id)]
-    return _sequence_placeholder("append_provisioning_events")
+    return raise_missing_runtime_dependency("append_provisioning_events")
 
 
 async def append_audit_event(
@@ -739,7 +730,7 @@ async def append_audit_event(
             ),
         )
         return EventRef(event_id=event_id)
-    return _sequence_placeholder("append_audit_event")
+    return raise_missing_runtime_dependency("append_audit_event")
 
 
 async def build_create_project_response(

@@ -34,9 +34,9 @@ def public_coroutines(module: ModuleType) -> list[Callable[..., Awaitable[object
     ]
 
 
-def calls_sequence_placeholder(function: Callable[..., Awaitable[object]]) -> bool:
+def calls_missing_runtime_dependency(function: Callable[..., Awaitable[object]]) -> bool:
     source = inspect.getsource(function)
-    return "_sequence_placeholder" in source
+    return "raise_missing_runtime_dependency" in source
 
 
 def dummy_argument() -> SimpleNamespace:
@@ -48,12 +48,12 @@ def dummy_argument() -> SimpleNamespace:
 
 
 @pytest.mark.anyio
-async def test_sequence_functions_are_explicit_placeholders() -> None:
+async def test_sequence_functions_raise_missing_runtime_dependency() -> None:
     for module_name in FUNCTION_MODULES:
         module = import_module(module_name)
         for function in public_coroutines(module):
             parameters = inspect.signature(function).parameters
-            if not calls_sequence_placeholder(function):
+            if not calls_missing_runtime_dependency(function):
                 continue
             args = [
                 dummy_argument()

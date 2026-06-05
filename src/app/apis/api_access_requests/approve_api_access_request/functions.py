@@ -3,10 +3,8 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import UTC, datetime, timedelta
-from typing import NoReturn
 from uuid import uuid4
 
-from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.api_access_requests.approve_api_access_request import queries
@@ -15,7 +13,7 @@ from app.apis.api_access_requests.approve_api_access_request.schemas import (
     ApproveApiAccessRequestResponse,
 )
 from app.apis.api_access_requests.common import AccessRequestDerivedState
-from app.apis.common import IdentityGroup
+from app.apis.common import IdentityGroup, raise_missing_runtime_dependency
 from app.apis.deps import build_caller_identity
 from app.apis.sequence_types import (
     ApiAccessRequestRef,
@@ -37,13 +35,6 @@ from app.integrations.identity.schemas import (
     DescribeUserPoolClientInput,
     UpdateUserPoolClientInput,
 )
-
-
-def _sequence_placeholder(function_name: str) -> NoReturn:
-    raise HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail=f"{function_name} requires runtime dependencies.",
-    )
 
 
 def _now() -> datetime:
@@ -107,7 +98,7 @@ async def get_access_request(
             apigw_rest_api_id=row.apigw_rest_api_id,
             apigw_stage_name=row.apigw_stage_name,
         )
-    return _sequence_placeholder("get_access_request")
+    return raise_missing_runtime_dependency("get_access_request")
 
 
 async def is_pending_access_request(access_request: ApiAccessRequestRef) -> bool:
@@ -188,7 +179,7 @@ async def append_access_request_approving_event(
             ),
         )
         return EventRef(event_id=event_id)
-    return _sequence_placeholder("append_access_request_approving_event")
+    return raise_missing_runtime_dependency("append_access_request_approving_event")
 
 
 async def create_provisioning_operation(
@@ -213,7 +204,7 @@ async def create_provisioning_operation(
             ),
         )
         return ProvisioningOperationRef(operation_id=operation_id)
-    return _sequence_placeholder("create_provisioning_operation")
+    return raise_missing_runtime_dependency("create_provisioning_operation")
 
 
 async def get_idempotency_record(
@@ -236,7 +227,7 @@ async def get_idempotency_record(
             response_payload=row.response_payload,
             expires_at=row.expires_at,
         )
-    return _sequence_placeholder("get_idempotency_record")
+    return raise_missing_runtime_dependency("get_idempotency_record")
 
 
 async def create_idempotency_record(
@@ -286,7 +277,7 @@ async def create_idempotency_record(
             idempotency_key=idempotency_key,
             operation_id=operation.operation_id,
         )
-    return _sequence_placeholder("create_idempotency_record")
+    return raise_missing_runtime_dependency("create_idempotency_record")
 
 
 async def add_usage_plan_api_stage(
@@ -312,7 +303,7 @@ async def add_usage_plan_api_stage(
         )
         _ = operation
         return UsagePlanApiStageRef(usage_plan_api_stage_id=access_request.api_stage_id)
-    return _sequence_placeholder("add_usage_plan_api_stage")
+    return raise_missing_runtime_dependency("add_usage_plan_api_stage")
 
 
 async def get_cognito_app_client(
@@ -353,7 +344,7 @@ async def get_cognito_app_client(
             allowed_oauth_flows=client.allowed_oauth_flows,
             supported_identity_providers=client.supported_identity_providers,
         )
-    return _sequence_placeholder("get_cognito_app_client")
+    return raise_missing_runtime_dependency("get_cognito_app_client")
 
 
 async def merge_cognito_allowed_scopes(
@@ -425,7 +416,7 @@ async def update_cognito_app_client(
             allowed_oauth_flows=updated.allowed_oauth_flows,
             supported_identity_providers=updated.supported_identity_providers,
         )
-    return _sequence_placeholder("update_cognito_app_client")
+    return raise_missing_runtime_dependency("update_cognito_app_client")
 
 
 async def save_approved_access_resources(
@@ -514,7 +505,7 @@ async def save_approved_access_resources(
             usage_plan_api_stage_id=usage_plan_api_stage_id,
             client_scope_ids=tuple(client_scope_ids),
         )
-    return _sequence_placeholder("save_approved_access_resources")
+    return raise_missing_runtime_dependency("save_approved_access_resources")
 
 
 async def append_usage_plan_stage_event(

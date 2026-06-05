@@ -26,7 +26,7 @@ def test_check_api_managed_literals_reports_disallowed_literals(tmp_path: Path) 
         '''
 async def get_project_detail() -> object:
     """CALLBACK in docstring is allowed."""
-    return "CALLBACK", "LOGOUT", "hub-admin"
+    return "CALLBACK", "LOGOUT", "hub-admin", "OPENAPI", "published", "openapi"
 ''',
     )
     write_file(
@@ -37,6 +37,14 @@ from enum import StrEnum
 
 class IdentityGroup(StrEnum):
     HUB_ADMIN = "hub-admin"
+""",
+    )
+    write_file(
+        api_root / "apis" / "common.py",
+        """
+OPENAPI = "OPENAPI"
+PUBLISHED = "published"
+OPENAPI_FILENAME = "openapi"
 """,
     )
     write_file(
@@ -52,7 +60,10 @@ LOGOUT = "LOGOUT"
     assert [(issue.literal, issue.line) for issue in issues] == [
         ("CALLBACK", 4),
         ("LOGOUT", 4),
+        ("OPENAPI", 4),
         ("hub-admin", 4),
+        ("openapi", 4),
+        ("published", 4),
     ]
 
 

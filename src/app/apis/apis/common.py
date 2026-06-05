@@ -17,6 +17,34 @@ class ApiDerivedState(StrEnum):
     PUBLISHED = "PUBLISHED"
 
 
+class ApiDocumentType(StrEnum):
+    """API に紐づく document 種別です。"""
+
+    # OpenAPI 仕様書です。
+    OPENAPI = "OPENAPI"
+
+
+class ApiDocumentVersionLabel(StrEnum):
+    """API document の版ラベルです。"""
+
+    # 公開時点の版です。
+    PUBLISHED = "published"
+
+
+class ApiDocumentSourceFilename(StrEnum):
+    """API document の保存元ファイル名です。"""
+
+    # OpenAPI 仕様書の既定ファイル名です。
+    OPENAPI = "openapi"
+
+
+class ApiLifecycleReason(StrEnum):
+    """API lifecycle event の reason です。"""
+
+    # API 公開処理により発生した event です。
+    PUBLISHED = "published"
+
+
 class ReviewerRole(StrEnum):
     """API利用申請を審査する担当者の役割を表す列挙値です。"""
 

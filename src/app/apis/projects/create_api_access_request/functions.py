@@ -3,13 +3,12 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import UTC, datetime, timedelta
-from typing import NoReturn
 from uuid import uuid4
 
-from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.api_access_requests.common import AccessRequestDerivedState, AuthMode
+from app.apis.common import raise_missing_runtime_dependency
 from app.apis.deps import build_caller_identity
 from app.apis.projects.common import ProjectCognitoClientType
 from app.apis.projects.create_api_access_request import queries
@@ -27,13 +26,6 @@ from app.apis.sequence_types import (
     RequestContext,
 )
 from app.apis.types import ResourceId
-
-
-def _sequence_placeholder(function_name: str) -> NoReturn:
-    raise HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail=f"{function_name} requires runtime dependencies.",
-    )
 
 
 async def get_caller_identity(
@@ -93,7 +85,7 @@ async def get_project(
             owner_principal_id=row.owner_principal_id,
             caller_project_role=row.caller_project_role,
         )
-    return _sequence_placeholder("get_project")
+    return raise_missing_runtime_dependency("get_project")
 
 
 async def has_project_owner_permission(project: ProjectRef, caller: CallerIdentity) -> bool:
@@ -118,7 +110,7 @@ async def is_published_api(
         if not rows:
             raise ValueError("api is not published")
         return True
-    return _sequence_placeholder("is_published_api")
+    return raise_missing_runtime_dependency("is_published_api")
 
 
 async def get_api_reviewer(
@@ -136,7 +128,7 @@ async def get_api_reviewer(
         if not reviewers:
             raise ValueError("api reviewer is not configured")
         return ApiReviewerRefs(reviewer_principal_ids=reviewers)
-    return _sequence_placeholder("get_api_reviewer")
+    return raise_missing_runtime_dependency("get_api_reviewer")
 
 
 async def has_requested_auth_mode_clients(
@@ -161,7 +153,7 @@ async def has_requested_auth_mode_clients(
         if not required.issubset(client_types):
             raise ValueError("requested auth mode client is not configured")
         return True
-    return _sequence_placeholder("has_requested_auth_mode_clients")
+    return raise_missing_runtime_dependency("has_requested_auth_mode_clients")
 
 
 async def has_active_subscription(
@@ -183,7 +175,7 @@ async def has_active_subscription(
         if rows:
             raise ValueError("active subscription already exists")
         return False
-    return _sequence_placeholder("has_active_subscription")
+    return raise_missing_runtime_dependency("has_active_subscription")
 
 
 async def has_pending_access_request_for_project_api(
@@ -205,7 +197,7 @@ async def has_pending_access_request_for_project_api(
         if rows:
             raise ValueError("pending access request already exists")
         return False
-    return _sequence_placeholder("has_pending_access_request_for_project_api")
+    return raise_missing_runtime_dependency("has_pending_access_request_for_project_api")
 
 
 async def save_api_access_request(
@@ -239,7 +231,7 @@ async def save_api_access_request(
             requested_reason=request.requested_reason,
             requested_by=caller.principal_id,
         )
-    return _sequence_placeholder("save_api_access_request")
+    return raise_missing_runtime_dependency("save_api_access_request")
 
 
 async def get_idempotency_record(
@@ -262,7 +254,7 @@ async def get_idempotency_record(
             response_payload=row.response_payload,
             expires_at=row.expires_at,
         )
-    return _sequence_placeholder("get_idempotency_record")
+    return raise_missing_runtime_dependency("get_idempotency_record")
 
 
 async def create_idempotency_record(
@@ -294,7 +286,7 @@ async def create_idempotency_record(
             ),
         )
         return IdempotencyRecordRef(idempotency_key=idempotency_key, operation_id=None)
-    return _sequence_placeholder("create_idempotency_record")
+    return raise_missing_runtime_dependency("create_idempotency_record")
 
 
 async def append_access_request_created_event(
@@ -328,7 +320,7 @@ async def append_access_request_created_event(
             ),
         )
         return EventRef(event_id=event_id)
-    return _sequence_placeholder("append_access_request_created_event")
+    return raise_missing_runtime_dependency("append_access_request_created_event")
 
 
 async def append_audit_event(
@@ -357,7 +349,7 @@ async def append_audit_event(
             ),
         )
         return EventRef(event_id=event_id)
-    return _sequence_placeholder("append_audit_event")
+    return raise_missing_runtime_dependency("append_audit_event")
 
 
 async def build_create_access_request_response(

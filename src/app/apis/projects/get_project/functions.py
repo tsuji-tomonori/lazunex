@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.apis.common import IdentityGroup
+from app.apis.common import IdentityGroup, raise_missing_runtime_dependency
 from app.apis.deps import build_caller_identity
 from app.apis.projects.common import (
     ProjectCognitoClientType,
@@ -126,10 +126,7 @@ async def get_project_detail(
                 ),
             ),
         )
-    raise HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail="get_project_detail requires session and caller.",
-    )
+    return raise_missing_runtime_dependency("get_project_detail")
 
 
 async def has_project_view_permission(project: GetProjectResponse, caller: CallerIdentity) -> bool:

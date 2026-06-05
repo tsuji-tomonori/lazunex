@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from typing import NoReturn, cast
+from typing import cast
 
-from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.apis.common import ApiDerivedState, ApiVisibility
@@ -13,15 +12,9 @@ from app.apis.apis.list_apis.schemas import (
     ListApisQuery,
     ListApisResponse,
 )
+from app.apis.common import raise_missing_runtime_dependency
 from app.apis.deps import build_caller_identity
 from app.apis.sequence_types import CallerIdentity, SequencePage
-
-
-def _sequence_placeholder(function_name: str) -> NoReturn:
-    raise HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail=f"{function_name} requires runtime dependencies.",
-    )
 
 
 async def get_caller_identity(
@@ -63,7 +56,7 @@ async def get_viewable_apis(
             for row in row_objects
         )
         return SequencePage(items=items, next_token=None)
-    return _sequence_placeholder("get_viewable_apis")
+    return raise_missing_runtime_dependency("get_viewable_apis")
 
 
 async def apply_pagination(

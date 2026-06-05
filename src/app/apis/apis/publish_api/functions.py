@@ -3,20 +3,25 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import UTC, datetime, timedelta
-from typing import NoReturn
 from uuid import uuid4
 
-from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.apis.apis.common import ApiDerivedState, ScopeAttachmentMode
+from app.apis.apis.common import (
+    ApiDerivedState,
+    ApiDocumentSourceFilename,
+    ApiDocumentType,
+    ApiDocumentVersionLabel,
+    ApiLifecycleReason,
+    ScopeAttachmentMode,
+)
 from app.apis.apis.publish_api import queries
 from app.apis.apis.publish_api.schemas import (
     ApiScopeResponse,
     PublishApiRequest,
     PublishApiResponse,
 )
-from app.apis.common import IdentityGroup
+from app.apis.common import IdentityGroup, raise_missing_runtime_dependency
 from app.apis.deps import build_caller_identity
 from app.apis.sequence_types import (
     ApiCatalogMetadataRef,
@@ -42,13 +47,6 @@ from app.integrations.identity.schemas import (
     DescribeResourceServerInput,
     UpdateResourceServerInput,
 )
-
-
-def _sequence_placeholder(function_name: str) -> NoReturn:
-    raise HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail=f"{function_name} requires runtime dependencies.",
-    )
 
 
 def _now() -> datetime:
@@ -114,7 +112,7 @@ async def get_idempotency_record(
             response_payload=row.response_payload,
             expires_at=row.expires_at,
         )
-    return _sequence_placeholder("get_idempotency_record")
+    return raise_missing_runtime_dependency("get_idempotency_record")
 
 
 async def verify_api_gateway_stage_registration(
@@ -173,7 +171,7 @@ async def verify_api_gateway_stage_registration(
                 )
             )
         return True
-    return _sequence_placeholder("verify_api_gateway_stage_registration")
+    return raise_missing_runtime_dependency("verify_api_gateway_stage_registration")
 
 
 async def has_registered_api(
@@ -200,7 +198,7 @@ async def has_registered_api(
         if stage_rows:
             raise ValueError("API Gateway stage is already registered")
         return False
-    return _sequence_placeholder("has_registered_api")
+    return raise_missing_runtime_dependency("has_registered_api")
 
 
 async def create_provisioning_operation(
@@ -225,7 +223,7 @@ async def create_provisioning_operation(
             ),
         )
         return ProvisioningOperationRef(operation_id=operation_id, target_id=api_id)
-    return _sequence_placeholder("create_provisioning_operation")
+    return raise_missing_runtime_dependency("create_provisioning_operation")
 
 
 async def create_idempotency_record(
@@ -254,7 +252,7 @@ async def create_idempotency_record(
             idempotency_key=idempotency_key,
             operation_id=operation.operation_id,
         )
-    return _sequence_placeholder("create_idempotency_record")
+    return raise_missing_runtime_dependency("create_idempotency_record")
 
 
 async def add_cognito_custom_scope(
@@ -291,7 +289,7 @@ async def add_cognito_custom_scope(
         return ApiScopeRef(
             scope_full_name=f"{settings.cognito_resource_server_identifier}/{scope_name}"
         )
-    return _sequence_placeholder("add_cognito_custom_scope")
+    return raise_missing_runtime_dependency("add_cognito_custom_scope")
 
 
 async def save_api_catalog_metadata(
@@ -363,11 +361,11 @@ async def save_api_catalog_metadata(
             queries.InsertApiDocumentsParams(
                 api_document_id=uuid4(),
                 api_id=api_id,
-                document_type="OPENAPI",
-                version_label="published",
+                document_type=ApiDocumentType.OPENAPI,
+                version_label=ApiDocumentVersionLabel.PUBLISHED,
                 s3_uri=request.openapi_document.s3_uri,
                 sha256=request.openapi_document.sha256,
-                source_filename="openapi",
+                source_filename=ApiDocumentSourceFilename.OPENAPI,
                 actor_principal_id=caller.principal_id,
                 now=now,
             ),
@@ -393,7 +391,7 @@ async def save_api_catalog_metadata(
             api_scope_id=api_scope_id,
             api_reviewer_ids=tuple(reviewer_ids),
         )
-    return _sequence_placeholder("save_api_catalog_metadata")
+    return raise_missing_runtime_dependency("save_api_catalog_metadata")
 
 
 async def append_api_lifecycle_events(
@@ -417,7 +415,7 @@ async def append_api_lifecycle_events(
                 actor_principal_id=caller.principal_id,
                 actor_type=request_context.actor_type,
                 now=now,
-                reason="published",
+                reason=ApiLifecycleReason.PUBLISHED,
                 correlation_id=request_context.correlation_id,
                 idempotency_key=idempotency_key or "",
                 event_payload={"apiStageId": str(api.api_stage_id)},
@@ -435,7 +433,7 @@ async def append_api_lifecycle_events(
                     actor_principal_id=caller.principal_id,
                     actor_type=request_context.actor_type,
                     now=now,
-                    reason="published",
+                    reason=ApiLifecycleReason.PUBLISHED,
                     correlation_id=request_context.correlation_id,
                     idempotency_key=idempotency_key or "",
                     event_payload={"apiId": str(api.api_id)},
@@ -453,7 +451,7 @@ async def append_api_lifecycle_events(
                     actor_principal_id=caller.principal_id,
                     actor_type=request_context.actor_type,
                     now=now,
-                    reason="published",
+                    reason=ApiLifecycleReason.PUBLISHED,
                     correlation_id=request_context.correlation_id,
                     idempotency_key=idempotency_key or "",
                     event_payload={"apiId": str(api.api_id)},
@@ -471,7 +469,7 @@ async def append_api_lifecycle_events(
                     actor_principal_id=caller.principal_id,
                     actor_type=request_context.actor_type,
                     now=now,
-                    reason="published",
+                    reason=ApiLifecycleReason.PUBLISHED,
                     correlation_id=request_context.correlation_id,
                     idempotency_key=idempotency_key or "",
                     event_payload={"apiId": str(api.api_id)},
@@ -479,7 +477,7 @@ async def append_api_lifecycle_events(
             )
             refs.append(EventRef(event_id=event_id))
         return refs
-    return _sequence_placeholder("append_api_lifecycle_events")
+    return raise_missing_runtime_dependency("append_api_lifecycle_events")
 
 
 async def append_provisioning_events(
@@ -508,7 +506,7 @@ async def append_provisioning_events(
             ),
         )
         return [EventRef(event_id=event_id)]
-    return _sequence_placeholder("append_provisioning_events")
+    return raise_missing_runtime_dependency("append_provisioning_events")
 
 
 async def append_audit_event(
@@ -535,7 +533,7 @@ async def append_audit_event(
             ),
         )
         return EventRef(event_id=event_id)
-    return _sequence_placeholder("append_audit_event")
+    return raise_missing_runtime_dependency("append_audit_event")
 
 
 async def build_publish_api_response(

@@ -19,8 +19,6 @@ def _top_level_functions(path: Path, include_private: bool) -> list[str]:
     for node in tree.body:
         if not isinstance(node, ast.AsyncFunctionDef | ast.FunctionDef):
             continue
-        if node.name == "_sequence_placeholder":
-            continue
         if not include_private and node.name.startswith("_"):
             continue
         names.append(node.name)

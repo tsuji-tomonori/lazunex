@@ -90,7 +90,7 @@ async def test_get_api_detail_requires_session(api_id: UUID) -> None:
         await functions.get_api_detail(api_id)
 
     assert error.value.status_code == 500
-    assert error.value.detail == "get_api_detail requires session."
+    assert error.value.detail == "get_api_detail requires runtime dependencies."
 
 
 async def test_get_api_helpers_validate_visibility_and_build_response() -> None:

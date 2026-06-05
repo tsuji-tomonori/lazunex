@@ -11,7 +11,7 @@ from app.apis.apis.get_api.schemas import (
     ApiScopeResponse,
     GetApiResponse,
 )
-from app.apis.common import IdentityGroup
+from app.apis.common import IdentityGroup, raise_missing_runtime_dependency
 from app.apis.deps import build_caller_identity
 from app.apis.sequence_types import CallerIdentity
 from app.apis.types import ResourceId
@@ -72,10 +72,7 @@ async def get_api_detail(
                 for row in rows
             ],
         )
-    raise HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail="get_api_detail requires session.",
-    )
+    return raise_missing_runtime_dependency("get_api_detail")
 
 
 async def is_viewable_api(

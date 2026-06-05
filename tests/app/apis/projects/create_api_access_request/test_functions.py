@@ -214,7 +214,7 @@ async def test_create_access_request_rejects_unpublished_or_unreviewed_api(
         return [SimpleNamespace(reviewer_principal_id="")]
 
     monkeypatch.setattr(queries, "select_apis", select_empty)
-    with pytest.raises(ValueError, match="published"):
+    with pytest.raises(ValueError, match="api is not published"):
         await functions.is_published_api(
             UUID("7b0d4a98-0000-0000-0000-000000000001"),
             UUID("7b0d4a98-0000-0000-0000-000000000101"),

@@ -3,10 +3,8 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import UTC, datetime, timedelta
-from typing import NoReturn
 from uuid import uuid4
 
-from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.api_access_requests.common import AccessRequestDerivedState
@@ -15,7 +13,7 @@ from app.apis.api_access_requests.reject_api_access_request.schemas import (
     RejectApiAccessRequestRequest,
     RejectApiAccessRequestResponse,
 )
-from app.apis.common import IdentityGroup
+from app.apis.common import IdentityGroup, raise_missing_runtime_dependency
 from app.apis.deps import build_caller_identity
 from app.apis.sequence_types import (
     ApiAccessRequestRef,
@@ -26,13 +24,6 @@ from app.apis.sequence_types import (
     RequestContext,
 )
 from app.apis.types import ResourceId
-
-
-def _sequence_placeholder(function_name: str) -> NoReturn:
-    raise HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail=f"{function_name} requires runtime dependencies.",
-    )
 
 
 async def get_caller_identity(
@@ -75,7 +66,7 @@ async def get_access_request(
             requested_reason=row.requested_reason,
             requested_by=row.requested_by,
         )
-    return _sequence_placeholder("get_access_request")
+    return raise_missing_runtime_dependency("get_access_request")
 
 
 async def is_pending_access_request(access_request: ApiAccessRequestRef) -> bool:
@@ -102,7 +93,7 @@ async def has_api_reviewer_permission(
         if not rows:
             raise ValueError("caller is not an api reviewer")
         return True
-    return _sequence_placeholder("has_api_reviewer_permission")
+    return raise_missing_runtime_dependency("has_api_reviewer_permission")
 
 
 async def validate_rejection_reason(
@@ -144,7 +135,7 @@ async def append_access_request_rejecting_event(
             ),
         )
         return EventRef(event_id=event_id)
-    return _sequence_placeholder("append_access_request_rejecting_event")
+    return raise_missing_runtime_dependency("append_access_request_rejecting_event")
 
 
 async def save_api_access_review(
@@ -168,7 +159,7 @@ async def save_api_access_review(
             ),
         )
         return ApiAccessReviewRef(review_id=review_id, reviewed_at=reviewed_at)
-    return _sequence_placeholder("save_api_access_review")
+    return raise_missing_runtime_dependency("save_api_access_review")
 
 
 async def get_idempotency_record(
@@ -191,7 +182,7 @@ async def get_idempotency_record(
             response_payload=row.response_payload,
             expires_at=row.expires_at,
         )
-    return _sequence_placeholder("get_idempotency_record")
+    return raise_missing_runtime_dependency("get_idempotency_record")
 
 
 async def create_idempotency_record(
@@ -222,7 +213,7 @@ async def create_idempotency_record(
             ),
         )
         return IdempotencyRecordRef(idempotency_key=idempotency_key, operation_id=None)
-    return _sequence_placeholder("create_idempotency_record")
+    return raise_missing_runtime_dependency("create_idempotency_record")
 
 
 async def update_access_request_status(
@@ -261,7 +252,7 @@ async def append_access_request_rejected_event(
             ),
         )
         return EventRef(event_id=event_id)
-    return _sequence_placeholder("append_access_request_rejected_event")
+    return raise_missing_runtime_dependency("append_access_request_rejected_event")
 
 
 async def append_audit_event(
@@ -290,7 +281,7 @@ async def append_audit_event(
             ),
         )
         return EventRef(event_id=event_id)
-    return _sequence_placeholder("append_audit_event")
+    return raise_missing_runtime_dependency("append_audit_event")
 
 
 async def build_reject_access_request_response(

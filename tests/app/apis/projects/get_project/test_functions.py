@@ -148,4 +148,4 @@ async def test_get_project_detail_requires_session_and_caller() -> None:
         await functions.get_project_detail(project_id)
 
     assert error.value.status_code == 500
-    assert error.value.detail == "get_project_detail requires session and caller."
+    assert error.value.detail == "get_project_detail requires runtime dependencies."

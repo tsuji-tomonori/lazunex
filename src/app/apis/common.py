@@ -1,8 +1,15 @@
 from enum import StrEnum
+from typing import NoReturn
+
+from fastapi import HTTPException, status
 
 from app.apis.api_access_requests.common import AccessRequestDerivedState, AuthMode
 from app.apis.apis.common import (
     ApiDerivedState,
+    ApiDocumentSourceFilename,
+    ApiDocumentType,
+    ApiDocumentVersionLabel,
+    ApiLifecycleReason,
     ApiVisibility,
     ReviewerRole,
     ScopeAttachmentMode,
@@ -69,6 +76,14 @@ class IdentityGroup(StrEnum):
     HUB_ADMIN = "hub-admin"
 
 
+def raise_missing_runtime_dependency(function_name: str) -> NoReturn:
+    """Sequence function に runtime dependency が注入されていない場合の 500 を返す。"""
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail=f"{function_name} requires runtime dependencies.",
+    )
+
+
 __all__ = [
     "COMMON_ERROR_SAMPLE",
     "ERROR_RESPONSES",
@@ -77,8 +92,12 @@ __all__ = [
     "ApiBaseModel",
     "ApiCode",
     "ApiDerivedState",
+    "ApiDocumentSourceFilename",
+    "ApiDocumentType",
+    "ApiDocumentVersionLabel",
     "ApiGatewayId",
     "ApiKeyLast4",
+    "ApiLifecycleReason",
     "ApiVisibility",
     "AuthMode",
     "AwsAccountId",
@@ -123,6 +142,7 @@ __all__ = [
     "empty_error_details",
     "error_responses",
     "not_implemented",
+    "raise_missing_runtime_dependency",
     "sample_value",
     "success_response",
 ]
