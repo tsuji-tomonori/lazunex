@@ -29,6 +29,8 @@ SQL_RECORD_ACTIONS = {
     "削除": "レコードを削除する",
 }
 ROUTER_METHODS = {"delete", "get", "patch", "post", "put"}
+COMMON_ERROR_STATUS_CODES = (401, 422, 429, 500)
+HTTP_500_INTERNAL_SERVER_ERROR = 500
 HTTP_STATUS_REASON_PHRASES = {
     200: "OK",
     201: "Created",
@@ -44,6 +46,8 @@ HTTP_STATUS_REASON_PHRASES = {
     503: "Service Unavailable",
 }
 PREDICATES = {"has", "is"}
+ROUTER_ERROR_CONDITION = "Router で捕捉した例外を error response に変換する場合。"
+ROUTER_ERROR_DETAIL = "internal server error"
 
 
 @dataclass(frozen=True)
@@ -227,6 +231,7 @@ def response_status_codes(node: ast.AST | None) -> tuple[int, ...]:
         if isinstance(callee, ast.Attribute):
             callee_name = callee.attr
         if callee_name == "error_responses":
+            codes.extend(COMMON_ERROR_STATUS_CODES)
             for argument in node.args:
                 if code := http_status_code(argument):
                     codes.append(code)
@@ -616,11 +621,33 @@ def endpoint_sequence_items(
         def visit_Return(self, node: ast.Return) -> None:
             if api_error_response_call(node) is not None:
                 return
+            if error_response_for_router_error_call(node) is not None:
+                return
             if node.value is not None:
                 function_name = awaited_api_function_name(node.value)
                 if function_name is not None:
                     append_sequence_step(function_name)
             items.append(SuccessReturnStep(success_status_code))
+
+        def visit_Try(self, node: ast.Try) -> None:
+            for child in node.body:
+                self.visit(child)
+            for handler in node.handlers:
+                if excepts_router_handled_exceptions(handler) and any(
+                    returns_error_response_for_router_error(statement) for statement in handler.body
+                ):
+                    items.append(
+                        ErrorReturnStep(
+                            HTTP_500_INTERNAL_SERVER_ERROR,
+                            ROUTER_ERROR_CONDITION,
+                            ROUTER_ERROR_DETAIL,
+                        )
+                    )
+                else:
+                    for child in handler.body:
+                        self.visit(child)
+            for child in [*node.orelse, *node.finalbody]:
+                self.visit(child)
 
     def append_sequence_step(function_name: str, condition_label: str | None = None) -> None:
         if function_name not in metadata:
@@ -763,6 +790,33 @@ def api_error_response_call(node: ast.AST) -> ast.Call | None:
     if not isinstance(call.func, ast.Name) or call.func.id != "api_error_response":
         return None
     return call
+
+
+def error_response_for_router_error_call(node: ast.AST) -> ast.Call | None:
+    if not isinstance(node, ast.Return):
+        return None
+    call = node.value
+    if not isinstance(call, ast.Call):
+        return None
+    if not isinstance(call.func, ast.Name) or call.func.id != "error_response_for_router_error":
+        return None
+    return call
+
+
+def excepts_router_handled_exceptions(node: ast.ExceptHandler) -> bool:
+    exception_type = node.type
+    if isinstance(exception_type, ast.Name):
+        return exception_type.id == "ROUTER_HANDLED_EXCEPTIONS"
+    if isinstance(exception_type, ast.Tuple):
+        return any(
+            isinstance(element, ast.Name) and element.id == "ROUTER_HANDLED_EXCEPTIONS"
+            for element in exception_type.elts
+        )
+    return False
+
+
+def returns_error_response_for_router_error(node: ast.stmt) -> bool:
+    return isinstance(node, ast.Return) and error_response_for_router_error_call(node) is not None
 
 
 def fallback_error_return_condition(detail: str | None) -> str:

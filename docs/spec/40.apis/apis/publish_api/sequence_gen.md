@@ -54,6 +54,9 @@ sequenceDiagram
       API->>API: provisioning operation/step event を追記する。
       API->>API: 監査イベントを追記する。
       API->>API: API 公開登録レスポンスを組み立てる。
+      alt Router で捕捉した例外を error response に変換する場合。
+        API-->>User: HTTP 500 Internal Server Error<br/>internal server error
+      end
       API->>DB: API codeの重複登録を防ぐため、既存APIを取得する。<br/>SQL 001_select_apis.sql<br/>テーブル apis
       API->>DB: API公開登録の処理結果として、provisioning operationを追加する。<br/>SQL 003_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
       API->>DB: 公開対象APIのcatalog metadataを保持するため、API catalogを追加する。<br/>SQL 004_insert_apis.sql<br/>テーブル apis

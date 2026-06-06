@@ -18,6 +18,9 @@ sequenceDiagram
   end
   alt 呼び出し元が Project 詳細を参照できる場合。
     API->>API: secret 値を含めずに Project 詳細レスポンスを組み立てる。
+    alt Router で捕捉した例外を error response に変換する場合。
+      API-->>User: HTTP 500 Internal Server Error<br/>internal server error
+    end
     API->>DB: Project詳細レスポンスを組み立てるため、Projectと関連metadataを取得する。<br/>SQL 001_select_projects.sql<br/>テーブル projects, project_api_keys, project_usage_plans, project_cognito_clients, project_cognito_client_urls, project_members
     API-->>User: HTTP 200 OK
   end

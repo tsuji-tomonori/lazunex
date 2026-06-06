@@ -50,6 +50,9 @@ sequenceDiagram
           API->>API: provisioning operation/step event を追記する。
           API->>API: 監査イベントを追記する。
           API->>API: 利用申請承認レスポンスを組み立てる。
+          alt Router で捕捉した例外を error response に変換する場合。
+            API-->>User: HTTP 500 Internal Server Error<br/>internal server error
+          end
           API->>DB: 承認対象の利用申請と現在状態を確認するため、利用申請を取得する。<br/>SQL 001_select_api_access_requests.sql<br/>テーブル api_access_requests, projects, apis, api_gateway_stages, api_cognito_scopes, api_access_reviews
           API->>DB: 承認者が対象APIのreviewerか確認するため、API reviewerを取得する。<br/>SQL 002_select_api_reviewers.sql<br/>テーブル api_reviewers
           API->>DB: 重複承認を防ぐため、既存のactive subscriptionを取得する。<br/>SQL 003_select_subscriptions.sql<br/>テーブル project_api_subscriptions

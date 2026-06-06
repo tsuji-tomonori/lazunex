@@ -21,12 +21,11 @@ def test_api_error_responses_are_selected_per_operation() -> None:
             "503",
         },
         "getProject": {"200", "401", "403", "404", "422", "429", "500"},
-        "listProjectSubscriptions": {"200", "401", "403", "404", "422", "429", "500"},
+        "listProjectSubscriptions": {"200", "401", "403", "422", "429", "500"},
         "listProjectApiAccessRequests": {
             "200",
             "401",
             "403",
-            "404",
             "422",
             "429",
             "500",
@@ -47,7 +46,6 @@ def test_api_error_responses_are_selected_per_operation() -> None:
         },
         "approveApiAccessRequest": {
             "200",
-            "400",
             "401",
             "403",
             "404",

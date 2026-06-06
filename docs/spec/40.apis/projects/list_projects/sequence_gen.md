@@ -16,6 +16,9 @@ sequenceDiagram
     API->>API: 呼び出し元が参照可能な Project を検索する。
     API->>API: 一覧取得結果に limit と nextToken を適用する。
     API->>API: Project 一覧レスポンスを組み立てる。
+    alt Router で捕捉した例外を error response に変換する場合。
+      API-->>User: HTTP 500 Internal Server Error<br/>internal server error
+    end
     API->>DB: 参照可能なProject一覧を返すため、検索条件に合うProjectを取得する。<br/>SQL 001_select_projects.sql<br/>テーブル projects, project_members, project_api_subscriptions
     API-->>User: HTTP 200 OK
   end

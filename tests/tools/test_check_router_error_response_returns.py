@@ -27,6 +27,7 @@ async def route() -> object:
 
     assert [(issue.status_name, issue.line) for issue in issues] == [
         ("HTTP_400_BAD_REQUEST", 9),
+        ("HTTP_500_INTERNAL_SERVER_ERROR", 9),
         ("HTTP_409_CONFLICT", 10),
     ]
 
@@ -44,7 +45,10 @@ router = APIRouter()
 
 @router.post("/projects", responses={**error_responses(status.HTTP_409_CONFLICT)})
 async def route() -> object:
-    return api_error_response(status.HTTP_409_CONFLICT, "conflict")
+    try:
+        return api_error_response(status.HTTP_409_CONFLICT, "conflict")
+    except ROUTER_HANDLED_EXCEPTIONS as error:
+        return error_response_for_router_error(error)
 """,
         encoding="utf-8",
     )

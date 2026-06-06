@@ -18,6 +18,9 @@ sequenceDiagram
   end
   alt 対象 API が呼び出し元から参照可能な場合。
     API->>API: API 詳細レスポンスを組み立てる。
+    alt Router で捕捉した例外を error response に変換する場合。
+      API-->>User: HTTP 500 Internal Server Error<br/>internal server error
+    end
     API->>DB: API詳細レスポンスを組み立てるため、API catalog情報を取得する。<br/>SQL 001_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes, api_reviewers
     API-->>User: HTTP 200 OK
   end

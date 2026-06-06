@@ -12,6 +12,7 @@ from tools.generate_api_sequences import (
     FunctionMetadata,
     SequenceStep,
     SqlStep,
+    SuccessReturnStep,
     api_dirs,
     api_sequence_from_dir,
     awaited_api_function_name,
@@ -23,6 +24,7 @@ from tools.generate_api_sequences import (
     endpoint_operation_id,
     endpoint_route_method,
     endpoint_route_path,
+    endpoint_sequence_items,
     endpoint_status_codes,
     function_metadata,
     function_target,
@@ -254,7 +256,7 @@ async def publish_api():
 
     assert endpoint_route_method(function) == "POST"
     assert endpoint_route_path(function) == "/apis"
-    assert endpoint_status_codes(function) == (201, 400, 409, 503)
+    assert endpoint_status_codes(function) == (201, 401, 422, 429, 500, 400, 409, 503)
     assert http_status_code_label(400) == "HTTP 400 Bad Request"
 
 
@@ -340,6 +342,49 @@ def test_endpoint_exception_error_returns_reads_api_function_error_summaries() -
     ]
 
 
+def test_endpoint_sequence_items_reads_router_error_handler_as_500() -> None:
+    tree = ast.parse(
+        """
+async def create_project():
+    try:
+        project = await api_functions.create_project()
+        return await api_functions.build_project_response(project)
+    except ROUTER_HANDLED_EXCEPTIONS as error:
+        return error_response_for_router_error(error)
+"""
+    )
+    function = next(node for node in tree.body if isinstance(node, ast.AsyncFunctionDef))
+    metadata = {
+        "create_project": FunctionMetadata(
+            "Project を作成する。",
+            (),
+            "ProjectRef",
+        ),
+        "build_project_response": FunctionMetadata(
+            "Project 作成レスポンスを組み立てる。",
+            (),
+            "CreateProjectResponse",
+        ),
+    }
+
+    assert endpoint_sequence_items(function, metadata, 201) == [
+        SequenceStep("create_project", "project", "Project を作成する。", (), "ProjectRef"),
+        SequenceStep(
+            "build_project_response",
+            "project_response",
+            "Project 作成レスポンスを組み立てる。",
+            (),
+            "CreateProjectResponse",
+        ),
+        SuccessReturnStep(201),
+        ErrorReturnStep(
+            500,
+            "Router で捕捉した例外を error response に変換する場合。",
+            "internal server error",
+        ),
+    ]
+
+
 def test_endpoint_route_metadata_handles_defaults_keyword_path_and_unknown_status() -> None:
     tree = ast.parse(
         """
@@ -362,7 +407,7 @@ async def health():
     assert endpoint_operation_id(function) == "health"
     assert endpoint_route_method(function) == "GET"
     assert endpoint_route_path(function) == "/health"
-    assert endpoint_status_codes(function) == (202, 418, 404)
+    assert endpoint_status_codes(function) == (202, 418, 401, 422, 429, 500, 404)
     assert http_status_code_label(418) == "HTTP 418"
 
     fallback_tree = ast.parse(

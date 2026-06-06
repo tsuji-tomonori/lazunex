@@ -47,6 +47,9 @@ sequenceDiagram
             API->>API: 利用申請作成イベントを追記する。
             API->>API: 監査イベントを追記する。
             API->>API: 利用申請作成レスポンスを組み立てる。
+            alt Router で捕捉した例外を error response に変換する場合。
+              API-->>User: HTTP 500 Internal Server Error<br/>internal server error
+            end
             API->>DB: 申請元Projectと呼び出し元の権限を確認するため、Projectを取得する。<br/>SQL 001_select_projects.sql<br/>テーブル projects, project_members
             API->>DB: 申請対象APIが利用申請可能か確認するため、API catalog情報を取得する。<br/>SQL 002_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes, api_reviewers
             API->>DB: 申請認証方式とProject client構成を照合するため、Project Cognito clientを取得する。<br/>SQL 003_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients

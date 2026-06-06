@@ -27,10 +27,11 @@ HTTP_STATUS_NAMES = {
     503: "HTTP_503_SERVICE_UNAVAILABLE",
 }
 EXTERNAL_API_ERROR_STATUSES = {
-    404,
-    409,
     502,
     503,
+}
+ROUTER_ERROR_HANDLER_STATUSES = {
+    500,
 }
 
 
@@ -73,6 +74,7 @@ def _declared_error_response_statuses(
                 continue
             if not isinstance(node.func, ast.Name) or node.func.id != "error_responses":
                 continue
+            statuses[500] = HTTP_STATUS_NAMES[500]
             for arg in node.args:
                 status = _status_attr_code(arg)
                 if status is not None:
@@ -94,6 +96,45 @@ def _returned_error_response_statuses(
         status = _status_attr_code(node.args[0])
         if status is not None:
             statuses.append((node.lineno, status[0], status[1]))
+    return statuses
+
+
+def _returns_error_response_for_router_error(node: ast.stmt) -> bool:
+    if not isinstance(node, ast.Return):
+        return False
+    call = node.value
+    if not isinstance(call, ast.Call):
+        return False
+    return isinstance(call.func, ast.Name) and call.func.id == "error_response_for_router_error"
+
+
+def _excepts_router_handled_exceptions(node: ast.ExceptHandler) -> bool:
+    exception_type = node.type
+    if isinstance(exception_type, ast.Name):
+        return exception_type.id == "ROUTER_HANDLED_EXCEPTIONS"
+    if isinstance(exception_type, ast.Tuple):
+        return any(
+            isinstance(element, ast.Name) and element.id == "ROUTER_HANDLED_EXCEPTIONS"
+            for element in exception_type.elts
+        )
+    return False
+
+
+def _returned_router_error_handler_statuses(
+    function: ast.AsyncFunctionDef | ast.FunctionDef,
+) -> list[tuple[int, int, str]]:
+    statuses: list[tuple[int, int, str]] = []
+    for node in ast.walk(function):
+        if not isinstance(node, ast.ExceptHandler):
+            continue
+        if not _excepts_router_handled_exceptions(node):
+            continue
+        if not any(_returns_error_response_for_router_error(statement) for statement in node.body):
+            continue
+        statuses.extend(
+            (node.lineno, status_code, HTTP_STATUS_NAMES[status_code])
+            for status_code in sorted(ROUTER_ERROR_HANDLER_STATUSES)
+        )
     return statuses
 
 
@@ -155,6 +196,7 @@ def check_router_error_response_returns(
                 continue
             returned_statuses = [
                 *_returned_error_response_statuses(node),
+                *_returned_router_error_handler_statuses(node),
                 *_returned_exception_statuses(path, node),
                 *_returned_external_error_statuses(path, node),
             ]

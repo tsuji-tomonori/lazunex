@@ -40,6 +40,9 @@ sequenceDiagram
     API->>API: provisioning operation/step event を追記する。
     API->>API: 監査イベントを追記する。
     API->>API: public App Client 更新レスポンスを組み立てる。
+    alt Router で捕捉した例外を error response に変換する場合。
+      API-->>User: HTTP 500 Internal Server Error<br/>internal server error
+    end
     API->>DB: 更新対象のpublic clientと現在versionを確認するため、Project Cognito clientを取得する。<br/>SQL 001_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients, projects, project_members
     API->>DB: public client設定の更新内容とversionを反映するため、Project Cognito clientを更新する。<br/>SQL 003_update_project_cognito_clients.sql<br/>テーブル project_cognito_clients
     API->>DB: public clientのURL設定を最新化するため、既存のProject Cognito client URLを削除する。<br/>SQL 004_delete_project_cognito_client_urls.sql<br/>テーブル project_cognito_client_urls

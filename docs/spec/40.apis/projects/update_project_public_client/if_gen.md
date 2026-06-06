@@ -54,7 +54,10 @@ _なし_
 | `409` | 重複作成、状態遷移の競合、または楽観ロックのversion不一致が発生した場合に返します。 | `application/json` | 7 field(s) |
 | `502` | API GatewayやCognitoなど外部AWSサービスから失敗応答を受け取った場合に返します。 | `application/json` | 7 field(s) |
 | `503` | API GatewayやCognitoなど外部AWSサービスが一時的に利用できない場合に返します。 | `application/json` | 7 field(s) |
-| `422` | Validation Error | `application/json` | 6 field(s) |
+| `401` | 認証情報が未指定、期限切れ、または検証できない場合に返します。 | `application/json` | 7 field(s) |
+| `422` | path、query、header、bodyがOpenAPIスキーマの型や制約に一致しない場合に返します。 | `application/json` | 7 field(s) |
+| `429` | 呼び出し頻度が許可された上限を超えた場合に返します。 | `application/json` | 7 field(s) |
+| `500` | Lazunex内部で想定外のエラーが発生した場合に返します。 | `application/json` | 7 field(s) |
 
 ##### `200` Successful Response
 
@@ -159,18 +162,61 @@ Media type: `application/json`
 | `error.details[].reason` | `string` | yes | 入力検証エラーになった具体的な理由です。 | minLength=1 |
 | `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
 
-##### `422` Validation Error
+##### `401` 認証情報が未指定、期限切れ、または検証できない場合に返します。
 
 Media type: `application/json`
 
 | 項目 | 型 | 必須 | 説明 | 制約 |
 | --- | --- | --- | --- | --- |
-| `detail` | `array<ValidationError>` | no | `detail` の値。 | - |
-| `detail[].loc` | `array<object>` | yes | `loc` の値。 | - |
-| `detail[].msg` | `string` | yes | `msg` の値。 | - |
-| `detail[].type` | `string` | yes | `type` の値。 | - |
-| `detail[].input` | `Input` | no | `input` の値。 | - |
-| `detail[].ctx` | `object` | no | `ctx` の値。 | - |
+| `error` | `ErrorBody` | yes | エラーコード、メッセージ、追跡IDを含む共通エラー本文です。 | - |
+| `error.code` | `string` | yes | エラー種別を機械的に判定するためのコードです。 | minLength=1, maxLength=100 |
+| `error.message` | `string` | yes | 利用者または運用者に表示するエラーメッセージです。 | minLength=1 |
+| `error.details` | `array<ValidationErrorDetail>` | no | 入力検証エラーの詳細一覧です。 | - |
+| `error.details[].field` | `string` | yes | 入力検証エラーが発生したリクエスト項目です。 | minLength=1, maxLength=256 |
+| `error.details[].reason` | `string` | yes | 入力検証エラーになった具体的な理由です。 | minLength=1 |
+| `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
+
+##### `422` path、query、header、bodyがOpenAPIスキーマの型や制約に一致しない場合に返します。
+
+Media type: `application/json`
+
+| 項目 | 型 | 必須 | 説明 | 制約 |
+| --- | --- | --- | --- | --- |
+| `error` | `ErrorBody` | yes | エラーコード、メッセージ、追跡IDを含む共通エラー本文です。 | - |
+| `error.code` | `string` | yes | エラー種別を機械的に判定するためのコードです。 | minLength=1, maxLength=100 |
+| `error.message` | `string` | yes | 利用者または運用者に表示するエラーメッセージです。 | minLength=1 |
+| `error.details` | `array<ValidationErrorDetail>` | no | 入力検証エラーの詳細一覧です。 | - |
+| `error.details[].field` | `string` | yes | 入力検証エラーが発生したリクエスト項目です。 | minLength=1, maxLength=256 |
+| `error.details[].reason` | `string` | yes | 入力検証エラーになった具体的な理由です。 | minLength=1 |
+| `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
+
+##### `429` 呼び出し頻度が許可された上限を超えた場合に返します。
+
+Media type: `application/json`
+
+| 項目 | 型 | 必須 | 説明 | 制約 |
+| --- | --- | --- | --- | --- |
+| `error` | `ErrorBody` | yes | エラーコード、メッセージ、追跡IDを含む共通エラー本文です。 | - |
+| `error.code` | `string` | yes | エラー種別を機械的に判定するためのコードです。 | minLength=1, maxLength=100 |
+| `error.message` | `string` | yes | 利用者または運用者に表示するエラーメッセージです。 | minLength=1 |
+| `error.details` | `array<ValidationErrorDetail>` | no | 入力検証エラーの詳細一覧です。 | - |
+| `error.details[].field` | `string` | yes | 入力検証エラーが発生したリクエスト項目です。 | minLength=1, maxLength=256 |
+| `error.details[].reason` | `string` | yes | 入力検証エラーになった具体的な理由です。 | minLength=1 |
+| `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
+
+##### `500` Lazunex内部で想定外のエラーが発生した場合に返します。
+
+Media type: `application/json`
+
+| 項目 | 型 | 必須 | 説明 | 制約 |
+| --- | --- | --- | --- | --- |
+| `error` | `ErrorBody` | yes | エラーコード、メッセージ、追跡IDを含む共通エラー本文です。 | - |
+| `error.code` | `string` | yes | エラー種別を機械的に判定するためのコードです。 | minLength=1, maxLength=100 |
+| `error.message` | `string` | yes | 利用者または運用者に表示するエラーメッセージです。 | minLength=1 |
+| `error.details` | `array<ValidationErrorDetail>` | no | 入力検証エラーの詳細一覧です。 | - |
+| `error.details[].field` | `string` | yes | 入力検証エラーが発生したリクエスト項目です。 | minLength=1, maxLength=256 |
+| `error.details[].reason` | `string` | yes | 入力検証エラーになった具体的な理由です。 | minLength=1 |
+| `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
 
 ## Samples
 

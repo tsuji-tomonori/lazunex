@@ -47,7 +47,6 @@ router = APIRouter()
         **error_responses(
             status.HTTP_400_BAD_REQUEST,
             status.HTTP_403_FORBIDDEN,
-            status.HTTP_404_NOT_FOUND,
             status.HTTP_409_CONFLICT,
             status.HTTP_502_BAD_GATEWAY,
             status.HTTP_503_SERVICE_UNAVAILABLE,

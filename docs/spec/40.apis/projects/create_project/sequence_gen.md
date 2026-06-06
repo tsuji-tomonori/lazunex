@@ -49,6 +49,9 @@ sequenceDiagram
     API->>API: provisioning operation/step event を追記する。
     API->>API: 監査イベントを追記する。
     API->>API: Project 作成レスポンスを組み立てる。
+    alt Router で捕捉した例外を error response に変換する場合。
+      API-->>User: HTTP 500 Internal Server Error<br/>internal server error
+    end
     API->>DB: Project codeの重複作成を防ぐため、既存Projectを取得する。<br/>SQL 001_select_projects.sql<br/>テーブル projects
     API->>DB: 新規Projectの基本情報を保持するため、Projectを追加する。<br/>SQL 002_insert_projects.sql<br/>テーブル projects
     API->>DB: Project作成を履歴化するため、Projectイベントを追加する。<br/>SQL 003_insert_project_events.sql<br/>テーブル project_events

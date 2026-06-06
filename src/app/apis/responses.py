@@ -124,8 +124,17 @@ ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
 }
 
 
+COMMON_ERROR_STATUS_CODES = (
+    status.HTTP_401_UNAUTHORIZED,
+    status.HTTP_422_UNPROCESSABLE_CONTENT,
+    status.HTTP_429_TOO_MANY_REQUESTS,
+    status.HTTP_500_INTERNAL_SERVER_ERROR,
+)
+
+
 def error_responses(*status_codes: int) -> dict[int | str, dict[str, Any]]:
-    return {code: ERROR_RESPONSES[code] for code in status_codes}
+    codes = (*status_codes, *COMMON_ERROR_STATUS_CODES)
+    return {code: ERROR_RESPONSES[code] for code in dict.fromkeys(codes)}
 
 
 def success_response(sample: BaseModel) -> dict[str, Any]:
