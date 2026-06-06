@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable
+from dataclasses import replace
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import cast
@@ -11,6 +12,7 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apis.helpers import record_async_call
+from app.apis.api_access_requests.common import AccessRequestDerivedState
 from app.apis.api_access_requests.reject_api_access_request import functions, queries
 from app.apis.api_access_requests.reject_api_access_request.samples import (
     REJECT_API_ACCESS_REQUEST_REQUEST_SAMPLE,
@@ -33,7 +35,14 @@ async def assert_runtime_dependency_error(
 async def test_reject_access_request_helpers_and_placeholders(
     access_request: ApiAccessRequestRef,
 ) -> None:
+    access_request = replace(access_request, derived_state=AccessRequestDerivedState.PENDING)
     assert await functions.is_pending_access_request(access_request) is True
+    assert (
+        await functions.is_pending_access_request(
+            replace(access_request, derived_state=AccessRequestDerivedState.APPROVED)
+        )
+        is False
+    )
     assert await functions.validate_rejection_reason(REJECT_API_ACCESS_REQUEST_REQUEST_SAMPLE)
 
     blank_comment = REJECT_API_ACCESS_REQUEST_REQUEST_SAMPLE.model_copy(

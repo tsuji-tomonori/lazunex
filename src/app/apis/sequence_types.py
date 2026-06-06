@@ -192,6 +192,7 @@ class ApiAccessRequestRef:
     requested_auth_mode: str | None = None
     requested_reason: str | None = None
     requested_by: PrincipalId | None = None
+    derived_state: str | None = None
     scope_full_name: ScopeFullName | None = None
     api_scope_id: ResourceId | None = None
     apigw_rest_api_id: ApiGatewayId | None = None

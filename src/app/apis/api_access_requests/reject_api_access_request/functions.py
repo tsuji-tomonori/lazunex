@@ -65,14 +65,14 @@ async def get_access_request(
             requested_auth_mode=row.requested_auth_mode,
             requested_reason=row.requested_reason,
             requested_by=row.requested_by,
+            derived_state=AccessRequestDerivedState.PENDING,
         )
     return raise_missing_runtime_dependency("get_access_request")
 
 
 async def is_pending_access_request(access_request: ApiAccessRequestRef) -> bool:
     """利用申請が審査中状態であるかを判定する。"""
-    _ = access_request
-    return True
+    return access_request.derived_state == AccessRequestDerivedState.PENDING
 
 
 async def has_api_reviewer_permission(

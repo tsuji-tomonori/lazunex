@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, Header, Path, status
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Path, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.api_access_requests.approve_api_access_request import functions as api_functions
@@ -85,10 +85,22 @@ async def approve_api_access_request(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> ApproveApiAccessRequestResponse:
     access_request = await api_functions.get_access_request(access_request_id, session)
-    await api_functions.is_pending_access_request(access_request)
+    if not await api_functions.is_pending_access_request(access_request):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="access request is not pending",
+        )
     await api_functions.has_api_reviewer_permission(access_request, caller, session)
-    await api_functions.is_available_project_api_stage(access_request)
-    await api_functions.has_active_subscription(access_request, session)
+    if not await api_functions.is_available_project_api_stage(access_request):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="project api stage is not available",
+        )
+    if await api_functions.has_active_subscription(access_request, session):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="active subscription already exists",
+        )
     await api_functions.append_access_request_approving_event(
         access_request,
         caller,

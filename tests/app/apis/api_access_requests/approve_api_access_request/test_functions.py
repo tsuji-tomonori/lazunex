@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable
+from dataclasses import replace
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import cast
@@ -15,6 +16,7 @@ from app.apis.api_access_requests.approve_api_access_request import functions, q
 from app.apis.api_access_requests.approve_api_access_request.samples import (
     APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE,
 )
+from app.apis.api_access_requests.common import AccessRequestDerivedState
 from app.apis.common import IdentityGroup
 from app.apis.sequence_types import (
     ApiAccessRequestRef,
@@ -105,6 +107,14 @@ async def test_approve_helpers_merge_scopes_and_build_response(
         principal_id="reviewer-001", groups=(IdentityGroup.HUB_ADMIN,), scopes=()
     )
     client = CognitoAppClientRef(app_client_id="public-client-id", allowed_scopes=("openid",))
+    access_request = replace(
+        access_request,
+        derived_state=AccessRequestDerivedState.PENDING,
+        scope_full_name=f"api-hub/api:{access_request.api_id}:invoke",
+        api_scope_id=access_request.api_id,
+        apigw_rest_api_id="rest-api-id",
+        apigw_stage_name="prod",
+    )
     resources = ApprovedAccessResourceRefs(
         review_id=access_request.access_request_id,
         subscription_id=access_request.project_id,
@@ -126,6 +136,13 @@ async def test_approve_helpers_merge_scopes_and_build_response(
     assert await functions.has_active_subscription(access_request) is False
     assert merged.allowed_scopes[-1] == f"api-hub/api:{access_request.api_id}:invoke"
     assert response.project_id == access_request.project_id
+
+
+async def test_approve_predicates_return_false_for_non_matching_refs(
+    access_request: ApiAccessRequestRef,
+) -> None:
+    assert await functions.is_pending_access_request(access_request) is False
+    assert await functions.is_available_project_api_stage(access_request) is False
 
 
 async def test_approve_event_helpers_and_placeholders(
@@ -309,7 +326,7 @@ async def test_approve_access_request_db_mapping_sequence(
     assert "insert_project_cognito_client_scopes" in calls
 
 
-async def test_approve_access_request_rejects_duplicate_subscription(
+async def test_approve_access_request_has_active_subscription_returns_true_for_duplicate(
     monkeypatch: pytest.MonkeyPatch,
     access_request: ApiAccessRequestRef,
 ) -> None:
@@ -320,8 +337,7 @@ async def test_approve_access_request_rejects_duplicate_subscription(
 
     monkeypatch.setattr(queries, "select_subscriptions", select_subscriptions)
 
-    with pytest.raises(ValueError, match="active subscription"):
-        await functions.has_active_subscription(access_request, session)
+    assert await functions.has_active_subscription(access_request, session) is True
 
 
 async def test_approve_access_request_rejects_missing_cognito_client(

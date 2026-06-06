@@ -93,6 +93,7 @@ async def get_access_request(
             requested_auth_mode=row.requested_auth_mode,
             requested_reason=row.requested_reason,
             requested_by=row.requested_by,
+            derived_state=AccessRequestDerivedState.PENDING,
             scope_full_name=row.scope_full_name,
             api_scope_id=row.api_scope_id,
             apigw_rest_api_id=row.apigw_rest_api_id,
@@ -103,8 +104,7 @@ async def get_access_request(
 
 async def is_pending_access_request(access_request: ApiAccessRequestRef) -> bool:
     """利用申請が審査中状態であるかを判定する。"""
-    _ = access_request
-    return True
+    return access_request.derived_state == AccessRequestDerivedState.PENDING
 
 
 async def has_api_reviewer_permission(
@@ -130,8 +130,14 @@ async def has_api_reviewer_permission(
 
 async def is_available_project_api_stage(access_request: ApiAccessRequestRef) -> bool:
     """承認対象の Project、API、stage が利用可能かを判定する。"""
-    _ = access_request
-    return True
+    return all(
+        (
+            access_request.api_scope_id,
+            access_request.scope_full_name,
+            access_request.apigw_rest_api_id,
+            access_request.apigw_stage_name,
+        )
+    )
 
 
 async def has_active_subscription(
@@ -147,9 +153,7 @@ async def has_active_subscription(
                 api_stage_id=access_request.api_stage_id,
             ),
         )
-        if rows:
-            raise ValueError("active subscription already exists")
-        return False
+        return bool(rows)
     return False
 
 

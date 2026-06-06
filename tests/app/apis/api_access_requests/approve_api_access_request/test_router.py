@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any
+from uuid import uuid4
 
 import pytest
+from sqlalchemy import text
 
 from app.apis.api_access_requests.approve_api_access_request.samples import (
     APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE,
@@ -111,3 +114,74 @@ async def test_approve_api_access_request_router_persists_approval_resources_wit
         )
         == 0
     )
+
+
+@pytest.mark.anyio
+async def test_approve_api_access_request_router_rejects_duplicate_subscription(
+    router_db_harness: Any,
+    router_auth_headers: Any,
+    router_seed_access_request: Any,
+) -> None:
+    access_request = await router_seed_access_request(router_db_harness)
+    now = datetime.now(UTC)
+    async with router_db_harness.session_factory() as session:
+        await session.execute(
+            text(
+                """
+                INSERT INTO project_api_subscriptions (
+                    subscription_id,
+                    project_id,
+                    api_id,
+                    api_stage_id,
+                    access_request_id,
+                    approved_auth_mode,
+                    approved_by,
+                    approved_at,
+                    created_at,
+                    created_by,
+                    updated_at,
+                    updated_by,
+                    row_version
+                ) VALUES (
+                    :subscription_id,
+                    :project_id,
+                    :api_id,
+                    :api_stage_id,
+                    :access_request_id,
+                    :approved_auth_mode,
+                    :approved_by,
+                    :approved_at,
+                    :created_at,
+                    :created_by,
+                    :updated_at,
+                    :updated_by,
+                    :row_version
+                )
+                """
+            ),
+            {
+                "subscription_id": str(uuid4()),
+                "project_id": access_request["projectId"],
+                "api_id": access_request["apiId"],
+                "api_stage_id": access_request["apiStageId"],
+                "access_request_id": access_request["accessRequestId"],
+                "approved_auth_mode": "PUBLIC_PKCE",
+                "approved_by": "user-12345",
+                "approved_at": now,
+                "created_at": now,
+                "created_by": "user-12345",
+                "updated_at": now,
+                "updated_by": "user-12345",
+                "row_version": 1,
+            },
+        )
+        await session.commit()
+
+    response = await router_db_harness.client.post(
+        f"/api-access-requests/{access_request['accessRequestId']}/approve",
+        json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
+        headers=router_auth_headers("approve-access-request-duplicate-test"),
+    )
+
+    assert response.status_code == 409, response.text
+    assert response.json()["detail"] == "active subscription already exists"
