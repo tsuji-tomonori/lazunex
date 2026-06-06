@@ -264,10 +264,10 @@ async def test_update_public_client_db_sequence(monkeypatch: pytest.MonkeyPatch)
     assert "insert_audit_events" in calls
 
 
-async def test_update_public_client_get_project_without_session_returns_ref() -> None:
+async def test_update_public_client_get_project_requires_runtime_dependencies() -> None:
     project_id = UUID("cb62b5f6-0000-0000-0000-000000000001")
 
-    assert await functions.get_project(project_id) == ProjectRef(project_id=project_id)
+    await assert_runtime_dependency_error(functions.get_project(project_id), "get_project")
 
 
 async def test_update_public_client_get_idempotency_record_loads_existing(

@@ -139,7 +139,7 @@ async def has_api_reviewer_permission(
                 summary="呼び出し元が対象 API の reviewer または Hub 管理者でない場合。",
             )
         return True
-    return IdentityGroup.HUB_ADMIN in caller.groups
+    return raise_missing_runtime_dependency("has_api_reviewer_permission")
 
 
 async def is_available_project_api_stage(access_request: ApiAccessRequestRef) -> bool:
@@ -168,7 +168,7 @@ async def has_active_subscription(
             ),
         )
         return bool(rows)
-    return False
+    return raise_missing_runtime_dependency("has_active_subscription")
 
 
 async def append_access_request_approving_event(

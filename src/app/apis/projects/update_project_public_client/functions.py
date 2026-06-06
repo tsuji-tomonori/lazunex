@@ -114,7 +114,7 @@ async def get_project(
             owner_principal_id=row.owner_principal_id,
             caller_project_role=row.caller_project_role,
         )
-    return ProjectRef(project_id=project_id)
+    return raise_missing_runtime_dependency("get_project")
 
 
 async def has_project_owner_permission(project: ProjectRef, caller: CallerIdentity) -> bool:

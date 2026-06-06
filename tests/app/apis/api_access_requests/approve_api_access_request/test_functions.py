@@ -131,11 +131,17 @@ async def test_approve_helpers_merge_scopes_and_build_response(
     )
 
     assert await functions.is_pending_access_request(access_request) is True
-    assert await functions.has_api_reviewer_permission(access_request, caller) is True
     assert await functions.is_available_project_api_stage(access_request) is True
-    assert await functions.has_active_subscription(access_request) is False
     assert merged.allowed_scopes[-1] == f"api-hub/api:{access_request.api_id}:invoke"
     assert response.project_id == access_request.project_id
+    await assert_runtime_dependency_error(
+        functions.has_api_reviewer_permission(access_request, caller),
+        "has_api_reviewer_permission",
+    )
+    await assert_runtime_dependency_error(
+        functions.has_active_subscription(access_request),
+        "has_active_subscription",
+    )
 
 
 async def test_approve_predicates_return_false_for_non_matching_refs(
