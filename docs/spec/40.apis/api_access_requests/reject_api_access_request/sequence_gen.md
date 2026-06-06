@@ -31,9 +31,13 @@ sequenceDiagram
         API->>DB: DB transactionをrollbackして変更を破棄する。
         API-->>User: HTTP 400 Bad Request<br/>review_comment must not be blank
       end
+      API->>DB: Idempotency-Key に対応する既存レコードを取得する。<br/>SQL 007_select_idempotency_records.sql<br/>テーブル idempotency_records
+      alt router が idempotency key is already used と判定した場合。
+        API->>DB: DB transactionをrollbackして変更を破棄する。
+        API-->>User: HTTP 409 Conflict<br/>idempotency key is already used
+      end
       API->>DB: 利用申請却下開始イベントを追記する。<br/>SQL 004_insert_access_request_events.sql<br/>テーブル access_request_events
       API->>DB: 却下結果の review レコードを保存する。<br/>SQL 003_insert_api_access_reviews.sql<br/>テーブル api_access_reviews
-      API->>DB: Idempotency-Key に対応する既存レコードを取得する。<br/>SQL 007_select_idempotency_records.sql<br/>テーブル idempotency_records
       API->>DB: 冪等性レコードを作成または確認する。<br/>SQL 006_insert_idempotency_records.sql<br/>テーブル idempotency_records
       alt 却下結果の reviewedAt が保存結果から取得できない場合。
         API->>DB: DB transactionをrollbackして変更を破棄する。

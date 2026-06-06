@@ -30,6 +30,10 @@ sequenceDiagram
   alt 呼び出し元が Project owner である場合。
     API->>DB: Project の public App Client metadata を取得する。<br/>SQL 001_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients, projects, project_members
     API->>DB: Idempotency-Key に対応する既存レコードを取得する。<br/>SQL 013_select_idempotency_records.sql<br/>テーブル idempotency_records
+    alt router が idempotency key is already used と判定した場合。
+      API->>DB: DB transactionをrollbackして変更を破棄する。
+      API-->>User: HTTP 409 Conflict<br/>idempotency key is already used
+    end
     API->>DB: public client 更新用の provisioning operation を作成する。<br/>SQL 008_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
     API->>DB: 冪等性レコードを作成または確認する。<br/>SQL 009_insert_idempotency_records.sql<br/>テーブル idempotency_records
     API->>R_identity: Cognito App Client 設定を取得する。

@@ -133,7 +133,7 @@ async def get_idempotency_record(
     return raise_missing_runtime_dependency("get_idempotency_record")
 
 
-async def verify_api_gateway_stage_registration(
+async def update_api_gateway_stage_registration(
     request: PublishApiRequest,
     api_gateway_control: ApiGatewayControlPort | None = None,
 ) -> bool:
@@ -194,7 +194,7 @@ async def verify_api_gateway_stage_registration(
                 )
             )
         return True
-    return raise_missing_runtime_dependency("verify_api_gateway_stage_registration")
+    return raise_missing_runtime_dependency("update_api_gateway_stage_registration")
 
 
 async def has_registered_api(

@@ -9,10 +9,10 @@
 | domain | `apis` |
 | api | `publish_api` |
 | routes | POST /apis (publishApi) |
-| router | `src/app/apis/apis/publish_api/router.py:61` |
-| messages | 6 |
-| logger wrapper calls | 6 |
-| levels | WARNING:2, ERROR:4 |
+| router | `src/app/apis/apis/publish_api/router.py:62` |
+| messages | 7 |
+| logger wrapper calls | 7 |
+| levels | WARNING:3, ERROR:4 |
 
 ## 生成・検証方針
 
@@ -26,23 +26,25 @@
 
 | id | message_id | level | status | wrapper calls | ログ概要 | 説明 | 出力項目 | 対応すべきこと | runbook | 実装参照 |
 | :--- | :--- | :--- | ---: | ---: | :--- | :--- | :--- | :--- | :--- | :--- |
-| `M001` | `publishApi.caller_cannot_publish_api` | `WARNING` | 403 | 1 | 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 呼び出し元がAPI公開登録権限を持たない場合。 | traceId, actorPrincipalId, api.statusCode, error.code, error.message | actorPrincipalIdとAPI公開登録権限を確認する。 | RUNBOOK-authorization-forbidden | src/app/apis/apis/publish_api/router.py:79<br>wrapper: src/app/apis/apis/publish_api/router.py:79 (ops_logger.warning) |
-| `M002` | `publishApi.api_gateway_stage_registration_is_not_valid` | `ERROR` | 502 | 1 | API Gateway stage登録を検証できないため、API公開登録を中断した。 | API Gateway stage登録の検証に失敗した場合。 | traceId, actorPrincipalId, api.statusCode, error.code, error.message | API Gateway REST API ID、stage名、権限、リージョンを確認する。 | RUNBOOK-dependency-provisioning-failure | src/app/apis/apis/publish_api/router.py:104<br>wrapper: src/app/apis/apis/publish_api/router.py:104 (ops_logger.error) |
-| `M003` | `publishApi.api_is_already_registered` | `WARNING` | 409 | 1 | APIが既に登録済みのため、リクエストを拒否した。 | 同一API Gateway stageが既にAPI catalogに登録されている場合。 | traceId, actorPrincipalId, api.statusCode, error.code, error.message | 既存API metadataとIdempotency-Keyを確認する。 | RUNBOOK-state-conflict-idempotency | src/app/apis/apis/publish_api/router.py:130<br>wrapper: src/app/apis/apis/publish_api/router.py:130 (ops_logger.warning) |
-| `M004` | `publishApi.router_error` | `ERROR` |  | 1 | Routerで捕捉した例外によりAPI公開登録が失敗した。 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 | traceId, actorPrincipalId, api.statusCode, error.code, error.message, error.exceptionType | 同一routeの5xx率、直近deploy、Cognito/API Gateway/DB状態を確認する。 | RUNBOOK-unexpected-api-failure | src/app/apis/apis/publish_api/router.py:256<br>wrapper: src/app/apis/apis/publish_api/router.py:256 (ops_logger.error) |
-| `M005` | `publishApi.db_integrity_error` | `ERROR` | 500 | 1 | DB整合性違反によりAPI公開登録のcommitが失敗した。 | API公開登録のDB transaction commitでIntegrityErrorを捕捉した場合。 | traceId, actorPrincipalId, api.statusCode, error.code, error.message, error.exceptionType | API catalog/provisioning/idempotency、Cognito/API Gateway、制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。 | RUNBOOK-db-data-repair | src/app/apis/apis/publish_api/router.py:192<br>wrapper: src/app/apis/apis/publish_api/router.py:192 (ops_logger.error) |
-| `M006` | `publishApi.db_commit_failed` | `ERROR` | 503 | 1 | DB commit失敗によりAPI公開登録を確定できなかった。 | API公開登録のDB transaction commitでSQLAlchemyErrorを捕捉した場合。 | traceId, actorPrincipalId, api.statusCode, error.code, error.message, error.exceptionType | DB接続状態、transaction rollback、idempotency状態を確認し、必要に応じて利用者へ再実行を案内する。 | RUNBOOK-db-commit-retry | src/app/apis/apis/publish_api/router.py:222<br>wrapper: src/app/apis/apis/publish_api/router.py:222 (ops_logger.error) |
+| `M001` | `publishApi.caller_cannot_publish_api` | `WARNING` | 403 | 1 | 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 呼び出し元がAPI公開登録権限を持たない場合。 | traceId, actorPrincipalId, api.statusCode, error.code, error.message | actorPrincipalIdとAPI公開登録権限を確認する。 | RUNBOOK-authorization-forbidden | src/app/apis/apis/publish_api/router.py:80<br>wrapper: src/app/apis/apis/publish_api/router.py:80 (ops_logger.warning) |
+| `M002` | `publishApi.api_gateway_stage_registration_is_not_valid` | `ERROR` | 502 | 1 | API Gateway stage登録を検証できないため、API公開登録を中断した。 | API Gateway stage登録の検証に失敗した場合。 | traceId, actorPrincipalId, api.statusCode, error.code, error.message | API Gateway REST API ID、stage名、権限、リージョンを確認する。 | RUNBOOK-dependency-provisioning-failure | src/app/apis/apis/publish_api/router.py:131<br>wrapper: src/app/apis/apis/publish_api/router.py:131 (ops_logger.error) |
+| `M003` | `publishApi.api_is_already_registered` | `WARNING` | 409 | 1 | APIが既に登録済みのため、リクエストを拒否した。 | 同一API Gateway stageが既にAPI catalogに登録されている場合。 | traceId, actorPrincipalId, api.statusCode, error.code, error.message | 既存API metadataとIdempotency-Keyを確認する。 | RUNBOOK-state-conflict-idempotency | src/app/apis/apis/publish_api/router.py:157<br>wrapper: src/app/apis/apis/publish_api/router.py:157 (ops_logger.warning) |
+| `M004` | `publishApi.router_error` | `ERROR` |  | 1 | Routerで捕捉した例外によりAPI公開登録が失敗した。 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 | traceId, actorPrincipalId, api.statusCode, error.code, error.message, error.exceptionType | 同一routeの5xx率、直近deploy、Cognito/API Gateway/DB状態を確認する。 | RUNBOOK-unexpected-api-failure | src/app/apis/apis/publish_api/router.py:283<br>wrapper: src/app/apis/apis/publish_api/router.py:283 (ops_logger.error) |
+| `M005` | `publishApi.db_integrity_error` | `ERROR` | 500 | 1 | DB整合性違反によりAPI公開登録のcommitが失敗した。 | API公開登録のDB transaction commitでIntegrityErrorを捕捉した場合。 | traceId, actorPrincipalId, api.statusCode, error.code, error.message, error.exceptionType | API catalog/provisioning/idempotency、Cognito/API Gateway、制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。 | RUNBOOK-db-data-repair | src/app/apis/apis/publish_api/router.py:219<br>wrapper: src/app/apis/apis/publish_api/router.py:219 (ops_logger.error) |
+| `M006` | `publishApi.db_commit_failed` | `ERROR` | 503 | 1 | DB commit失敗によりAPI公開登録を確定できなかった。 | API公開登録のDB transaction commitでSQLAlchemyErrorを捕捉した場合。 | traceId, actorPrincipalId, api.statusCode, error.code, error.message, error.exceptionType | DB接続状態、transaction rollback、idempotency状態を確認し、必要に応じて利用者へ再実行を案内する。 | RUNBOOK-db-commit-retry | src/app/apis/apis/publish_api/router.py:249<br>wrapper: src/app/apis/apis/publish_api/router.py:249 (ops_logger.error) |
+| `M007` | `publishApi.idempotency_key_already_used` | `WARNING` | 409 | 1 | Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | Idempotency-Keyに対応する処理結果が既に存在する場合。 | traceId, actorPrincipalId, api.statusCode, error.code, error.message | Idempotency-Key、operationId、既存responsePayloadを確認する。 | RUNBOOK-state-conflict-idempotency | src/app/apis/apis/publish_api/router.py:104<br>wrapper: src/app/apis/apis/publish_api/router.py:104 (ops_logger.warning) |
 
 ## loggerラッパー呼び出し一覧
 
 | source | function | wrapper | catalog_id | message_id | level_hint | context keys |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `src/app/apis/apis/publish_api/router.py:79` | publish_api | `ops_logger.warning` | `M001` | `publishApi.caller_cannot_publish_api` | `WARNING` |  |
-| `src/app/apis/apis/publish_api/router.py:104` | publish_api | `ops_logger.error` | `M002` | `publishApi.api_gateway_stage_registration_is_not_valid` | `ERROR` |  |
-| `src/app/apis/apis/publish_api/router.py:130` | publish_api | `ops_logger.warning` | `M003` | `publishApi.api_is_already_registered` | `WARNING` |  |
-| `src/app/apis/apis/publish_api/router.py:192` | publish_api | `ops_logger.error` | `M005` | `publishApi.db_integrity_error` | `ERROR` |  |
-| `src/app/apis/apis/publish_api/router.py:222` | publish_api | `ops_logger.error` | `M006` | `publishApi.db_commit_failed` | `ERROR` |  |
-| `src/app/apis/apis/publish_api/router.py:256` | publish_api | `ops_logger.error` | `M004` | `publishApi.router_error` | `ERROR` |  |
+| `src/app/apis/apis/publish_api/router.py:80` | publish_api | `ops_logger.warning` | `M001` | `publishApi.caller_cannot_publish_api` | `WARNING` |  |
+| `src/app/apis/apis/publish_api/router.py:104` | publish_api | `ops_logger.warning` | `M007` | `publishApi.idempotency_key_already_used` | `WARNING` |  |
+| `src/app/apis/apis/publish_api/router.py:131` | publish_api | `ops_logger.error` | `M002` | `publishApi.api_gateway_stage_registration_is_not_valid` | `ERROR` |  |
+| `src/app/apis/apis/publish_api/router.py:157` | publish_api | `ops_logger.warning` | `M003` | `publishApi.api_is_already_registered` | `WARNING` |  |
+| `src/app/apis/apis/publish_api/router.py:219` | publish_api | `ops_logger.error` | `M005` | `publishApi.db_integrity_error` | `ERROR` |  |
+| `src/app/apis/apis/publish_api/router.py:249` | publish_api | `ops_logger.error` | `M006` | `publishApi.db_commit_failed` | `ERROR` |  |
+| `src/app/apis/apis/publish_api/router.py:283` | publish_api | `ops_logger.error` | `M004` | `publishApi.router_error` | `ERROR` |  |
 
 ## strict検証で要求する項目
 

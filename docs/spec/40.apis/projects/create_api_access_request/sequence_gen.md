@@ -31,30 +31,34 @@ sequenceDiagram
     API->>DB: 対象 API が公開済みであるかを判定する。<br/>SQL 002_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes, api_reviewers
     alt 対象 API が公開済みである場合。
       API->>DB: 対象 API の reviewer 情報を取得する。<br/>SQL 002_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes, api_reviewers
-      alt 対象 API の reviewer が設定されていない場合。
+      alt router が api reviewer is not configured と判定した場合。
         API->>DB: DB transactionをrollbackして変更を破棄する。
         API-->>User: HTTP 409 Conflict<br/>api reviewer is not configured
       end
-      alt requestedAuthMode に対応する Project client が存在しない場合。
-        API->>DB: DB transactionをrollbackして変更を破棄する。
-        API-->>User: HTTP 409 Conflict<br/>requested auth mode client is not configured
-      end
       API->>DB: requestedAuthMode に対応する Project client が存在するかを判定する。<br/>SQL 003_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients
       alt requestedAuthMode に対応する Project client が存在する場合。
-        alt 同一 Project/API の active subscription が存在する場合。
+        alt router が requested auth mode client is not configured と判定した場合。
           API->>DB: DB transactionをrollbackして変更を破棄する。
-          API-->>User: HTTP 409 Conflict<br/>active subscription already exists
+          API-->>User: HTTP 409 Conflict<br/>requested auth mode client is not configured
         end
         API->>DB: 同一 Project/API の active subscription が存在するかを判定する。<br/>SQL 004_select_subscriptions.sql<br/>テーブル project_api_subscriptions
-        alt 同一 Project/API の active subscription が存在しない場合。
-          alt 同一 Project/API の審査中申請が存在する場合。
+        alt 同一 Project/API の active subscription が存在する場合。
+          alt router が active subscription already exists と判定した場合。
             API->>DB: DB transactionをrollbackして変更を破棄する。
-            API-->>User: HTTP 409 Conflict<br/>pending access request already exists
+            API-->>User: HTTP 409 Conflict<br/>active subscription already exists
           end
           API->>DB: 同一 Project/API の審査中申請が存在するかを判定する。<br/>SQL 005_select_api_access_requests.sql<br/>テーブル api_access_requests, api_access_reviews
-          alt 同一 Project/API の審査中申請が存在しない場合。
-            API->>DB: 利用申請を保存する。<br/>SQL 006_insert_api_access_requests.sql<br/>テーブル api_access_requests
+          alt 同一 Project/API の審査中申請が存在する場合。
+            alt router が pending access request already exists と判定した場合。
+              API->>DB: DB transactionをrollbackして変更を破棄する。
+              API-->>User: HTTP 409 Conflict<br/>pending access request already exists
+            end
             API->>DB: Idempotency-Key に対応する既存レコードを取得する。<br/>SQL 010_select_idempotency_records.sql<br/>テーブル idempotency_records
+            alt router が idempotency key is already used と判定した場合。
+              API->>DB: DB transactionをrollbackして変更を破棄する。
+              API-->>User: HTTP 409 Conflict<br/>idempotency key is already used
+            end
+            API->>DB: 利用申請を保存する。<br/>SQL 006_insert_api_access_requests.sql<br/>テーブル api_access_requests
             API->>DB: 冪等性レコードを作成または確認する。<br/>SQL 009_insert_idempotency_records.sql<br/>テーブル idempotency_records
             API->>DB: 利用申請作成イベントを追記する。<br/>SQL 007_insert_access_request_events.sql<br/>テーブル access_request_events
             API->>DB: 監査イベントを追記する。<br/>SQL 008_insert_audit_events.sql<br/>テーブル audit_events

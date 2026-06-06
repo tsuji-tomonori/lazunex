@@ -101,7 +101,7 @@ async def test_get_caller_identity_returns_common_identity() -> None:
     )
 
 
-async def test_verify_api_gateway_stage_registration_patches_methods() -> None:
+async def test_update_api_gateway_stage_registration_patches_methods() -> None:
     client = FakeApiGatewayControlClient()
     request = PUBLISH_API_REQUEST_SAMPLE.model_copy(
         update={
@@ -111,13 +111,13 @@ async def test_verify_api_gateway_stage_registration_patches_methods() -> None:
         }
     )
 
-    assert await functions.verify_api_gateway_stage_registration(request, client) is True
+    assert await functions.update_api_gateway_stage_registration(request, client) is True
 
     assert any(isinstance(call, UpdateMethodInput) for call in client.calls)
     assert isinstance(client.calls[-1], CreateDeploymentInput)
 
 
-async def test_verify_api_gateway_stage_registration_rejects_missing_scope() -> None:
+async def test_update_api_gateway_stage_registration_rejects_missing_scope() -> None:
     class MissingScopeClient(FakeApiGatewayControlClient):
         async def get_method(self, request: GetMethodInput) -> ApiGatewayMethodDescription:
             self.calls.append(request)
@@ -139,7 +139,7 @@ async def test_verify_api_gateway_stage_registration_rejects_missing_scope() -> 
     )
 
     with pytest.raises(ValueError, match="API Gateway method"):
-        await functions.verify_api_gateway_stage_registration(request, MissingScopeClient())
+        await functions.update_api_gateway_stage_registration(request, MissingScopeClient())
 
 
 async def test_add_cognito_custom_scope_calls_identity_admin() -> None:

@@ -39,9 +39,13 @@ sequenceDiagram
         end
         API->>DB: 同一 Project/API の active subscription が存在するかを判定する。<br/>SQL 003_select_subscriptions.sql<br/>テーブル project_api_subscriptions
         alt 同一 Project/API の active subscription が存在しない場合。
+          API->>DB: Idempotency-Key に対応する既存レコードを取得する。<br/>SQL 019_select_idempotency_records.sql<br/>テーブル idempotency_records
+          alt router が idempotency key is already used と判定した場合。
+            API->>DB: DB transactionをrollbackして変更を破棄する。
+            API-->>User: HTTP 409 Conflict<br/>idempotency key is already used
+          end
           API->>DB: 利用申請承認開始イベントを追記する。<br/>SQL 004_insert_access_request_events.sql<br/>テーブル access_request_events
           API->>DB: 承認反映用の provisioning operation を作成する。<br/>SQL 005_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
-          API->>DB: Idempotency-Key に対応する既存レコードを取得する。<br/>SQL 019_select_idempotency_records.sql<br/>テーブル idempotency_records
           API->>DB: 冪等性レコードを作成または確認する。<br/>SQL 013_insert_idempotency_records.sql<br/>テーブル idempotency_records
           API->>R_api_gateway_control: API Gateway Usage Plan に API stage を追加する。
           API->>R_identity: Cognito App Client 設定を取得する。

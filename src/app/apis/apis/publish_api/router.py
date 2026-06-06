@@ -22,6 +22,7 @@ from app.apis.router_errors import (
     ROUTER_HANDLED_EXCEPTIONS,
     api_error_response,
     error_response_for_router_error,
+    has_existing_idempotency_result,
     router_log_context,
     status_code_for_router_error,
 )
@@ -96,8 +97,34 @@ async def publish_api(
                 ),
             )
             return api_error_response(status.HTTP_403_FORBIDDEN, "caller cannot publish api")
-        await api_functions.get_idempotency_record(idempotency_key, session)
-        if not await api_functions.verify_api_gateway_stage_registration(
+        idempotency_record = await api_functions.get_idempotency_record(
+            idempotency_key, session
+        )
+        if has_existing_idempotency_result(idempotency_record):
+            ops_logger.warning(
+                "publishApi.idempotency_key_already_used",
+                catalog_id="M007",
+                summary="Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。",
+                status_code=status.HTTP_409_CONFLICT,
+                detail="idempotency key is already used",
+                when="Idempotency-Keyに対応する処理結果が既に存在する場合。",
+                why_production="冪等性キーの再利用やリトライ衝突を運用で追跡するため。",
+                context_model="traceId, actorPrincipalId, api.statusCode, "
+                "error.code, error.message",
+                operator_action="Idempotency-Key、operationId、既存responsePayloadを確認する。",
+                runbook="RUNBOOK-state-conflict-idempotency",
+                context=router_log_context(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="idempotency key is already used",
+                    caller=caller,
+                    request_context=request_context,
+                ),
+            )
+            return api_error_response(
+                status.HTTP_409_CONFLICT,
+                "idempotency key is already used",
+            )
+        if not await api_functions.update_api_gateway_stage_registration(
             validated_request,
             api_gateway_control,
         ):

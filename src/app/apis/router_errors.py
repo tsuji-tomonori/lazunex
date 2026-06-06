@@ -7,7 +7,7 @@ from starlette.responses import JSONResponse
 
 from app.apis.exceptions import ApiFunctionError
 from app.apis.responses import ErrorBody, ErrorResponse
-from app.apis.sequence_types import CallerIdentity, RequestContext
+from app.apis.sequence_types import CallerIdentity, IdempotencyRecordRef, RequestContext
 from app.integrations.common_errors import (
     ExternalApiConflictError,
     ExternalApiError,
@@ -38,6 +38,11 @@ def api_error_response(
         status_code=status_code,
         content=body.model_dump(mode="json", by_alias=True),
     )
+
+
+def has_existing_idempotency_result(record: IdempotencyRecordRef) -> bool:
+    """Idempotency-Key が既に処理結果へ紐づいているかを判定する。"""
+    return record.operation_id is not None or record.response_payload is not None
 
 
 def error_response_for_router_error(

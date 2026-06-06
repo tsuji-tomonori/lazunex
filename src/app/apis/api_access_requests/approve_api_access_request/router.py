@@ -25,6 +25,7 @@ from app.apis.router_errors import (
     ROUTER_HANDLED_EXCEPTIONS,
     api_error_response,
     error_response_for_router_error,
+    has_existing_idempotency_result,
     router_log_context,
     status_code_for_router_error,
 )
@@ -191,6 +192,34 @@ async def approve_api_access_request(
             return api_error_response(
                 status.HTTP_409_CONFLICT, "active subscription already exists"
             )
+        idempotency_record = await api_functions.get_idempotency_record(
+            idempotency_key, session
+        )
+        if has_existing_idempotency_result(idempotency_record):
+            ops_logger.warning(
+                "approveApiAccessRequest.idempotency_key_already_used",
+                catalog_id="M008",
+                summary="Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。",
+                status_code=status.HTTP_409_CONFLICT,
+                detail="idempotency key is already used",
+                when="Idempotency-Keyに対応する処理結果が既に存在する場合。",
+                why_production="冪等性キーの再利用やリトライ衝突を運用で追跡するため。",
+                context_model="traceId, actorPrincipalId, api.statusCode, "
+                "resource.accessRequestId, error.code, error.message",
+                operator_action="Idempotency-Key、operationId、既存responsePayloadを確認する。",
+                runbook="RUNBOOK-state-conflict-idempotency",
+                context=router_log_context(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="idempotency key is already used",
+                    caller=caller,
+                    request_context=request_context,
+                    resource={"accessRequestId": access_request_id},
+                ),
+            )
+            return api_error_response(
+                status.HTTP_409_CONFLICT,
+                "idempotency key is already used",
+            )
         await api_functions.append_access_request_approving_event(
             access_request,
             caller,
@@ -205,7 +234,6 @@ async def approve_api_access_request(
             caller,
             session,
         )
-        await api_functions.get_idempotency_record(idempotency_key, session)
         await api_functions.create_idempotency_record(
             idempotency_key,
             operation,

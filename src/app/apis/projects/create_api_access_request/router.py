@@ -25,6 +25,7 @@ from app.apis.router_errors import (
     ROUTER_HANDLED_EXCEPTIONS,
     api_error_response,
     error_response_for_router_error,
+    has_existing_idempotency_result,
     router_log_context,
     status_code_for_router_error,
 )
@@ -136,16 +137,41 @@ async def create_api_access_request(
                 ),
             )
             return api_error_response(status.HTTP_404_NOT_FOUND, "api is not published")
-        await api_functions.get_api_reviewer(
+        api_reviewer = await api_functions.get_api_reviewer(
             validated_request.api_id,
             validated_request.api_stage_id,
             session,
         )
-        if not await api_functions.has_requested_auth_mode_clients(
+        if not api_reviewer.reviewer_principal_ids:
+            ops_logger.warning(
+                "createApiAccessRequest.api_reviewer_is_not_configured",
+                catalog_id="M009",
+                summary="対象APIのreviewerが未設定のため、リクエストを拒否した。",
+                status_code=status.HTTP_409_CONFLICT,
+                detail="api reviewer is not configured",
+                when="対象API stageのreviewer情報が空の場合。",
+                why_production="API利用申請の審査担当設定不足を運用で追跡するため。",
+                context_model="traceId, actorPrincipalId, api.statusCode, resource.projectId, "
+                "error.code, error.message",
+                operator_action="apiId、apiStageId、reviewer設定を確認する。",
+                runbook="RUNBOOK-api-client-error",
+                context=router_log_context(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="api reviewer is not configured",
+                    caller=caller,
+                    request_context=request_context,
+                    resource={"projectId": project_id},
+                ),
+            )
+            return api_error_response(
+                status.HTTP_409_CONFLICT, "api reviewer is not configured"
+            )
+        has_requested_auth_mode_clients = await api_functions.has_requested_auth_mode_clients(
             project,
             validated_request,
             session,
-        ):
+        )
+        if not has_requested_auth_mode_clients:
             ops_logger.warning(
                 "createApiAccessRequest.requested_auth_mode_client_is_not_configured",
                 catalog_id="M003",
@@ -170,12 +196,13 @@ async def create_api_access_request(
             return api_error_response(
                 status.HTTP_409_CONFLICT, "requested auth mode client is not configured"
             )
-        if await api_functions.has_active_subscription(
+        has_active_subscription = await api_functions.has_active_subscription(
             project,
             validated_request.api_id,
             validated_request.api_stage_id,
             session,
-        ):
+        )
+        if has_active_subscription:
             ops_logger.warning(
                 "createApiAccessRequest.active_subscription_already_exists",
                 catalog_id="M004",
@@ -199,12 +226,13 @@ async def create_api_access_request(
             return api_error_response(
                 status.HTTP_409_CONFLICT, "active subscription already exists"
             )
-        if await api_functions.has_pending_access_request_for_project_api(
+        has_pending_access_request = await api_functions.has_pending_access_request_for_project_api(
             project,
             validated_request.api_id,
             validated_request.api_stage_id,
             session,
-        ):
+        )
+        if has_pending_access_request:
             ops_logger.warning(
                 "createApiAccessRequest.pending_access_request_already_exists",
                 catalog_id="M005",
@@ -228,13 +256,40 @@ async def create_api_access_request(
             return api_error_response(
                 status.HTTP_409_CONFLICT, "pending access request already exists"
             )
+        idempotency_record = await api_functions.get_idempotency_record(
+            idempotency_key, session
+        )
+        if has_existing_idempotency_result(idempotency_record):
+            ops_logger.warning(
+                "createApiAccessRequest.idempotency_key_already_used",
+                catalog_id="M010",
+                summary="Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。",
+                status_code=status.HTTP_409_CONFLICT,
+                detail="idempotency key is already used",
+                when="Idempotency-Keyに対応する処理結果が既に存在する場合。",
+                why_production="冪等性キーの再利用やリトライ衝突を運用で追跡するため。",
+                context_model="traceId, actorPrincipalId, api.statusCode, resource.projectId, "
+                "error.code, error.message",
+                operator_action="Idempotency-Key、operationId、既存responsePayloadを確認する。",
+                runbook="RUNBOOK-state-conflict-idempotency",
+                context=router_log_context(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="idempotency key is already used",
+                    caller=caller,
+                    request_context=request_context,
+                    resource={"projectId": project_id},
+                ),
+            )
+            return api_error_response(
+                status.HTTP_409_CONFLICT,
+                "idempotency key is already used",
+            )
         access_request = await api_functions.save_api_access_request(
             project,
             validated_request,
             caller,
             session,
         )
-        await api_functions.get_idempotency_record(idempotency_key, session)
         await api_functions.create_idempotency_record(
             idempotency_key,
             access_request,

@@ -30,6 +30,10 @@ sequenceDiagram
   alt 呼び出し元が API 公開登録できる場合。
     Note over API,DB: DB transaction範囲開始 (最初のDB操作からcommit/rollbackまで)
     API->>DB: Idempotency-Key に対応する既存レコードを取得する。<br/>SQL 018_select_idempotency_records.sql<br/>テーブル idempotency_records
+    alt router が idempotency key is already used と判定した場合。
+      API->>DB: DB transactionをrollbackして変更を破棄する。
+      API-->>User: HTTP 409 Conflict<br/>idempotency key is already used
+    end
     API->>R_api_gateway_control: 登録対象 API Gateway stage の登録情報を検証する。
     alt API Gateway method に API key と Cognito scope が設定されていない場合。
       API->>DB: DB transactionをrollbackして変更を破棄する。

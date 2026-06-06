@@ -143,12 +143,6 @@ async def get_api_reviewer(
             queries.SelectApisParams(api_id=api_id, api_stage_id=api_stage_id),
         )
         reviewers = tuple(row.reviewer_principal_id for row in rows if row.reviewer_principal_id)
-        if not reviewers:
-            raise ApiFunctionError(
-                status.HTTP_409_CONFLICT,
-                "api reviewer is not configured",
-                summary="対象 API の reviewer が設定されていない場合。",
-            )
         return ApiReviewerRefs(reviewer_principal_ids=reviewers)
     return raise_missing_runtime_dependency("get_api_reviewer")
 
@@ -172,13 +166,7 @@ async def has_requested_auth_mode_clients(
             }
         else:
             required = {_client_type_for_auth_mode(request.requested_auth_mode)}
-        if not required.issubset(client_types):
-            raise ApiFunctionError(
-                status.HTTP_409_CONFLICT,
-                "requested auth mode client is not configured",
-                summary="requestedAuthMode に対応する Project client が存在しない場合。",
-            )
-        return True
+        return required.issubset(client_types)
     return raise_missing_runtime_dependency("has_requested_auth_mode_clients")
 
 
@@ -198,13 +186,7 @@ async def has_active_subscription(
                 api_stage_id=api_stage_id,
             ),
         )
-        if rows:
-            raise ApiFunctionError(
-                status.HTTP_409_CONFLICT,
-                "active subscription already exists",
-                summary="同一 Project/API の active subscription が存在する場合。",
-            )
-        return False
+        return bool(rows)
     return raise_missing_runtime_dependency("has_active_subscription")
 
 
@@ -224,13 +206,7 @@ async def has_pending_access_request_for_project_api(
                 api_stage_id=api_stage_id,
             ),
         )
-        if rows:
-            raise ApiFunctionError(
-                status.HTTP_409_CONFLICT,
-                "pending access request already exists",
-                summary="同一 Project/API の審査中申請が存在する場合。",
-            )
-        return False
+        return bool(rows)
     return raise_missing_runtime_dependency("has_pending_access_request_for_project_api")
 
 

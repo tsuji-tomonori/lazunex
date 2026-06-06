@@ -222,12 +222,12 @@ async def test_create_access_request_rejects_unpublished_or_unreviewed_api(
         )
 
     monkeypatch.setattr(queries, "select_apis", select_api_without_reviewer)
-    with pytest.raises(ValueError, match="reviewer"):
-        await functions.get_api_reviewer(
-            UUID("7b0d4a98-0000-0000-0000-000000000001"),
-            UUID("7b0d4a98-0000-0000-0000-000000000101"),
-            session,
-        )
+    reviewers = await functions.get_api_reviewer(
+        UUID("7b0d4a98-0000-0000-0000-000000000001"),
+        UUID("7b0d4a98-0000-0000-0000-000000000101"),
+        session,
+    )
+    assert reviewers.reviewer_principal_ids == ()
 
 
 async def test_create_access_request_rejects_duplicate_subscription(
@@ -241,13 +241,12 @@ async def test_create_access_request_rejects_duplicate_subscription(
 
     monkeypatch.setattr(queries, "select_subscriptions", select_subscriptions)
 
-    with pytest.raises(ValueError, match="active subscription"):
-        await functions.has_active_subscription(
-            project,
-            UUID("7b0d4a98-0000-0000-0000-000000000001"),
-            UUID("7b0d4a98-0000-0000-0000-000000000101"),
-            session,
-        )
+    assert await functions.has_active_subscription(
+        project,
+        UUID("7b0d4a98-0000-0000-0000-000000000001"),
+        UUID("7b0d4a98-0000-0000-0000-000000000101"),
+        session,
+    )
 
 
 async def test_create_access_request_rejects_pending_duplicate_and_loads_idempotency(
@@ -275,13 +274,12 @@ async def test_create_access_request_rejects_pending_duplicate_and_loads_idempot
     monkeypatch.setattr(queries, "select_api_access_requests", select_access_requests)
     monkeypatch.setattr(queries, "select_idempotency_records", select_idempotency_records)
 
-    with pytest.raises(ValueError, match="pending access request"):
-        await functions.has_pending_access_request_for_project_api(
-            project,
-            UUID("7b0d4a98-0000-0000-0000-000000000001"),
-            UUID("7b0d4a98-0000-0000-0000-000000000101"),
-            session,
-        )
+    assert await functions.has_pending_access_request_for_project_api(
+        project,
+        UUID("7b0d4a98-0000-0000-0000-000000000001"),
+        UUID("7b0d4a98-0000-0000-0000-000000000101"),
+        session,
+    )
 
     record = await functions.get_idempotency_record("idem-key", session)
     assert record.operation_id == operation_id
@@ -309,5 +307,4 @@ async def test_create_access_request_checks_requested_auth_mode_clients(
 
     monkeypatch.setattr(queries, "select_project_cognito_clients", select_empty)
 
-    with pytest.raises(ValueError, match="auth mode client"):
-        await functions.has_requested_auth_mode_clients(project, request, session)
+    assert not await functions.has_requested_auth_mode_clients(project, request, session)
