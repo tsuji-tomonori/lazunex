@@ -18,5 +18,6 @@ sequenceDiagram
     API->>API: 一覧取得結果に limit と nextToken を適用する。
     API->>API: secret 値を含めずに Project subscription 一覧レスポンスを組み立てる。
     API->>DB: Projectが利用可能なAPI一覧を返すため、承認済みsubscriptionを取得する。<br/>SQL 001_select_subscriptions.sql<br/>テーブル project_api_subscriptions, projects, apis, api_gateway_stages, api_cognito_scopes, project_cognito_client_scopes, project_cognito_clients, project_members
+    API-->>User: HTTP 200 OK
   end
 ```

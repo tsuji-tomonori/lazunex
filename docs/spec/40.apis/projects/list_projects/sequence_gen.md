@@ -17,5 +17,6 @@ sequenceDiagram
     API->>API: 一覧取得結果に limit と nextToken を適用する。
     API->>API: Project 一覧レスポンスを組み立てる。
     API->>DB: 参照可能なProject一覧を返すため、検索条件に合うProjectを取得する。<br/>SQL 001_select_projects.sql<br/>テーブル projects, project_members, project_api_subscriptions
+    API-->>User: HTTP 200 OK
   end
 ```

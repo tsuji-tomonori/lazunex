@@ -73,10 +73,19 @@ class ErrorReturnStep:
     detail: str
 
 
-type SequenceItem = SequenceStep | ErrorReturnStep
+@dataclass(frozen=True)
+class SuccessReturnStep:
+    status_code: int
+
+
+type SequenceItem = SequenceStep | ErrorReturnStep | SuccessReturnStep
 
 
 def empty_sequence_items() -> list[SequenceItem]:
+    return []
+
+
+def empty_success_returns() -> list[SuccessReturnStep]:
     return []
 
 
@@ -106,6 +115,7 @@ class ApiSequence:
     steps: list[SequenceStep]
     error_returns: list[ErrorReturnStep]
     sql_steps: list[SqlStep]
+    success_returns: list[SuccessReturnStep] = field(default_factory=empty_success_returns)
     items: list[SequenceItem] = field(default_factory=empty_sequence_items)
     integration_resources: frozenset[str] = field(default_factory=lambda: frozenset[str]())
     method: str = "GET"
@@ -551,14 +561,26 @@ def endpoint_sequence_steps(
 ) -> list[SequenceStep]:
     return [
         item
-        for item in endpoint_sequence_items(function, metadata)
+        for item in endpoint_sequence_items(
+            function, metadata, endpoint_success_status_code(function)
+        )
         if isinstance(item, SequenceStep)
     ]
+
+
+def endpoint_success_status_code(function: ast.AsyncFunctionDef | ast.FunctionDef) -> int:
+    for decorator in function.decorator_list:
+        if not is_router_decorator(decorator) or not isinstance(decorator, ast.Call):
+            continue
+        if code := http_status_code(keyword_value(decorator, "status_code")):
+            return code
+    return 200
 
 
 def endpoint_sequence_items(
     function: ast.AsyncFunctionDef | ast.FunctionDef,
     metadata: dict[str, FunctionMetadata],
+    success_status_code: int,
 ) -> list[SequenceItem]:
     items: list[SequenceItem] = []
 
@@ -590,6 +612,15 @@ def endpoint_sequence_items(
                 self.generic_visit(node)
                 return
             append_sequence_step(function_name)
+
+        def visit_Return(self, node: ast.Return) -> None:
+            if api_error_response_call(node) is not None:
+                return
+            if node.value is not None:
+                function_name = awaited_api_function_name(node.value)
+                if function_name is not None:
+                    append_sequence_step(function_name)
+            items.append(SuccessReturnStep(success_status_code))
 
     def append_sequence_step(function_name: str, condition_label: str | None = None) -> None:
         if function_name not in metadata:
@@ -623,11 +654,16 @@ def sequence_step_from_metadata(
 def dedupe_sequence_items(items: list[SequenceItem]) -> list[SequenceItem]:
     deduped: list[SequenceItem] = []
     seen_errors: set[ErrorReturnStep] = set()
+    seen_successes: set[SuccessReturnStep] = set()
     for item in items:
         if isinstance(item, ErrorReturnStep):
             if item in seen_errors:
                 continue
             seen_errors.add(item)
+        if isinstance(item, SuccessReturnStep):
+            if item in seen_successes:
+                continue
+            seen_successes.add(item)
         deduped.append(item)
     return deduped
 
@@ -915,9 +951,10 @@ def api_sequence_from_dir(
     tree = ast.parse(router_path.read_text(encoding="utf-8"), filename=str(router_path))
     function = endpoint_function(tree)
     metadata = function_metadata(functions_path)
-    items = endpoint_sequence_items(function, metadata)
+    items = endpoint_sequence_items(function, metadata, endpoint_success_status_code(function))
     steps = [item for item in items if isinstance(item, SequenceStep)]
     error_returns = [item for item in items if isinstance(item, ErrorReturnStep)]
+    success_returns = [item for item in items if isinstance(item, SuccessReturnStep)]
     query_filenames = query_sql_filenames(api_dir / "queries.py")
     called_query_filenames = {
         query_filenames[query_function]
@@ -934,6 +971,7 @@ def api_sequence_from_dir(
         operation_id=endpoint_operation_id(function),
         steps=steps,
         error_returns=error_returns,
+        success_returns=success_returns,
         sql_steps=sql_sequence_steps(
             api_dir / "sql",
             query_sql_summaries(api_dir / "queries.py"),
@@ -993,7 +1031,12 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
 
     rendered_items = sequence.items or [*sequence.steps, *sequence.error_returns]
     alt_depth = 0
+    success_return: SuccessReturnStep | None = None
     for item in rendered_items:
+        if isinstance(item, SuccessReturnStep):
+            success_return = item
+            continue
+
         if isinstance(item, ErrorReturnStep):
             indent = "  " + ("  " * alt_depth)
             lines.append(f"{indent}alt {item.condition}")
@@ -1026,6 +1069,10 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
             f"{indent}API->>DB: {sql_step.summary}"
             f"<br/>SQL {sql_step.filename}<br/>テーブル {tables}"
         )
+
+    if success_return is not None:
+        indent = "  " + ("  " * alt_depth)
+        lines.append(f"{indent}API-->>User: {http_status_code_label(success_return.status_code)}")
 
     for depth in range(alt_depth - 1, -1, -1):
         indent = "  " + ("  " * depth)

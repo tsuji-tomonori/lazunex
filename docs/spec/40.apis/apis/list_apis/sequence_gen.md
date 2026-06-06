@@ -17,5 +17,6 @@ sequenceDiagram
     API->>API: 一覧取得結果に limit と nextToken を適用する。
     API->>API: API 一覧レスポンスを組み立てる。
     API->>DB: 参照可能なAPI一覧を返すため、検索条件に合うAPI catalog情報を取得する。<br/>SQL 001_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes
+    API-->>User: HTTP 200 OK
   end
 ```

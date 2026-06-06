@@ -62,6 +62,7 @@ sequenceDiagram
           API->>DB: Cognito clientにAPI実行scopeを許可するため、Project Cognito client scopeを追加する。<br/>SQL 010_insert_project_cognito_client_scopes.sql<br/>テーブル project_cognito_client_scopes
           API->>DB: 利用申請承認の処理結果として、冪等性レコードを追加する。<br/>SQL 013_insert_idempotency_records.sql<br/>テーブル idempotency_records
           API->>DB: Idempotency-Keyに対応する既存レコードを取得する。<br/>SQL 019_select_idempotency_records.sql<br/>テーブル idempotency_records
+          API-->>User: HTTP 200 OK
         end
       end
     end

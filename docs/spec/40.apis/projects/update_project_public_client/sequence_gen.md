@@ -50,5 +50,6 @@ sequenceDiagram
     API->>DB: Project public client更新の処理結果として、冪等性レコードを追加する。<br/>SQL 009_insert_idempotency_records.sql<br/>テーブル idempotency_records
     API->>DB: Project public client更新の処理結果として、provisioning operation eventsを追加する。<br/>SQL 011_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
     API->>DB: Idempotency-Keyに対応する既存レコードを取得する。<br/>SQL 013_select_idempotency_records.sql<br/>テーブル idempotency_records
+    API-->>User: HTTP 200 OK
   end
 ```

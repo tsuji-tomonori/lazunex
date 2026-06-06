@@ -19,5 +19,6 @@ sequenceDiagram
   alt 対象 API が呼び出し元から参照可能な場合。
     API->>API: API 詳細レスポンスを組み立てる。
     API->>DB: API詳細レスポンスを組み立てるため、API catalog情報を取得する。<br/>SQL 001_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes, api_reviewers
+    API-->>User: HTTP 200 OK
   end
 ```

@@ -70,6 +70,7 @@ sequenceDiagram
       API->>DB: API公開登録の処理結果として、provisioning operation eventsを追加する。<br/>SQL 016_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
       API->>DB: Idempotency-Keyに対応する既存レコードを取得する。<br/>SQL 018_select_idempotency_records.sql<br/>テーブル idempotency_records
       API->>DB: API Gateway stageの重複登録を防ぐため、既存stageを取得する。<br/>SQL 019_select_api_gateway_stages_by_unique_key.sql<br/>テーブル api_gateway_stages
+      API-->>User: HTTP 201 Created
     end
   end
 ```

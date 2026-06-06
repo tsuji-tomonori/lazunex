@@ -181,6 +181,7 @@ async def select_projects(session: AsyncSession, params):
             "caller cannot view project",
         )
     ]
+    assert [success.status_code for success in sequence.success_returns] == [200]
     assert sequence.sql_steps == [
         SqlStep(
             "001_select_projects.sql",

@@ -57,6 +57,7 @@ sequenceDiagram
             API->>DB: 利用申請作成の処理結果として、監査イベントを追加する。<br/>SQL 008_insert_audit_events.sql<br/>テーブル audit_events
             API->>DB: 利用申請作成の処理結果として、冪等性レコードを追加する。<br/>SQL 009_insert_idempotency_records.sql<br/>テーブル idempotency_records
             API->>DB: Idempotency-Keyに対応する既存レコードを取得する。<br/>SQL 010_select_idempotency_records.sql<br/>テーブル idempotency_records
+            API-->>User: HTTP 201 Created
           end
         end
       end

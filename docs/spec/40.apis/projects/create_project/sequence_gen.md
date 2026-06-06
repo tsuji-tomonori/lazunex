@@ -68,5 +68,6 @@ sequenceDiagram
     API->>DB: Idempotency-Keyに対応する既存レコードを取得する。<br/>SQL 019_select_idempotency_records.sql<br/>テーブル idempotency_records
     API->>DB: Project作成の処理結果として、監査イベントを追加する。<br/>SQL 020_insert_audit_events.sql<br/>テーブル audit_events
     API->>DB: Project作成の処理結果として、Project Cognito clientイベントを追加する。<br/>SQL 021_insert_project_cognito_client_events.sql<br/>テーブル project_cognito_client_events
+    API-->>User: HTTP 201 Created
   end
 ```
