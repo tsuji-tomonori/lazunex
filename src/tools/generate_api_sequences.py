@@ -1063,6 +1063,27 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
             return step.integration_resources[0]
         return None
 
+    sql_steps_by_filename = {step.filename: step for step in sequence.sql_steps}
+
+    def sql_steps_for_step(step: SequenceStep) -> list[SqlStep]:
+        query_filenames = query_sql_filenames_for_step(step, sequence.sql_steps)
+        return [
+            sql_steps_by_filename[filename]
+            for filename in query_filenames
+            if filename in sql_steps_by_filename
+        ]
+
+    def append_sql_steps(step: SequenceStep) -> None:
+        step_sql_steps = sql_steps_for_step(step)
+        for sql_step in step_sql_steps:
+            tables = ", ".join(sql_step.tables)
+            indent = "  " + ("  " * alt_depth)
+            label = step.description if len(step_sql_steps) == 1 else sql_step.summary
+            lines.append(
+                f"{indent}API->>DB: {label}"
+                f"<br/>SQL {sql_step.filename}<br/>テーブル {tables}"
+            )
+
     lines = [
         GENERATED_COMMENT,
         "",
@@ -1105,24 +1126,21 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
         label = sequence_label(step)
         if is_predicate_function(step.function_name):
             indent = "  " + ("  " * alt_depth)
+            append_sql_steps(step)
             lines.append(f"{indent}alt {predicate_condition_label(step)}")
             alt_depth += 1
             continue
         selected_resource = step_resource(step)
         indent = "  " + ("  " * alt_depth)
+        if selected_resource is None and sql_steps_for_step(step):
+            append_sql_steps(step)
+            continue
         if selected_resource is None:
             lines.append(f"{indent}API->>API: {label}")
         else:
             resource_id = participant_id("R", selected_resource)
             lines.append(f"{indent}API->>{resource_id}: {label}")
-
-    for sql_step in sequence.sql_steps:
-        tables = ", ".join(sql_step.tables)
-        indent = "  " + ("  " * alt_depth)
-        lines.append(
-            f"{indent}API->>DB: {sql_step.summary}"
-            f"<br/>SQL {sql_step.filename}<br/>テーブル {tables}"
-        )
+            append_sql_steps(step)
 
     if success_return is not None:
         indent = "  " + ("  " * alt_depth)
@@ -1134,6 +1152,17 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
 
     lines.extend(["```", ""])
     return "\n".join(lines)
+
+
+def query_sql_filenames_for_step(step: SequenceStep, sql_steps: list[SqlStep]) -> list[str]:
+    filenames: list[str] = []
+    for query_function in step.query_functions:
+        suffix = f"_{query_function}.sql"
+        for sql_step in sql_steps:
+            if sql_step.filename == f"{query_function}.sql" or sql_step.filename.endswith(suffix):
+                filenames.append(sql_step.filename)
+                break
+    return filenames
 
 
 def output_path(sequence: ApiSequence, docs_root: Path) -> Path:

@@ -9,7 +9,7 @@ sequenceDiagram
   participant API as API
   participant DB as DB
   User->>API: GET /apis/{apiId}
-  API->>API: API 詳細レスポンスに必要な情報を取得する。
+  API->>DB: API 詳細レスポンスに必要な情報を取得する。<br/>SQL 001_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes, api_reviewers
   alt 対象 API が存在しない場合。
     API-->>User: HTTP 404 Not Found<br/>API not found
   end
@@ -21,7 +21,6 @@ sequenceDiagram
     alt Router で捕捉した例外を error response に変換する場合。
       API-->>User: HTTP 500 Internal Server Error<br/>internal server error
     end
-    API->>DB: API詳細レスポンスを組み立てるため、API catalog情報を取得する。<br/>SQL 001_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes, api_reviewers
     API-->>User: HTTP 200 OK
   end
 ```

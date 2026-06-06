@@ -11,7 +11,7 @@ sequenceDiagram
   participant R_identity as Resource: identity
   participant DB as DB
   User->>API: POST /api-access-requests/{accessRequestId}/approve
-  API->>API: 承認対象の利用申請を取得する。
+  API->>DB: 承認対象の利用申請を取得する。<br/>SQL 001_select_api_access_requests.sql<br/>テーブル api_access_requests, projects, apis, api_gateway_stages, api_cognito_scopes, api_access_reviews
   alt 承認対象の審査中利用申請が存在しない場合。
     API-->>User: HTTP 404 Not Found<br/>pending access request is not found
   end
@@ -22,6 +22,7 @@ sequenceDiagram
     alt 呼び出し元が対象 API の reviewer または Hub 管理者でない場合。
       API-->>User: HTTP 403 Forbidden<br/>caller is not an api reviewer
     end
+    API->>DB: 呼び出し元が対象 API の reviewer または Hub 管理者であるかを判定する。<br/>SQL 002_select_api_reviewers.sql<br/>テーブル api_reviewers
     alt 呼び出し元が対象 API の reviewer または Hub 管理者である場合。
       alt 承認対象の Project、API、stage が利用可能でない場合。
         API-->>User: HTTP 409 Conflict<br/>project api stage is not available
@@ -30,46 +31,34 @@ sequenceDiagram
         alt 同一 Project/API の active subscription が存在する場合。
           API-->>User: HTTP 409 Conflict<br/>active subscription already exists
         end
+        API->>DB: 同一 Project/API の active subscription が存在するかを判定する。<br/>SQL 003_select_subscriptions.sql<br/>テーブル project_api_subscriptions
         alt 同一 Project/API の active subscription が存在しない場合。
-          API->>API: 利用申請承認開始イベントを追記する。
-          API->>API: 承認反映用の provisioning operation を作成する。
-          API->>API: Idempotency-Key に対応する既存レコードを取得する。
-          API->>API: 冪等性レコードを作成または確認する。
+          API->>DB: 利用申請承認開始イベントを追記する。<br/>SQL 004_insert_access_request_events.sql<br/>テーブル access_request_events
+          API->>DB: 承認反映用の provisioning operation を作成する。<br/>SQL 005_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
+          API->>DB: Idempotency-Key に対応する既存レコードを取得する。<br/>SQL 019_select_idempotency_records.sql<br/>テーブル idempotency_records
+          API->>DB: 冪等性レコードを作成または確認する。<br/>SQL 013_insert_idempotency_records.sql<br/>テーブル idempotency_records
           API->>R_api_gateway_control: API Gateway Usage Plan に API stage を追加する。
           API->>R_identity: Cognito App Client 設定を取得する。
           API->>API: 既存 AllowedOAuthScopes に承認対象 scope を統合する。
           API->>R_identity: Cognito App Client を更新する。
-          API->>API: 承認結果、subscription、linkage、client scope を保存する。
-          alt 承認対象の Project Cognito client が設定されていない場合。
-            API-->>User: HTTP 409 Conflict<br/>project cognito client is not configured
-          end
-          API->>API: Usage Plan stage 追加イベントを追記する。
-          API->>API: Cognito App Client scope 付与イベントを追記する。
-          API->>API: 利用申請承認済みイベントを追記する。
-          API->>API: subscription 反映済みイベントを追記する。
-          API->>API: provisioning operation/step event を追記する。
-          API->>API: 監査イベントを追記する。
-          API->>API: 利用申請承認レスポンスを組み立てる。
-          alt Router で捕捉した例外を error response に変換する場合。
-            API-->>User: HTTP 500 Internal Server Error<br/>internal server error
-          end
-          API->>DB: 承認対象の利用申請と現在状態を確認するため、利用申請を取得する。<br/>SQL 001_select_api_access_requests.sql<br/>テーブル api_access_requests, projects, apis, api_gateway_stages, api_cognito_scopes, api_access_reviews
-          API->>DB: 承認者が対象APIのreviewerか確認するため、API reviewerを取得する。<br/>SQL 002_select_api_reviewers.sql<br/>テーブル api_reviewers
-          API->>DB: 重複承認を防ぐため、既存のactive subscriptionを取得する。<br/>SQL 003_select_subscriptions.sql<br/>テーブル project_api_subscriptions
-          API->>DB: 承認処理の開始と完了を追跡するため、利用申請イベントを追加する。<br/>SQL 004_insert_access_request_events.sql<br/>テーブル access_request_events
-          API->>DB: 承認後のAWS反映作業を追跡するため、provisioning operationを追加する。<br/>SQL 005_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
           API->>DB: 承認後にscopeを付与する対象を決めるため、Project Cognito clientを取得する。<br/>SQL 006_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients, project_usage_plans
           API->>DB: 承認結果と承認コメントを保持するため、利用申請レビューを追加する。<br/>SQL 007_insert_api_access_reviews.sql<br/>テーブル api_access_reviews
           API->>DB: 承認済みAPI利用権を有効化するため、Project API subscriptionを追加する。<br/>SQL 008_insert_project_api_subscriptions.sql<br/>テーブル project_api_subscriptions
           API->>DB: Usage Planから対象stageを利用可能にするため、Usage Plan stage紐づけを追加する。<br/>SQL 009_insert_project_usage_plan_api_stages.sql<br/>テーブル project_usage_plan_api_stages
           API->>DB: Cognito clientにAPI実行scopeを許可するため、Project Cognito client scopeを追加する。<br/>SQL 010_insert_project_cognito_client_scopes.sql<br/>テーブル project_cognito_client_scopes
-          API->>DB: 利用申請承認の処理結果として、subscriptionイベントを追加する。<br/>SQL 011_insert_subscription_events.sql<br/>テーブル subscription_events
-          API->>DB: 利用申請承認の処理結果として、監査イベントを追加する。<br/>SQL 012_insert_audit_events.sql<br/>テーブル audit_events
-          API->>DB: 利用申請承認の処理結果として、冪等性レコードを追加する。<br/>SQL 013_insert_idempotency_records.sql<br/>テーブル idempotency_records
-          API->>DB: 利用申請承認の処理結果として、Usage Plan stageイベントを追加する。<br/>SQL 015_insert_usage_plan_stage_events.sql<br/>テーブル usage_plan_stage_events
-          API->>DB: 利用申請承認の処理結果として、client scopeイベントを追加する。<br/>SQL 016_insert_client_scope_events.sql<br/>テーブル client_scope_events
-          API->>DB: 利用申請承認の処理結果として、provisioning operation eventsを追加する。<br/>SQL 017_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
-          API->>DB: Idempotency-Keyに対応する既存レコードを取得する。<br/>SQL 019_select_idempotency_records.sql<br/>テーブル idempotency_records
+          alt 承認対象の Project Cognito client が設定されていない場合。
+            API-->>User: HTTP 409 Conflict<br/>project cognito client is not configured
+          end
+          API->>DB: Usage Plan stage 追加イベントを追記する。<br/>SQL 015_insert_usage_plan_stage_events.sql<br/>テーブル usage_plan_stage_events
+          API->>DB: Cognito App Client scope 付与イベントを追記する。<br/>SQL 016_insert_client_scope_events.sql<br/>テーブル client_scope_events
+          API->>DB: 利用申請承認済みイベントを追記する。<br/>SQL 004_insert_access_request_events.sql<br/>テーブル access_request_events
+          API->>DB: subscription 反映済みイベントを追記する。<br/>SQL 011_insert_subscription_events.sql<br/>テーブル subscription_events
+          API->>DB: provisioning operation/step event を追記する。<br/>SQL 017_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
+          API->>DB: 監査イベントを追記する。<br/>SQL 012_insert_audit_events.sql<br/>テーブル audit_events
+          API->>API: 利用申請承認レスポンスを組み立てる。
+          alt Router で捕捉した例外を error response に変換する場合。
+            API-->>User: HTTP 500 Internal Server Error<br/>internal server error
+          end
           API-->>User: HTTP 200 OK
         end
       end

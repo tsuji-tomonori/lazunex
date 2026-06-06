@@ -14,13 +14,12 @@ sequenceDiagram
     API-->>User: HTTP 403 Forbidden<br/>caller cannot list project subscriptions
   end
   alt 呼び出し元が Project subscription 一覧を参照できる場合。
-    API->>API: Project の active subscription を検索する。
+    API->>DB: Project の active subscription を検索する。<br/>SQL 001_select_subscriptions.sql<br/>テーブル project_api_subscriptions, projects, apis, api_gateway_stages, api_cognito_scopes, project_cognito_client_scopes, project_cognito_clients, project_members
     API->>API: 一覧取得結果に limit と nextToken を適用する。
     API->>API: secret 値を含めずに Project subscription 一覧レスポンスを組み立てる。
     alt Router で捕捉した例外を error response に変換する場合。
       API-->>User: HTTP 500 Internal Server Error<br/>internal server error
     end
-    API->>DB: Projectが利用可能なAPI一覧を返すため、承認済みsubscriptionを取得する。<br/>SQL 001_select_subscriptions.sql<br/>テーブル project_api_subscriptions, projects, apis, api_gateway_stages, api_cognito_scopes, project_cognito_client_scopes, project_cognito_clients, project_members
     API-->>User: HTTP 200 OK
   end
 ```

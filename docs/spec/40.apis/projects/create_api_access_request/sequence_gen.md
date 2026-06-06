@@ -13,7 +13,7 @@ sequenceDiagram
   alt requestedReason が空白である場合。
     API-->>User: HTTP 400 Bad Request<br/>requested_reason must not be blank
   end
-  API->>API: 対象 Project を取得する。
+  API->>DB: 対象 Project を取得する。<br/>SQL 001_select_projects.sql<br/>テーブル projects, project_members
   alt 対象 Project が存在しない、または呼び出し元が参照できない場合。
     API-->>User: HTTP 404 Not Found<br/>project is not found or caller cannot access it
   end
@@ -24,42 +24,36 @@ sequenceDiagram
     alt 対象 API が公開済みでない場合。
       API-->>User: HTTP 404 Not Found<br/>api is not published
     end
+    API->>DB: 対象 API が公開済みであるかを判定する。<br/>SQL 002_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes, api_reviewers
     alt 対象 API が公開済みである場合。
-      API->>API: 対象 API の reviewer 情報を取得する。
+      API->>DB: 対象 API の reviewer 情報を取得する。<br/>SQL 002_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes, api_reviewers
       alt 対象 API の reviewer が設定されていない場合。
         API-->>User: HTTP 409 Conflict<br/>api reviewer is not configured
       end
       alt requestedAuthMode に対応する Project client が存在しない場合。
         API-->>User: HTTP 409 Conflict<br/>requested auth mode client is not configured
       end
+      API->>DB: requestedAuthMode に対応する Project client が存在するかを判定する。<br/>SQL 003_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients
       alt requestedAuthMode に対応する Project client が存在する場合。
         alt 同一 Project/API の active subscription が存在する場合。
           API-->>User: HTTP 409 Conflict<br/>active subscription already exists
         end
+        API->>DB: 同一 Project/API の active subscription が存在するかを判定する。<br/>SQL 004_select_subscriptions.sql<br/>テーブル project_api_subscriptions
         alt 同一 Project/API の active subscription が存在しない場合。
           alt 同一 Project/API の審査中申請が存在する場合。
             API-->>User: HTTP 409 Conflict<br/>pending access request already exists
           end
+          API->>DB: 同一 Project/API の審査中申請が存在するかを判定する。<br/>SQL 005_select_api_access_requests.sql<br/>テーブル api_access_requests, api_access_reviews
           alt 同一 Project/API の審査中申請が存在しない場合。
-            API->>API: 利用申請を保存する。
-            API->>API: Idempotency-Key に対応する既存レコードを取得する。
-            API->>API: 冪等性レコードを作成または確認する。
-            API->>API: 利用申請作成イベントを追記する。
-            API->>API: 監査イベントを追記する。
+            API->>DB: 利用申請を保存する。<br/>SQL 006_insert_api_access_requests.sql<br/>テーブル api_access_requests
+            API->>DB: Idempotency-Key に対応する既存レコードを取得する。<br/>SQL 010_select_idempotency_records.sql<br/>テーブル idempotency_records
+            API->>DB: 冪等性レコードを作成または確認する。<br/>SQL 009_insert_idempotency_records.sql<br/>テーブル idempotency_records
+            API->>DB: 利用申請作成イベントを追記する。<br/>SQL 007_insert_access_request_events.sql<br/>テーブル access_request_events
+            API->>DB: 監査イベントを追記する。<br/>SQL 008_insert_audit_events.sql<br/>テーブル audit_events
             API->>API: 利用申請作成レスポンスを組み立てる。
             alt Router で捕捉した例外を error response に変換する場合。
               API-->>User: HTTP 500 Internal Server Error<br/>internal server error
             end
-            API->>DB: 申請元Projectと呼び出し元の権限を確認するため、Projectを取得する。<br/>SQL 001_select_projects.sql<br/>テーブル projects, project_members
-            API->>DB: 申請対象APIが利用申請可能か確認するため、API catalog情報を取得する。<br/>SQL 002_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes, api_reviewers
-            API->>DB: 申請認証方式とProject client構成を照合するため、Project Cognito clientを取得する。<br/>SQL 003_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients
-            API->>DB: 既に利用可能なAPIへの重複申請を防ぐため、active subscriptionを取得する。<br/>SQL 004_select_subscriptions.sql<br/>テーブル project_api_subscriptions
-            API->>DB: 同一Project/APIの審査中申請を検出するため、利用申請を取得する。<br/>SQL 005_select_api_access_requests.sql<br/>テーブル api_access_requests, api_access_reviews
-            API->>DB: 審査待ちの利用申請を保持するため、利用申請を追加する。<br/>SQL 006_insert_api_access_requests.sql<br/>テーブル api_access_requests
-            API->>DB: 利用申請作成を履歴化するため、利用申請イベントを追加する。<br/>SQL 007_insert_access_request_events.sql<br/>テーブル access_request_events
-            API->>DB: 利用申請作成の処理結果として、監査イベントを追加する。<br/>SQL 008_insert_audit_events.sql<br/>テーブル audit_events
-            API->>DB: 利用申請作成の処理結果として、冪等性レコードを追加する。<br/>SQL 009_insert_idempotency_records.sql<br/>テーブル idempotency_records
-            API->>DB: Idempotency-Keyに対応する既存レコードを取得する。<br/>SQL 010_select_idempotency_records.sql<br/>テーブル idempotency_records
             API-->>User: HTTP 201 Created
           end
         end

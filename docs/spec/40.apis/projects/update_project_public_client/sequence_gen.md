@@ -17,7 +17,7 @@ sequenceDiagram
   alt retry_grace_period_seconds が60秒を超える場合。
     API-->>User: HTTP 400 Bad Request<br/>retry_grace_period_seconds must be 60 seconds or fewer
   end
-  API->>API: 対象 Project を取得する。
+  API->>DB: 対象 Project を取得する。<br/>SQL 001_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients, projects, project_members
   alt 対象 Project の public App Client が存在しない、または呼び出し元が参照できない場合。
     API-->>User: HTTP 404 Not Found<br/>project public client is not found or caller cannot access it
   end
@@ -25,34 +25,28 @@ sequenceDiagram
     API-->>User: HTTP 403 Forbidden<br/>caller is not a project owner
   end
   alt 呼び出し元が Project owner である場合。
-    API->>API: Project の public App Client metadata を取得する。
-    API->>API: Idempotency-Key に対応する既存レコードを取得する。
-    API->>API: public client 更新用の provisioning operation を作成する。
-    API->>API: 冪等性レコードを作成または確認する。
+    API->>DB: Project の public App Client metadata を取得する。<br/>SQL 001_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients, projects, project_members
+    API->>DB: Idempotency-Key に対応する既存レコードを取得する。<br/>SQL 013_select_idempotency_records.sql<br/>テーブル idempotency_records
+    API->>DB: public client 更新用の provisioning operation を作成する。<br/>SQL 008_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
+    API->>DB: 冪等性レコードを作成または確認する。<br/>SQL 009_insert_idempotency_records.sql<br/>テーブル idempotency_records
     API->>R_identity: Cognito App Client 設定を取得する。
     API->>API: callback URL、logout URL、token 設定を既存設定へ統合する。
     API->>R_identity: Cognito App Client を更新する。
-    API->>API: public App Client metadata を更新する。
-    alt Project public App Client の row version が一致しない場合。
-      API-->>User: HTTP 409 Conflict<br/>project public client row version conflict
-    end
-    API->>API: Project public client 更新イベントを追記する。
-    API->>API: provisioning operation/step event を追記する。
-    API->>API: 監査イベントを追記する。
-    API->>API: public App Client 更新レスポンスを組み立てる。
-    alt Router で捕捉した例外を error response に変換する場合。
-      API-->>User: HTTP 500 Internal Server Error<br/>internal server error
-    end
     API->>DB: 更新対象のpublic clientと現在versionを確認するため、Project Cognito clientを取得する。<br/>SQL 001_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients, projects, project_members
     API->>DB: public client設定の更新内容とversionを反映するため、Project Cognito clientを更新する。<br/>SQL 003_update_project_cognito_clients.sql<br/>テーブル project_cognito_clients
     API->>DB: public clientのURL設定を最新化するため、既存のProject Cognito client URLを削除する。<br/>SQL 004_delete_project_cognito_client_urls.sql<br/>テーブル project_cognito_client_urls
     API->>DB: public clientのURL設定を最新化するため、既存のProject Cognito client URLを削除する。<br/>SQL 005_insert_project_cognito_client_urls.sql<br/>テーブル project_cognito_client_urls
+    alt Project public App Client の row version が一致しない場合。
+      API-->>User: HTTP 409 Conflict<br/>project public client row version conflict
+    end
+    API->>DB: 更新対象のpublic clientと現在versionを確認するため、Project Cognito clientを取得する。<br/>SQL 001_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients, projects, project_members
     API->>DB: Project public client更新の処理結果として、Project Cognito clientイベントを追加する。<br/>SQL 006_insert_project_cognito_client_events.sql<br/>テーブル project_cognito_client_events
-    API->>DB: Project public client更新の処理結果として、監査イベントを追加する。<br/>SQL 007_insert_audit_events.sql<br/>テーブル audit_events
-    API->>DB: Project public client更新の処理結果として、provisioning operationを追加する。<br/>SQL 008_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
-    API->>DB: Project public client更新の処理結果として、冪等性レコードを追加する。<br/>SQL 009_insert_idempotency_records.sql<br/>テーブル idempotency_records
-    API->>DB: Project public client更新の処理結果として、provisioning operation eventsを追加する。<br/>SQL 011_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
-    API->>DB: Idempotency-Keyに対応する既存レコードを取得する。<br/>SQL 013_select_idempotency_records.sql<br/>テーブル idempotency_records
+    API->>DB: provisioning operation/step event を追記する。<br/>SQL 011_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
+    API->>DB: 監査イベントを追記する。<br/>SQL 007_insert_audit_events.sql<br/>テーブル audit_events
+    API->>API: public App Client 更新レスポンスを組み立てる。
+    alt Router で捕捉した例外を error response に変換する場合。
+      API-->>User: HTTP 500 Internal Server Error<br/>internal server error
+    end
     API-->>User: HTTP 200 OK
   end
 ```

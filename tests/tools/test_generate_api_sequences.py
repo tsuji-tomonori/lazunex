@@ -38,6 +38,7 @@ from tools.generate_api_sequences import (
     literal_string,
     main,
     query_sql_filenames,
+    query_sql_filenames_for_step,
     query_sql_summaries,
     render_sequence_markdown,
     sql_sequence_steps,
@@ -437,6 +438,7 @@ def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
                     "プロジェクト情報を取得する。",
                     ("project_id ResourceId",),
                     "ProjectRef",
+                    query_functions=("select_projects",),
                 ),
                 SequenceStep(
                     "create_api_gateway_api_key",
@@ -452,6 +454,15 @@ def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
                     "プロジェクトを参照できるかを判定する。",
                     ("project ProjectRef", "caller CallerIdentity"),
                     "bool",
+                    query_functions=("select_projects",),
+                ),
+                SequenceStep(
+                    "append_project_created_event",
+                    "project_created_event",
+                    "Project 作成イベントを追記する。",
+                    ("project ProjectRef",),
+                    "EventRef",
+                    query_functions=("insert_project_events",),
                 ),
                 SequenceStep(
                     "build_project_detail_response",
@@ -476,10 +487,10 @@ def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
                     "Project 詳細表示に必要な Project と member を取得する。",
                 ),
                 SqlStep(
-                    "002_select_projects.sql",
-                    "参照",
-                    ("projects",),
-                    "Project 一覧表示に必要な Project を取得する。",
+                    "003_insert_project_events.sql",
+                    "追加",
+                    ("project_events",),
+                    "Project 作成の処理結果として、Project eventを追加する。",
                 ),
             ],
             integration_resources=frozenset({"api_gateway", "api_gateway_control"}),
@@ -499,20 +510,52 @@ def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
     assert "participant DB as DB" in markdown
     assert "participant T_projects" not in markdown
     assert "  autonumber" in markdown
-    assert "API->>API: プロジェクト情報を取得する。" in markdown
+    assert "API->>API: プロジェクト情報を取得する。" not in markdown
+    assert (
+        "API->>DB: プロジェクト情報を取得する。"
+        "<br/>SQL 001_select_projects.sql<br/>テーブル projects, project_members" in markdown
+    )
     assert "API->>R_api_gateway_control: API keyを作成する。" in markdown
     assert "alt プロジェクトを参照できる場合。" in markdown
     assert "API->>API: プロジェクトを参照できるかを判定する。" not in markdown
     assert "    API->>API: プロジェクト詳細レスポンスを組み立てる。" in markdown
     assert (
-        "API->>DB: Project 詳細表示に必要な Project と member を取得する。"
-        "<br/>SQL 001_select_projects.sql<br/>テーブル projects, project_members" in markdown
+        "API->>API: Project 作成イベントを追記する。" not in markdown
+    )
+    assert (
+        "API->>DB: Project 作成イベントを追記する。"
+        "<br/>SQL 003_insert_project_events.sql<br/>テーブル project_events" in markdown
+    )
+    assert markdown.index("API->>DB: Project 作成イベントを追記する。") < markdown.index(
+        "SQL 003_insert_project_events.sql"
     )
     assert "API-->>User: HTTP 200 OK" not in markdown
     assert "alt 呼び出し元が Project 詳細を参照できない場合。" in markdown
     assert "API-->>User: HTTP 403 Forbidden<br/>caller cannot view project" in markdown
     assert "API-->>User: HTTP 404 Not Found" not in markdown
     assert markdown.rstrip().endswith("  end\n```")
+
+
+def test_query_sql_filenames_for_step_matches_query_function_suffix() -> None:
+    step = SequenceStep(
+        "append_project_created_event",
+        "project_created_event",
+        "Project 作成イベントを追記する。",
+        query_functions=("insert_project_events",),
+    )
+
+    assert query_sql_filenames_for_step(
+        step,
+        [
+            SqlStep("001_select_projects.sql", "参照", ("projects",), "Projectを取得する。"),
+            SqlStep(
+                "003_insert_project_events.sql",
+                "追加",
+                ("project_events",),
+                "Project eventを追加する。",
+            ),
+        ],
+    ) == ["003_insert_project_events.sql"]
 
 
 def test_generate_sequences_and_check_mode(

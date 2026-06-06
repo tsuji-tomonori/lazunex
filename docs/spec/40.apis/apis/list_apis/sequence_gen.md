@@ -13,13 +13,12 @@ sequenceDiagram
     API-->>User: HTTP 403 Forbidden<br/>caller cannot list apis
   end
   alt 呼び出し元が API 一覧を参照できる場合。
-    API->>API: 呼び出し元が参照可能な公開 API を検索する。
+    API->>DB: 呼び出し元が参照可能な公開 API を検索する。<br/>SQL 001_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes
     API->>API: 一覧取得結果に limit と nextToken を適用する。
     API->>API: API 一覧レスポンスを組み立てる。
     alt Router で捕捉した例外を error response に変換する場合。
       API-->>User: HTTP 500 Internal Server Error<br/>internal server error
     end
-    API->>DB: 参照可能なAPI一覧を返すため、検索条件に合うAPI catalog情報を取得する。<br/>SQL 001_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes
     API-->>User: HTTP 200 OK
   end
 ```

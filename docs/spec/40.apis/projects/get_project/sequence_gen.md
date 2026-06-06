@@ -9,7 +9,7 @@ sequenceDiagram
   participant API as API
   participant DB as DB
   User->>API: GET /projects/{projectId}
-  API->>API: Project 詳細レスポンスに必要な情報を取得する。
+  API->>DB: Project 詳細レスポンスに必要な情報を取得する。<br/>SQL 001_select_projects.sql<br/>テーブル projects, project_api_keys, project_usage_plans, project_cognito_clients, project_cognito_client_urls, project_members
   alt 対象 Project が存在しない、または呼び出し元が参照できない場合。
     API-->>User: HTTP 404 Not Found<br/>Project not found
   end
@@ -21,7 +21,6 @@ sequenceDiagram
     alt Router で捕捉した例外を error response に変換する場合。
       API-->>User: HTTP 500 Internal Server Error<br/>internal server error
     end
-    API->>DB: Project詳細レスポンスを組み立てるため、Projectと関連metadataを取得する。<br/>SQL 001_select_projects.sql<br/>テーブル projects, project_api_keys, project_usage_plans, project_cognito_clients, project_cognito_client_urls, project_members
     API-->>User: HTTP 200 OK
   end
 ```

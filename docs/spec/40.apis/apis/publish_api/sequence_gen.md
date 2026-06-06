@@ -28,7 +28,7 @@ sequenceDiagram
     API-->>User: HTTP 403 Forbidden<br/>caller cannot publish api
   end
   alt 呼び出し元が API 公開登録できる場合。
-    API->>API: Idempotency-Key に対応する既存レコードを取得する。
+    API->>DB: Idempotency-Key に対応する既存レコードを取得する。<br/>SQL 018_select_idempotency_records.sql<br/>テーブル idempotency_records
     API->>R_api_gateway_control: 登録対象 API Gateway stage の登録情報を検証する。
     alt API Gateway method に API key と Cognito scope が設定されていない場合。
       API-->>User: HTTP 502 Bad Gateway<br/>API Gateway method is not configured for API key and Cognito scope
@@ -39,6 +39,8 @@ sequenceDiagram
     alt 登録対象 API が既に登録済みである場合。
       API-->>User: HTTP 409 Conflict<br/>api is already registered
     end
+    API->>DB: API codeの重複登録を防ぐため、既存APIを取得する。<br/>SQL 001_select_apis.sql<br/>テーブル apis
+    API->>DB: API Gateway stageの重複登録を防ぐため、既存stageを取得する。<br/>SQL 019_select_api_gateway_stages_by_unique_key.sql<br/>テーブル api_gateway_stages
     alt 登録対象 API が既に登録済みでない場合。
       alt 登録対象 API code が既に登録済みである場合。
         API-->>User: HTTP 409 Conflict<br/>api code is already registered
@@ -46,33 +48,24 @@ sequenceDiagram
       alt 登録対象 API Gateway stage が既に登録済みである場合。
         API-->>User: HTTP 409 Conflict<br/>API Gateway stage is already registered
       end
-      API->>API: API 公開用の provisioning operation を作成する。
-      API->>API: 冪等性レコードを作成または確認する。
+      API->>DB: API 公開用の provisioning operation を作成する。<br/>SQL 003_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
+      API->>DB: 冪等性レコードを作成または確認する。<br/>SQL 011_insert_idempotency_records.sql<br/>テーブル idempotency_records
       API->>R_identity: Cognito Resource Server に custom scope を追加する。
-      API->>API: API metadata、stage、reviewer、OpenAPI metadata、scope を保存する。
-      API->>API: API stage、scope、reviewer の lifecycle event を追記する。
-      API->>API: provisioning operation/step event を追記する。
-      API->>API: 監査イベントを追記する。
-      API->>API: API 公開登録レスポンスを組み立てる。
-      alt Router で捕捉した例外を error response に変換する場合。
-        API-->>User: HTTP 500 Internal Server Error<br/>internal server error
-      end
-      API->>DB: API codeの重複登録を防ぐため、既存APIを取得する。<br/>SQL 001_select_apis.sql<br/>テーブル apis
-      API->>DB: API公開登録の処理結果として、provisioning operationを追加する。<br/>SQL 003_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
       API->>DB: 公開対象APIのcatalog metadataを保持するため、API catalogを追加する。<br/>SQL 004_insert_apis.sql<br/>テーブル apis
       API->>DB: 公開対象のAPI Gateway stageをLazunex上で参照するため、API Gateway stageを追加する。<br/>SQL 005_insert_api_gateway_stages.sql<br/>テーブル api_gateway_stages
       API->>DB: API実行認可に使うcustom scopeを管理するため、API Cognito scopeを追加する。<br/>SQL 006_insert_api_cognito_scopes.sql<br/>テーブル api_cognito_scopes
       API->>DB: 公開APIのOpenAPI documentを保持するため、API documentを追加する。<br/>SQL 007_insert_api_documents.sql<br/>テーブル api_documents
       API->>DB: 利用申請の審査担当を管理するため、API reviewerを追加する。<br/>SQL 008_insert_api_reviewers.sql<br/>テーブル api_reviewers
       API->>DB: API公開登録の処理結果として、APIイベントを追加する。<br/>SQL 009_insert_api_events.sql<br/>テーブル api_events
-      API->>DB: API公開登録の処理結果として、監査イベントを追加する。<br/>SQL 010_insert_audit_events.sql<br/>テーブル audit_events
-      API->>DB: API公開登録の処理結果として、冪等性レコードを追加する。<br/>SQL 011_insert_idempotency_records.sql<br/>テーブル idempotency_records
       API->>DB: API公開登録の処理結果として、API stageイベントを追加する。<br/>SQL 013_insert_api_stage_events.sql<br/>テーブル api_stage_events
       API->>DB: API公開登録の処理結果として、API scopeイベントを追加する。<br/>SQL 014_insert_api_scope_events.sql<br/>テーブル api_scope_events
       API->>DB: API公開登録の処理結果として、API reviewerイベントを追加する。<br/>SQL 015_insert_api_reviewer_events.sql<br/>テーブル api_reviewer_events
-      API->>DB: API公開登録の処理結果として、provisioning operation eventsを追加する。<br/>SQL 016_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
-      API->>DB: Idempotency-Keyに対応する既存レコードを取得する。<br/>SQL 018_select_idempotency_records.sql<br/>テーブル idempotency_records
-      API->>DB: API Gateway stageの重複登録を防ぐため、既存stageを取得する。<br/>SQL 019_select_api_gateway_stages_by_unique_key.sql<br/>テーブル api_gateway_stages
+      API->>DB: provisioning operation/step event を追記する。<br/>SQL 016_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
+      API->>DB: 監査イベントを追記する。<br/>SQL 010_insert_audit_events.sql<br/>テーブル audit_events
+      API->>API: API 公開登録レスポンスを組み立てる。
+      alt Router で捕捉した例外を error response に変換する場合。
+        API-->>User: HTTP 500 Internal Server Error<br/>internal server error
+      end
       API-->>User: HTTP 201 Created
     end
   end

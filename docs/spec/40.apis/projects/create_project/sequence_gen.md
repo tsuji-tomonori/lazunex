@@ -29,12 +29,13 @@ sequenceDiagram
     API-->>User: HTTP 403 Forbidden<br/>caller cannot create project
   end
   alt 呼び出し元が Project を作成できる場合。
-    API->>API: Idempotency-Key に対応する既存レコードを取得する。
-    API->>API: Project 作成用の provisioning operation を作成する。
+    API->>DB: Idempotency-Key に対応する既存レコードを取得する。<br/>SQL 019_select_idempotency_records.sql<br/>テーブル idempotency_records
+    API->>DB: Project codeの重複作成を防ぐため、既存Projectを取得する。<br/>SQL 001_select_projects.sql<br/>テーブル projects
+    API->>DB: Project作成の処理結果として、provisioning operationを追加する。<br/>SQL 004_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
     alt 登録対象 Project code が既に登録済みである場合。
       API-->>User: HTTP 409 Conflict<br/>project code is already registered
     end
-    API->>API: 冪等性レコードを作成または確認する。
+    API->>DB: 冪等性レコードを作成または確認する。<br/>SQL 011_insert_idempotency_records.sql<br/>テーブル idempotency_records
     API->>R_api_gateway_control: API Gateway API key を作成する。
     API->>R_api_gateway_control: API Gateway Usage Plan を作成する。
     API->>R_api_gateway_control: API Gateway Usage Plan Key 紐づけを作成する。
@@ -44,33 +45,25 @@ sequenceDiagram
       API-->>User: HTTP 502 Bad Gateway<br/>confidential app client secret is missing
     end
     API->>R_secret_values: API key 値と client secret 値を hash 化する。
-    API->>API: Project、owner、API key、Usage Plan、App Client metadata を保存する。
-    API->>API: Project 関連 lifecycle event を追記する。
-    API->>API: provisioning operation/step event を追記する。
-    API->>API: 監査イベントを追記する。
-    API->>API: Project 作成レスポンスを組み立てる。
-    alt Router で捕捉した例外を error response に変換する場合。
-      API-->>User: HTTP 500 Internal Server Error<br/>internal server error
-    end
-    API->>DB: Project codeの重複作成を防ぐため、既存Projectを取得する。<br/>SQL 001_select_projects.sql<br/>テーブル projects
     API->>DB: 新規Projectの基本情報を保持するため、Projectを追加する。<br/>SQL 002_insert_projects.sql<br/>テーブル projects
-    API->>DB: Project作成を履歴化するため、Projectイベントを追加する。<br/>SQL 003_insert_project_events.sql<br/>テーブル project_events
-    API->>DB: Project作成の処理結果として、provisioning operationを追加する。<br/>SQL 004_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
     API->>DB: Projectに払い出したAPI key metadataを保持するため、Project API keyを追加する。<br/>SQL 005_insert_project_api_keys.sql<br/>テーブル project_api_keys
     API->>DB: Project用Usage Plan metadataを保持するため、Project Usage Planを追加する。<br/>SQL 006_insert_project_usage_plans.sql<br/>テーブル project_usage_plans
     API->>DB: ProjectのAPI keyとUsage Planの紐づきを保持するため、Project Usage Plan keyを追加する。<br/>SQL 007_insert_project_usage_plan_keys.sql<br/>テーブル project_usage_plan_keys
     API->>DB: Project用Cognito app client metadataを保持するため、Project Cognito clientを追加する。<br/>SQL 008_insert_project_cognito_clients.sql<br/>テーブル project_cognito_clients
-    API->>DB: public clientのcallback/logout URLを保持するため、Project Cognito client URLを追加する。<br/>SQL 009_insert_project_cognito_client_urls.sql<br/>テーブル project_cognito_client_urls
     API->>DB: Project owner/memberを管理するため、Project memberを追加する。<br/>SQL 010_insert_project_members.sql<br/>テーブル project_members
-    API->>DB: Project作成の処理結果として、冪等性レコードを追加する。<br/>SQL 011_insert_idempotency_records.sql<br/>テーブル idempotency_records
+    API->>DB: public clientのcallback/logout URLを保持するため、Project Cognito client URLを追加する。<br/>SQL 009_insert_project_cognito_client_urls.sql<br/>テーブル project_cognito_client_urls
+    API->>DB: Project作成を履歴化するため、Projectイベントを追加する。<br/>SQL 003_insert_project_events.sql<br/>テーブル project_events
     API->>DB: Project作成の処理結果として、Project memberイベントを追加する。<br/>SQL 013_insert_project_member_events.sql<br/>テーブル project_member_events
     API->>DB: Project作成の処理結果として、Project API keyイベントを追加する。<br/>SQL 014_insert_project_api_key_events.sql<br/>テーブル project_api_key_events
     API->>DB: Project作成の処理結果として、Project Usage Planイベントを追加する。<br/>SQL 015_insert_project_usage_plan_events.sql<br/>テーブル project_usage_plan_events
     API->>DB: Project作成の処理結果として、Project Usage Plan keyイベントを追加する。<br/>SQL 016_insert_project_usage_plan_key_events.sql<br/>テーブル project_usage_plan_key_events
-    API->>DB: Project作成の処理結果として、provisioning operation eventsを追加する。<br/>SQL 017_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
-    API->>DB: Idempotency-Keyに対応する既存レコードを取得する。<br/>SQL 019_select_idempotency_records.sql<br/>テーブル idempotency_records
-    API->>DB: Project作成の処理結果として、監査イベントを追加する。<br/>SQL 020_insert_audit_events.sql<br/>テーブル audit_events
     API->>DB: Project作成の処理結果として、Project Cognito clientイベントを追加する。<br/>SQL 021_insert_project_cognito_client_events.sql<br/>テーブル project_cognito_client_events
+    API->>DB: provisioning operation/step event を追記する。<br/>SQL 017_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
+    API->>DB: 監査イベントを追記する。<br/>SQL 020_insert_audit_events.sql<br/>テーブル audit_events
+    API->>API: Project 作成レスポンスを組み立てる。
+    alt Router で捕捉した例外を error response に変換する場合。
+      API-->>User: HTTP 500 Internal Server Error<br/>internal server error
+    end
     API-->>User: HTTP 201 Created
   end
 ```

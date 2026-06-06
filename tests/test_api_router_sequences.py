@@ -106,9 +106,20 @@ async def replacement_function(
     calls.append(function_name)
     if function_name.startswith("validate_") and args:
         return args[0]
+    if function_name.startswith(("has_", "is_", "verify_")):
+        return predicate_success_value(function_name)
     if function_name.startswith("build_"):
         return expected
     return step_value()
+
+
+def predicate_success_value(function_name: str) -> bool:
+    false_on_success = (
+        "has_active_subscription",
+        "has_pending_access_request_for_project_api",
+        "has_registered_api",
+    )
+    return function_name not in false_on_success
 
 
 def patch_sequence_functions(
