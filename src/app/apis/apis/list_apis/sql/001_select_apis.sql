@@ -11,9 +11,9 @@ SELECT
     s.invoke_url,
     c.scope_full_name
 FROM apis AS a
-LEFT JOIN api_gateway_stages AS s
+INNER JOIN api_gateway_stages AS s
     ON s.api_stage_id = a.default_api_stage_id
-LEFT JOIN api_cognito_scopes AS c
+INNER JOIN api_cognito_scopes AS c
     ON c.api_id = a.api_id
 WHERE (@visibility IS NULL OR a.visibility = @visibility)
   AND (

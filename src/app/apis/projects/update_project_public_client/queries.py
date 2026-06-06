@@ -41,7 +41,7 @@ class SelectProjectCognitoClientsRow(BaseModel):
     enable_token_revocation: bool
     row_version: int
     owner_principal_id: str
-    caller_project_role: str
+    caller_project_role: Any
 
 
 async def select_project_cognito_clients(

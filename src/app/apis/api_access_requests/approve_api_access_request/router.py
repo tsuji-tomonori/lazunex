@@ -150,12 +150,48 @@ async def approve_api_access_request(
             caller,
             session,
         )
-        await api_functions.append_usage_plan_stage_event(usage_plan_stage)
-        await api_functions.append_client_scope_event(resources)
-        await api_functions.append_access_request_approved_event(access_request)
-        await api_functions.append_subscription_provisioned_event(resources)
-        await api_functions.append_provisioning_events()
-        await api_functions.append_audit_event(access_request, caller)
+        await api_functions.append_usage_plan_stage_event(
+            usage_plan_stage,
+            caller,
+            request_context,
+            idempotency_key,
+            session,
+        )
+        await api_functions.append_client_scope_event(
+            resources,
+            caller,
+            request_context,
+            idempotency_key,
+            session,
+        )
+        await api_functions.append_access_request_approved_event(
+            access_request,
+            caller,
+            request_context,
+            idempotency_key,
+            session,
+        )
+        await api_functions.append_subscription_provisioned_event(
+            resources,
+            caller,
+            request_context,
+            idempotency_key,
+            session,
+        )
+        await api_functions.append_provisioning_events(
+            operation,
+            caller,
+            request_context,
+            idempotency_key,
+            session,
+        )
+        await api_functions.append_audit_event(
+            access_request,
+            caller,
+            request_context,
+            operation,
+            session,
+        )
         await session.commit()
         return await api_functions.build_approve_access_request_response(
             access_request,

@@ -9,7 +9,7 @@ sequenceDiagram
   participant API as API
   participant DB as DB
   User->>API: GET /projects/{projectId}/subscriptions
-  API->>API: 対象 Project を取得する。
+  API->>API: 対象 Project の参照を組み立てる。
   alt 呼び出し元が Project subscription 一覧を参照できない場合。
     API-->>User: HTTP 403 Forbidden<br/>caller cannot list project subscriptions
   end

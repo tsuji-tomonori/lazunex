@@ -22,11 +22,11 @@ SELECT
     r.reviewer_principal_id,
     r.reviewer_role
 FROM apis AS a
-LEFT JOIN api_gateway_stages AS s
+INNER JOIN api_gateway_stages AS s
     ON s.api_id = a.api_id
-LEFT JOIN api_cognito_scopes AS c
+INNER JOIN api_cognito_scopes AS c
     ON c.api_id = a.api_id
-LEFT JOIN api_reviewers AS r
+INNER JOIN api_reviewers AS r
     ON r.api_id = a.api_id
 WHERE a.api_id = @api_id
 ORDER BY

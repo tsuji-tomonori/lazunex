@@ -133,6 +133,46 @@ def test_parse_query_spec_infers_qualified_alias_and_expression_rows(tmp_path: P
     ]
 
 
+def test_parse_query_spec_marks_null_checked_params_nullable(tmp_path: Path) -> None:
+    sql_path = tmp_path / "001_select_projects.sql"
+    sql_path.write_text(
+        """
+        SELECT project_id
+        FROM projects
+        WHERE (@project_code IS NULL OR project_code = @project_code);
+        """,
+        encoding="utf-8",
+    )
+
+    spec = parse_query_spec(sql_path, parse_tables(DDL))
+
+    assert [(field.name, field.type_hint, field.nullable) for field in spec.params] == [
+        ("project_code", "str", True)
+    ]
+
+
+def test_parse_query_spec_marks_left_join_rows_nullable(tmp_path: Path) -> None:
+    sql_path = tmp_path / "001_select_projects.sql"
+    sql_path.write_text(
+        """
+        SELECT
+            p.project_id,
+            e.aggregate_id AS event_aggregate_id
+        FROM projects AS p
+        LEFT JOIN project_events AS e
+            ON e.aggregate_id = p.project_id;
+        """,
+        encoding="utf-8",
+    )
+
+    spec = parse_query_spec(sql_path, parse_tables(DDL))
+
+    assert [(field.name, field.type_hint, field.nullable) for field in spec.rows] == [
+        ("project_id", "UUID", False),
+        ("event_aggregate_id", "UUID", True),
+    ]
+
+
 def test_operation_from_statements_detects_statement_kind() -> None:
     assert (
         operation_from_statements([parse_one("SELECT project_id FROM projects", read="postgres")])

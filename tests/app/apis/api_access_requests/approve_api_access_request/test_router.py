@@ -75,14 +75,14 @@ async def test_approve_api_access_request_router_persists_approval_resources_wit
         )
         == 2
     )
-    assert await router_count_rows(router_db_harness.session_factory, "access_request_events") == 2
-    assert await router_count_rows(router_db_harness.session_factory, "audit_events") == 3
+    assert await router_count_rows(router_db_harness.session_factory, "access_request_events") == 3
+    assert await router_count_rows(router_db_harness.session_factory, "audit_events") == 4
     assert (
         await router_count_rows(
             router_db_harness.session_factory,
             "client_scope_events",
         )
-        == 0
+        == 2
     )
     assert (
         await router_count_rows(
@@ -97,7 +97,7 @@ async def test_approve_api_access_request_router_persists_approval_resources_wit
             router_db_harness.session_factory,
             "provisioning_operation_events",
         )
-        == 2
+        == 3
     )
     assert (
         await router_count_rows(
@@ -106,13 +106,13 @@ async def test_approve_api_access_request_router_persists_approval_resources_wit
         )
         == 0
     )
-    assert await router_count_rows(router_db_harness.session_factory, "subscription_events") == 0
+    assert await router_count_rows(router_db_harness.session_factory, "subscription_events") == 1
     assert (
         await router_count_rows(
             router_db_harness.session_factory,
             "usage_plan_stage_events",
         )
-        == 0
+        == 1
     )
 
 

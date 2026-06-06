@@ -19,7 +19,7 @@ class SelectApiAccessRequestsParams(BaseModel):
     actor_principal_id: str
     project_id: UUID
     is_hub_admin: Any
-    decision: str | None
+    decision: str | None = None
     after_requested_at: Any
     limit: Any
 

@@ -25,7 +25,7 @@ class SelectProjectsRow(BaseModel):
     project_id: UUID
     project_code: str
     owner_principal_id: str
-    caller_project_role: str
+    caller_project_role: Any
 
 
 async def select_projects(
@@ -58,7 +58,7 @@ class SelectApisRow(BaseModel):
     apigw_stage_name: str
     api_scope_id: UUID
     scope_full_name: str
-    reviewer_principal_id: str
+    reviewer_principal_id: str | None = None
 
 
 async def select_apis(

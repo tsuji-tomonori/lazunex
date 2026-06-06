@@ -15,7 +15,7 @@ SQL_DIR = Path(__file__).with_name("sql")
 
 class SelectApisParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    visibility: str | None
+    visibility: str | None = None
     keyword: Any
     after_api_code: Any
     limit: Any

@@ -57,6 +57,7 @@ async def get_viewable_projects(
     return raise_missing_runtime_dependency("get_viewable_projects")
 
 
+# @resource-free
 async def apply_pagination(
     page: SequencePage[ProjectListItemResponse],
     query: ListProjectsQuery,

@@ -59,6 +59,7 @@ async def get_viewable_apis(
     return raise_missing_runtime_dependency("get_viewable_apis")
 
 
+# @resource-free
 async def apply_pagination(
     page: SequencePage[ApiListItemResponse],
     query: ListApisQuery,

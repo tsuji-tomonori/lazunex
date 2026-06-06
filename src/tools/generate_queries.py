@@ -140,6 +140,19 @@ def table_aliases(statement: Any) -> dict[str, str]:
     return aliases
 
 
+def nullable_table_aliases(statement: Any) -> set[str]:
+    aliases: set[str] = set()
+    for join in statement.find_all(exp.Join):
+        if join.args.get("side") != "LEFT":
+            continue
+        table = join.this
+        if not isinstance(table, exp.Table):
+            continue
+        aliases.add(table.name)
+        aliases.add(table.alias_or_name)
+    return aliases
+
+
 def resolve_column(
     column: exp.Column, aliases: dict[str, str], columns: dict[str, dict[str, Column]]
 ) -> Column | None:
@@ -162,18 +175,37 @@ def resolve_column(
 
 
 def output_field(
-    expression: Any, aliases: dict[str, str], columns: dict[str, dict[str, Column]]
+    expression: Any,
+    aliases: dict[str, str],
+    columns: dict[str, dict[str, Column]],
+    nullable_aliases: set[str] | None = None,
 ) -> FieldSpec:
+    nullable_aliases = nullable_aliases or set()
     if isinstance(expression, exp.Alias):
         alias = python_identifier(expression.alias)
         if isinstance(expression.this, exp.Column):
-            return field_from_column(alias, resolve_column(expression.this, aliases, columns))
+            column = resolve_column(expression.this, aliases, columns)
+            return field_from_column(
+                alias,
+                column,
+                nullable=(
+                    column.nullable or expression.this.table in nullable_aliases
+                    if column is not None
+                    else None
+                ),
+            )
         return FieldSpec(name=alias, type_hint="Any")
 
     if isinstance(expression, exp.Column):
+        column = resolve_column(expression, aliases, columns)
         return field_from_column(
             expression.alias_or_name,
-            resolve_column(expression, aliases, columns),
+            column,
+            nullable=(
+                column.nullable or expression.table in nullable_aliases
+                if column is not None
+                else None
+            ),
         )
 
     name = python_identifier(expression.alias_or_name or "value")
@@ -184,7 +216,11 @@ def select_output_fields(
     statement: exp.Select, columns: dict[str, dict[str, Column]]
 ) -> list[FieldSpec]:
     aliases = table_aliases(statement)
-    return [output_field(expression, aliases, columns) for expression in statement.expressions]
+    nullable_aliases = nullable_table_aliases(statement)
+    return [
+        output_field(expression, aliases, columns, nullable_aliases)
+        for expression in statement.expressions
+    ]
 
 
 def mutation_target_table(statement: Any) -> str | None:
@@ -302,6 +338,17 @@ def collect_comparison_param_columns(
     return param_columns
 
 
+def nullable_placeholder_names(statement: Any) -> set[str]:
+    names: set[str] = set()
+    for expression in statement.find_all(exp.Is):
+        if not isinstance(expression.expression, exp.Null):
+            continue
+        name = parameter_name(expression.this)
+        if name is not None:
+            names.add(name)
+    return names
+
+
 def infer_param_fields(
     sql: str,
     statements: list[Any],
@@ -310,6 +357,7 @@ def infer_param_fields(
     unique_columns = unique_column_index(tables)
     columns = ddl_column_index(tables)
     param_columns: dict[str, Column] = {}
+    nullable_params: set[str] = set()
 
     for statement in statements:
         if isinstance(statement, exp.Insert):
@@ -317,11 +365,12 @@ def infer_param_fields(
         elif isinstance(statement, exp.Update):
             param_columns.update(collect_update_param_columns(statement, columns))
         param_columns.update(collect_comparison_param_columns(statement, columns))
+        nullable_params.update(nullable_placeholder_names(statement))
 
     fields: list[FieldSpec] = []
     for name in placeholder_names(sql):
         column = param_columns.get(name, unique_columns.get(name))
-        fields.append(field_from_column(name, column, nullable=False))
+        fields.append(field_from_column(name, column, nullable=name in nullable_params))
     return fields
 
 

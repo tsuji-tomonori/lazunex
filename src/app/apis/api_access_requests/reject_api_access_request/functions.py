@@ -230,6 +230,7 @@ async def create_idempotency_record(
     return raise_missing_runtime_dependency("create_idempotency_record")
 
 
+# @resource-free
 async def update_access_request_status(
     access_request: ApiAccessRequestRef,
     review: ApiAccessReviewRef,

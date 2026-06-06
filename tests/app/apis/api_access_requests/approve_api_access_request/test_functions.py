@@ -145,7 +145,7 @@ async def test_approve_predicates_return_false_for_non_matching_refs(
     assert await functions.is_available_project_api_stage(access_request) is False
 
 
-async def test_approve_event_helpers_and_placeholders(
+async def test_approve_event_helpers_require_runtime_dependencies(
     access_request: ApiAccessRequestRef,
 ) -> None:
     resources = ApprovedAccessResourceRefs(
@@ -159,17 +159,35 @@ async def test_approve_event_helpers_and_placeholders(
         usage_plan_api_stage_id=access_request.api_stage_id,
     )
 
-    assert (await functions.append_usage_plan_stage_event(usage_plan_stage)).event_id
-    assert len(await functions.append_client_scope_event(resources)) == 1
-    assert (await functions.append_access_request_approved_event(access_request)).event_id
-    assert (await functions.append_subscription_provisioned_event(resources)).event_id
-    assert len(await functions.append_provisioning_events()) == 1
-    assert (
-        await functions.append_audit_event(
+    await assert_runtime_dependency_error(
+        functions.append_usage_plan_stage_event(usage_plan_stage),
+        "append_usage_plan_stage_event",
+    )
+    await assert_runtime_dependency_error(
+        functions.append_client_scope_event(resources),
+        "append_client_scope_event",
+    )
+    await assert_runtime_dependency_error(
+        functions.append_access_request_approved_event(access_request),
+        "append_access_request_approved_event",
+    )
+    await assert_runtime_dependency_error(
+        functions.append_subscription_provisioned_event(resources),
+        "append_subscription_provisioned_event",
+    )
+    await assert_runtime_dependency_error(
+        functions.append_provisioning_events(
+            ProvisioningOperationRef(operation_id=access_request.access_request_id)
+        ),
+        "append_provisioning_events",
+    )
+    await assert_runtime_dependency_error(
+        functions.append_audit_event(
             access_request,
             CallerIdentity(principal_id="reviewer-001", groups=(), scopes=()),
-        )
-    ).event_id
+        ),
+        "append_audit_event",
+    )
     caller = await functions.get_caller_identity(
         principal_id=" reviewer-001 ",
         groups="reviewers",
@@ -266,6 +284,11 @@ async def test_approve_access_request_db_mapping_sequence(
         "insert_project_api_subscriptions",
         "insert_project_usage_plan_api_stages",
         "insert_project_cognito_client_scopes",
+        "insert_usage_plan_stage_events",
+        "insert_client_scope_events",
+        "insert_subscription_events",
+        "insert_provisioning_operation_events",
+        "insert_audit_events",
     ):
         monkeypatch.setattr(queries, name, record_async_call(calls, name))
 
@@ -315,6 +338,30 @@ async def test_approve_access_request_db_mapping_sequence(
         caller,
         session,
     )
+    await functions.append_usage_plan_stage_event(
+        usage_plan_stage,
+        caller,
+        context,
+        "idem-key",
+        session,
+    )
+    await functions.append_client_scope_event(resources, caller, context, "idem-key", session)
+    await functions.append_access_request_approved_event(
+        access_request,
+        caller,
+        context,
+        "idem-key",
+        session,
+    )
+    await functions.append_subscription_provisioned_event(
+        resources,
+        caller,
+        context,
+        "idem-key",
+        session,
+    )
+    await functions.append_provisioning_events(operation, caller, context, "idem-key", session)
+    await functions.append_audit_event(access_request, caller, context, operation, session)
 
     usage_plan_call = cast(AddUsagePlanStageInput, api_gateway.calls[0])
     describe_call = cast(DescribeUserPoolClientInput, identity.calls[0])
@@ -324,6 +371,12 @@ async def test_approve_access_request_db_mapping_sequence(
     assert describe_call.client_id == "public-client-id"
     assert resources.subscription_id
     assert "insert_project_cognito_client_scopes" in calls
+    assert "insert_usage_plan_stage_events" in calls
+    assert "insert_client_scope_events" in calls
+    assert calls.count("insert_access_request_events") == 2
+    assert "insert_subscription_events" in calls
+    assert "insert_provisioning_operation_events" in calls
+    assert "insert_audit_events" in calls
 
 
 async def test_approve_access_request_has_active_subscription_returns_true_for_duplicate(

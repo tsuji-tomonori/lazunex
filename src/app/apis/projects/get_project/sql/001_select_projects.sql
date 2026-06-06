@@ -23,11 +23,11 @@ SELECT
     u.url_type,
     u.url
 FROM projects AS p
-LEFT JOIN project_api_keys AS k
+INNER JOIN project_api_keys AS k
     ON k.project_id = p.project_id
-LEFT JOIN project_usage_plans AS up
+INNER JOIN project_usage_plans AS up
     ON up.project_id = p.project_id
-LEFT JOIN project_cognito_clients AS c
+INNER JOIN project_cognito_clients AS c
     ON c.project_id = p.project_id
 LEFT JOIN project_cognito_client_urls AS u
     ON u.project_cognito_client_id = c.project_cognito_client_id

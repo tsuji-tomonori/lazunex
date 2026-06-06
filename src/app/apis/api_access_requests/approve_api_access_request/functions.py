@@ -528,45 +528,189 @@ async def save_approved_access_resources(
 
 async def append_usage_plan_stage_event(
     usage_plan_stage: UsagePlanApiStageRef,
+    caller: CallerIdentity | None = None,
+    request_context: RequestContext | None = None,
+    idempotency_key: str | None = None,
+    session: AsyncSession | None = None,
 ) -> EventRef:
     """Usage Plan stage 追加イベントを追記する。"""
-    _ = usage_plan_stage
-    return EventRef(event_id=uuid4())
+    if session is not None and caller is not None and request_context is not None:
+        event_id = uuid4()
+        await queries.insert_usage_plan_stage_events(
+            session,
+            queries.InsertUsagePlanStageEventsParams(
+                event_id=event_id,
+                usage_plan_api_stage_id=usage_plan_stage.usage_plan_api_stage_id,
+                event_name="USAGE_PLAN_STAGE_ADDED",
+                actor_principal_id=caller.principal_id,
+                actor_type=request_context.actor_type,
+                now=_now(),
+                reason="approved access request",
+                correlation_id=request_context.correlation_id,
+                idempotency_key=idempotency_key or "",
+                event_payload={},
+            ),
+        )
+        return EventRef(event_id=event_id)
+    return raise_missing_runtime_dependency("append_usage_plan_stage_event")
 
 
-async def append_client_scope_event(resources: ApprovedAccessResourceRefs) -> list[EventRef]:
+async def append_client_scope_event(
+    resources: ApprovedAccessResourceRefs,
+    caller: CallerIdentity | None = None,
+    request_context: RequestContext | None = None,
+    idempotency_key: str | None = None,
+    session: AsyncSession | None = None,
+) -> list[EventRef]:
     """Cognito App Client scope 付与イベントを追記する。"""
-    return [EventRef(event_id=uuid4()) for _ in resources.client_scope_ids]
+    if session is not None and caller is not None and request_context is not None:
+        refs: list[EventRef] = []
+        now = _now()
+        for client_scope_id in resources.client_scope_ids:
+            event_id = uuid4()
+            await queries.insert_client_scope_events(
+                session,
+                queries.InsertClientScopeEventsParams(
+                    event_id=event_id,
+                    project_cognito_client_scope_id=client_scope_id,
+                    event_name="CLIENT_SCOPE_GRANTED",
+                    actor_principal_id=caller.principal_id,
+                    actor_type=request_context.actor_type,
+                    now=now,
+                    reason="approved access request",
+                    correlation_id=request_context.correlation_id,
+                    idempotency_key=idempotency_key or "",
+                    event_payload={"subscriptionId": str(resources.subscription_id)},
+                ),
+            )
+            refs.append(EventRef(event_id=event_id))
+        return refs
+    return raise_missing_runtime_dependency("append_client_scope_event")
 
 
 async def append_access_request_approved_event(
     access_request: ApiAccessRequestRef,
+    caller: CallerIdentity | None = None,
+    request_context: RequestContext | None = None,
+    idempotency_key: str | None = None,
+    session: AsyncSession | None = None,
 ) -> EventRef:
     """利用申請承認済みイベントを追記する。"""
-    _ = access_request
-    return EventRef(event_id=uuid4())
+    if session is not None and caller is not None and request_context is not None:
+        event_id = uuid4()
+        await queries.insert_access_request_events(
+            session,
+            queries.InsertAccessRequestEventsParams(
+                event_id=event_id,
+                access_request_id=access_request.access_request_id,
+                event_name="ACCESS_REQUEST_APPROVED",
+                actor_principal_id=caller.principal_id,
+                actor_type=request_context.actor_type,
+                now=_now(),
+                reason=access_request.requested_reason or "",
+                correlation_id=request_context.correlation_id,
+                idempotency_key=idempotency_key or "",
+                event_payload={
+                    "projectId": str(access_request.project_id),
+                    "apiId": str(access_request.api_id),
+                    "apiStageId": str(access_request.api_stage_id),
+                },
+            ),
+        )
+        return EventRef(event_id=event_id)
+    return raise_missing_runtime_dependency("append_access_request_approved_event")
 
 
 async def append_subscription_provisioned_event(
     resources: ApprovedAccessResourceRefs,
+    caller: CallerIdentity | None = None,
+    request_context: RequestContext | None = None,
+    idempotency_key: str | None = None,
+    session: AsyncSession | None = None,
 ) -> EventRef:
     """subscription 反映済みイベントを追記する。"""
-    _ = resources
-    return EventRef(event_id=uuid4())
+    if session is not None and caller is not None and request_context is not None:
+        event_id = uuid4()
+        await queries.insert_subscription_events(
+            session,
+            queries.InsertSubscriptionEventsParams(
+                event_id=event_id,
+                subscription_id=resources.subscription_id,
+                event_name="SUBSCRIPTION_PROVISIONED",
+                actor_principal_id=caller.principal_id,
+                actor_type=request_context.actor_type,
+                now=_now(),
+                reason="approved access request",
+                correlation_id=request_context.correlation_id,
+                idempotency_key=idempotency_key or "",
+                event_payload={
+                    "usagePlanApiStageId": str(resources.usage_plan_api_stage_id),
+                    "clientScopeIds": [str(value) for value in resources.client_scope_ids],
+                },
+            ),
+        )
+        return EventRef(event_id=event_id)
+    return raise_missing_runtime_dependency("append_subscription_provisioned_event")
 
 
-async def append_provisioning_events() -> list[EventRef]:
+async def append_provisioning_events(
+    operation: ProvisioningOperationRef,
+    caller: CallerIdentity | None = None,
+    request_context: RequestContext | None = None,
+    idempotency_key: str | None = None,
+    session: AsyncSession | None = None,
+) -> list[EventRef]:
     """provisioning operation/step event を追記する。"""
-    return [EventRef(event_id=uuid4())]
+    if session is not None and caller is not None and request_context is not None:
+        event_id = uuid4()
+        await queries.insert_provisioning_operation_events(
+            session,
+            queries.InsertProvisioningOperationEventsParams(
+                event_id=event_id,
+                operation_id=operation.operation_id,
+                event_name="PROVISIONING_OPERATION_SUCCEEDED",
+                actor_principal_id=caller.principal_id,
+                actor_type=request_context.actor_type,
+                now=_now(),
+                reason="approve access request completed",
+                correlation_id=request_context.correlation_id,
+                idempotency_key=idempotency_key or "",
+                event_payload={"targetId": str(operation.target_id or operation.operation_id)},
+            ),
+        )
+        return [EventRef(event_id=event_id)]
+    return raise_missing_runtime_dependency("append_provisioning_events")
 
 
 async def append_audit_event(
     access_request: ApiAccessRequestRef,
     caller: CallerIdentity,
+    request_context: RequestContext | None = None,
+    operation: ProvisioningOperationRef | None = None,
+    session: AsyncSession | None = None,
 ) -> EventRef:
     """監査イベントを追記する。"""
-    _ = access_request, caller
-    return EventRef(event_id=uuid4())
+    if session is not None and request_context is not None and operation is not None:
+        event_id = uuid4()
+        await queries.insert_audit_events(
+            session,
+            queries.InsertAuditEventsParams(
+                audit_event_id=event_id,
+                actor_principal_id=caller.principal_id,
+                access_request_id=access_request.access_request_id,
+                operation_id=operation.operation_id,
+                source_ip=request_context.source_ip,
+                user_agent=request_context.user_agent,
+                details={
+                    "projectId": str(access_request.project_id),
+                    "apiId": str(access_request.api_id),
+                    "apiStageId": str(access_request.api_stage_id),
+                },
+                now=_now(),
+            ),
+        )
+        return EventRef(event_id=event_id)
+    return raise_missing_runtime_dependency("append_audit_event")
 
 
 async def build_approve_access_request_response(

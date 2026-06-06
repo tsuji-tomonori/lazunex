@@ -27,8 +27,9 @@ async def get_caller_identity(
     return build_caller_identity(principal_id=principal_id, groups=groups, scopes=scopes)
 
 
+# @resource-free
 async def get_project(project_id: ResourceId) -> ProjectRef:
-    """対象 Project を取得する。"""
+    """対象 Project の参照を組み立てる。"""
     return ProjectRef(project_id=project_id)
 
 
@@ -71,6 +72,7 @@ async def get_project_access_requests(
     return raise_missing_runtime_dependency("get_project_access_requests")
 
 
+# @resource-free
 async def apply_pagination(
     page: SequencePage[ProjectApiAccessRequestItemResponse],
     query: ListProjectApiAccessRequestsQuery,
