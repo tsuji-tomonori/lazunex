@@ -12,26 +12,26 @@ sequenceDiagram
   participant DB as DB
   User->>API: POST /api-access-requests/{accessRequestId}/approve
   API->>API: 承認対象の利用申請を取得する。
-  alt 利用申請が審査中状態である場合。
-    alt 呼び出し元が対象 API の reviewer または Hub 管理者である場合。
-      alt 承認対象の Project、API、stage が利用可能な場合。
-        alt 同一 Project/API の active subscription が存在する場合。
-          API->>API: 利用申請承認開始イベントを追記する。
-          API->>API: 承認反映用の provisioning operation を作成する。
-          API->>API: Idempotency-Key に対応する既存レコードを取得する。
-          API->>API: 冪等性レコードを作成または確認する。
-          API->>R_api_gateway_control: API Gateway Usage Plan に API stage を追加する。
-          API->>R_identity: Cognito App Client 設定を取得する。
-          API->>API: 既存 AllowedOAuthScopes に承認対象 scope を統合する。
-          API->>R_identity: Cognito App Client を更新する。
-          API->>API: 承認結果、subscription、linkage、client scope を保存する。
-          API->>API: Usage Plan stage 追加イベントを追記する。
-          API->>API: Cognito App Client scope 付与イベントを追記する。
-          API->>API: 利用申請承認済みイベントを追記する。
-          API->>API: subscription 反映済みイベントを追記する。
-          API->>API: provisioning operation/step event を追記する。
-          API->>API: 監査イベントを追記する。
-          API->>API: 利用申請承認レスポンスを組み立てる。
+  alt 同一 Project/API の active subscription が存在する場合。
+    API->>API: 利用申請承認開始イベントを追記する。
+    API->>API: 承認反映用の provisioning operation を作成する。
+    API->>API: Idempotency-Key に対応する既存レコードを取得する。
+    API->>API: 冪等性レコードを作成または確認する。
+    API->>R_api_gateway_control: API Gateway Usage Plan に API stage を追加する。
+    API->>R_identity: Cognito App Client 設定を取得する。
+    API->>API: 既存 AllowedOAuthScopes に承認対象 scope を統合する。
+    API->>R_identity: Cognito App Client を更新する。
+    API->>API: 承認結果、subscription、linkage、client scope を保存する。
+    API->>API: Usage Plan stage 追加イベントを追記する。
+    API->>API: Cognito App Client scope 付与イベントを追記する。
+    API->>API: 利用申請承認済みイベントを追記する。
+    API->>API: subscription 反映済みイベントを追記する。
+    API->>API: provisioning operation/step event を追記する。
+    API->>API: 監査イベントを追記する。
+    API->>API: 利用申請承認レスポンスを組み立てる。
+    alt 利用申請が審査中状態である場合。
+      alt 呼び出し元が対象 API の reviewer または Hub 管理者である場合。
+        alt 承認対象の Project、API、stage が利用可能な場合。
           API->>DB: 承認対象の利用申請と現在状態を確認するため、利用申請を取得する。<br/>SQL 001_select_api_access_requests.sql<br/>テーブル api_access_requests, projects, apis, api_gateway_stages, api_cognito_scopes, api_access_reviews
           API->>DB: 承認者が対象APIのreviewerか確認するため、API reviewerを取得する。<br/>SQL 002_select_api_reviewers.sql<br/>テーブル api_reviewers
           API->>DB: 重複承認を防ぐため、既存のactive subscriptionを取得する。<br/>SQL 003_select_subscriptions.sql<br/>テーブル project_api_subscriptions

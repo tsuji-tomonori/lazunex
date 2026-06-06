@@ -9,10 +9,10 @@ sequenceDiagram
   participant API as API
   participant DB as DB
   User->>API: GET /projects
+  API->>API: 呼び出し元が参照可能な Project を検索する。
+  API->>API: 一覧取得結果に limit と nextToken を適用する。
+  API->>API: Project 一覧レスポンスを組み立てる。
   alt 呼び出し元が Project 一覧を参照できる場合。
-    API->>API: 呼び出し元が参照可能な Project を検索する。
-    API->>API: 一覧取得結果に limit と nextToken を適用する。
-    API->>API: Project 一覧レスポンスを組み立てる。
     API->>DB: 参照可能なProject一覧を返すため、検索条件に合うProjectを取得する。<br/>SQL 001_select_projects.sql<br/>テーブル projects, project_members, project_api_subscriptions
   end
   API-->>User: HTTP 200 OK

@@ -48,6 +48,8 @@
 | <code>project_cognito_clients</code> | <code>retry_grace_period_seconds</code> | <code>retry_grace_period_seconds</code> | refresh token rotationの再試行猶予秒数。 | <code>INT</code> | yes |
 | <code>project_cognito_clients</code> | <code>enable_token_revocation</code> | <code>enable_token_revocation</code> | token revocationを有効にするかどうか。 | <code>BOOLEAN</code> | no |
 | <code>project_cognito_clients</code> | <code>row_version</code> | <code>row_version</code> | 楽観ロック用の行バージョン。 | <code>INT</code> | no |
+| <code>projects</code> | <code>owner_principal_id</code> | <code>owner_principal_id</code> | プロジェクトオーナーのprincipal。 | <code>VARCHAR(256)</code> | no |
+| <code>-</code> | <code>caller_project_role</code> | <code>caller_project_role</code> | - | <code>Any</code> | no |
 
 ### 条件
 

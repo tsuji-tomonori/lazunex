@@ -10,17 +10,17 @@ sequenceDiagram
   participant DB as DB
   User->>API: POST /api-access-requests/{accessRequestId}/reject
   API->>API: 却下対象の利用申請を取得する。
+  API->>API: 利用申請却下理由を検証する。
+  API->>API: 利用申請却下開始イベントを追記する。
+  API->>API: 却下結果の review レコードを保存する。
+  API->>API: Idempotency-Key に対応する既存レコードを取得する。
+  API->>API: 冪等性レコードを作成または確認する。
+  API->>API: 利用申請状態を rejected 相当に更新する。
+  API->>API: 利用申請却下済みイベントを追記する。
+  API->>API: 監査イベントを追記する。
+  API->>API: 利用申請却下レスポンスを組み立てる。
   alt 利用申請が審査中状態である場合。
     alt 呼び出し元が対象 API の reviewer または Hub 管理者である場合。
-      API->>API: 利用申請却下理由を検証する。
-      API->>API: 利用申請却下開始イベントを追記する。
-      API->>API: 却下結果の review レコードを保存する。
-      API->>API: Idempotency-Key に対応する既存レコードを取得する。
-      API->>API: 冪等性レコードを作成または確認する。
-      API->>API: 利用申請状態を rejected 相当に更新する。
-      API->>API: 利用申請却下済みイベントを追記する。
-      API->>API: 監査イベントを追記する。
-      API->>API: 利用申請却下レスポンスを組み立てる。
       API->>DB: 却下対象の利用申請と現在状態を確認するため、利用申請を取得する。<br/>SQL 001_select_api_access_requests.sql<br/>テーブル api_access_requests, apis, api_access_reviews
       API->>DB: 却下者が対象APIのreviewerか確認するため、API reviewerを取得する。<br/>SQL 002_select_api_reviewers.sql<br/>テーブル api_reviewers
       API->>DB: 却下結果と却下コメントを保持するため、利用申請レビューを追加する。<br/>SQL 003_insert_api_access_reviews.sql<br/>テーブル api_access_reviews

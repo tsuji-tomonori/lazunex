@@ -11,18 +11,18 @@ sequenceDiagram
   User->>API: POST /projects/{projectId}/api-access-requests
   API->>API: 利用申請作成リクエストを検証する。
   API->>API: 対象 Project を取得する。
-  alt 呼び出し元が Project owner である場合。
-    alt 対象 API が公開済みである場合。
-      API->>API: 対象 API の reviewer 情報を取得する。
-      alt requestedAuthMode に対応する Project client が存在する場合。
-        alt 同一 Project/API の active subscription が存在する場合。
-          alt 同一 Project/API の審査中申請が存在する場合。
-            API->>API: 利用申請を保存する。
-            API->>API: Idempotency-Key に対応する既存レコードを取得する。
-            API->>API: 冪等性レコードを作成または確認する。
-            API->>API: 利用申請作成イベントを追記する。
-            API->>API: 監査イベントを追記する。
-            API->>API: 利用申請作成レスポンスを組み立てる。
+  API->>API: 対象 API の reviewer 情報を取得する。
+  alt 同一 Project/API の active subscription が存在する場合。
+    alt 同一 Project/API の審査中申請が存在する場合。
+      API->>API: 利用申請を保存する。
+      API->>API: Idempotency-Key に対応する既存レコードを取得する。
+      API->>API: 冪等性レコードを作成または確認する。
+      API->>API: 利用申請作成イベントを追記する。
+      API->>API: 監査イベントを追記する。
+      API->>API: 利用申請作成レスポンスを組み立てる。
+      alt 呼び出し元が Project owner である場合。
+        alt 対象 API が公開済みである場合。
+          alt requestedAuthMode に対応する Project client が存在する場合。
             API->>DB: 申請元Projectと呼び出し元の権限を確認するため、Projectを取得する。<br/>SQL 001_select_projects.sql<br/>テーブル projects, project_members
             API->>DB: 申請対象APIが利用申請可能か確認するため、API catalog情報を取得する。<br/>SQL 002_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes, api_reviewers
             API->>DB: 申請認証方式とProject client構成を照合するため、Project Cognito clientを取得する。<br/>SQL 003_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients

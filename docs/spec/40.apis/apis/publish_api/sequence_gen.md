@@ -7,23 +7,23 @@ sequenceDiagram
   autonumber
   participant User as User
   participant API as API
-  participant R_api_gateway_control as Resource: api gateway control
   participant R_identity as Resource: identity
+  participant R_api_gateway_control as Resource: api gateway control
   participant DB as DB
   User->>API: POST /apis
   API->>API: API 公開登録リクエストを検証する。
-  alt 呼び出し元が API 公開登録できる場合。
-    API->>API: Idempotency-Key に対応する既存レコードを取得する。
-    API->>R_api_gateway_control: 登録対象 API Gateway stage の登録情報を検証する。
-    alt 登録対象 API が既に登録済み場合。
-      API->>API: API 公開用の provisioning operation を作成する。
-      API->>API: 冪等性レコードを作成または確認する。
-      API->>R_identity: Cognito Resource Server に custom scope を追加する。
-      API->>API: API metadata、stage、reviewer、OpenAPI metadata、scope を保存する。
-      API->>API: API stage、scope、reviewer の lifecycle event を追記する。
-      API->>API: provisioning operation/step event を追記する。
-      API->>API: 監査イベントを追記する。
-      API->>API: API 公開登録レスポンスを組み立てる。
+  API->>API: Idempotency-Key に対応する既存レコードを取得する。
+  alt 登録対象 API が既に登録済み場合。
+    API->>API: API 公開用の provisioning operation を作成する。
+    API->>API: 冪等性レコードを作成または確認する。
+    API->>R_identity: Cognito Resource Server に custom scope を追加する。
+    API->>API: API metadata、stage、reviewer、OpenAPI metadata、scope を保存する。
+    API->>API: API stage、scope、reviewer の lifecycle event を追記する。
+    API->>API: provisioning operation/step event を追記する。
+    API->>API: 監査イベントを追記する。
+    API->>API: API 公開登録レスポンスを組み立てる。
+    alt 呼び出し元が API 公開登録できる場合。
+      API->>R_api_gateway_control: 登録対象 API Gateway stage の登録情報を検証する。
       API->>DB: API codeの重複登録を防ぐため、既存APIを取得する。<br/>SQL 001_select_apis.sql<br/>テーブル apis
       API->>DB: API公開登録の処理結果として、provisioning operationを追加する。<br/>SQL 003_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
       API->>DB: 公開対象APIのcatalog metadataを保持するため、API catalogを追加する。<br/>SQL 004_insert_apis.sql<br/>テーブル apis

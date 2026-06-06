@@ -12,19 +12,19 @@ sequenceDiagram
   User->>API: PATCH /projects/{projectId}/public-client
   API->>API: public App Client 更新リクエストを検証する。
   API->>API: 対象 Project を取得する。
+  API->>API: Project の public App Client metadata を取得する。
+  API->>API: Idempotency-Key に対応する既存レコードを取得する。
+  API->>API: public client 更新用の provisioning operation を作成する。
+  API->>API: 冪等性レコードを作成または確認する。
+  API->>R_identity: Cognito App Client 設定を取得する。
+  API->>API: callback URL、logout URL、token 設定を既存設定へ統合する。
+  API->>R_identity: Cognito App Client を更新する。
+  API->>API: public App Client metadata を更新する。
+  API->>API: Project public client 更新イベントを追記する。
+  API->>API: provisioning operation/step event を追記する。
+  API->>API: 監査イベントを追記する。
+  API->>API: public App Client 更新レスポンスを組み立てる。
   alt 呼び出し元が Project owner である場合。
-    API->>API: Project の public App Client metadata を取得する。
-    API->>API: Idempotency-Key に対応する既存レコードを取得する。
-    API->>API: public client 更新用の provisioning operation を作成する。
-    API->>API: 冪等性レコードを作成または確認する。
-    API->>R_identity: Cognito App Client 設定を取得する。
-    API->>API: callback URL、logout URL、token 設定を既存設定へ統合する。
-    API->>R_identity: Cognito App Client を更新する。
-    API->>API: public App Client metadata を更新する。
-    API->>API: Project public client 更新イベントを追記する。
-    API->>API: provisioning operation/step event を追記する。
-    API->>API: 監査イベントを追記する。
-    API->>API: public App Client 更新レスポンスを組み立てる。
     API->>DB: 更新対象のpublic clientと現在versionを確認するため、Project Cognito clientを取得する。<br/>SQL 001_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients, projects, project_members
     API->>DB: public client設定の更新内容とversionを反映するため、Project Cognito clientを更新する。<br/>SQL 003_update_project_cognito_clients.sql<br/>テーブル project_cognito_clients
     API->>DB: public clientのURL設定を最新化するため、既存のProject Cognito client URLを削除する。<br/>SQL 004_delete_project_cognito_client_urls.sql<br/>テーブル project_cognito_client_urls

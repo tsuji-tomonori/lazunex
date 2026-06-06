@@ -32,6 +32,7 @@
 | <code>projects</code> | <code>project_id</code> | <code>project_id</code> | Project ID。 | <code>UUID</code> | no |
 | <code>projects</code> | <code>project_code</code> | <code>project_code</code> | 人が読めるProjectコード。例: payment-frontend。 | <code>VARCHAR(100)</code> | no |
 | <code>projects</code> | <code>owner_principal_id</code> | <code>owner_principal_id</code> | プロジェクトオーナーのprincipal。 | <code>VARCHAR(256)</code> | no |
+| <code>-</code> | <code>caller_project_role</code> | <code>caller_project_role</code> | - | <code>Any</code> | no |
 
 ### 条件
 
