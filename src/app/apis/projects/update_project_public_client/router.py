@@ -18,6 +18,7 @@ from app.apis.responses import (
     error_responses,
     success_response,
 )
+from app.apis.router_errors import ROUTER_HANDLED_EXCEPTIONS, raise_http_exception_for_router_error
 from app.apis.sequence_types import CallerIdentity, RequestContext
 from app.apis.types import ResourceId
 from app.db.session import get_session
@@ -78,64 +79,67 @@ async def update_project_public_client(
     request_context: Annotated[RequestContext, Depends(get_request_context)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> UpdateProjectPublicClientResponse:
-    validated_request = await api_functions.validate_public_client_update_request(request)
-    project = await api_functions.get_project(project_id, caller, session)
-    if not await api_functions.has_project_owner_permission(project, caller):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="caller is not a project owner",
+    try:
+        validated_request = await api_functions.validate_public_client_update_request(request)
+        project = await api_functions.get_project(project_id, caller, session)
+        if not await api_functions.has_project_owner_permission(project, caller):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="caller is not a project owner",
+            )
+        public_client = await api_functions.get_public_app_client_metadata(project, caller, session)
+        await api_functions.get_idempotency_record(idempotency_key, session)
+        operation = await api_functions.create_provisioning_operation(
+            project,
+            validated_request,
+            idempotency_key,
+            caller,
+            session,
         )
-    public_client = await api_functions.get_public_app_client_metadata(project, caller, session)
-    await api_functions.get_idempotency_record(idempotency_key, session)
-    operation = await api_functions.create_provisioning_operation(
-        project,
-        validated_request,
-        idempotency_key,
-        caller,
-        session,
-    )
-    await api_functions.create_idempotency_record(
-        idempotency_key,
-        operation,
-        validated_request,
-        caller,
-        session,
-    )
-    current_client = await api_functions.get_cognito_app_client(public_client, identity_admin)
-    merged_client = await api_functions.merge_public_client_settings(
-        current_client,
-        validated_request,
-    )
-    updated_client = await api_functions.update_cognito_app_client(
-        merged_client,
-        identity_admin,
-    )
-    updated_metadata = await api_functions.update_public_app_client_metadata(
-        project,
-        updated_client,
-        validated_request,
-        caller,
-        session,
-    )
-    await api_functions.append_project_public_client_updated_event(
-        project,
-        updated_metadata,
-        caller,
-        request_context,
-        idempotency_key,
-        session,
-    )
-    await api_functions.append_provisioning_events(
-        operation,
-        caller,
-        request_context,
-        idempotency_key,
-        session,
-    )
-    await api_functions.append_audit_event(project, caller, request_context, operation, session)
-    await session.commit()
-    return await api_functions.build_update_public_client_response(
-        project,
-        updated_metadata,
-        operation,
-    )
+        await api_functions.create_idempotency_record(
+            idempotency_key,
+            operation,
+            validated_request,
+            caller,
+            session,
+        )
+        current_client = await api_functions.get_cognito_app_client(public_client, identity_admin)
+        merged_client = await api_functions.merge_public_client_settings(
+            current_client,
+            validated_request,
+        )
+        updated_client = await api_functions.update_cognito_app_client(
+            merged_client,
+            identity_admin,
+        )
+        updated_metadata = await api_functions.update_public_app_client_metadata(
+            project,
+            updated_client,
+            validated_request,
+            caller,
+            session,
+        )
+        await api_functions.append_project_public_client_updated_event(
+            project,
+            updated_metadata,
+            caller,
+            request_context,
+            idempotency_key,
+            session,
+        )
+        await api_functions.append_provisioning_events(
+            operation,
+            caller,
+            request_context,
+            idempotency_key,
+            session,
+        )
+        await api_functions.append_audit_event(project, caller, request_context, operation, session)
+        await session.commit()
+        return await api_functions.build_update_public_client_response(
+            project,
+            updated_metadata,
+            operation,
+        )
+    except ROUTER_HANDLED_EXCEPTIONS as error:
+        raise_http_exception_for_router_error(error)

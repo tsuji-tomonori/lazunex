@@ -17,6 +17,7 @@ from app.apis.responses import (
     error_responses,
     success_response,
 )
+from app.apis.router_errors import ROUTER_HANDLED_EXCEPTIONS, raise_http_exception_for_router_error
 from app.apis.sequence_types import CallerIdentity
 from app.apis.types import ResourceId
 from app.db.session import get_session
@@ -61,17 +62,20 @@ async def list_project_api_access_requests(
     caller: Annotated[CallerIdentity, Depends(get_caller_identity)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> ListProjectApiAccessRequestsResponse:
-    project = await api_functions.get_project(project_id)
-    if not await api_functions.has_project_access_request_view_permission(project, caller):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="caller cannot list project access requests",
+    try:
+        project = await api_functions.get_project(project_id)
+        if not await api_functions.has_project_access_request_view_permission(project, caller):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="caller cannot list project access requests",
+            )
+        access_requests = await api_functions.get_project_access_requests(
+            project,
+            query,
+            caller,
+            session,
         )
-    access_requests = await api_functions.get_project_access_requests(
-        project,
-        query,
-        caller,
-        session,
-    )
-    page = await api_functions.apply_pagination(access_requests, query)
-    return await api_functions.build_project_access_request_list_response(page)
+        page = await api_functions.apply_pagination(access_requests, query)
+        return await api_functions.build_project_access_request_list_response(page)
+    except ROUTER_HANDLED_EXCEPTIONS as error:
+        raise_http_exception_for_router_error(error)

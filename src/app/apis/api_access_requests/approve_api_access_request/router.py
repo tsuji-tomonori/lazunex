@@ -18,6 +18,7 @@ from app.apis.responses import (
     error_responses,
     success_response,
 )
+from app.apis.router_errors import ROUTER_HANDLED_EXCEPTIONS, raise_http_exception_for_router_error
 from app.apis.sequence_types import CallerIdentity, RequestContext
 from app.apis.types import ResourceId
 from app.db.session import get_session
@@ -84,88 +85,91 @@ async def approve_api_access_request(
     request_context: Annotated[RequestContext, Depends(get_request_context)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> ApproveApiAccessRequestResponse:
-    access_request = await api_functions.get_access_request(access_request_id, session)
-    if not await api_functions.is_pending_access_request(access_request):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="access request is not pending",
+    try:
+        access_request = await api_functions.get_access_request(access_request_id, session)
+        if not await api_functions.is_pending_access_request(access_request):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="access request is not pending",
+            )
+        if not await api_functions.has_api_reviewer_permission(access_request, caller, session):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="caller is not an api reviewer",
+            )
+        if not await api_functions.is_available_project_api_stage(access_request):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="project api stage is not available",
+            )
+        if await api_functions.has_active_subscription(access_request, session):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="active subscription already exists",
+            )
+        await api_functions.append_access_request_approving_event(
+            access_request,
+            caller,
+            request_context,
+            idempotency_key,
+            session,
         )
-    if not await api_functions.has_api_reviewer_permission(access_request, caller, session):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="caller is not an api reviewer",
+        operation = await api_functions.create_provisioning_operation(
+            access_request,
+            request,
+            idempotency_key,
+            caller,
+            session,
         )
-    if not await api_functions.is_available_project_api_stage(access_request):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="project api stage is not available",
+        await api_functions.get_idempotency_record(idempotency_key, session)
+        await api_functions.create_idempotency_record(
+            idempotency_key,
+            operation,
+            access_request,
+            request,
+            caller,
+            session,
         )
-    if await api_functions.has_active_subscription(access_request, session):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="active subscription already exists",
+        usage_plan_stage = await api_functions.add_usage_plan_api_stage(
+            access_request,
+            api_gateway_control,
+            request,
+            session,
         )
-    await api_functions.append_access_request_approving_event(
-        access_request,
-        caller,
-        request_context,
-        idempotency_key,
-        session,
-    )
-    operation = await api_functions.create_provisioning_operation(
-        access_request,
-        request,
-        idempotency_key,
-        caller,
-        session,
-    )
-    await api_functions.get_idempotency_record(idempotency_key, session)
-    await api_functions.create_idempotency_record(
-        idempotency_key,
-        operation,
-        access_request,
-        request,
-        caller,
-        session,
-    )
-    usage_plan_stage = await api_functions.add_usage_plan_api_stage(
-        access_request,
-        api_gateway_control,
-        request,
-        session,
-    )
-    current_client = await api_functions.get_cognito_app_client(
-        access_request,
-        identity_admin,
-        request,
-        session,
-    )
-    merged_client = await api_functions.merge_cognito_allowed_scopes(
-        current_client,
-        access_request,
-    )
-    updated_client = await api_functions.update_cognito_app_client(
-        merged_client,
-        identity_admin,
-    )
-    resources = await api_functions.save_approved_access_resources(
-        access_request,
-        request,
-        usage_plan_stage,
-        updated_client,
-        caller,
-        session,
-    )
-    await api_functions.append_usage_plan_stage_event(usage_plan_stage)
-    await api_functions.append_client_scope_event(resources)
-    await api_functions.append_access_request_approved_event(access_request)
-    await api_functions.append_subscription_provisioned_event(resources)
-    await api_functions.append_provisioning_events()
-    await api_functions.append_audit_event(access_request, caller)
-    await session.commit()
-    return await api_functions.build_approve_access_request_response(
-        access_request,
-        resources,
-        request,
-        operation,
-    )
+        current_client = await api_functions.get_cognito_app_client(
+            access_request,
+            identity_admin,
+            request,
+            session,
+        )
+        merged_client = await api_functions.merge_cognito_allowed_scopes(
+            current_client,
+            access_request,
+        )
+        updated_client = await api_functions.update_cognito_app_client(
+            merged_client,
+            identity_admin,
+        )
+        resources = await api_functions.save_approved_access_resources(
+            access_request,
+            request,
+            usage_plan_stage,
+            updated_client,
+            caller,
+            session,
+        )
+        await api_functions.append_usage_plan_stage_event(usage_plan_stage)
+        await api_functions.append_client_scope_event(resources)
+        await api_functions.append_access_request_approved_event(access_request)
+        await api_functions.append_subscription_provisioned_event(resources)
+        await api_functions.append_provisioning_events()
+        await api_functions.append_audit_event(access_request, caller)
+        await session.commit()
+        return await api_functions.build_approve_access_request_response(
+            access_request,
+            resources,
+            request,
+            operation,
+        )
+    except ROUTER_HANDLED_EXCEPTIONS as error:
+        raise_http_exception_for_router_error(error)

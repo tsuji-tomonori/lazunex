@@ -18,6 +18,7 @@ from app.apis.responses import (
     error_responses,
     success_response,
 )
+from app.apis.router_errors import ROUTER_HANDLED_EXCEPTIONS, raise_http_exception_for_router_error
 from app.apis.sequence_types import CallerIdentity, RequestContext
 from app.apis.types import ResourceId
 from app.db.session import get_session
@@ -74,71 +75,79 @@ async def create_api_access_request(
     request_context: Annotated[RequestContext, Depends(get_request_context)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> CreateApiAccessRequestResponse:
-    validated_request = await api_functions.validate_create_access_request_request(request)
-    project = await api_functions.get_project(project_id, caller, session)
-    if not await api_functions.has_project_owner_permission(project, caller):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="caller is not a project owner",
+    try:
+        validated_request = await api_functions.validate_create_access_request_request(request)
+        project = await api_functions.get_project(project_id, caller, session)
+        if not await api_functions.has_project_owner_permission(project, caller):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="caller is not a project owner",
+            )
+        if not await api_functions.is_published_api(
+            validated_request.api_id,
+            validated_request.api_stage_id,
+            session,
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="api is not published",
+            )
+        await api_functions.get_api_reviewer(
+            validated_request.api_id,
+            validated_request.api_stage_id,
+            session,
         )
-    if not await api_functions.is_published_api(
-        validated_request.api_id,
-        validated_request.api_stage_id,
-        session,
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="api is not published",
+        if not await api_functions.has_requested_auth_mode_clients(
+            project,
+            validated_request,
+            session,
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="requested auth mode client is not configured",
+            )
+        if await api_functions.has_active_subscription(
+            project,
+            validated_request.api_id,
+            validated_request.api_stage_id,
+            session,
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="active subscription already exists",
+            )
+        if await api_functions.has_pending_access_request_for_project_api(
+            project,
+            validated_request.api_id,
+            validated_request.api_stage_id,
+            session,
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="pending access request already exists",
+            )
+        access_request = await api_functions.save_api_access_request(
+            project,
+            validated_request,
+            caller,
+            session,
         )
-    await api_functions.get_api_reviewer(
-        validated_request.api_id,
-        validated_request.api_stage_id,
-        session,
-    )
-    if not await api_functions.has_requested_auth_mode_clients(
-        project,
-        validated_request,
-        session,
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="requested auth mode client is not configured",
+        await api_functions.get_idempotency_record(idempotency_key, session)
+        await api_functions.create_idempotency_record(
+            idempotency_key,
+            access_request,
+            caller,
+            session,
         )
-    if await api_functions.has_active_subscription(
-        project,
-        validated_request.api_id,
-        validated_request.api_stage_id,
-        session,
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="active subscription already exists",
+        await api_functions.append_access_request_created_event(
+            access_request,
+            caller,
+            request_context,
+            idempotency_key,
+            session,
         )
-    if await api_functions.has_pending_access_request_for_project_api(
-        project,
-        validated_request.api_id,
-        validated_request.api_stage_id,
-        session,
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="pending access request already exists",
-        )
-    access_request = await api_functions.save_api_access_request(
-        project,
-        validated_request,
-        caller,
-        session,
-    )
-    await api_functions.get_idempotency_record(idempotency_key, session)
-    await api_functions.create_idempotency_record(idempotency_key, access_request, caller, session)
-    await api_functions.append_access_request_created_event(
-        access_request,
-        caller,
-        request_context,
-        idempotency_key,
-        session,
-    )
-    await api_functions.append_audit_event(access_request, caller, request_context, session)
-    await session.commit()
-    return await api_functions.build_create_access_request_response(access_request)
+        await api_functions.append_audit_event(access_request, caller, request_context, session)
+        await session.commit()
+        return await api_functions.build_create_access_request_response(access_request)
+    except ROUTER_HANDLED_EXCEPTIONS as error:
+        raise_http_exception_for_router_error(error)

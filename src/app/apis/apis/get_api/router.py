@@ -12,6 +12,7 @@ from app.apis.responses import (
     error_responses,
     success_response,
 )
+from app.apis.router_errors import ROUTER_HANDLED_EXCEPTIONS, raise_http_exception_for_router_error
 from app.apis.sequence_types import CallerIdentity
 from app.apis.types import ResourceId
 from app.db.session import get_session
@@ -50,10 +51,13 @@ async def get_api(
     caller: Annotated[CallerIdentity, Depends(get_caller_identity)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> GetApiResponse:
-    api = await api_functions.get_api_detail(api_id, session)
-    if not await api_functions.is_viewable_api(api, caller):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="caller cannot view api",
-        )
-    return await api_functions.build_api_detail_response(api)
+    try:
+        api = await api_functions.get_api_detail(api_id, session)
+        if not await api_functions.is_viewable_api(api, caller):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="caller cannot view api",
+            )
+        return await api_functions.build_api_detail_response(api)
+    except ROUTER_HANDLED_EXCEPTIONS as error:
+        raise_http_exception_for_router_error(error)

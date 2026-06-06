@@ -12,6 +12,7 @@ from app.apis.responses import (
     error_responses,
     success_response,
 )
+from app.apis.router_errors import ROUTER_HANDLED_EXCEPTIONS, raise_http_exception_for_router_error
 from app.apis.sequence_types import CallerIdentity
 from app.apis.types import ResourceId
 from app.db.session import get_session
@@ -54,10 +55,13 @@ async def get_project(
     caller: Annotated[CallerIdentity, Depends(get_caller_identity)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> GetProjectResponse:
-    project = await api_functions.get_project_detail(project_id, caller, session)
-    if not await api_functions.has_project_view_permission(project, caller):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="caller cannot view project",
-        )
-    return await api_functions.build_project_detail_response(project)
+    try:
+        project = await api_functions.get_project_detail(project_id, caller, session)
+        if not await api_functions.has_project_view_permission(project, caller):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="caller cannot view project",
+            )
+        return await api_functions.build_project_detail_response(project)
+    except ROUTER_HANDLED_EXCEPTIONS as error:
+        raise_http_exception_for_router_error(error)

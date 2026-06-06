@@ -17,6 +17,7 @@ from app.apis.responses import (
     error_responses,
     success_response,
 )
+from app.apis.router_errors import ROUTER_HANDLED_EXCEPTIONS, raise_http_exception_for_router_error
 from app.apis.sequence_types import CallerIdentity
 from app.apis.types import ResourceId
 from app.db.session import get_session
@@ -61,17 +62,20 @@ async def list_project_subscriptions(
     caller: Annotated[CallerIdentity, Depends(get_caller_identity)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> ListProjectSubscriptionsResponse:
-    project = await api_functions.get_project(project_id)
-    if not await api_functions.has_project_subscription_view_permission(project, caller):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="caller cannot list project subscriptions",
+    try:
+        project = await api_functions.get_project(project_id)
+        if not await api_functions.has_project_subscription_view_permission(project, caller):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="caller cannot list project subscriptions",
+            )
+        subscriptions = await api_functions.get_project_subscriptions(
+            project,
+            query,
+            caller,
+            session,
         )
-    subscriptions = await api_functions.get_project_subscriptions(
-        project,
-        query,
-        caller,
-        session,
-    )
-    page = await api_functions.apply_pagination(subscriptions, query)
-    return await api_functions.build_project_subscription_list_response(page)
+        page = await api_functions.apply_pagination(subscriptions, query)
+        return await api_functions.build_project_subscription_list_response(page)
+    except ROUTER_HANDLED_EXCEPTIONS as error:
+        raise_http_exception_for_router_error(error)

@@ -15,6 +15,7 @@ from app.apis.responses import (
     error_responses,
     success_response,
 )
+from app.apis.router_errors import ROUTER_HANDLED_EXCEPTIONS, raise_http_exception_for_router_error
 from app.apis.sequence_types import CallerIdentity, RequestContext
 from app.db.session import get_session
 from app.integrations.api_gateway_control.deps import get_api_gateway_control_client
@@ -63,68 +64,71 @@ async def publish_api(
     request_context: Annotated[RequestContext, Depends(get_request_context)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> PublishApiResponse:
-    validated_request = await api_functions.validate_api_publish_request(request)
-    if not await api_functions.has_api_publish_permission(validated_request, caller):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="caller cannot publish api",
+    try:
+        validated_request = await api_functions.validate_api_publish_request(request)
+        if not await api_functions.has_api_publish_permission(validated_request, caller):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="caller cannot publish api",
+            )
+        await api_functions.get_idempotency_record(idempotency_key, session)
+        if not await api_functions.verify_api_gateway_stage_registration(
+            validated_request,
+            api_gateway_control,
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="API Gateway stage registration is not valid",
+            )
+        if await api_functions.has_registered_api(validated_request, session):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="api is already registered",
+            )
+        operation = await api_functions.create_provisioning_operation(
+            validated_request,
+            idempotency_key,
+            caller,
+            session,
         )
-    await api_functions.get_idempotency_record(idempotency_key, session)
-    if not await api_functions.verify_api_gateway_stage_registration(
-        validated_request,
-        api_gateway_control,
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="API Gateway stage registration is not valid",
+        await api_functions.create_idempotency_record(
+            idempotency_key,
+            operation,
+            validated_request,
+            caller,
+            session,
         )
-    if await api_functions.has_registered_api(validated_request, session):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="api is already registered",
+        scope = await api_functions.add_cognito_custom_scope(
+            validated_request,
+            identity_admin,
         )
-    operation = await api_functions.create_provisioning_operation(
-        validated_request,
-        idempotency_key,
-        caller,
-        session,
-    )
-    await api_functions.create_idempotency_record(
-        idempotency_key,
-        operation,
-        validated_request,
-        caller,
-        session,
-    )
-    scope = await api_functions.add_cognito_custom_scope(
-        validated_request,
-        identity_admin,
-    )
-    api = await api_functions.save_api_catalog_metadata(
-        validated_request,
-        scope,
-        operation,
-        caller,
-        session,
-    )
-    await api_functions.append_api_lifecycle_events(
-        api,
-        caller,
-        request_context,
-        idempotency_key,
-        session,
-    )
-    await api_functions.append_provisioning_events(
-        operation,
-        caller,
-        request_context,
-        idempotency_key,
-        session,
-    )
-    await api_functions.append_audit_event(api, caller, request_context, operation, session)
-    await session.commit()
-    return await api_functions.build_publish_api_response(
-        api,
-        scope,
-        operation=operation,
-    )
+        api = await api_functions.save_api_catalog_metadata(
+            validated_request,
+            scope,
+            operation,
+            caller,
+            session,
+        )
+        await api_functions.append_api_lifecycle_events(
+            api,
+            caller,
+            request_context,
+            idempotency_key,
+            session,
+        )
+        await api_functions.append_provisioning_events(
+            operation,
+            caller,
+            request_context,
+            idempotency_key,
+            session,
+        )
+        await api_functions.append_audit_event(api, caller, request_context, operation, session)
+        await session.commit()
+        return await api_functions.build_publish_api_response(
+            api,
+            scope,
+            operation=operation,
+        )
+    except ROUTER_HANDLED_EXCEPTIONS as error:
+        raise_http_exception_for_router_error(error)
