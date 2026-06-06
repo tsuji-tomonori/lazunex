@@ -12,6 +12,7 @@ from app.apis.apis.get_api.schemas import (
     ApiScopeResponse,
     GetApiResponse,
 )
+from app.apis.sample_cases import request_sample, status_samples
 
 GET_API_RESPONSE_SAMPLE = GetApiResponse(
     api_id=UUID("7b0d4a98-0000-0000-0000-000000000001"),
@@ -43,4 +44,20 @@ GET_API_RESPONSE_SAMPLE = GetApiResponse(
             reviewer_principal_id="reviewer-001", reviewer_role=ReviewerRole.PRIMARY
         )
     ],
+)
+GET_API_STATUS_SAMPLES = status_samples(
+    request=request_sample(
+        path={"apiId": "7b0d4a98-0000-0000-0000-000000000001"},
+        headers={"X-Principal-Id": "user-12345"},
+    ),
+    success_status=200,
+    success_response=GET_API_RESPONSE_SAMPLE,
+    errors={
+        401: "認証情報が未指定、期限切れ、または検証できない場合。",
+        403: "呼び出し元に対象APIを参照する権限がない場合。",
+        404: "指定されたAPIが存在しない場合。",
+        422: "pathがOpenAPIスキーマの型や制約に一致しない場合。",
+        429: "呼び出し頻度が許可された上限を超えた場合。",
+        500: "Lazunex内部で想定外のエラーが発生した場合。",
+    },
 )

@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
 from app.apis.apis.list_apis import functions as api_functions
-from app.apis.apis.list_apis.samples import LIST_APIS_RESPONSE_SAMPLE
+from app.apis.apis.list_apis.samples import LIST_APIS_RESPONSE_SAMPLE, LIST_APIS_STATUS_SAMPLES
 from app.apis.apis.list_apis.schemas import ListApisQuery, ListApisResponse
 from app.apis.deps import get_caller_identity
 from app.apis.responses import (
@@ -33,6 +33,7 @@ router = APIRouter()
         status.HTTP_200_OK: success_response(LIST_APIS_RESPONSE_SAMPLE),
         **error_responses(
             status.HTTP_403_FORBIDDEN,
+            samples=LIST_APIS_STATUS_SAMPLES,
         ),
     },
     tags=["apis"],

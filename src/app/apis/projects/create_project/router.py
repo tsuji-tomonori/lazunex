@@ -10,6 +10,7 @@ from app.apis.projects.create_project import functions as api_functions
 from app.apis.projects.create_project.samples import (
     CREATE_PROJECT_REQUEST_SAMPLE,
     CREATE_PROJECT_RESPONSE_SAMPLE,
+    CREATE_PROJECT_STATUS_SAMPLES,
 )
 from app.apis.projects.create_project.schemas import CreateProjectRequest, CreateProjectResponse
 from app.apis.responses import (
@@ -50,6 +51,7 @@ router = APIRouter()
             status.HTTP_409_CONFLICT,
             status.HTTP_502_BAD_GATEWAY,
             status.HTTP_503_SERVICE_UNAVAILABLE,
+            samples=CREATE_PROJECT_STATUS_SAMPLES,
         ),
     },
     tags=["projects"],

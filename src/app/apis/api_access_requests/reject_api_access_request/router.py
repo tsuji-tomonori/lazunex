@@ -8,6 +8,7 @@ from app.apis.api_access_requests.reject_api_access_request import functions as 
 from app.apis.api_access_requests.reject_api_access_request.samples import (
     REJECT_API_ACCESS_REQUEST_REQUEST_SAMPLE,
     REJECT_API_ACCESS_REQUEST_RESPONSE_SAMPLE,
+    REJECT_API_ACCESS_REQUEST_STATUS_SAMPLES,
 )
 from app.apis.api_access_requests.reject_api_access_request.schemas import (
     RejectApiAccessRequestRequest,
@@ -45,6 +46,7 @@ router = APIRouter()
             status.HTTP_404_NOT_FOUND,
             status.HTTP_409_CONFLICT,
             status.HTTP_500_INTERNAL_SERVER_ERROR,
+            samples=REJECT_API_ACCESS_REQUEST_STATUS_SAMPLES,
         ),
     },
     tags=["api-access-requests"],

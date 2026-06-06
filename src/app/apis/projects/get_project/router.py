@@ -7,7 +7,10 @@ from starlette.responses import JSONResponse
 from app.apis.base import sample_path_value
 from app.apis.deps import get_caller_identity
 from app.apis.projects.get_project import functions as api_functions
-from app.apis.projects.get_project.samples import GET_PROJECT_RESPONSE_SAMPLE
+from app.apis.projects.get_project.samples import (
+    GET_PROJECT_RESPONSE_SAMPLE,
+    GET_PROJECT_STATUS_SAMPLES,
+)
 from app.apis.projects.get_project.schemas import GetProjectResponse
 from app.apis.responses import (
     error_responses,
@@ -38,6 +41,7 @@ router = APIRouter()
         **error_responses(
             status.HTTP_403_FORBIDDEN,
             status.HTTP_404_NOT_FOUND,
+            samples=GET_PROJECT_STATUS_SAMPLES,
         ),
     },
     tags=["projects"],

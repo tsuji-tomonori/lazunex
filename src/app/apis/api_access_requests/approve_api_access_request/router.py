@@ -8,6 +8,7 @@ from app.apis.api_access_requests.approve_api_access_request import functions as
 from app.apis.api_access_requests.approve_api_access_request.samples import (
     APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE,
     APPROVE_API_ACCESS_REQUEST_RESPONSE_SAMPLE,
+    APPROVE_API_ACCESS_REQUEST_STATUS_SAMPLES,
 )
 from app.apis.api_access_requests.approve_api_access_request.schemas import (
     ApproveApiAccessRequestRequest,
@@ -49,6 +50,7 @@ router = APIRouter()
             status.HTTP_409_CONFLICT,
             status.HTTP_502_BAD_GATEWAY,
             status.HTTP_503_SERVICE_UNAVAILABLE,
+            samples=APPROVE_API_ACCESS_REQUEST_STATUS_SAMPLES,
         ),
     },
     tags=["api-access-requests"],

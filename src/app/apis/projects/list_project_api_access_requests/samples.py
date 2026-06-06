@@ -9,6 +9,7 @@ from app.apis.projects.list_project_api_access_requests.schemas import (
     ListProjectApiAccessRequestsResponse,
     ProjectApiAccessRequestItemResponse,
 )
+from app.apis.sample_cases import request_sample, status_samples
 
 LIST_PROJECT_API_ACCESS_REQUESTS_RESPONSE_SAMPLE = ListProjectApiAccessRequestsResponse(
     items=[
@@ -29,4 +30,20 @@ LIST_PROJECT_API_ACCESS_REQUESTS_RESPONSE_SAMPLE = ListProjectApiAccessRequestsR
         )
     ],
     next_token=None,
+)
+LIST_PROJECT_API_ACCESS_REQUESTS_STATUS_SAMPLES = status_samples(
+    request=request_sample(
+        path={"projectId": "cb62b5f6-0000-0000-0000-000000000001"},
+        query={"limit": 50},
+        headers={"X-Principal-Id": "user-12345"},
+    ),
+    success_status=200,
+    success_response=LIST_PROJECT_API_ACCESS_REQUESTS_RESPONSE_SAMPLE,
+    errors={
+        401: "認証情報が未指定、期限切れ、または検証できない場合。",
+        403: "呼び出し元に対象Projectの利用申請履歴を参照する権限がない場合。",
+        422: "pathまたはqueryがOpenAPIスキーマの型や制約に一致しない場合。",
+        429: "呼び出し頻度が許可された上限を超えた場合。",
+        500: "Lazunex内部で想定外のエラーが発生した場合。",
+    },
 )

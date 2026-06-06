@@ -10,6 +10,7 @@ from app.apis.projects.update_project_public_client import functions as api_func
 from app.apis.projects.update_project_public_client.samples import (
     UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE,
     UPDATE_PROJECT_PUBLIC_CLIENT_RESPONSE_SAMPLE,
+    UPDATE_PROJECT_PUBLIC_CLIENT_STATUS_SAMPLES,
 )
 from app.apis.projects.update_project_public_client.schemas import (
     UpdateProjectPublicClientRequest,
@@ -48,6 +49,7 @@ router = APIRouter()
             status.HTTP_409_CONFLICT,
             status.HTTP_502_BAD_GATEWAY,
             status.HTTP_503_SERVICE_UNAVAILABLE,
+            samples=UPDATE_PROJECT_PUBLIC_CLIENT_STATUS_SAMPLES,
         ),
     },
     tags=["projects"],

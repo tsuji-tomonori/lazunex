@@ -19,6 +19,7 @@ from tools.generate_openapi_if_specs import (
     load_operation_sample,
     main,
     module_sample,
+    module_status_samples,
     object_field_rows,
     operation_output_path,
     parameter_default,
@@ -396,6 +397,28 @@ def test_sample_renderers_format_curl_and_json() -> None:
         )[-2]
         == "_なし_"
     )
+    status_samples = render_samples_section(
+        "/admin/users/{userId}",
+        "delete",
+        operation,
+        OperationSamples(
+            request=None,
+            response=None,
+            status_samples={
+                200: {
+                    "request": {"path": {"userId": "user-1"}},
+                    "response": {"userId": "user-1"},
+                },
+                404: {
+                    "request": {"path": {"userId": "missing"}},
+                    "response": {"error": {"code": "NOT_FOUND"}},
+                },
+            },
+        ),
+    )
+    rendered_status_samples = "\n".join(status_samples)
+    assert "### HTTP 200" in rendered_status_samples
+    assert '"userId": "missing"' in rendered_status_samples
 
 
 def test_operation_output_path_falls_back_to_default() -> None:
@@ -459,8 +482,10 @@ def test_operation_samples_are_loaded_from_samples_module() -> None:
     assert sample is not None
     assert sample.request is not None
     assert sample.response is not None
+    assert sample.status_samples is not None
     assert sample.request["requestedReason"] == "決済画面から請求情報を参照するため"
     assert sample.response["derivedState"] == "PENDING"
+    assert sample.status_samples[201]["response"]["derivedState"] == "PENDING"
     assert (
         implementation_operation_samples({"createApiAccessRequest": api_path})[
             "createApiAccessRequest"
@@ -475,6 +500,7 @@ def test_module_sample_handles_missing_suffix() -> None:
         VALUE: ClassVar[dict[str, int]] = {"x": 1}
 
     assert module_sample(SampleModule, "_REQUEST_SAMPLE") is None
+    assert module_status_samples(SampleModule) is None
 
 
 def test_router_operation_helpers_handle_non_matches(tmp_path: Path) -> None:

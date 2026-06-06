@@ -210,49 +210,49 @@ Media type: `application/json`
 
 ## Samples
 
-### In
+### HTTP 201
 
-```bash
-curl -X POST 'https://api.example.com/apis' \
-  -H 'Idempotency-Key: <Idempotency-Key>' \
-  -H 'X-Principal-Id: <X-Principal-Id>' \
-  -H 'X-Groups: <X-Groups>' \
-  -H 'X-Scopes: <X-Scopes>' \
-  -H 'X-Correlation-Id: <X-Correlation-Id>' \
-  -H 'User-Agent: <User-Agent>' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "apiCode": "billing-api-v1",
-  "name": "Billing API",
-  "description": "社内請求API",
-  "providerName": "Finance Platform Team",
-  "providerContact": "finance-platform@example.com",
-  "ownerPrincipalId": "user-12345",
-  "visibility": "INTERNAL",
-  "apigw": {
-    "awsAccountId": "123456789012",
-    "awsRegion": "ap-northeast-1",
-    "restApiId": "abc123def4",
-    "stageName": "prod",
-    "invokeUrl": "https://abc123def4.execute-api.ap-northeast-1.amazonaws.com/prod",
-    "customDomainUrl": "https://billing-api.internal.example.com",
-    "authorizerId": "auth123",
-    "scopeAttachmentMode": "VERIFY_ONLY"
+#### Request
+
+```json
+{
+  "headers": {
+    "X-Principal-Id": "api-publisher-001",
+    "Idempotency-Key": "publish-api-001"
   },
-  "reviewers": [
-    {
-      "reviewerPrincipalId": "reviewer-001",
-      "reviewerRole": "PRIMARY"
+  "body": {
+    "apiCode": "billing-api-v1",
+    "name": "Billing API",
+    "description": "社内請求API",
+    "providerName": "Finance Platform Team",
+    "providerContact": "finance-platform@example.com",
+    "ownerPrincipalId": "user-12345",
+    "visibility": "INTERNAL",
+    "apigw": {
+      "awsAccountId": "123456789012",
+      "awsRegion": "ap-northeast-1",
+      "restApiId": "abc123def4",
+      "stageName": "prod",
+      "invokeUrl": "https://abc123def4.execute-api.ap-northeast-1.amazonaws.com/prod",
+      "customDomainUrl": "https://billing-api.internal.example.com",
+      "authorizerId": "auth123",
+      "scopeAttachmentMode": "VERIFY_ONLY"
+    },
+    "reviewers": [
+      {
+        "reviewerPrincipalId": "reviewer-001",
+        "reviewerRole": "PRIMARY"
+      }
+    ],
+    "openapiDocument": {
+      "s3Uri": "s3://lazunex-openapi/billing-api-v1/openapi.yaml",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
     }
-  ],
-  "openapiDocument": {
-    "s3Uri": "s3://lazunex-openapi/billing-api-v1/openapi.yaml",
-    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
   }
-}'
+}
 ```
 
-### Out
+#### Response
 
 ```json
 {
@@ -265,5 +265,500 @@ curl -X POST 'https://api.example.com/apis' \
   },
   "derivedState": "PUBLISHED",
   "operationId": "5d4d5b68-0000-0000-0000-000000000001"
+}
+```
+
+### HTTP 400
+
+#### Request
+
+```json
+{
+  "headers": {
+    "X-Principal-Id": "api-publisher-001",
+    "Idempotency-Key": "publish-api-001"
+  },
+  "body": {
+    "apiCode": "billing-api-v1",
+    "name": "Billing API",
+    "description": "社内請求API",
+    "providerName": "Finance Platform Team",
+    "providerContact": "finance-platform@example.com",
+    "ownerPrincipalId": "user-12345",
+    "visibility": "INTERNAL",
+    "apigw": {
+      "awsAccountId": "123456789012",
+      "awsRegion": "ap-northeast-1",
+      "restApiId": "abc123def4",
+      "stageName": "prod",
+      "invokeUrl": "https://abc123def4.execute-api.ap-northeast-1.amazonaws.com/prod",
+      "customDomainUrl": "https://billing-api.internal.example.com",
+      "authorizerId": "auth123",
+      "scopeAttachmentMode": "VERIFY_ONLY"
+    },
+    "reviewers": [
+      {
+        "reviewerPrincipalId": "reviewer-001",
+        "reviewerRole": "PRIMARY"
+      }
+    ],
+    "openapiDocument": {
+      "s3Uri": "s3://lazunex-openapi/billing-api-v1/openapi.yaml",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "BAD_REQUEST",
+    "message": "公開登録リクエストが業務ルールに合わない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 401
+
+#### Request
+
+```json
+{
+  "headers": {
+    "X-Principal-Id": "api-publisher-001",
+    "Idempotency-Key": "publish-api-001"
+  },
+  "body": {
+    "apiCode": "billing-api-v1",
+    "name": "Billing API",
+    "description": "社内請求API",
+    "providerName": "Finance Platform Team",
+    "providerContact": "finance-platform@example.com",
+    "ownerPrincipalId": "user-12345",
+    "visibility": "INTERNAL",
+    "apigw": {
+      "awsAccountId": "123456789012",
+      "awsRegion": "ap-northeast-1",
+      "restApiId": "abc123def4",
+      "stageName": "prod",
+      "invokeUrl": "https://abc123def4.execute-api.ap-northeast-1.amazonaws.com/prod",
+      "customDomainUrl": "https://billing-api.internal.example.com",
+      "authorizerId": "auth123",
+      "scopeAttachmentMode": "VERIFY_ONLY"
+    },
+    "reviewers": [
+      {
+        "reviewerPrincipalId": "reviewer-001",
+        "reviewerRole": "PRIMARY"
+      }
+    ],
+    "openapiDocument": {
+      "s3Uri": "s3://lazunex-openapi/billing-api-v1/openapi.yaml",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "認証情報が未指定、期限切れ、または検証できない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 403
+
+#### Request
+
+```json
+{
+  "headers": {
+    "X-Principal-Id": "api-publisher-001",
+    "Idempotency-Key": "publish-api-001"
+  },
+  "body": {
+    "apiCode": "billing-api-v1",
+    "name": "Billing API",
+    "description": "社内請求API",
+    "providerName": "Finance Platform Team",
+    "providerContact": "finance-platform@example.com",
+    "ownerPrincipalId": "user-12345",
+    "visibility": "INTERNAL",
+    "apigw": {
+      "awsAccountId": "123456789012",
+      "awsRegion": "ap-northeast-1",
+      "restApiId": "abc123def4",
+      "stageName": "prod",
+      "invokeUrl": "https://abc123def4.execute-api.ap-northeast-1.amazonaws.com/prod",
+      "customDomainUrl": "https://billing-api.internal.example.com",
+      "authorizerId": "auth123",
+      "scopeAttachmentMode": "VERIFY_ONLY"
+    },
+    "reviewers": [
+      {
+        "reviewerPrincipalId": "reviewer-001",
+        "reviewerRole": "PRIMARY"
+      }
+    ],
+    "openapiDocument": {
+      "s3Uri": "s3://lazunex-openapi/billing-api-v1/openapi.yaml",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "呼び出し元にAPIを公開登録する権限がない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 409
+
+#### Request
+
+```json
+{
+  "headers": {
+    "X-Principal-Id": "api-publisher-001",
+    "Idempotency-Key": "publish-api-001"
+  },
+  "body": {
+    "apiCode": "billing-api-v1",
+    "name": "Billing API",
+    "description": "社内請求API",
+    "providerName": "Finance Platform Team",
+    "providerContact": "finance-platform@example.com",
+    "ownerPrincipalId": "user-12345",
+    "visibility": "INTERNAL",
+    "apigw": {
+      "awsAccountId": "123456789012",
+      "awsRegion": "ap-northeast-1",
+      "restApiId": "abc123def4",
+      "stageName": "prod",
+      "invokeUrl": "https://abc123def4.execute-api.ap-northeast-1.amazonaws.com/prod",
+      "customDomainUrl": "https://billing-api.internal.example.com",
+      "authorizerId": "auth123",
+      "scopeAttachmentMode": "VERIFY_ONLY"
+    },
+    "reviewers": [
+      {
+        "reviewerPrincipalId": "reviewer-001",
+        "reviewerRole": "PRIMARY"
+      }
+    ],
+    "openapiDocument": {
+      "s3Uri": "s3://lazunex-openapi/billing-api-v1/openapi.yaml",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "CONFLICT",
+    "message": "同じAPI codeまたはstageが既に登録済みの場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 422
+
+#### Request
+
+```json
+{
+  "headers": {
+    "X-Principal-Id": "api-publisher-001",
+    "Idempotency-Key": "publish-api-001"
+  },
+  "body": {
+    "apiCode": "billing-api-v1",
+    "name": "Billing API",
+    "description": "社内請求API",
+    "providerName": "Finance Platform Team",
+    "providerContact": "finance-platform@example.com",
+    "ownerPrincipalId": "user-12345",
+    "visibility": "INTERNAL",
+    "apigw": {
+      "awsAccountId": "123456789012",
+      "awsRegion": "ap-northeast-1",
+      "restApiId": "abc123def4",
+      "stageName": "prod",
+      "invokeUrl": "https://abc123def4.execute-api.ap-northeast-1.amazonaws.com/prod",
+      "customDomainUrl": "https://billing-api.internal.example.com",
+      "authorizerId": "auth123",
+      "scopeAttachmentMode": "VERIFY_ONLY"
+    },
+    "reviewers": [
+      {
+        "reviewerPrincipalId": "reviewer-001",
+        "reviewerRole": "PRIMARY"
+      }
+    ],
+    "openapiDocument": {
+      "s3Uri": "s3://lazunex-openapi/billing-api-v1/openapi.yaml",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "headerまたはbodyがOpenAPIスキーマの型や制約に一致しない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 429
+
+#### Request
+
+```json
+{
+  "headers": {
+    "X-Principal-Id": "api-publisher-001",
+    "Idempotency-Key": "publish-api-001"
+  },
+  "body": {
+    "apiCode": "billing-api-v1",
+    "name": "Billing API",
+    "description": "社内請求API",
+    "providerName": "Finance Platform Team",
+    "providerContact": "finance-platform@example.com",
+    "ownerPrincipalId": "user-12345",
+    "visibility": "INTERNAL",
+    "apigw": {
+      "awsAccountId": "123456789012",
+      "awsRegion": "ap-northeast-1",
+      "restApiId": "abc123def4",
+      "stageName": "prod",
+      "invokeUrl": "https://abc123def4.execute-api.ap-northeast-1.amazonaws.com/prod",
+      "customDomainUrl": "https://billing-api.internal.example.com",
+      "authorizerId": "auth123",
+      "scopeAttachmentMode": "VERIFY_ONLY"
+    },
+    "reviewers": [
+      {
+        "reviewerPrincipalId": "reviewer-001",
+        "reviewerRole": "PRIMARY"
+      }
+    ],
+    "openapiDocument": {
+      "s3Uri": "s3://lazunex-openapi/billing-api-v1/openapi.yaml",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "TOO_MANY_REQUESTS",
+    "message": "呼び出し頻度が許可された上限を超えた場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 500
+
+#### Request
+
+```json
+{
+  "headers": {
+    "X-Principal-Id": "api-publisher-001",
+    "Idempotency-Key": "publish-api-001"
+  },
+  "body": {
+    "apiCode": "billing-api-v1",
+    "name": "Billing API",
+    "description": "社内請求API",
+    "providerName": "Finance Platform Team",
+    "providerContact": "finance-platform@example.com",
+    "ownerPrincipalId": "user-12345",
+    "visibility": "INTERNAL",
+    "apigw": {
+      "awsAccountId": "123456789012",
+      "awsRegion": "ap-northeast-1",
+      "restApiId": "abc123def4",
+      "stageName": "prod",
+      "invokeUrl": "https://abc123def4.execute-api.ap-northeast-1.amazonaws.com/prod",
+      "customDomainUrl": "https://billing-api.internal.example.com",
+      "authorizerId": "auth123",
+      "scopeAttachmentMode": "VERIFY_ONLY"
+    },
+    "reviewers": [
+      {
+        "reviewerPrincipalId": "reviewer-001",
+        "reviewerRole": "PRIMARY"
+      }
+    ],
+    "openapiDocument": {
+      "s3Uri": "s3://lazunex-openapi/billing-api-v1/openapi.yaml",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "INTERNAL_SERVER_ERROR",
+    "message": "Lazunex内部で想定外のエラーが発生した場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 502
+
+#### Request
+
+```json
+{
+  "headers": {
+    "X-Principal-Id": "api-publisher-001",
+    "Idempotency-Key": "publish-api-001"
+  },
+  "body": {
+    "apiCode": "billing-api-v1",
+    "name": "Billing API",
+    "description": "社内請求API",
+    "providerName": "Finance Platform Team",
+    "providerContact": "finance-platform@example.com",
+    "ownerPrincipalId": "user-12345",
+    "visibility": "INTERNAL",
+    "apigw": {
+      "awsAccountId": "123456789012",
+      "awsRegion": "ap-northeast-1",
+      "restApiId": "abc123def4",
+      "stageName": "prod",
+      "invokeUrl": "https://abc123def4.execute-api.ap-northeast-1.amazonaws.com/prod",
+      "customDomainUrl": "https://billing-api.internal.example.com",
+      "authorizerId": "auth123",
+      "scopeAttachmentMode": "VERIFY_ONLY"
+    },
+    "reviewers": [
+      {
+        "reviewerPrincipalId": "reviewer-001",
+        "reviewerRole": "PRIMARY"
+      }
+    ],
+    "openapiDocument": {
+      "s3Uri": "s3://lazunex-openapi/billing-api-v1/openapi.yaml",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "BAD_GATEWAY",
+    "message": "API GatewayまたはCognitoの確認で失敗応答を受け取った場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 503
+
+#### Request
+
+```json
+{
+  "headers": {
+    "X-Principal-Id": "api-publisher-001",
+    "Idempotency-Key": "publish-api-001"
+  },
+  "body": {
+    "apiCode": "billing-api-v1",
+    "name": "Billing API",
+    "description": "社内請求API",
+    "providerName": "Finance Platform Team",
+    "providerContact": "finance-platform@example.com",
+    "ownerPrincipalId": "user-12345",
+    "visibility": "INTERNAL",
+    "apigw": {
+      "awsAccountId": "123456789012",
+      "awsRegion": "ap-northeast-1",
+      "restApiId": "abc123def4",
+      "stageName": "prod",
+      "invokeUrl": "https://abc123def4.execute-api.ap-northeast-1.amazonaws.com/prod",
+      "customDomainUrl": "https://billing-api.internal.example.com",
+      "authorizerId": "auth123",
+      "scopeAttachmentMode": "VERIFY_ONLY"
+    },
+    "reviewers": [
+      {
+        "reviewerPrincipalId": "reviewer-001",
+        "reviewerRole": "PRIMARY"
+      }
+    ],
+    "openapiDocument": {
+      "s3Uri": "s3://lazunex-openapi/billing-api-v1/openapi.yaml",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "SERVICE_UNAVAILABLE",
+    "message": "API GatewayまたはCognitoが一時的に利用できない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
 }
 ```

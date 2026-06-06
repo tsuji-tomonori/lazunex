@@ -220,38 +220,41 @@ Media type: `application/json`
 
 ## Samples
 
-### In
+### HTTP 200
 
-```bash
-curl -X PATCH 'https://api.example.com/projects/cb62b5f6-0000-0000-0000-000000000001/public-client' \
-  -H 'Idempotency-Key: <Idempotency-Key>' \
-  -H 'X-Principal-Id: <X-Principal-Id>' \
-  -H 'X-Groups: <X-Groups>' \
-  -H 'X-Scopes: <X-Scopes>' \
-  -H 'X-Correlation-Id: <X-Correlation-Id>' \
-  -H 'User-Agent: <User-Agent>' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "callbackUrls": [
-    "https://payment.example.internal/callback",
-    "https://payment-stg.example.internal/callback"
-  ],
-  "logoutUrls": [
-    "https://payment.example.internal/logout"
-  ],
-  "accessTokenValidity": 15,
-  "accessTokenUnit": "minutes",
-  "idTokenValidity": 15,
-  "idTokenUnit": "minutes",
-  "refreshTokenValidity": 1,
-  "refreshTokenUnit": "days",
-  "refreshTokenRotationEnabled": true,
-  "retryGracePeriodSeconds": 10,
-  "expectedRowVersion": 3
-}'
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345",
+    "Idempotency-Key": "update-public-client-001"
+  },
+  "body": {
+    "callbackUrls": [
+      "https://payment.example.internal/callback",
+      "https://payment-stg.example.internal/callback"
+    ],
+    "logoutUrls": [
+      "https://payment.example.internal/logout"
+    ],
+    "accessTokenValidity": 15,
+    "accessTokenUnit": "minutes",
+    "idTokenValidity": 15,
+    "idTokenUnit": "minutes",
+    "refreshTokenValidity": 1,
+    "refreshTokenUnit": "days",
+    "refreshTokenRotationEnabled": true,
+    "retryGracePeriodSeconds": 10,
+    "expectedRowVersion": 3
+  }
+}
 ```
 
-### Out
+#### Response
 
 ```json
 {
@@ -273,5 +276,475 @@ curl -X PATCH 'https://api.example.com/projects/cb62b5f6-0000-0000-0000-00000000
     "rowVersion": 4
   },
   "operationId": "62f6d4b2-0000-0000-0000-000000000001"
+}
+```
+
+### HTTP 400
+
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345",
+    "Idempotency-Key": "update-public-client-001"
+  },
+  "body": {
+    "callbackUrls": [
+      "https://payment.example.internal/callback",
+      "https://payment-stg.example.internal/callback"
+    ],
+    "logoutUrls": [
+      "https://payment.example.internal/logout"
+    ],
+    "accessTokenValidity": 15,
+    "accessTokenUnit": "minutes",
+    "idTokenValidity": 15,
+    "idTokenUnit": "minutes",
+    "refreshTokenValidity": 1,
+    "refreshTokenUnit": "days",
+    "refreshTokenRotationEnabled": true,
+    "retryGracePeriodSeconds": 10,
+    "expectedRowVersion": 3
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "BAD_REQUEST",
+    "message": "public app client更新リクエストが業務ルールに合わない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 401
+
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345",
+    "Idempotency-Key": "update-public-client-001"
+  },
+  "body": {
+    "callbackUrls": [
+      "https://payment.example.internal/callback",
+      "https://payment-stg.example.internal/callback"
+    ],
+    "logoutUrls": [
+      "https://payment.example.internal/logout"
+    ],
+    "accessTokenValidity": 15,
+    "accessTokenUnit": "minutes",
+    "idTokenValidity": 15,
+    "idTokenUnit": "minutes",
+    "refreshTokenValidity": 1,
+    "refreshTokenUnit": "days",
+    "refreshTokenRotationEnabled": true,
+    "retryGracePeriodSeconds": 10,
+    "expectedRowVersion": 3
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "認証情報が未指定、期限切れ、または検証できない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 403
+
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345",
+    "Idempotency-Key": "update-public-client-001"
+  },
+  "body": {
+    "callbackUrls": [
+      "https://payment.example.internal/callback",
+      "https://payment-stg.example.internal/callback"
+    ],
+    "logoutUrls": [
+      "https://payment.example.internal/logout"
+    ],
+    "accessTokenValidity": 15,
+    "accessTokenUnit": "minutes",
+    "idTokenValidity": 15,
+    "idTokenUnit": "minutes",
+    "refreshTokenValidity": 1,
+    "refreshTokenUnit": "days",
+    "refreshTokenRotationEnabled": true,
+    "retryGracePeriodSeconds": 10,
+    "expectedRowVersion": 3
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "呼び出し元が対象Projectのownerではない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 404
+
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345",
+    "Idempotency-Key": "update-public-client-001"
+  },
+  "body": {
+    "callbackUrls": [
+      "https://payment.example.internal/callback",
+      "https://payment-stg.example.internal/callback"
+    ],
+    "logoutUrls": [
+      "https://payment.example.internal/logout"
+    ],
+    "accessTokenValidity": 15,
+    "accessTokenUnit": "minutes",
+    "idTokenValidity": 15,
+    "idTokenUnit": "minutes",
+    "refreshTokenValidity": 1,
+    "refreshTokenUnit": "days",
+    "refreshTokenRotationEnabled": true,
+    "retryGracePeriodSeconds": 10,
+    "expectedRowVersion": 3
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "指定されたProjectまたはpublic app clientが存在しない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 409
+
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345",
+    "Idempotency-Key": "update-public-client-001"
+  },
+  "body": {
+    "callbackUrls": [
+      "https://payment.example.internal/callback",
+      "https://payment-stg.example.internal/callback"
+    ],
+    "logoutUrls": [
+      "https://payment.example.internal/logout"
+    ],
+    "accessTokenValidity": 15,
+    "accessTokenUnit": "minutes",
+    "idTokenValidity": 15,
+    "idTokenUnit": "minutes",
+    "refreshTokenValidity": 1,
+    "refreshTokenUnit": "days",
+    "refreshTokenRotationEnabled": true,
+    "retryGracePeriodSeconds": 10,
+    "expectedRowVersion": 3
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "CONFLICT",
+    "message": "expected row versionが現在のversionと一致しない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 422
+
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345",
+    "Idempotency-Key": "update-public-client-001"
+  },
+  "body": {
+    "callbackUrls": [
+      "https://payment.example.internal/callback",
+      "https://payment-stg.example.internal/callback"
+    ],
+    "logoutUrls": [
+      "https://payment.example.internal/logout"
+    ],
+    "accessTokenValidity": 15,
+    "accessTokenUnit": "minutes",
+    "idTokenValidity": 15,
+    "idTokenUnit": "minutes",
+    "refreshTokenValidity": 1,
+    "refreshTokenUnit": "days",
+    "refreshTokenRotationEnabled": true,
+    "retryGracePeriodSeconds": 10,
+    "expectedRowVersion": 3
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "path、header、bodyがOpenAPIスキーマの型や制約に一致しない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 429
+
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345",
+    "Idempotency-Key": "update-public-client-001"
+  },
+  "body": {
+    "callbackUrls": [
+      "https://payment.example.internal/callback",
+      "https://payment-stg.example.internal/callback"
+    ],
+    "logoutUrls": [
+      "https://payment.example.internal/logout"
+    ],
+    "accessTokenValidity": 15,
+    "accessTokenUnit": "minutes",
+    "idTokenValidity": 15,
+    "idTokenUnit": "minutes",
+    "refreshTokenValidity": 1,
+    "refreshTokenUnit": "days",
+    "refreshTokenRotationEnabled": true,
+    "retryGracePeriodSeconds": 10,
+    "expectedRowVersion": 3
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "TOO_MANY_REQUESTS",
+    "message": "呼び出し頻度が許可された上限を超えた場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 500
+
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345",
+    "Idempotency-Key": "update-public-client-001"
+  },
+  "body": {
+    "callbackUrls": [
+      "https://payment.example.internal/callback",
+      "https://payment-stg.example.internal/callback"
+    ],
+    "logoutUrls": [
+      "https://payment.example.internal/logout"
+    ],
+    "accessTokenValidity": 15,
+    "accessTokenUnit": "minutes",
+    "idTokenValidity": 15,
+    "idTokenUnit": "minutes",
+    "refreshTokenValidity": 1,
+    "refreshTokenUnit": "days",
+    "refreshTokenRotationEnabled": true,
+    "retryGracePeriodSeconds": 10,
+    "expectedRowVersion": 3
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "INTERNAL_SERVER_ERROR",
+    "message": "Lazunex内部で想定外のエラーが発生した場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 502
+
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345",
+    "Idempotency-Key": "update-public-client-001"
+  },
+  "body": {
+    "callbackUrls": [
+      "https://payment.example.internal/callback",
+      "https://payment-stg.example.internal/callback"
+    ],
+    "logoutUrls": [
+      "https://payment.example.internal/logout"
+    ],
+    "accessTokenValidity": 15,
+    "accessTokenUnit": "minutes",
+    "idTokenValidity": 15,
+    "idTokenUnit": "minutes",
+    "refreshTokenValidity": 1,
+    "refreshTokenUnit": "days",
+    "refreshTokenRotationEnabled": true,
+    "retryGracePeriodSeconds": 10,
+    "expectedRowVersion": 3
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "BAD_GATEWAY",
+    "message": "Cognitoへの反映で失敗応答を受け取った場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 503
+
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345",
+    "Idempotency-Key": "update-public-client-001"
+  },
+  "body": {
+    "callbackUrls": [
+      "https://payment.example.internal/callback",
+      "https://payment-stg.example.internal/callback"
+    ],
+    "logoutUrls": [
+      "https://payment.example.internal/logout"
+    ],
+    "accessTokenValidity": 15,
+    "accessTokenUnit": "minutes",
+    "idTokenValidity": 15,
+    "idTokenUnit": "minutes",
+    "refreshTokenValidity": 1,
+    "refreshTokenUnit": "days",
+    "refreshTokenRotationEnabled": true,
+    "retryGracePeriodSeconds": 10,
+    "expectedRowVersion": 3
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "SERVICE_UNAVAILABLE",
+    "message": "Cognitoが一時的に利用できない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
 }
 ```

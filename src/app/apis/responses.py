@@ -3,7 +3,7 @@ from typing import Annotated, Any, Never
 from fastapi import HTTPException, status
 from pydantic import BaseModel, Field
 
-from app.apis.base import ApiBaseModel, sample_value
+from app.apis.base import ApiBaseModel, ApiStatusSample, sample_value
 from app.apis.types import DescriptionText, PageToken
 
 
@@ -132,9 +132,18 @@ COMMON_ERROR_STATUS_CODES = (
 )
 
 
-def error_responses(*status_codes: int) -> dict[int | str, dict[str, Any]]:
+def error_responses(
+    *status_codes: int,
+    samples: dict[int, ApiStatusSample] | None = None,
+) -> dict[int | str, dict[str, Any]]:
     codes = (*status_codes, *COMMON_ERROR_STATUS_CODES)
-    return {code: ERROR_RESPONSES[code] for code in dict.fromkeys(codes)}
+    responses: dict[int | str, dict[str, Any]] = {}
+    for code in dict.fromkeys(codes):
+        response = dict(ERROR_RESPONSES[code])
+        if samples is not None and code in samples:
+            response["content"] = {"application/json": {"example": samples[code]["response"]}}
+        responses[code] = response
+    return responses
 
 
 def success_response(sample: BaseModel) -> dict[str, Any]:

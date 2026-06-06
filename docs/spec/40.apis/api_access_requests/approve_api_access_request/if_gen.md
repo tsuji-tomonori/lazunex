@@ -192,24 +192,27 @@ Media type: `application/json`
 
 ## Samples
 
-### In
+### HTTP 200
 
-```bash
-curl -X POST 'https://api.example.com/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve' \
-  -H 'Idempotency-Key: <Idempotency-Key>' \
-  -H 'X-Principal-Id: <X-Principal-Id>' \
-  -H 'X-Groups: <X-Groups>' \
-  -H 'X-Scopes: <X-Scopes>' \
-  -H 'X-Correlation-Id: <X-Correlation-Id>' \
-  -H 'User-Agent: <User-Agent>' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "approvedAuthMode": "BOTH",
-  "reviewComment": "利用目的を確認済み"
-}'
+#### Request
+
+```json
+{
+  "path": {
+    "accessRequestId": "e540d3e8-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "reviewer-001",
+    "Idempotency-Key": "approve-access-request-001"
+  },
+  "body": {
+    "approvedAuthMode": "BOTH",
+    "reviewComment": "利用目的を確認済み"
+  }
+}
 ```
 
-### Out
+#### Response
 
 ```json
 {
@@ -221,5 +224,302 @@ curl -X POST 'https://api.example.com/api-access-requests/e540d3e8-0000-0000-000
   "approvedAuthMode": "BOTH",
   "derivedState": "APPROVED",
   "operationId": "b2fb8a44-0000-0000-0000-000000000001"
+}
+```
+
+### HTTP 401
+
+#### Request
+
+```json
+{
+  "path": {
+    "accessRequestId": "e540d3e8-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "reviewer-001",
+    "Idempotency-Key": "approve-access-request-001"
+  },
+  "body": {
+    "approvedAuthMode": "BOTH",
+    "reviewComment": "利用目的を確認済み"
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "認証情報が未指定、期限切れ、または検証できない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 403
+
+#### Request
+
+```json
+{
+  "path": {
+    "accessRequestId": "e540d3e8-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "reviewer-001",
+    "Idempotency-Key": "approve-access-request-001"
+  },
+  "body": {
+    "approvedAuthMode": "BOTH",
+    "reviewComment": "利用目的を確認済み"
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "呼び出し元が対象APIの審査者ではない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 404
+
+#### Request
+
+```json
+{
+  "path": {
+    "accessRequestId": "e540d3e8-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "reviewer-001",
+    "Idempotency-Key": "approve-access-request-001"
+  },
+  "body": {
+    "approvedAuthMode": "BOTH",
+    "reviewComment": "利用目的を確認済み"
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "指定されたAPI利用申請が存在しない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 409
+
+#### Request
+
+```json
+{
+  "path": {
+    "accessRequestId": "e540d3e8-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "reviewer-001",
+    "Idempotency-Key": "approve-access-request-001"
+  },
+  "body": {
+    "approvedAuthMode": "BOTH",
+    "reviewComment": "利用目的を確認済み"
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "CONFLICT",
+    "message": "利用申請が承認待ちではない、または有効な利用権が既に存在する場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 422
+
+#### Request
+
+```json
+{
+  "path": {
+    "accessRequestId": "e540d3e8-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "reviewer-001",
+    "Idempotency-Key": "approve-access-request-001"
+  },
+  "body": {
+    "approvedAuthMode": "BOTH",
+    "reviewComment": "利用目的を確認済み"
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "path、header、bodyがOpenAPIスキーマの型や制約に一致しない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 429
+
+#### Request
+
+```json
+{
+  "path": {
+    "accessRequestId": "e540d3e8-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "reviewer-001",
+    "Idempotency-Key": "approve-access-request-001"
+  },
+  "body": {
+    "approvedAuthMode": "BOTH",
+    "reviewComment": "利用目的を確認済み"
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "TOO_MANY_REQUESTS",
+    "message": "呼び出し頻度が許可された上限を超えた場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 500
+
+#### Request
+
+```json
+{
+  "path": {
+    "accessRequestId": "e540d3e8-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "reviewer-001",
+    "Idempotency-Key": "approve-access-request-001"
+  },
+  "body": {
+    "approvedAuthMode": "BOTH",
+    "reviewComment": "利用目的を確認済み"
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "INTERNAL_SERVER_ERROR",
+    "message": "Lazunex内部で想定外のエラーが発生した場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 502
+
+#### Request
+
+```json
+{
+  "path": {
+    "accessRequestId": "e540d3e8-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "reviewer-001",
+    "Idempotency-Key": "approve-access-request-001"
+  },
+  "body": {
+    "approvedAuthMode": "BOTH",
+    "reviewComment": "利用目的を確認済み"
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "BAD_GATEWAY",
+    "message": "API GatewayまたはCognitoへの反映で失敗応答を受け取った場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 503
+
+#### Request
+
+```json
+{
+  "path": {
+    "accessRequestId": "e540d3e8-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "reviewer-001",
+    "Idempotency-Key": "approve-access-request-001"
+  },
+  "body": {
+    "approvedAuthMode": "BOTH",
+    "reviewComment": "利用目的を確認済み"
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "SERVICE_UNAVAILABLE",
+    "message": "API GatewayまたはCognitoが一時的に利用できない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
 }
 ```

@@ -9,6 +9,7 @@ from app.apis.deps import get_caller_identity
 from app.apis.projects.list_project_api_access_requests import functions as api_functions
 from app.apis.projects.list_project_api_access_requests.samples import (
     LIST_PROJECT_API_ACCESS_REQUESTS_RESPONSE_SAMPLE,
+    LIST_PROJECT_API_ACCESS_REQUESTS_STATUS_SAMPLES,
 )
 from app.apis.projects.list_project_api_access_requests.schemas import (
     ListProjectApiAccessRequestsQuery,
@@ -40,6 +41,7 @@ router = APIRouter()
         status.HTTP_200_OK: success_response(LIST_PROJECT_API_ACCESS_REQUESTS_RESPONSE_SAMPLE),
         **error_responses(
             status.HTTP_403_FORBIDDEN,
+            samples=LIST_PROJECT_API_ACCESS_REQUESTS_STATUS_SAMPLES,
         ),
     },
     tags=["projects"],

@@ -6,6 +6,7 @@ from app.apis.projects.update_project_public_client.schemas import (
     UpdateProjectPublicClientRequest,
     UpdateProjectPublicClientResponse,
 )
+from app.apis.sample_cases import request_sample, status_samples
 
 UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE = UpdateProjectPublicClientRequest(
     callback_urls=[
@@ -40,4 +41,28 @@ UPDATE_PROJECT_PUBLIC_CLIENT_RESPONSE_SAMPLE = UpdateProjectPublicClientResponse
         row_version=4,
     ),
     operation_id=UUID("62f6d4b2-0000-0000-0000-000000000001"),
+)
+UPDATE_PROJECT_PUBLIC_CLIENT_STATUS_SAMPLES = status_samples(
+    request=request_sample(
+        path={"projectId": "cb62b5f6-0000-0000-0000-000000000001"},
+        headers={
+            "X-Principal-Id": "user-12345",
+            "Idempotency-Key": "update-public-client-001",
+        },
+        body=UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE,
+    ),
+    success_status=200,
+    success_response=UPDATE_PROJECT_PUBLIC_CLIENT_RESPONSE_SAMPLE,
+    errors={
+        400: "public app client更新リクエストが業務ルールに合わない場合。",
+        401: "認証情報が未指定、期限切れ、または検証できない場合。",
+        403: "呼び出し元が対象Projectのownerではない場合。",
+        404: "指定されたProjectまたはpublic app clientが存在しない場合。",
+        409: "expected row versionが現在のversionと一致しない場合。",
+        422: "path、header、bodyがOpenAPIスキーマの型や制約に一致しない場合。",
+        429: "呼び出し頻度が許可された上限を超えた場合。",
+        500: "Lazunex内部で想定外のエラーが発生した場合。",
+        502: "Cognitoへの反映で失敗応答を受け取った場合。",
+        503: "Cognitoが一時的に利用できない場合。",
+    },
 )

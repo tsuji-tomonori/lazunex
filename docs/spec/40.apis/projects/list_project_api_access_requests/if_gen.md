@@ -136,16 +136,25 @@ Media type: `application/json`
 
 ## Samples
 
-### In
+### HTTP 200
 
-```bash
-curl -X GET 'https://api.example.com/projects/cb62b5f6-0000-0000-0000-000000000001/api-access-requests?limit=<limit>&nextToken=<nextToken>' \
-  -H 'X-Principal-Id: <X-Principal-Id>' \
-  -H 'X-Groups: <X-Groups>' \
-  -H 'X-Scopes: <X-Scopes>'
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "query": {
+    "limit": 50
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345"
+  }
+}
 ```
 
-### Out
+#### Response
 
 ```json
 {
@@ -167,5 +176,160 @@ curl -X GET 'https://api.example.com/projects/cb62b5f6-0000-0000-0000-0000000000
     }
   ],
   "nextToken": null
+}
+```
+
+### HTTP 401
+
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "query": {
+    "limit": 50
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345"
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "認証情報が未指定、期限切れ、または検証できない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 403
+
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "query": {
+    "limit": 50
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345"
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "呼び出し元に対象Projectの利用申請履歴を参照する権限がない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 422
+
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "query": {
+    "limit": 50
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345"
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "pathまたはqueryがOpenAPIスキーマの型や制約に一致しない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 429
+
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "query": {
+    "limit": 50
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345"
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "TOO_MANY_REQUESTS",
+    "message": "呼び出し頻度が許可された上限を超えた場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 500
+
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "query": {
+    "limit": 50
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345"
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "INTERNAL_SERVER_ERROR",
+    "message": "Lazunex内部で想定外のエラーが発生した場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
 }
 ```

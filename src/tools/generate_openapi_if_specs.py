@@ -45,6 +45,7 @@ class FieldRow:
 class OperationSamples:
     request: JsonObject | None
     response: JsonObject | None
+    status_samples: dict[int, JsonObject] | None = None
 
 
 def snake_case(value: str) -> str:
@@ -462,24 +463,49 @@ def render_samples_section(
     operation: JsonObject,
     samples: OperationSamples | None,
 ) -> list[str]:
-    request_sample = samples.request if samples is not None else None
-    response_sample = samples.response if samples is not None else None
+    if samples is not None and samples.status_samples:
+        lines = ["## Samples", ""]
+        for status_code, status_sample in sorted(samples.status_samples.items()):
+            request_sample = as_object(status_sample.get("request"))
+            response_sample = as_object(status_sample.get("response"))
+            lines.extend(
+                [
+                    f"### HTTP {status_code}",
+                    "",
+                    "#### Request",
+                    "",
+                    "```json",
+                    render_json(request_sample),
+                    "```",
+                    "",
+                    "#### Response",
+                    "",
+                    "```json",
+                    render_json(response_sample),
+                    "```",
+                    "",
+                ]
+            )
+        return lines
+
+    body_request_sample = samples.request if samples is not None else None
+    body_response_sample = samples.response if samples is not None else None
     lines = [
         "## Samples",
         "",
         "### In",
         "",
         "```bash",
-        render_curl_sample(path, method, operation, request_sample),
+        render_curl_sample(path, method, operation, body_request_sample),
         "```",
         "",
         "### Out",
         "",
     ]
-    if response_sample is None:
+    if body_response_sample is None:
         lines.extend(["_なし_", ""])
         return lines
-    lines.extend(["```json", render_json(response_sample), "```", ""])
+    lines.extend(["```json", render_json(body_response_sample), "```", ""])
     return lines
 
 
@@ -584,6 +610,22 @@ def module_sample(module: Any, suffix: str) -> JsonObject | None:
     return None
 
 
+def module_status_samples(module: Any) -> dict[int, JsonObject] | None:
+    for name in sorted(dir(module)):
+        if not name.endswith("_STATUS_SAMPLES"):
+            continue
+        value = getattr(module, name)
+        if not isinstance(value, dict):
+            continue
+        status_samples = cast(dict[object, object], value)
+        return {
+            int(status_code): as_object(status_sample)
+            for status_code, status_sample in status_samples.items()
+            if isinstance(status_code, int) and isinstance(status_sample, dict)
+        }
+    return None
+
+
 def load_operation_sample(api_path: Path) -> OperationSamples | None:
     try:
         module = importlib.import_module(sample_module_name(api_path))
@@ -592,6 +634,7 @@ def load_operation_sample(api_path: Path) -> OperationSamples | None:
     return OperationSamples(
         request=module_sample(module, "_REQUEST_SAMPLE"),
         response=module_sample(module, "_RESPONSE_SAMPLE"),
+        status_samples=module_status_samples(module),
     )
 
 

@@ -221,53 +221,53 @@ Media type: `application/json`
 
 ## Samples
 
-### In
+### HTTP 201
 
-```bash
-curl -X POST 'https://api.example.com/projects' \
-  -H 'Idempotency-Key: <Idempotency-Key>' \
-  -H 'X-Principal-Id: <X-Principal-Id>' \
-  -H 'X-Groups: <X-Groups>' \
-  -H 'X-Scopes: <X-Scopes>' \
-  -H 'X-Correlation-Id: <X-Correlation-Id>' \
-  -H 'User-Agent: <User-Agent>' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "projectCode": "payment-frontend",
-  "name": "Payment Frontend",
-  "description": "決済画面プロジェクト",
-  "ownerPrincipalId": "user-12345",
-  "departmentCode": "FIN",
-  "usagePlan": {
-    "defaultRateLimit": 100,
-    "defaultBurstLimit": 200,
-    "defaultQuotaLimit": 100000,
-    "defaultQuotaPeriod": "MONTH"
+#### Request
+
+```json
+{
+  "headers": {
+    "X-Principal-Id": "project-admin-001",
+    "Idempotency-Key": "create-project-001"
   },
-  "publicClient": {
-    "callbackUrls": [
-      "https://payment.example.internal/callback"
-    ],
-    "logoutUrls": [
-      "https://payment.example.internal/logout"
-    ],
-    "accessTokenValidity": 15,
-    "accessTokenUnit": "minutes",
-    "idTokenValidity": 15,
-    "idTokenUnit": "minutes",
-    "refreshTokenValidity": 1,
-    "refreshTokenUnit": "days",
-    "refreshTokenRotationEnabled": true,
-    "retryGracePeriodSeconds": 10
-  },
-  "confidentialClient": {
-    "accessTokenValidity": 15,
-    "accessTokenUnit": "minutes"
+  "body": {
+    "projectCode": "payment-frontend",
+    "name": "Payment Frontend",
+    "description": "決済画面プロジェクト",
+    "ownerPrincipalId": "user-12345",
+    "departmentCode": "FIN",
+    "usagePlan": {
+      "defaultRateLimit": 100,
+      "defaultBurstLimit": 200,
+      "defaultQuotaLimit": 100000,
+      "defaultQuotaPeriod": "MONTH"
+    },
+    "publicClient": {
+      "callbackUrls": [
+        "https://payment.example.internal/callback"
+      ],
+      "logoutUrls": [
+        "https://payment.example.internal/logout"
+      ],
+      "accessTokenValidity": 15,
+      "accessTokenUnit": "minutes",
+      "idTokenValidity": 15,
+      "idTokenUnit": "minutes",
+      "refreshTokenValidity": 1,
+      "refreshTokenUnit": "days",
+      "refreshTokenRotationEnabled": true,
+      "retryGracePeriodSeconds": 10
+    },
+    "confidentialClient": {
+      "accessTokenValidity": 15,
+      "accessTokenUnit": "minutes"
+    }
   }
-}'
+}
 ```
 
-### Out
+#### Response
 
 ```json
 {
@@ -293,5 +293,536 @@ curl -X POST 'https://api.example.com/projects' \
     }
   },
   "operationId": "8f5a1f0a-0000-0000-0000-000000000001"
+}
+```
+
+### HTTP 400
+
+#### Request
+
+```json
+{
+  "headers": {
+    "X-Principal-Id": "project-admin-001",
+    "Idempotency-Key": "create-project-001"
+  },
+  "body": {
+    "projectCode": "payment-frontend",
+    "name": "Payment Frontend",
+    "description": "決済画面プロジェクト",
+    "ownerPrincipalId": "user-12345",
+    "departmentCode": "FIN",
+    "usagePlan": {
+      "defaultRateLimit": 100,
+      "defaultBurstLimit": 200,
+      "defaultQuotaLimit": 100000,
+      "defaultQuotaPeriod": "MONTH"
+    },
+    "publicClient": {
+      "callbackUrls": [
+        "https://payment.example.internal/callback"
+      ],
+      "logoutUrls": [
+        "https://payment.example.internal/logout"
+      ],
+      "accessTokenValidity": 15,
+      "accessTokenUnit": "minutes",
+      "idTokenValidity": 15,
+      "idTokenUnit": "minutes",
+      "refreshTokenValidity": 1,
+      "refreshTokenUnit": "days",
+      "refreshTokenRotationEnabled": true,
+      "retryGracePeriodSeconds": 10
+    },
+    "confidentialClient": {
+      "accessTokenValidity": 15,
+      "accessTokenUnit": "minutes"
+    }
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "BAD_REQUEST",
+    "message": "Project作成リクエストが業務ルールに合わない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 401
+
+#### Request
+
+```json
+{
+  "headers": {
+    "X-Principal-Id": "project-admin-001",
+    "Idempotency-Key": "create-project-001"
+  },
+  "body": {
+    "projectCode": "payment-frontend",
+    "name": "Payment Frontend",
+    "description": "決済画面プロジェクト",
+    "ownerPrincipalId": "user-12345",
+    "departmentCode": "FIN",
+    "usagePlan": {
+      "defaultRateLimit": 100,
+      "defaultBurstLimit": 200,
+      "defaultQuotaLimit": 100000,
+      "defaultQuotaPeriod": "MONTH"
+    },
+    "publicClient": {
+      "callbackUrls": [
+        "https://payment.example.internal/callback"
+      ],
+      "logoutUrls": [
+        "https://payment.example.internal/logout"
+      ],
+      "accessTokenValidity": 15,
+      "accessTokenUnit": "minutes",
+      "idTokenValidity": 15,
+      "idTokenUnit": "minutes",
+      "refreshTokenValidity": 1,
+      "refreshTokenUnit": "days",
+      "refreshTokenRotationEnabled": true,
+      "retryGracePeriodSeconds": 10
+    },
+    "confidentialClient": {
+      "accessTokenValidity": 15,
+      "accessTokenUnit": "minutes"
+    }
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "認証情報が未指定、期限切れ、または検証できない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 403
+
+#### Request
+
+```json
+{
+  "headers": {
+    "X-Principal-Id": "project-admin-001",
+    "Idempotency-Key": "create-project-001"
+  },
+  "body": {
+    "projectCode": "payment-frontend",
+    "name": "Payment Frontend",
+    "description": "決済画面プロジェクト",
+    "ownerPrincipalId": "user-12345",
+    "departmentCode": "FIN",
+    "usagePlan": {
+      "defaultRateLimit": 100,
+      "defaultBurstLimit": 200,
+      "defaultQuotaLimit": 100000,
+      "defaultQuotaPeriod": "MONTH"
+    },
+    "publicClient": {
+      "callbackUrls": [
+        "https://payment.example.internal/callback"
+      ],
+      "logoutUrls": [
+        "https://payment.example.internal/logout"
+      ],
+      "accessTokenValidity": 15,
+      "accessTokenUnit": "minutes",
+      "idTokenValidity": 15,
+      "idTokenUnit": "minutes",
+      "refreshTokenValidity": 1,
+      "refreshTokenUnit": "days",
+      "refreshTokenRotationEnabled": true,
+      "retryGracePeriodSeconds": 10
+    },
+    "confidentialClient": {
+      "accessTokenValidity": 15,
+      "accessTokenUnit": "minutes"
+    }
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "呼び出し元にProjectを作成する権限がない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 409
+
+#### Request
+
+```json
+{
+  "headers": {
+    "X-Principal-Id": "project-admin-001",
+    "Idempotency-Key": "create-project-001"
+  },
+  "body": {
+    "projectCode": "payment-frontend",
+    "name": "Payment Frontend",
+    "description": "決済画面プロジェクト",
+    "ownerPrincipalId": "user-12345",
+    "departmentCode": "FIN",
+    "usagePlan": {
+      "defaultRateLimit": 100,
+      "defaultBurstLimit": 200,
+      "defaultQuotaLimit": 100000,
+      "defaultQuotaPeriod": "MONTH"
+    },
+    "publicClient": {
+      "callbackUrls": [
+        "https://payment.example.internal/callback"
+      ],
+      "logoutUrls": [
+        "https://payment.example.internal/logout"
+      ],
+      "accessTokenValidity": 15,
+      "accessTokenUnit": "minutes",
+      "idTokenValidity": 15,
+      "idTokenUnit": "minutes",
+      "refreshTokenValidity": 1,
+      "refreshTokenUnit": "days",
+      "refreshTokenRotationEnabled": true,
+      "retryGracePeriodSeconds": 10
+    },
+    "confidentialClient": {
+      "accessTokenValidity": 15,
+      "accessTokenUnit": "minutes"
+    }
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "CONFLICT",
+    "message": "同じProject codeが既に登録済みの場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 422
+
+#### Request
+
+```json
+{
+  "headers": {
+    "X-Principal-Id": "project-admin-001",
+    "Idempotency-Key": "create-project-001"
+  },
+  "body": {
+    "projectCode": "payment-frontend",
+    "name": "Payment Frontend",
+    "description": "決済画面プロジェクト",
+    "ownerPrincipalId": "user-12345",
+    "departmentCode": "FIN",
+    "usagePlan": {
+      "defaultRateLimit": 100,
+      "defaultBurstLimit": 200,
+      "defaultQuotaLimit": 100000,
+      "defaultQuotaPeriod": "MONTH"
+    },
+    "publicClient": {
+      "callbackUrls": [
+        "https://payment.example.internal/callback"
+      ],
+      "logoutUrls": [
+        "https://payment.example.internal/logout"
+      ],
+      "accessTokenValidity": 15,
+      "accessTokenUnit": "minutes",
+      "idTokenValidity": 15,
+      "idTokenUnit": "minutes",
+      "refreshTokenValidity": 1,
+      "refreshTokenUnit": "days",
+      "refreshTokenRotationEnabled": true,
+      "retryGracePeriodSeconds": 10
+    },
+    "confidentialClient": {
+      "accessTokenValidity": 15,
+      "accessTokenUnit": "minutes"
+    }
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "headerまたはbodyがOpenAPIスキーマの型や制約に一致しない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 429
+
+#### Request
+
+```json
+{
+  "headers": {
+    "X-Principal-Id": "project-admin-001",
+    "Idempotency-Key": "create-project-001"
+  },
+  "body": {
+    "projectCode": "payment-frontend",
+    "name": "Payment Frontend",
+    "description": "決済画面プロジェクト",
+    "ownerPrincipalId": "user-12345",
+    "departmentCode": "FIN",
+    "usagePlan": {
+      "defaultRateLimit": 100,
+      "defaultBurstLimit": 200,
+      "defaultQuotaLimit": 100000,
+      "defaultQuotaPeriod": "MONTH"
+    },
+    "publicClient": {
+      "callbackUrls": [
+        "https://payment.example.internal/callback"
+      ],
+      "logoutUrls": [
+        "https://payment.example.internal/logout"
+      ],
+      "accessTokenValidity": 15,
+      "accessTokenUnit": "minutes",
+      "idTokenValidity": 15,
+      "idTokenUnit": "minutes",
+      "refreshTokenValidity": 1,
+      "refreshTokenUnit": "days",
+      "refreshTokenRotationEnabled": true,
+      "retryGracePeriodSeconds": 10
+    },
+    "confidentialClient": {
+      "accessTokenValidity": 15,
+      "accessTokenUnit": "minutes"
+    }
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "TOO_MANY_REQUESTS",
+    "message": "呼び出し頻度が許可された上限を超えた場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 500
+
+#### Request
+
+```json
+{
+  "headers": {
+    "X-Principal-Id": "project-admin-001",
+    "Idempotency-Key": "create-project-001"
+  },
+  "body": {
+    "projectCode": "payment-frontend",
+    "name": "Payment Frontend",
+    "description": "決済画面プロジェクト",
+    "ownerPrincipalId": "user-12345",
+    "departmentCode": "FIN",
+    "usagePlan": {
+      "defaultRateLimit": 100,
+      "defaultBurstLimit": 200,
+      "defaultQuotaLimit": 100000,
+      "defaultQuotaPeriod": "MONTH"
+    },
+    "publicClient": {
+      "callbackUrls": [
+        "https://payment.example.internal/callback"
+      ],
+      "logoutUrls": [
+        "https://payment.example.internal/logout"
+      ],
+      "accessTokenValidity": 15,
+      "accessTokenUnit": "minutes",
+      "idTokenValidity": 15,
+      "idTokenUnit": "minutes",
+      "refreshTokenValidity": 1,
+      "refreshTokenUnit": "days",
+      "refreshTokenRotationEnabled": true,
+      "retryGracePeriodSeconds": 10
+    },
+    "confidentialClient": {
+      "accessTokenValidity": 15,
+      "accessTokenUnit": "minutes"
+    }
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "INTERNAL_SERVER_ERROR",
+    "message": "Lazunex内部で想定外のエラーが発生した場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 502
+
+#### Request
+
+```json
+{
+  "headers": {
+    "X-Principal-Id": "project-admin-001",
+    "Idempotency-Key": "create-project-001"
+  },
+  "body": {
+    "projectCode": "payment-frontend",
+    "name": "Payment Frontend",
+    "description": "決済画面プロジェクト",
+    "ownerPrincipalId": "user-12345",
+    "departmentCode": "FIN",
+    "usagePlan": {
+      "defaultRateLimit": 100,
+      "defaultBurstLimit": 200,
+      "defaultQuotaLimit": 100000,
+      "defaultQuotaPeriod": "MONTH"
+    },
+    "publicClient": {
+      "callbackUrls": [
+        "https://payment.example.internal/callback"
+      ],
+      "logoutUrls": [
+        "https://payment.example.internal/logout"
+      ],
+      "accessTokenValidity": 15,
+      "accessTokenUnit": "minutes",
+      "idTokenValidity": 15,
+      "idTokenUnit": "minutes",
+      "refreshTokenValidity": 1,
+      "refreshTokenUnit": "days",
+      "refreshTokenRotationEnabled": true,
+      "retryGracePeriodSeconds": 10
+    },
+    "confidentialClient": {
+      "accessTokenValidity": 15,
+      "accessTokenUnit": "minutes"
+    }
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "BAD_GATEWAY",
+    "message": "API Gateway、Cognito、またはSecrets Managerで失敗応答を受け取った場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 503
+
+#### Request
+
+```json
+{
+  "headers": {
+    "X-Principal-Id": "project-admin-001",
+    "Idempotency-Key": "create-project-001"
+  },
+  "body": {
+    "projectCode": "payment-frontend",
+    "name": "Payment Frontend",
+    "description": "決済画面プロジェクト",
+    "ownerPrincipalId": "user-12345",
+    "departmentCode": "FIN",
+    "usagePlan": {
+      "defaultRateLimit": 100,
+      "defaultBurstLimit": 200,
+      "defaultQuotaLimit": 100000,
+      "defaultQuotaPeriod": "MONTH"
+    },
+    "publicClient": {
+      "callbackUrls": [
+        "https://payment.example.internal/callback"
+      ],
+      "logoutUrls": [
+        "https://payment.example.internal/logout"
+      ],
+      "accessTokenValidity": 15,
+      "accessTokenUnit": "minutes",
+      "idTokenValidity": 15,
+      "idTokenUnit": "minutes",
+      "refreshTokenValidity": 1,
+      "refreshTokenUnit": "days",
+      "refreshTokenRotationEnabled": true,
+      "retryGracePeriodSeconds": 10
+    },
+    "confidentialClient": {
+      "accessTokenValidity": 15,
+      "accessTokenUnit": "minutes"
+    }
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "SERVICE_UNAVAILABLE",
+    "message": "API Gateway、Cognito、またはSecrets Managerが一時的に利用できない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
 }
 ```

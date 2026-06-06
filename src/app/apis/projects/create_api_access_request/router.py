@@ -10,6 +10,7 @@ from app.apis.projects.create_api_access_request import functions as api_functio
 from app.apis.projects.create_api_access_request.samples import (
     CREATE_API_ACCESS_REQUEST_REQUEST_SAMPLE,
     CREATE_API_ACCESS_REQUEST_RESPONSE_SAMPLE,
+    CREATE_API_ACCESS_REQUEST_STATUS_SAMPLES,
 )
 from app.apis.projects.create_api_access_request.schemas import (
     CreateApiAccessRequestRequest,
@@ -45,6 +46,7 @@ router = APIRouter()
             status.HTTP_403_FORBIDDEN,
             status.HTTP_404_NOT_FOUND,
             status.HTTP_409_CONFLICT,
+            samples=CREATE_API_ACCESS_REQUEST_STATUS_SAMPLES,
         ),
     },
     tags=["projects"],

@@ -6,7 +6,10 @@ from starlette.responses import JSONResponse
 
 from app.apis.deps import get_caller_identity
 from app.apis.projects.list_projects import functions as api_functions
-from app.apis.projects.list_projects.samples import LIST_PROJECTS_RESPONSE_SAMPLE
+from app.apis.projects.list_projects.samples import (
+    LIST_PROJECTS_RESPONSE_SAMPLE,
+    LIST_PROJECTS_STATUS_SAMPLES,
+)
 from app.apis.projects.list_projects.schemas import ListProjectsQuery, ListProjectsResponse
 from app.apis.responses import (
     error_responses,
@@ -33,6 +36,7 @@ router = APIRouter()
         status.HTTP_200_OK: success_response(LIST_PROJECTS_RESPONSE_SAMPLE),
         **error_responses(
             status.HTTP_403_FORBIDDEN,
+            samples=LIST_PROJECTS_STATUS_SAMPLES,
         ),
     },
     tags=["projects"],

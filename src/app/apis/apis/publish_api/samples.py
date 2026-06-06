@@ -14,6 +14,7 @@ from app.apis.apis.publish_api.schemas import (
     PublishApiResponse,
     PublishApiReviewerRequest,
 )
+from app.apis.sample_cases import request_sample, status_samples
 
 PUBLISH_API_REQUEST_SAMPLE = PublishApiRequest(
     api_code="billing-api-v1",
@@ -53,4 +54,26 @@ PUBLISH_API_RESPONSE_SAMPLE = PublishApiResponse(
     ),
     derived_state=ApiDerivedState.PUBLISHED,
     operation_id=UUID("5d4d5b68-0000-0000-0000-000000000001"),
+)
+PUBLISH_API_STATUS_SAMPLES = status_samples(
+    request=request_sample(
+        headers={
+            "X-Principal-Id": "api-publisher-001",
+            "Idempotency-Key": "publish-api-001",
+        },
+        body=PUBLISH_API_REQUEST_SAMPLE,
+    ),
+    success_status=201,
+    success_response=PUBLISH_API_RESPONSE_SAMPLE,
+    errors={
+        400: "公開登録リクエストが業務ルールに合わない場合。",
+        401: "認証情報が未指定、期限切れ、または検証できない場合。",
+        403: "呼び出し元にAPIを公開登録する権限がない場合。",
+        409: "同じAPI codeまたはstageが既に登録済みの場合。",
+        422: "headerまたはbodyがOpenAPIスキーマの型や制約に一致しない場合。",
+        429: "呼び出し頻度が許可された上限を超えた場合。",
+        500: "Lazunex内部で想定外のエラーが発生した場合。",
+        502: "API GatewayまたはCognitoの確認で失敗応答を受け取った場合。",
+        503: "API GatewayまたはCognitoが一時的に利用できない場合。",
+    },
 )

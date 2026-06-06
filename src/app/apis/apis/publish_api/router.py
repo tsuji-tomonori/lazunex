@@ -8,6 +8,7 @@ from app.apis.apis.publish_api import functions as api_functions
 from app.apis.apis.publish_api.samples import (
     PUBLISH_API_REQUEST_SAMPLE,
     PUBLISH_API_RESPONSE_SAMPLE,
+    PUBLISH_API_STATUS_SAMPLES,
 )
 from app.apis.apis.publish_api.schemas import PublishApiRequest, PublishApiResponse
 from app.apis.base import sample_value
@@ -46,6 +47,7 @@ router = APIRouter()
             status.HTTP_409_CONFLICT,
             status.HTTP_502_BAD_GATEWAY,
             status.HTTP_503_SERVICE_UNAVAILABLE,
+            samples=PUBLISH_API_STATUS_SAMPLES,
         ),
     },
     tags=["apis"],

@@ -177,26 +177,29 @@ Media type: `application/json`
 
 ## Samples
 
-### In
+### HTTP 201
 
-```bash
-curl -X POST 'https://api.example.com/projects/cb62b5f6-0000-0000-0000-000000000001/api-access-requests' \
-  -H 'Idempotency-Key: <Idempotency-Key>' \
-  -H 'X-Principal-Id: <X-Principal-Id>' \
-  -H 'X-Groups: <X-Groups>' \
-  -H 'X-Scopes: <X-Scopes>' \
-  -H 'X-Correlation-Id: <X-Correlation-Id>' \
-  -H 'User-Agent: <User-Agent>' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "apiId": "7b0d4a98-0000-0000-0000-000000000001",
-  "apiStageId": "7b0d4a98-0000-0000-0000-000000000101",
-  "requestedAuthMode": "BOTH",
-  "requestedReason": "決済画面から請求情報を参照するため"
-}'
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345",
+    "Idempotency-Key": "create-access-request-001"
+  },
+  "body": {
+    "apiId": "7b0d4a98-0000-0000-0000-000000000001",
+    "apiStageId": "7b0d4a98-0000-0000-0000-000000000101",
+    "requestedAuthMode": "BOTH",
+    "requestedReason": "決済画面から請求情報を参照するため"
+  }
+}
 ```
 
-### Out
+#### Response
 
 ```json
 {
@@ -206,5 +209,285 @@ curl -X POST 'https://api.example.com/projects/cb62b5f6-0000-0000-0000-000000000
   "apiStageId": "7b0d4a98-0000-0000-0000-000000000101",
   "requestedAuthMode": "BOTH",
   "derivedState": "PENDING"
+}
+```
+
+### HTTP 400
+
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345",
+    "Idempotency-Key": "create-access-request-001"
+  },
+  "body": {
+    "apiId": "7b0d4a98-0000-0000-0000-000000000001",
+    "apiStageId": "7b0d4a98-0000-0000-0000-000000000101",
+    "requestedAuthMode": "BOTH",
+    "requestedReason": "決済画面から請求情報を参照するため"
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "BAD_REQUEST",
+    "message": "申請理由や希望認証方式が業務ルールに合わない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 401
+
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345",
+    "Idempotency-Key": "create-access-request-001"
+  },
+  "body": {
+    "apiId": "7b0d4a98-0000-0000-0000-000000000001",
+    "apiStageId": "7b0d4a98-0000-0000-0000-000000000101",
+    "requestedAuthMode": "BOTH",
+    "requestedReason": "決済画面から請求情報を参照するため"
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "認証情報が未指定、期限切れ、または検証できない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 403
+
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345",
+    "Idempotency-Key": "create-access-request-001"
+  },
+  "body": {
+    "apiId": "7b0d4a98-0000-0000-0000-000000000001",
+    "apiStageId": "7b0d4a98-0000-0000-0000-000000000101",
+    "requestedAuthMode": "BOTH",
+    "requestedReason": "決済画面から請求情報を参照するため"
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "呼び出し元に対象Projectから利用申請する権限がない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 404
+
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345",
+    "Idempotency-Key": "create-access-request-001"
+  },
+  "body": {
+    "apiId": "7b0d4a98-0000-0000-0000-000000000001",
+    "apiStageId": "7b0d4a98-0000-0000-0000-000000000101",
+    "requestedAuthMode": "BOTH",
+    "requestedReason": "決済画面から請求情報を参照するため"
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "指定されたProjectまたはAPI stageが存在しない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 409
+
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345",
+    "Idempotency-Key": "create-access-request-001"
+  },
+  "body": {
+    "apiId": "7b0d4a98-0000-0000-0000-000000000001",
+    "apiStageId": "7b0d4a98-0000-0000-0000-000000000101",
+    "requestedAuthMode": "BOTH",
+    "requestedReason": "決済画面から請求情報を参照するため"
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "CONFLICT",
+    "message": "同じProject/API stageの申請または利用権が既に存在する場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 422
+
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345",
+    "Idempotency-Key": "create-access-request-001"
+  },
+  "body": {
+    "apiId": "7b0d4a98-0000-0000-0000-000000000001",
+    "apiStageId": "7b0d4a98-0000-0000-0000-000000000101",
+    "requestedAuthMode": "BOTH",
+    "requestedReason": "決済画面から請求情報を参照するため"
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "path、header、bodyがOpenAPIスキーマの型や制約に一致しない場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 429
+
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345",
+    "Idempotency-Key": "create-access-request-001"
+  },
+  "body": {
+    "apiId": "7b0d4a98-0000-0000-0000-000000000001",
+    "apiStageId": "7b0d4a98-0000-0000-0000-000000000101",
+    "requestedAuthMode": "BOTH",
+    "requestedReason": "決済画面から請求情報を参照するため"
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "TOO_MANY_REQUESTS",
+    "message": "呼び出し頻度が許可された上限を超えた場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
+}
+```
+
+### HTTP 500
+
+#### Request
+
+```json
+{
+  "path": {
+    "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+  },
+  "headers": {
+    "X-Principal-Id": "user-12345",
+    "Idempotency-Key": "create-access-request-001"
+  },
+  "body": {
+    "apiId": "7b0d4a98-0000-0000-0000-000000000001",
+    "apiStageId": "7b0d4a98-0000-0000-0000-000000000101",
+    "requestedAuthMode": "BOTH",
+    "requestedReason": "決済画面から請求情報を参照するため"
+  }
+}
+```
+
+#### Response
+
+```json
+{
+  "error": {
+    "code": "INTERNAL_SERVER_ERROR",
+    "message": "Lazunex内部で想定外のエラーが発生した場合。",
+    "details": [],
+    "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
+  }
 }
 ```
