@@ -15,6 +15,10 @@ MESSAGE_PATTERN = re.compile(
     r"(?:->>|-->>|->|-->|-\)|--\)|-x|--x)"
     r"(?P<target>[A-Za-z][A-Za-z0-9_]*):\s*(?P<label>.+)$"
 )
+NOTE_PATTERN = re.compile(
+    r"^\s*Note\s+over\s+(?P<participants>[A-Za-z][A-Za-z0-9_]*(?:,[A-Za-z][A-Za-z0-9_]*)*):"
+    r"\s*(?P<label>.+)$"
+)
 SQL_MESSAGE_PATTERN = re.compile(
     r"^\s*API->>DB:\s*レコードを(?:参照|追加|更新|削除)する"
     r"\s+SQL\s+(?P<filename>\S+)<br/>テーブル\s+(?P<tables>.+)$"
@@ -86,6 +90,19 @@ def validate_sequence_block(
                         message="alt condition must not contain ':' or fullwidth colon.",
                     )
                 )
+            continue
+
+        note_match = NOTE_PATTERN.match(line)
+        if note_match:
+            for participant_id in note_match.group("participants").split(","):
+                if participant_id not in participants:
+                    issues.append(
+                        MermaidIssue(
+                            path=path,
+                            line=index,
+                            message=f"Unknown note participant '{participant_id}'.",
+                        )
+                    )
             continue
 
         participant_match = PARTICIPANT_PATTERN.match(line)

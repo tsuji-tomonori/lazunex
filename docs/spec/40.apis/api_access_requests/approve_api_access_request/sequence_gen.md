@@ -11,24 +11,30 @@ sequenceDiagram
   participant R_identity as Resource: identity
   participant DB as DB
   User->>API: POST /api-access-requests/{accessRequestId}/approve
+  Note over API,DB: DB transaction範囲開始 (最初のDB操作からcommit/rollbackまで)
   API->>DB: 承認対象の利用申請を取得する。<br/>SQL 001_select_api_access_requests.sql<br/>テーブル api_access_requests, projects, apis, api_gateway_stages, api_cognito_scopes, api_access_reviews
   alt 承認対象の審査中利用申請が存在しない場合。
+    API->>DB: DB transactionをrollbackして変更を破棄する。
     API-->>User: HTTP 404 Not Found<br/>pending access request is not found
   end
   alt 利用申請が審査中状態でない場合。
+    API->>DB: DB transactionをrollbackして変更を破棄する。
     API-->>User: HTTP 409 Conflict<br/>access request is not pending
   end
   alt 利用申請が審査中状態である場合。
     alt 呼び出し元が対象 API の reviewer または Hub 管理者でない場合。
+      API->>DB: DB transactionをrollbackして変更を破棄する。
       API-->>User: HTTP 403 Forbidden<br/>caller is not an api reviewer
     end
     API->>DB: 呼び出し元が対象 API の reviewer または Hub 管理者であるかを判定する。<br/>SQL 002_select_api_reviewers.sql<br/>テーブル api_reviewers
     alt 呼び出し元が対象 API の reviewer または Hub 管理者である場合。
       alt 承認対象の Project、API、stage が利用可能でない場合。
+        API->>DB: DB transactionをrollbackして変更を破棄する。
         API-->>User: HTTP 409 Conflict<br/>project api stage is not available
       end
       alt 承認対象の Project、API、stage が利用可能な場合。
         alt 同一 Project/API の active subscription が存在する場合。
+          API->>DB: DB transactionをrollbackして変更を破棄する。
           API-->>User: HTTP 409 Conflict<br/>active subscription already exists
         end
         API->>DB: 同一 Project/API の active subscription が存在するかを判定する。<br/>SQL 003_select_subscriptions.sql<br/>テーブル project_api_subscriptions
@@ -47,6 +53,7 @@ sequenceDiagram
           API->>DB: Usage Planから対象stageを利用可能にするため、Usage Plan stage紐づけを追加する。<br/>SQL 009_insert_project_usage_plan_api_stages.sql<br/>テーブル project_usage_plan_api_stages
           API->>DB: Cognito clientにAPI実行scopeを許可するため、Project Cognito client scopeを追加する。<br/>SQL 010_insert_project_cognito_client_scopes.sql<br/>テーブル project_cognito_client_scopes
           alt 承認対象の Project Cognito client が設定されていない場合。
+            API->>DB: DB transactionをrollbackして変更を破棄する。
             API-->>User: HTTP 409 Conflict<br/>project cognito client is not configured
           end
           API->>DB: Usage Plan stage 追加イベントを追記する。<br/>SQL 015_insert_usage_plan_stage_events.sql<br/>テーブル usage_plan_stage_events
@@ -55,6 +62,7 @@ sequenceDiagram
           API->>DB: subscription 反映済みイベントを追記する。<br/>SQL 011_insert_subscription_events.sql<br/>テーブル subscription_events
           API->>DB: provisioning operation/step event を追記する。<br/>SQL 017_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
           API->>DB: 監査イベントを追記する。<br/>SQL 012_insert_audit_events.sql<br/>テーブル audit_events
+          API->>DB: DB transactionをcommitして変更を確定する。
           API->>API: 利用申請承認レスポンスを組み立てる。
           alt Router で捕捉した例外を error response に変換する場合。
             API-->>User: HTTP 500 Internal Server Error<br/>internal server error

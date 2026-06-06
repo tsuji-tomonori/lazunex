@@ -43,6 +43,7 @@ sequenceDiagram
   autonumber
   participant API as API
   participant DB as DB
+  Note over API,DB: DB transaction範囲開始 (最初のDB操作からcommit/rollbackまで)
   API->>API: Project 一覧取得条件を検証する。
   alt 呼び出し元が Project 一覧を参照できる場合。
     API->>DB: レコードを参照する SQL 001_select_projects.sql<br/>テーブル projects, project_members

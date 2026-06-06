@@ -13,6 +13,7 @@ from tools.generate_api_sequences import (
     SequenceStep,
     SqlStep,
     SuccessReturnStep,
+    TransactionStep,
     api_dirs,
     api_sequence_from_dir,
     awaited_api_function_name,
@@ -43,6 +44,7 @@ from tools.generate_api_sequences import (
     render_sequence_markdown,
     sql_sequence_steps,
     sql_tables,
+    transaction_step_from_await,
 )
 
 
@@ -349,6 +351,7 @@ def test_endpoint_sequence_items_reads_router_error_handler_as_500() -> None:
 async def create_project():
     try:
         project = await api_functions.create_project()
+        await session.commit()
         return await api_functions.build_project_response(project)
     except ROUTER_HANDLED_EXCEPTIONS as error:
         return error_response_for_router_error(error)
@@ -370,6 +373,7 @@ async def create_project():
 
     assert endpoint_sequence_items(function, metadata, 201) == [
         SequenceStep("create_project", "project", "Project を作成する。", (), "ProjectRef"),
+        TransactionStep("commit", "DB transactionをcommitして変更を確定する。"),
         SequenceStep(
             "build_project_response",
             "project_response",
@@ -422,6 +426,21 @@ async def fallback():
 
     assert endpoint_route_path(fallback_function) == "/"
     assert endpoint_status_codes(fallback_function) == (200,)
+
+
+def test_transaction_step_from_await_reads_session_commit() -> None:
+    tree = ast.parse(
+        """
+async def route(session):
+    await session.commit()
+"""
+    )
+    await_node = next(node for node in ast.walk(tree) if isinstance(node, ast.Await))
+
+    assert transaction_step_from_await(await_node) == TransactionStep(
+        "commit",
+        "DB transactionをcommitして変更を確定する。",
+    )
 
 
 def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
@@ -556,6 +575,79 @@ def test_query_sql_filenames_for_step_matches_query_function_suffix() -> None:
             ),
         ],
     ) == ["003_insert_project_events.sql"]
+
+
+def test_render_sequence_markdown_marks_transaction_scope_until_commit() -> None:
+    create_step = SequenceStep(
+        "append_project_created_event",
+        "project_created_event",
+        "Project 作成イベントを追記する。",
+        query_functions=("insert_project_events",),
+    )
+    response_step = SequenceStep(
+        "build_project_response",
+        "project_response",
+        "Project 作成レスポンスを組み立てる。",
+    )
+
+    markdown = render_sequence_markdown(
+        ApiSequence(
+            domain="projects",
+            api="create_project",
+            endpoint_name="create_project",
+            operation_id="createProject",
+            steps=[create_step, response_step],
+            error_returns=[],
+            success_returns=[SuccessReturnStep(201)],
+            sql_steps=[
+                SqlStep(
+                    "003_insert_project_events.sql",
+                    "追加",
+                    ("project_events",),
+                    "Project eventを追加する。",
+                )
+            ],
+            items=[
+                create_step,
+                ErrorReturnStep(
+                    409,
+                    "Project 作成イベントを追記できない場合。",
+                    "project conflict",
+                ),
+                TransactionStep("commit", "DB transactionをcommitして変更を確定する。"),
+                response_step,
+                SuccessReturnStep(201),
+            ],
+            method="POST",
+            path="/projects",
+            status_codes=(201,),
+        )
+    )
+
+    assert (
+        "Note over API,DB: DB transaction範囲開始 "
+        "(最初のDB操作からcommit/rollbackまで)" in markdown
+    )
+    assert "API->>DB: DB transactionをrollbackして変更を破棄する。" in markdown
+    assert "API->>DB: DB transactionをcommitして変更を確定する。" in markdown
+    assert markdown.index("DB transaction範囲開始") < markdown.index(
+        "Project 作成イベントを追記する。"
+    )
+    assert markdown.index("Project 作成イベントを追記する。") < markdown.index(
+        "DB transactionをrollback"
+    )
+    assert markdown.index("DB transactionをrollback") < markdown.index(
+        "HTTP 409 Conflict"
+    )
+    assert markdown.index("HTTP 409 Conflict") < markdown.index(
+        "DB transactionをcommit"
+    )
+    assert markdown.index("DB transactionをcommit") < markdown.index(
+        "Project 作成レスポンスを組み立てる。"
+    )
+    assert markdown.index("Project 作成レスポンスを組み立てる。") < markdown.index(
+        "HTTP 201 Created"
+    )
 
 
 def test_generate_sequences_and_check_mode(

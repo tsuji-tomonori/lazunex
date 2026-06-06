@@ -82,7 +82,13 @@ class SuccessReturnStep:
     status_code: int
 
 
-type SequenceItem = SequenceStep | ErrorReturnStep | SuccessReturnStep
+@dataclass(frozen=True)
+class TransactionStep:
+    action: str
+    summary: str
+
+
+type SequenceItem = SequenceStep | ErrorReturnStep | SuccessReturnStep | TransactionStep
 
 
 def empty_sequence_items() -> list[SequenceItem]:
@@ -612,6 +618,10 @@ def endpoint_sequence_items(
             self.generic_visit(node)
 
         def visit_Await(self, node: ast.Await) -> None:
+            transaction_step = transaction_step_from_await(node)
+            if transaction_step is not None:
+                items.append(transaction_step)
+                return
             function_name = awaited_api_function_name(node)
             if function_name is None:
                 self.generic_visit(node)
@@ -676,6 +686,24 @@ def sequence_step_from_metadata(
         query_functions=function_metadata.query_functions,
         condition_label=condition_label,
     )
+
+
+def transaction_step_from_await(node: ast.Await) -> TransactionStep | None:
+    call = node.value
+    if not isinstance(call, ast.Call):
+        return None
+    callee = call.func
+    if not isinstance(callee, ast.Attribute):
+        return None
+    if not isinstance(callee.value, ast.Name) or callee.value.id != "session":
+        return None
+    if callee.attr == "commit":
+        return TransactionStep("commit", "DB transactionをcommitして変更を確定する。")
+    if callee.attr == "rollback":
+        return TransactionStep("rollback", "DB transactionをrollbackして変更を破棄する。")
+    if callee.attr == "begin":
+        return TransactionStep("begin", "DB transactionを開始する。")
+    return None
 
 
 def dedupe_sequence_items(items: list[SequenceItem]) -> list[SequenceItem]:
@@ -1064,6 +1092,14 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
         return None
 
     sql_steps_by_filename = {step.filename: step for step in sequence.sql_steps}
+    rendered_items = sequence.items or [*sequence.steps, *sequence.error_returns]
+    has_commit_step = any(
+        isinstance(item, TransactionStep) and item.action == "commit" for item in rendered_items
+    )
+    transaction_scope_opened = False
+    transaction_committed = False
+    alt_depth = 0
+    success_return: SuccessReturnStep | None = None
 
     def sql_steps_for_step(step: SequenceStep) -> list[SqlStep]:
         query_filenames = query_sql_filenames_for_step(step, sequence.sql_steps)
@@ -1076,6 +1112,7 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
     def append_sql_steps(step: SequenceStep) -> None:
         step_sql_steps = sql_steps_for_step(step)
         for sql_step in step_sql_steps:
+            open_transaction_scope_if_needed()
             tables = ", ".join(sql_step.tables)
             indent = "  " + ("  " * alt_depth)
             label = step.description if len(step_sql_steps) == 1 else sql_step.summary
@@ -1083,6 +1120,20 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
                 f"{indent}API->>DB: {label}"
                 f"<br/>SQL {sql_step.filename}<br/>テーブル {tables}"
             )
+
+    def transaction_indent() -> str:
+        return "  " + ("  " * alt_depth)
+
+    def open_transaction_scope_if_needed() -> None:
+        nonlocal transaction_scope_opened
+        if not has_commit_step or transaction_scope_opened:
+            return
+        indent = transaction_indent()
+        lines.append(
+            f"{indent}Note over API,DB: DB transaction範囲開始"
+            " (最初のDB操作からcommit/rollbackまで)"
+        )
+        transaction_scope_opened = True
 
     lines = [
         GENERATED_COMMENT,
@@ -1104,9 +1155,6 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
 
     lines.append(f"  User->>API: {sequence.method} {sequence.path}")
 
-    rendered_items = sequence.items or [*sequence.steps, *sequence.error_returns]
-    alt_depth = 0
-    success_return: SuccessReturnStep | None = None
     for item in rendered_items:
         if isinstance(item, SuccessReturnStep):
             success_return = item
@@ -1115,11 +1163,29 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
         if isinstance(item, ErrorReturnStep):
             indent = "  " + ("  " * alt_depth)
             lines.append(f"{indent}alt {item.condition}")
+            if transaction_scope_opened and not transaction_committed:
+                lines.append(f"{indent}  API->>DB: DB transactionをrollbackして変更を破棄する。")
             lines.append(
                 f"{indent}  API-->>User: {http_status_code_label(item.status_code)}"
                 f"<br/>{item.detail}"
             )
             lines.append(f"{indent}end")
+            continue
+
+        if isinstance(item, TransactionStep):
+            if item.action == "commit":
+                transaction_committed = True
+            indent = "  " + ("  " * alt_depth)
+            if item.action == "begin":
+                lines.append(f"{indent}Note over API,DB: {item.summary}")
+                transaction_scope_opened = True
+                continue
+            if item.action in {"commit", "rollback"}:
+                if item.action == "commit":
+                    open_transaction_scope_if_needed()
+                lines.append(f"{indent}API->>DB: {item.summary}")
+                continue
+            lines.append(f"{indent}Note over API,DB: {item.summary}")
             continue
 
         step = item

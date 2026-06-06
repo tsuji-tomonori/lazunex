@@ -17,11 +17,14 @@ sequenceDiagram
   alt retry_grace_period_seconds が60秒を超える場合。
     API-->>User: HTTP 400 Bad Request<br/>retry_grace_period_seconds must be 60 seconds or fewer
   end
+  Note over API,DB: DB transaction範囲開始 (最初のDB操作からcommit/rollbackまで)
   API->>DB: 対象 Project を取得する。<br/>SQL 001_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients, projects, project_members
   alt 対象 Project の public App Client が存在しない、または呼び出し元が参照できない場合。
+    API->>DB: DB transactionをrollbackして変更を破棄する。
     API-->>User: HTTP 404 Not Found<br/>project public client is not found or caller cannot access it
   end
   alt 呼び出し元が Project owner でない場合。
+    API->>DB: DB transactionをrollbackして変更を破棄する。
     API-->>User: HTTP 403 Forbidden<br/>caller is not a project owner
   end
   alt 呼び出し元が Project owner である場合。
@@ -37,12 +40,14 @@ sequenceDiagram
     API->>DB: public clientのURL設定を最新化するため、既存のProject Cognito client URLを削除する。<br/>SQL 004_delete_project_cognito_client_urls.sql<br/>テーブル project_cognito_client_urls
     API->>DB: public clientのURL設定を最新化するため、既存のProject Cognito client URLを削除する。<br/>SQL 005_insert_project_cognito_client_urls.sql<br/>テーブル project_cognito_client_urls
     alt Project public App Client の row version が一致しない場合。
+      API->>DB: DB transactionをrollbackして変更を破棄する。
       API-->>User: HTTP 409 Conflict<br/>project public client row version conflict
     end
     API->>DB: 更新対象のpublic clientと現在versionを確認するため、Project Cognito clientを取得する。<br/>SQL 001_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients, projects, project_members
     API->>DB: Project public client更新の処理結果として、Project Cognito clientイベントを追加する。<br/>SQL 006_insert_project_cognito_client_events.sql<br/>テーブル project_cognito_client_events
     API->>DB: provisioning operation/step event を追記する。<br/>SQL 011_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
     API->>DB: 監査イベントを追記する。<br/>SQL 007_insert_audit_events.sql<br/>テーブル audit_events
+    API->>DB: DB transactionをcommitして変更を確定する。
     API->>API: public App Client 更新レスポンスを組み立てる。
     alt Router で捕捉した例外を error response に変換する場合。
       API-->>User: HTTP 500 Internal Server Error<br/>internal server error
