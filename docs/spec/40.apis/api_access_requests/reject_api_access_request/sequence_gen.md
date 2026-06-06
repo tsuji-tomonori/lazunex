@@ -10,17 +10,17 @@ sequenceDiagram
   participant DB as DB
   User->>API: POST /api-access-requests/{accessRequestId}/reject
   API->>API: 却下対象の利用申請を取得する。
-  API->>API: 利用申請却下理由を検証する。
-  API->>API: 利用申請却下開始イベントを追記する。
-  API->>API: 却下結果の review レコードを保存する。
-  API->>API: Idempotency-Key に対応する既存レコードを取得する。
-  API->>API: 冪等性レコードを作成または確認する。
-  API->>API: 利用申請状態を rejected 相当に更新する。
-  API->>API: 利用申請却下済みイベントを追記する。
-  API->>API: 監査イベントを追記する。
-  API->>API: 利用申請却下レスポンスを組み立てる。
   alt 利用申請が審査中状態である場合。
     alt 呼び出し元が対象 API の reviewer または Hub 管理者である場合。
+      API->>API: 利用申請却下理由を検証する。
+      API->>API: 利用申請却下開始イベントを追記する。
+      API->>API: 却下結果の review レコードを保存する。
+      API->>API: Idempotency-Key に対応する既存レコードを取得する。
+      API->>API: 冪等性レコードを作成または確認する。
+      API->>API: 利用申請状態を rejected 相当に更新する。
+      API->>API: 利用申請却下済みイベントを追記する。
+      API->>API: 監査イベントを追記する。
+      API->>API: 利用申請却下レスポンスを組み立てる。
       API->>DB: 却下対象の利用申請と現在状態を確認するため、利用申請を取得する。<br/>SQL 001_select_api_access_requests.sql<br/>テーブル api_access_requests, apis, api_access_reviews
       API->>DB: 却下者が対象APIのreviewerか確認するため、API reviewerを取得する。<br/>SQL 002_select_api_reviewers.sql<br/>テーブル api_reviewers
       API->>DB: 却下結果と却下コメントを保持するため、利用申請レビューを追加する。<br/>SQL 003_insert_api_access_reviews.sql<br/>テーブル api_access_reviews
@@ -29,6 +29,21 @@ sequenceDiagram
       API->>DB: 利用申請却下の処理結果として、冪等性レコードを追加する。<br/>SQL 006_insert_idempotency_records.sql<br/>テーブル idempotency_records
       API->>DB: Idempotency-Keyに対応する既存レコードを取得する。<br/>SQL 007_select_idempotency_records.sql<br/>テーブル idempotency_records
     end
+  end
+  alt 利用申請が審査中状態でない場合。
+    API-->>User: HTTP 409 Conflict<br/>access request is not pending
+  end
+  alt 呼び出し元が対象 API の reviewer または Hub 管理者でない場合。
+    API-->>User: HTTP 403 Forbidden<br/>caller is not an api reviewer
+  end
+  alt 却下対象の審査中利用申請が存在しない場合。
+    API-->>User: HTTP 404 Not Found<br/>pending access request is not found
+  end
+  alt reviewComment が空白である場合。
+    API-->>User: HTTP 400 Bad Request<br/>review_comment must not be blank
+  end
+  alt 却下結果の reviewedAt が保存結果から取得できない場合。
+    API-->>User: HTTP 500 Internal Server Error<br/>reviewed_at is missing
   end
   API-->>User: HTTP 200 OK
   API-->>User: HTTP 400 Bad Request

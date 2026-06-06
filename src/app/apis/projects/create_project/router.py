@@ -1,7 +1,8 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Body, Depends, Header, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import JSONResponse
 
 from app.apis.base import sample_value
 from app.apis.deps import get_caller_identity, get_request_context
@@ -15,7 +16,11 @@ from app.apis.responses import (
     error_responses,
     success_response,
 )
-from app.apis.router_errors import ROUTER_HANDLED_EXCEPTIONS, raise_http_exception_for_router_error
+from app.apis.router_errors import (
+    ROUTER_HANDLED_EXCEPTIONS,
+    api_error_response,
+    error_response_for_router_error,
+)
 from app.apis.sequence_types import CallerIdentity, RequestContext
 from app.db.session import get_session
 from app.integrations.api_gateway_control.deps import get_api_gateway_control_client
@@ -68,14 +73,11 @@ async def create_project(
     secret_values: Annotated[SecretValuesPort, Depends(get_secret_values_client)],
     request_context: Annotated[RequestContext, Depends(get_request_context)],
     session: Annotated[AsyncSession, Depends(get_session)],
-) -> CreateProjectResponse:
+) -> CreateProjectResponse | JSONResponse:
     try:
         validated_request = await api_functions.validate_create_project_request(request)
         if not await api_functions.has_project_creation_permission(caller):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="caller cannot create project",
-            )
+            return api_error_response(status.HTTP_403_FORBIDDEN, "caller cannot create project")
         await api_functions.get_idempotency_record(idempotency_key, session)
         operation = await api_functions.create_project_provisioning_operation(
             validated_request,
@@ -155,4 +157,4 @@ async def create_project(
             operation,
         )
     except ROUTER_HANDLED_EXCEPTIONS as error:
-        raise_http_exception_for_router_error(error)
+        return error_response_for_router_error(error)

@@ -5,10 +5,12 @@ import json
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
+from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.common import raise_missing_runtime_dependency
 from app.apis.deps import build_caller_identity
+from app.apis.exceptions import ApiFunctionError
 from app.apis.projects.common import (
     ProjectCognitoClientUrlType,
     TokenValidityUnit,
@@ -98,7 +100,14 @@ async def get_project(
             ),
         )
         if not rows:
-            raise ValueError("project public client is not found or caller cannot access it")
+            raise ApiFunctionError(
+                status.HTTP_404_NOT_FOUND,
+                "project public client is not found or caller cannot access it",
+                summary=(
+                    "対象 Project の public App Client が存在しない、"
+                    "または呼び出し元が参照できない場合。"
+                ),
+            )
         row = rows[0]
         return ProjectRef(
             project_id=project_id,
@@ -131,7 +140,14 @@ async def get_public_app_client_metadata(
             ),
         )
         if not rows:
-            raise ValueError("project public client is not found or caller cannot access it")
+            raise ApiFunctionError(
+                status.HTTP_404_NOT_FOUND,
+                "project public client is not found or caller cannot access it",
+                summary=(
+                    "対象 Project の public App Client が存在しない、"
+                    "または呼び出し元が参照できない場合。"
+                ),
+            )
         row = rows[0]
         return UpdatedPublicClientResponse(
             app_client_id=row.app_client_id,
@@ -339,10 +355,21 @@ async def update_public_app_client_metadata(
             ),
         )
         if not rows:
-            raise ValueError("project public client is not found or caller cannot access it")
+            raise ApiFunctionError(
+                status.HTTP_404_NOT_FOUND,
+                "project public client is not found or caller cannot access it",
+                summary=(
+                    "対象 Project の public App Client が存在しない、"
+                    "または呼び出し元が参照できない場合。"
+                ),
+            )
         row = rows[0]
         if row.row_version != request.expected_row_version:
-            raise ValueError("project public client row version conflict")
+            raise ApiFunctionError(
+                status.HTTP_409_CONFLICT,
+                "project public client row version conflict",
+                summary="Project public App Client の row version が一致しない場合。",
+            )
         now = _now()
         await queries.update_project_cognito_clients(
             session,
@@ -421,7 +448,14 @@ async def append_project_public_client_updated_event(
             ),
         )
         if not rows:
-            raise ValueError("project public client is not found or caller cannot access it")
+            raise ApiFunctionError(
+                status.HTTP_404_NOT_FOUND,
+                "project public client is not found or caller cannot access it",
+                summary=(
+                    "対象 Project の public App Client が存在しない、"
+                    "または呼び出し元が参照できない場合。"
+                ),
+            )
         event_id = uuid4()
         await queries.insert_project_cognito_client_events(
             session,

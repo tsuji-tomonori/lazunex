@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import pytest
-from fastapi import HTTPException, status
+from fastapi import status
 
+from app.apis.exceptions import ApiFunctionError
 from app.apis.router_errors import (
-    raise_http_exception_for_external_error,
-    raise_http_exception_for_value_error,
+    error_response_for_api_function_error,
+    error_response_for_external_error,
 )
 from app.integrations.common_errors import (
     ExternalApiConflictError,
@@ -18,25 +19,47 @@ from app.integrations.common_errors import (
 @pytest.mark.parametrize(
     ("error", "expected_status"),
     [
-        (ValueError("requested_reason must not be blank"), status.HTTP_400_BAD_REQUEST),
-        (ValueError("caller is not an api reviewer"), status.HTTP_403_FORBIDDEN),
-        (ValueError("api is not published"), status.HTTP_404_NOT_FOUND),
-        (ValueError("active subscription already exists"), status.HTTP_409_CONFLICT),
         (
-            ValueError("API Gateway method is not configured for API key and Cognito scope"),
-            status.HTTP_502_BAD_GATEWAY,
+            ApiFunctionError(
+                status.HTTP_400_BAD_REQUEST,
+                "requested_reason must not be blank",
+                summary="requestedReason が空白である場合。",
+            ),
+            status.HTTP_400_BAD_REQUEST,
+        ),
+        (
+            ApiFunctionError(
+                status.HTTP_403_FORBIDDEN,
+                "caller is not an api reviewer",
+                summary="呼び出し元が対象 API の reviewer または Hub 管理者でない場合。",
+            ),
+            status.HTTP_403_FORBIDDEN,
+        ),
+        (
+            ApiFunctionError(
+                status.HTTP_404_NOT_FOUND,
+                "api is not published",
+                summary="対象 API が公開済みでない場合。",
+            ),
+            status.HTTP_404_NOT_FOUND,
+        ),
+        (
+            ApiFunctionError(
+                status.HTTP_409_CONFLICT,
+                "active subscription already exists",
+                summary="同一 Project/API の active subscription が存在する場合。",
+            ),
+            status.HTTP_409_CONFLICT,
         ),
     ],
 )
-def test_raise_http_exception_for_value_error_maps_status(
-    error: ValueError,
+def test_error_response_for_api_function_error_maps_status(
+    error: ApiFunctionError,
     expected_status: int,
 ) -> None:
-    with pytest.raises(HTTPException) as caught:
-        raise_http_exception_for_value_error(error)
+    response = error_response_for_api_function_error(error)
 
-    assert caught.value.status_code == expected_status
-    assert caught.value.detail == str(error)
+    assert response.status_code == expected_status
 
 
 @pytest.mark.parametrize(
@@ -51,8 +74,6 @@ def test_raise_http_exception_for_external_error_maps_status(
     error: ExternalApiError,
     expected_status: int,
 ) -> None:
-    with pytest.raises(HTTPException) as caught:
-        raise_http_exception_for_external_error(error)
+    response = error_response_for_external_error(error)
 
-    assert caught.value.status_code == expected_status
-    assert caught.value.detail == str(error)
+    assert response.status_code == expected_status

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import HTTPException, status
+from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.apis.common import ApiDerivedState, ApiVisibility, ReviewerRole, ScopeConfigObserved
@@ -13,6 +13,7 @@ from app.apis.apis.get_api.schemas import (
 )
 from app.apis.common import IdentityGroup, raise_missing_runtime_dependency
 from app.apis.deps import build_caller_identity
+from app.apis.exceptions import ApiFunctionError
 from app.apis.sequence_types import CallerIdentity
 from app.apis.types import ResourceId
 
@@ -37,7 +38,11 @@ async def get_api_detail(
             queries.SelectApisParams(api_id=api_id),
         )
         if not rows:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="API not found")
+            raise ApiFunctionError(
+                status.HTTP_404_NOT_FOUND,
+                "API not found",
+                summary="対象 API が存在しない場合。",
+            )
         first = rows[0]
         return GetApiResponse(
             api_id=first.api_id,

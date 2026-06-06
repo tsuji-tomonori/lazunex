@@ -5,6 +5,7 @@ import json
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
+from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.api_access_requests.approve_api_access_request import queries
@@ -15,6 +16,7 @@ from app.apis.api_access_requests.approve_api_access_request.schemas import (
 from app.apis.api_access_requests.common import AccessRequestDerivedState
 from app.apis.common import IdentityGroup, raise_missing_runtime_dependency
 from app.apis.deps import build_caller_identity
+from app.apis.exceptions import ApiFunctionError
 from app.apis.sequence_types import (
     ApiAccessRequestRef,
     ApprovedAccessResourceRefs,
@@ -59,7 +61,11 @@ async def _client_target(
         ),
     )
     if not rows:
-        raise ValueError("project cognito client is not configured")
+        raise ApiFunctionError(
+            status.HTTP_409_CONFLICT,
+            "project cognito client is not configured",
+            summary="承認対象の Project Cognito client が設定されていない場合。",
+        )
     return rows[0]
 
 
@@ -83,7 +89,11 @@ async def get_access_request(
             queries.SelectApiAccessRequestsParams(access_request_id=access_request_id),
         )
         if not rows:
-            raise ValueError("pending access request is not found")
+            raise ApiFunctionError(
+                status.HTTP_404_NOT_FOUND,
+                "pending access request is not found",
+                summary="承認対象の審査中利用申請が存在しない場合。",
+            )
         row = rows[0]
         return ApiAccessRequestRef(
             access_request_id=row.access_request_id,
@@ -123,7 +133,11 @@ async def has_api_reviewer_permission(
             ),
         )
         if not rows:
-            raise ValueError("caller is not an api reviewer")
+            raise ApiFunctionError(
+                status.HTTP_403_FORBIDDEN,
+                "caller is not an api reviewer",
+                summary="呼び出し元が対象 API の reviewer または Hub 管理者でない場合。",
+            )
         return True
     return IdentityGroup.HUB_ADMIN in caller.groups
 
@@ -438,7 +452,11 @@ async def save_approved_access_resources(
             ),
         )
         if not targets:
-            raise ValueError("project cognito client is not configured")
+            raise ApiFunctionError(
+                status.HTTP_409_CONFLICT,
+                "project cognito client is not configured",
+                summary="承認対象の Project Cognito client が設定されていない場合。",
+            )
         now = _now()
         review_id = uuid4()
         subscription_id = uuid4()

@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.common import IdentityGroup
+from app.apis.exceptions import ApiFunctionError
 from app.apis.projects.common import ProjectCognitoClientType, ProjectCognitoClientUrlType
 from app.apis.projects.get_project import functions, queries
 from app.apis.sequence_types import CallerIdentity
@@ -135,7 +136,7 @@ async def test_get_project_detail_raises_not_found(monkeypatch: pytest.MonkeyPat
 
     monkeypatch.setattr(queries, "select_projects", select_projects)
 
-    with pytest.raises(HTTPException) as error:
+    with pytest.raises(ApiFunctionError) as error:
         await functions.get_project_detail(project_id, caller, cast(AsyncSession, object()))
 
     assert error.value.status_code == 404

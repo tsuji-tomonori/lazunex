@@ -7,6 +7,9 @@ from _pytest.capture import CaptureFixture
 
 from tools.generate_api_sequences import (
     ApiSequence,
+    ErrorReturnStep,
+    FunctionErrorMetadata,
+    FunctionMetadata,
     SequenceStep,
     SqlStep,
     api_dirs,
@@ -14,6 +17,8 @@ from tools.generate_api_sequences import (
     awaited_api_function_name,
     build_arg_parser,
     changed_outputs,
+    endpoint_error_returns,
+    endpoint_exception_error_returns,
     endpoint_function,
     endpoint_operation_id,
     endpoint_route_method,
@@ -81,6 +86,8 @@ router = APIRouter()
 async def get_project(project_id):
     project = await api_functions.get_project(project_id)
     await api_functions.has_project_view_permission(project, caller=None)
+    if not await api_functions.has_project_owner_permission(project, caller=None):
+        return api_error_response(status.HTTP_403_FORBIDDEN, 'caller cannot view project')
     return await api_functions.build_project_detail_response(project)
 """,
     )
@@ -97,6 +104,9 @@ async def get_project(project_id: ResourceId) -> ProjectRef:
 
 async def has_project_view_permission(project: ProjectRef, caller=None) -> bool:
     \"\"\"プロジェクトを参照できるかを判定する。\"\"\"
+
+async def has_project_owner_permission(project: ProjectRef, caller=None) -> bool:
+    \"\"\"呼び出し元が Project owner であるかを判定する。\"\"\"
 
 async def build_project_detail_response(project: ProjectRef) -> GetProjectResponse:
     \"\"\"プロジェクト詳細レスポンスを組み立てる。\"\"\"
@@ -149,12 +159,27 @@ async def select_projects(session: AsyncSession, params):
             "bool",
         ),
         SequenceStep(
+            "has_project_owner_permission",
+            "project_owner_permission",
+            "呼び出し元が Project owner であるかを判定する。",
+            ("project ProjectRef", "caller"),
+            "bool",
+            condition_label="呼び出し元が Project owner である場合。",
+        ),
+        SequenceStep(
             "build_project_detail_response",
             "project_detail_response",
             "プロジェクト詳細レスポンスを組み立てる。",
             ("project ProjectRef",),
             "GetProjectResponse",
         ),
+    ]
+    assert sequence.error_returns == [
+        ErrorReturnStep(
+            403,
+            "呼び出し元が Project owner でない場合。",
+            "caller cannot view project",
+        )
     ]
     assert sequence.sql_steps == [
         SqlStep(
@@ -230,6 +255,88 @@ async def publish_api():
     assert endpoint_route_path(function) == "/apis"
     assert endpoint_status_codes(function) == (201, 400, 409, 503)
     assert http_status_code_label(400) == "HTTP 400 Bad Request"
+
+
+def test_endpoint_error_returns_reads_router_error_schema_returns() -> None:
+    tree = ast.parse(
+        """
+async def get_project():
+    if not await api_functions.has_project_view_permission(project, caller):
+        return api_error_response(status.HTTP_403_FORBIDDEN, "caller cannot view project")
+    if await api_functions.has_project_conflict(project):
+        return api_error_response(status.HTTP_409_CONFLICT, "project is already updated")
+    if not await api_functions.verify_project_registration(project):
+        return api_error_response(status.HTTP_502_BAD_GATEWAY, "project registration is not valid")
+"""
+    )
+    metadata = {
+        "has_project_view_permission": FunctionMetadata(
+            "呼び出し元が Project 詳細を参照できるかを判定する。",
+            (),
+            "bool",
+        ),
+        "has_project_conflict": FunctionMetadata(
+            "Project の更新競合が存在するかを判定する。",
+            (),
+            "bool",
+        ),
+        "verify_project_registration": FunctionMetadata(
+            "Project の登録情報を検証する。",
+            (),
+            "bool",
+        ),
+    }
+    function = next(node for node in tree.body if isinstance(node, ast.AsyncFunctionDef))
+
+    assert endpoint_error_returns(function, metadata) == [
+        ErrorReturnStep(
+            403,
+            "呼び出し元が Project 詳細を参照できない場合。",
+            "caller cannot view project",
+        ),
+        ErrorReturnStep(
+            409,
+            "Project の更新競合が存在する場合。",
+            "project is already updated",
+        ),
+        ErrorReturnStep(
+            502,
+            "Project の登録情報を検証できない場合。",
+            "project registration is not valid",
+        ),
+    ]
+
+
+def test_endpoint_exception_error_returns_reads_api_function_error_summaries() -> None:
+    steps = [
+        SequenceStep(
+            "validate_request",
+            "request",
+            "リクエストを検証する。",
+        )
+    ]
+    metadata = {
+        "validate_request": FunctionMetadata(
+            "リクエストを検証する。",
+            (),
+            "Request",
+            errors=(
+                FunctionErrorMetadata(
+                    400,
+                    "requested_reason must not be blank",
+                    "requestedReason が空白である場合。",
+                ),
+            ),
+        )
+    }
+
+    assert endpoint_exception_error_returns(steps, metadata) == [
+        ErrorReturnStep(
+            400,
+            "requestedReason が空白である場合。",
+            "requested_reason must not be blank",
+        )
+    ]
 
 
 def test_endpoint_route_metadata_handles_defaults_keyword_path_and_unknown_status() -> None:
@@ -308,6 +415,13 @@ def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
                     "GetProjectResponse",
                 ),
             ],
+            error_returns=[
+                ErrorReturnStep(
+                    403,
+                    "呼び出し元が Project 詳細を参照できない場合。",
+                    "caller cannot view project",
+                )
+            ],
             sql_steps=[
                 SqlStep(
                     "001_select_projects.sql",
@@ -349,6 +463,8 @@ def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
         "<br/>SQL 001_select_projects.sql<br/>テーブル projects, project_members" in markdown
     )
     assert "API-->>User: HTTP 200 OK" in markdown
+    assert "alt 呼び出し元が Project 詳細を参照できない場合。" in markdown
+    assert "API-->>User: HTTP 403 Forbidden<br/>caller cannot view project" in markdown
     assert "API-->>User: HTTP 404 Not Found" in markdown
     assert markdown.rstrip().endswith("  API-->>User: HTTP 404 Not Found\n```")
 

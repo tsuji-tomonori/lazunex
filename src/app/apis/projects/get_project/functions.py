@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from fastapi import HTTPException, status
+from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.common import IdentityGroup, raise_missing_runtime_dependency
 from app.apis.deps import build_caller_identity
+from app.apis.exceptions import ApiFunctionError
 from app.apis.projects.common import (
     ProjectCognitoClientType,
     ProjectCognitoClientUrlType,
@@ -63,7 +64,11 @@ async def get_project_detail(
             ),
         )
         if not rows:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+            raise ApiFunctionError(
+                status.HTTP_404_NOT_FOUND,
+                "Project not found",
+                summary="対象 Project が存在しない、または呼び出し元が参照できない場合。",
+            )
         first = rows[0]
         callback_urls = [
             row.url

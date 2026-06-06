@@ -5,6 +5,7 @@ import json
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
+from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.api_access_requests.common import AccessRequestDerivedState
@@ -15,6 +16,7 @@ from app.apis.api_access_requests.reject_api_access_request.schemas import (
 )
 from app.apis.common import IdentityGroup, raise_missing_runtime_dependency
 from app.apis.deps import build_caller_identity
+from app.apis.exceptions import ApiFunctionError
 from app.apis.sequence_types import (
     ApiAccessRequestRef,
     ApiAccessReviewRef,
@@ -55,7 +57,11 @@ async def get_access_request(
             queries.SelectApiAccessRequestsParams(access_request_id=access_request_id),
         )
         if not rows:
-            raise ValueError("pending access request is not found")
+            raise ApiFunctionError(
+                status.HTTP_404_NOT_FOUND,
+                "pending access request is not found",
+                summary="却下対象の審査中利用申請が存在しない場合。",
+            )
         row = rows[0]
         return ApiAccessRequestRef(
             access_request_id=row.access_request_id,
@@ -91,7 +97,11 @@ async def has_api_reviewer_permission(
             ),
         )
         if not rows:
-            raise ValueError("caller is not an api reviewer")
+            raise ApiFunctionError(
+                status.HTTP_403_FORBIDDEN,
+                "caller is not an api reviewer",
+                summary="呼び出し元が対象 API の reviewer または Hub 管理者でない場合。",
+            )
         return True
     return raise_missing_runtime_dependency("has_api_reviewer_permission")
 
@@ -101,7 +111,11 @@ async def validate_rejection_reason(
 ) -> RejectApiAccessRequestRequest:
     """利用申請却下理由を検証する。"""
     if not request.review_comment.strip():
-        raise ValueError("review_comment must not be blank")
+        raise ApiFunctionError(
+            status.HTTP_400_BAD_REQUEST,
+            "review_comment must not be blank",
+            summary="reviewComment が空白である場合。",
+        )
     return request
 
 
@@ -290,7 +304,11 @@ async def build_reject_access_request_response(
 ) -> RejectApiAccessRequestResponse:
     """利用申請却下レスポンスを組み立てる。"""
     if not isinstance(review.reviewed_at, datetime):
-        raise ValueError("reviewed_at is missing")
+        raise ApiFunctionError(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "reviewed_at is missing",
+            summary="却下結果の reviewedAt が保存結果から取得できない場合。",
+        )
     return RejectApiAccessRequestResponse(
         access_request_id=access_request.access_request_id,
         derived_state=AccessRequestDerivedState.REJECTED,

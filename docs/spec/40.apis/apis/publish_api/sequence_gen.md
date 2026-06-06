@@ -7,23 +7,23 @@ sequenceDiagram
   autonumber
   participant User as User
   participant API as API
-  participant R_identity as Resource: identity
   participant R_api_gateway_control as Resource: api gateway control
+  participant R_identity as Resource: identity
   participant DB as DB
   User->>API: POST /apis
   API->>API: API 公開登録リクエストを検証する。
-  API->>API: Idempotency-Key に対応する既存レコードを取得する。
-  alt 登録対象 API が既に登録済み場合。
-    API->>API: API 公開用の provisioning operation を作成する。
-    API->>API: 冪等性レコードを作成または確認する。
-    API->>R_identity: Cognito Resource Server に custom scope を追加する。
-    API->>API: API metadata、stage、reviewer、OpenAPI metadata、scope を保存する。
-    API->>API: API stage、scope、reviewer の lifecycle event を追記する。
-    API->>API: provisioning operation/step event を追記する。
-    API->>API: 監査イベントを追記する。
-    API->>API: API 公開登録レスポンスを組み立てる。
-    alt 呼び出し元が API 公開登録できる場合。
-      API->>R_api_gateway_control: 登録対象 API Gateway stage の登録情報を検証する。
+  alt 呼び出し元が API 公開登録できる場合。
+    API->>API: Idempotency-Key に対応する既存レコードを取得する。
+    API->>R_api_gateway_control: 登録対象 API Gateway stage の登録情報を検証する。
+    alt 登録対象 API が既に登録済みでない場合。
+      API->>API: API 公開用の provisioning operation を作成する。
+      API->>API: 冪等性レコードを作成または確認する。
+      API->>R_identity: Cognito Resource Server に custom scope を追加する。
+      API->>API: API metadata、stage、reviewer、OpenAPI metadata、scope を保存する。
+      API->>API: API stage、scope、reviewer の lifecycle event を追記する。
+      API->>API: provisioning operation/step event を追記する。
+      API->>API: 監査イベントを追記する。
+      API->>API: API 公開登録レスポンスを組み立てる。
       API->>DB: API codeの重複登録を防ぐため、既存APIを取得する。<br/>SQL 001_select_apis.sql<br/>テーブル apis
       API->>DB: API公開登録の処理結果として、provisioning operationを追加する。<br/>SQL 003_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
       API->>DB: 公開対象APIのcatalog metadataを保持するため、API catalogを追加する。<br/>SQL 004_insert_apis.sql<br/>テーブル apis
@@ -41,6 +41,36 @@ sequenceDiagram
       API->>DB: Idempotency-Keyに対応する既存レコードを取得する。<br/>SQL 018_select_idempotency_records.sql<br/>テーブル idempotency_records
       API->>DB: API Gateway stageの重複登録を防ぐため、既存stageを取得する。<br/>SQL 019_select_api_gateway_stages_by_unique_key.sql<br/>テーブル api_gateway_stages
     end
+  end
+  alt 呼び出し元が API 公開登録できない場合。
+    API-->>User: HTTP 403 Forbidden<br/>caller cannot publish api
+  end
+  alt 登録対象 API Gateway stage の登録情報を検証できない場合。
+    API-->>User: HTTP 502 Bad Gateway<br/>API Gateway stage registration is not valid
+  end
+  alt 登録対象 API が既に登録済みである場合。
+    API-->>User: HTTP 409 Conflict<br/>api is already registered
+  end
+  alt apiCode が空白である場合。
+    API-->>User: HTTP 400 Bad Request<br/>api_code must not be blank
+  end
+  alt ownerPrincipalId が空白である場合。
+    API-->>User: HTTP 400 Bad Request<br/>owner_principal_id must not be blank
+  end
+  alt reviewers が空である場合。
+    API-->>User: HTTP 400 Bad Request<br/>reviewers must contain at least one reviewer
+  end
+  alt reviewers に重複する reviewerPrincipalId が含まれる場合。
+    API-->>User: HTTP 400 Bad Request<br/>reviewers must not contain duplicate reviewer_principal_id values
+  end
+  alt API Gateway method に API key と Cognito scope が設定されていない場合。
+    API-->>User: HTTP 502 Bad Gateway<br/>API Gateway method is not configured for API key and Cognito scope
+  end
+  alt 登録対象 API code が既に登録済みである場合。
+    API-->>User: HTTP 409 Conflict<br/>api code is already registered
+  end
+  alt 登録対象 API Gateway stage が既に登録済みである場合。
+    API-->>User: HTTP 409 Conflict<br/>API Gateway stage is already registered
   end
   API-->>User: HTTP 201 Created
   API-->>User: HTTP 400 Bad Request

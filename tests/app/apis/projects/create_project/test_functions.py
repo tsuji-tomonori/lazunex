@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from apis.helpers import record_async_call
 from app.apis.common import IdentityGroup
+from app.apis.exceptions import ApiFunctionError
 from app.apis.projects.create_project import functions, queries
 from app.apis.projects.create_project.samples import CREATE_PROJECT_REQUEST_SAMPLE
 from app.apis.sequence_types import (
@@ -218,7 +219,7 @@ async def test_create_cognito_confidential_app_client_rejects_missing_secret() -
         confidential_client=UserPoolClientCreated(app_client_id="confidential-client-id")
     )
 
-    with pytest.raises(RuntimeError, match="confidential app client secret is missing"):
+    with pytest.raises(ApiFunctionError, match="confidential app client secret is missing"):
         await functions.create_cognito_confidential_app_client(
             CREATE_PROJECT_REQUEST_SAMPLE,
             client,

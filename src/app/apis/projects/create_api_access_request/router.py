@@ -1,7 +1,8 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, Header, HTTPException, Path, status
+from fastapi import APIRouter, Body, Depends, Header, Path, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import JSONResponse
 
 from app.apis.base import sample_path_value, sample_value
 from app.apis.deps import get_caller_identity, get_request_context
@@ -18,7 +19,11 @@ from app.apis.responses import (
     error_responses,
     success_response,
 )
-from app.apis.router_errors import ROUTER_HANDLED_EXCEPTIONS, raise_http_exception_for_router_error
+from app.apis.router_errors import (
+    ROUTER_HANDLED_EXCEPTIONS,
+    api_error_response,
+    error_response_for_router_error,
+)
 from app.apis.sequence_types import CallerIdentity, RequestContext
 from app.apis.types import ResourceId
 from app.db.session import get_session
@@ -74,24 +79,18 @@ async def create_api_access_request(
     caller: Annotated[CallerIdentity, Depends(get_caller_identity)],
     request_context: Annotated[RequestContext, Depends(get_request_context)],
     session: Annotated[AsyncSession, Depends(get_session)],
-) -> CreateApiAccessRequestResponse:
+) -> CreateApiAccessRequestResponse | JSONResponse:
     try:
         validated_request = await api_functions.validate_create_access_request_request(request)
         project = await api_functions.get_project(project_id, caller, session)
         if not await api_functions.has_project_owner_permission(project, caller):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="caller is not a project owner",
-            )
+            return api_error_response(status.HTTP_403_FORBIDDEN, "caller is not a project owner")
         if not await api_functions.is_published_api(
             validated_request.api_id,
             validated_request.api_stage_id,
             session,
         ):
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="api is not published",
-            )
+            return api_error_response(status.HTTP_404_NOT_FOUND, "api is not published")
         await api_functions.get_api_reviewer(
             validated_request.api_id,
             validated_request.api_stage_id,
@@ -102,9 +101,8 @@ async def create_api_access_request(
             validated_request,
             session,
         ):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="requested auth mode client is not configured",
+            return api_error_response(
+                status.HTTP_409_CONFLICT, "requested auth mode client is not configured"
             )
         if await api_functions.has_active_subscription(
             project,
@@ -112,9 +110,8 @@ async def create_api_access_request(
             validated_request.api_stage_id,
             session,
         ):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="active subscription already exists",
+            return api_error_response(
+                status.HTTP_409_CONFLICT, "active subscription already exists"
             )
         if await api_functions.has_pending_access_request_for_project_api(
             project,
@@ -122,9 +119,8 @@ async def create_api_access_request(
             validated_request.api_stage_id,
             session,
         ):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="pending access request already exists",
+            return api_error_response(
+                status.HTTP_409_CONFLICT, "pending access request already exists"
             )
         access_request = await api_functions.save_api_access_request(
             project,
@@ -150,4 +146,4 @@ async def create_api_access_request(
         await session.commit()
         return await api_functions.build_create_access_request_response(access_request)
     except ROUTER_HANDLED_EXCEPTIONS as error:
-        raise_http_exception_for_router_error(error)
+        return error_response_for_router_error(error)

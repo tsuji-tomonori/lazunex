@@ -6,10 +6,12 @@ import json
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
+from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.common import IdentityGroup, raise_missing_runtime_dependency
 from app.apis.deps import build_caller_identity
+from app.apis.exceptions import ApiFunctionError
 from app.apis.projects.common import (
     ProjectCognitoClientType,
     ProjectCognitoClientUrlType,
@@ -85,9 +87,17 @@ async def get_caller_identity(
 async def validate_create_project_request(request: CreateProjectRequest) -> CreateProjectRequest:
     """Project 作成リクエストを検証する。"""
     if not request.project_code.strip():
-        raise ValueError("project_code must not be blank")
+        raise ApiFunctionError(
+            status.HTTP_400_BAD_REQUEST,
+            "project_code must not be blank",
+            summary="projectCode が空白である場合。",
+        )
     if not request.owner_principal_id.strip():
-        raise ValueError("owner_principal_id must not be blank")
+        raise ApiFunctionError(
+            status.HTTP_400_BAD_REQUEST,
+            "owner_principal_id must not be blank",
+            summary="ownerPrincipalId が空白である場合。",
+        )
     validate_cognito_url_list("public_client.callback_urls", request.public_client.callback_urls)
     validate_cognito_url_list("public_client.logout_urls", request.public_client.logout_urls)
     validate_access_or_id_token_validity(
@@ -154,7 +164,11 @@ async def create_project_provisioning_operation(
             queries.SelectProjectsParams(project_code=request.project_code),
         )
         if existing:
-            raise ValueError("project code is already registered")
+            raise ApiFunctionError(
+                status.HTTP_409_CONFLICT,
+                "project code is already registered",
+                summary="登録対象 Project code が既に登録済みである場合。",
+            )
         project_id = uuid4()
         operation_id = uuid4()
         await queries.insert_provisioning_operations(
@@ -306,7 +320,11 @@ async def create_cognito_confidential_app_client(
             )
         )
         if created.client_secret is None:
-            raise RuntimeError("confidential app client secret is missing")
+            raise ApiFunctionError(
+                status.HTTP_502_BAD_GATEWAY,
+                "confidential app client secret is missing",
+                summary="confidential app client secret を取得できない場合。",
+            )
         return CognitoConfidentialClientRef(
             app_client_id=created.app_client_id,
             client_secret=created.client_secret,

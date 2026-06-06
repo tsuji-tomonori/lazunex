@@ -1,6 +1,10 @@
 from collections.abc import Sequence
 from enum import StrEnum
 
+from fastapi import status
+
+from app.apis.exceptions import ApiFunctionError
+
 
 class ProjectDerivedState(StrEnum):
     """プロジェクトの現在状態を表す列挙値です。"""
@@ -73,12 +77,24 @@ def _duration_seconds(value: int, unit: TokenValidityUnit | str) -> int:
 
 def validate_cognito_url_list(field_name: str, urls: Sequence[str]) -> None:
     if len(urls) > 100:
-        raise ValueError(f"{field_name} must contain 100 or fewer URLs")
+        raise ApiFunctionError(
+            status.HTTP_400_BAD_REQUEST,
+            f"{field_name} must contain 100 or fewer URLs",
+            summary="Cognito URL 一覧に指定された URL が100件を超える場合。",
+        )
     if len(set(urls)) != len(urls):
-        raise ValueError(f"{field_name} must not contain duplicate URLs")
+        raise ApiFunctionError(
+            status.HTTP_400_BAD_REQUEST,
+            f"{field_name} must not contain duplicate URLs",
+            summary="Cognito URL 一覧に重複 URL が含まれる場合。",
+        )
     too_long = [url for url in urls if len(url) > 1024]
     if too_long:
-        raise ValueError(f"{field_name} URLs must be 1024 characters or fewer")
+        raise ApiFunctionError(
+            status.HTTP_400_BAD_REQUEST,
+            f"{field_name} URLs must be 1024 characters or fewer",
+            summary="Cognito URL 一覧に1024文字を超える URL が含まれる場合。",
+        )
 
 
 def validate_access_or_id_token_validity(
@@ -88,15 +104,27 @@ def validate_access_or_id_token_validity(
 ) -> None:
     seconds = _duration_seconds(value, unit)
     if not 5 * 60 <= seconds <= 24 * 60 * 60:
-        raise ValueError(f"{field_name} must be between 5 minutes and 1 day")
+        raise ApiFunctionError(
+            status.HTTP_400_BAD_REQUEST,
+            f"{field_name} must be between 5 minutes and 1 day",
+            summary="access token または id token の有効期間が5分から1日の範囲外である場合。",
+        )
 
 
 def validate_refresh_token_validity(value: int, unit: TokenValidityUnit | str) -> None:
     seconds = _duration_seconds(value, unit)
     if not 60 * 60 <= seconds <= 10 * 365 * 24 * 60 * 60:
-        raise ValueError("refresh_token_validity must be between 60 minutes and 10 years")
+        raise ApiFunctionError(
+            status.HTTP_400_BAD_REQUEST,
+            "refresh_token_validity must be between 60 minutes and 10 years",
+            summary="refresh_token_validity が60分から10年の範囲外である場合。",
+        )
 
 
 def validate_retry_grace_period_seconds(value: int) -> None:
     if value > 60:
-        raise ValueError("retry_grace_period_seconds must be 60 seconds or fewer")
+        raise ApiFunctionError(
+            status.HTTP_400_BAD_REQUEST,
+            "retry_grace_period_seconds must be 60 seconds or fewer",
+            summary="retry_grace_period_seconds が60秒を超える場合。",
+        )

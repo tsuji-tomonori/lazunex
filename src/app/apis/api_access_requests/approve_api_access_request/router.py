@@ -1,7 +1,8 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, Header, HTTPException, Path, status
+from fastapi import APIRouter, Body, Depends, Header, Path, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import JSONResponse
 
 from app.apis.api_access_requests.approve_api_access_request import functions as api_functions
 from app.apis.api_access_requests.approve_api_access_request.samples import (
@@ -18,7 +19,11 @@ from app.apis.responses import (
     error_responses,
     success_response,
 )
-from app.apis.router_errors import ROUTER_HANDLED_EXCEPTIONS, raise_http_exception_for_router_error
+from app.apis.router_errors import (
+    ROUTER_HANDLED_EXCEPTIONS,
+    api_error_response,
+    error_response_for_router_error,
+)
 from app.apis.sequence_types import CallerIdentity, RequestContext
 from app.apis.types import ResourceId
 from app.db.session import get_session
@@ -84,28 +89,20 @@ async def approve_api_access_request(
     identity_admin: Annotated[IdentityAdminPort, Depends(get_identity_admin_client)],
     request_context: Annotated[RequestContext, Depends(get_request_context)],
     session: Annotated[AsyncSession, Depends(get_session)],
-) -> ApproveApiAccessRequestResponse:
+) -> ApproveApiAccessRequestResponse | JSONResponse:
     try:
         access_request = await api_functions.get_access_request(access_request_id, session)
         if not await api_functions.is_pending_access_request(access_request):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="access request is not pending",
-            )
+            return api_error_response(status.HTTP_409_CONFLICT, "access request is not pending")
         if not await api_functions.has_api_reviewer_permission(access_request, caller, session):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="caller is not an api reviewer",
-            )
+            return api_error_response(status.HTTP_403_FORBIDDEN, "caller is not an api reviewer")
         if not await api_functions.is_available_project_api_stage(access_request):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="project api stage is not available",
+            return api_error_response(
+                status.HTTP_409_CONFLICT, "project api stage is not available"
             )
         if await api_functions.has_active_subscription(access_request, session):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="active subscription already exists",
+            return api_error_response(
+                status.HTTP_409_CONFLICT, "active subscription already exists"
             )
         await api_functions.append_access_request_approving_event(
             access_request,
@@ -172,4 +169,4 @@ async def approve_api_access_request(
             operation,
         )
     except ROUTER_HANDLED_EXCEPTIONS as error:
-        raise_http_exception_for_router_error(error)
+        return error_response_for_router_error(error)

@@ -5,11 +5,13 @@ import json
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
+from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.api_access_requests.common import AccessRequestDerivedState, AuthMode
 from app.apis.common import raise_missing_runtime_dependency
 from app.apis.deps import build_caller_identity
+from app.apis.exceptions import ApiFunctionError
 from app.apis.projects.common import ProjectCognitoClientType
 from app.apis.projects.create_api_access_request import queries
 from app.apis.projects.create_api_access_request.schemas import (
@@ -42,7 +44,11 @@ async def validate_create_access_request_request(
 ) -> CreateApiAccessRequestRequest:
     """利用申請作成リクエストを検証する。"""
     if not request.requested_reason.strip():
-        raise ValueError("requested_reason must not be blank")
+        raise ApiFunctionError(
+            status.HTTP_400_BAD_REQUEST,
+            "requested_reason must not be blank",
+            summary="requestedReason が空白である場合。",
+        )
     return request
 
 
@@ -60,7 +66,11 @@ def _client_type_for_auth_mode(auth_mode: AuthMode) -> ProjectCognitoClientType:
         return ProjectCognitoClientType.CONFIDENTIAL_CLIENT_CREDENTIALS
     if auth_mode == AuthMode.PUBLIC_PKCE:
         return ProjectCognitoClientType.PUBLIC_PKCE
-    raise ValueError("auth mode must map to one project cognito client type")
+    raise ApiFunctionError(
+        status.HTTP_400_BAD_REQUEST,
+        "auth mode must map to one project cognito client type",
+        summary="requestedAuthMode が Project Cognito client 種別に対応しない場合。",
+    )
 
 
 async def get_project(
@@ -78,7 +88,11 @@ async def get_project(
             ),
         )
         if not rows:
-            raise ValueError("project is not found or caller cannot access it")
+            raise ApiFunctionError(
+                status.HTTP_404_NOT_FOUND,
+                "project is not found or caller cannot access it",
+                summary="対象 Project が存在しない、または呼び出し元が参照できない場合。",
+            )
         row = rows[0]
         return ProjectRef(
             project_id=row.project_id,
@@ -108,7 +122,11 @@ async def is_published_api(
             queries.SelectApisParams(api_id=api_id, api_stage_id=api_stage_id),
         )
         if not rows:
-            raise ValueError("api is not published")
+            raise ApiFunctionError(
+                status.HTTP_404_NOT_FOUND,
+                "api is not published",
+                summary="対象 API が公開済みでない場合。",
+            )
         return True
     return raise_missing_runtime_dependency("is_published_api")
 
@@ -126,7 +144,11 @@ async def get_api_reviewer(
         )
         reviewers = tuple(row.reviewer_principal_id for row in rows if row.reviewer_principal_id)
         if not reviewers:
-            raise ValueError("api reviewer is not configured")
+            raise ApiFunctionError(
+                status.HTTP_409_CONFLICT,
+                "api reviewer is not configured",
+                summary="対象 API の reviewer が設定されていない場合。",
+            )
         return ApiReviewerRefs(reviewer_principal_ids=reviewers)
     return raise_missing_runtime_dependency("get_api_reviewer")
 
@@ -151,7 +173,11 @@ async def has_requested_auth_mode_clients(
         else:
             required = {_client_type_for_auth_mode(request.requested_auth_mode)}
         if not required.issubset(client_types):
-            raise ValueError("requested auth mode client is not configured")
+            raise ApiFunctionError(
+                status.HTTP_409_CONFLICT,
+                "requested auth mode client is not configured",
+                summary="requestedAuthMode に対応する Project client が存在しない場合。",
+            )
         return True
     return raise_missing_runtime_dependency("has_requested_auth_mode_clients")
 
@@ -173,7 +199,11 @@ async def has_active_subscription(
             ),
         )
         if rows:
-            raise ValueError("active subscription already exists")
+            raise ApiFunctionError(
+                status.HTTP_409_CONFLICT,
+                "active subscription already exists",
+                summary="同一 Project/API の active subscription が存在する場合。",
+            )
         return False
     return raise_missing_runtime_dependency("has_active_subscription")
 
@@ -195,7 +225,11 @@ async def has_pending_access_request_for_project_api(
             ),
         )
         if rows:
-            raise ValueError("pending access request already exists")
+            raise ApiFunctionError(
+                status.HTTP_409_CONFLICT,
+                "pending access request already exists",
+                summary="同一 Project/API の審査中申請が存在する場合。",
+            )
         return False
     return raise_missing_runtime_dependency("has_pending_access_request_for_project_api")
 

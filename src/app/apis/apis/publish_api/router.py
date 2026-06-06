@@ -1,7 +1,8 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Body, Depends, Header, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import JSONResponse
 
 from app.apis.apis.publish_api import functions as api_functions
 from app.apis.apis.publish_api.samples import (
@@ -15,7 +16,11 @@ from app.apis.responses import (
     error_responses,
     success_response,
 )
-from app.apis.router_errors import ROUTER_HANDLED_EXCEPTIONS, raise_http_exception_for_router_error
+from app.apis.router_errors import (
+    ROUTER_HANDLED_EXCEPTIONS,
+    api_error_response,
+    error_response_for_router_error,
+)
 from app.apis.sequence_types import CallerIdentity, RequestContext
 from app.db.session import get_session
 from app.integrations.api_gateway_control.deps import get_api_gateway_control_client
@@ -63,28 +68,21 @@ async def publish_api(
     identity_admin: Annotated[IdentityAdminPort, Depends(get_identity_admin_client)],
     request_context: Annotated[RequestContext, Depends(get_request_context)],
     session: Annotated[AsyncSession, Depends(get_session)],
-) -> PublishApiResponse:
+) -> PublishApiResponse | JSONResponse:
     try:
         validated_request = await api_functions.validate_api_publish_request(request)
         if not await api_functions.has_api_publish_permission(validated_request, caller):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="caller cannot publish api",
-            )
+            return api_error_response(status.HTTP_403_FORBIDDEN, "caller cannot publish api")
         await api_functions.get_idempotency_record(idempotency_key, session)
         if not await api_functions.verify_api_gateway_stage_registration(
             validated_request,
             api_gateway_control,
         ):
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="API Gateway stage registration is not valid",
+            return api_error_response(
+                status.HTTP_502_BAD_GATEWAY, "API Gateway stage registration is not valid"
             )
         if await api_functions.has_registered_api(validated_request, session):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="api is already registered",
-            )
+            return api_error_response(status.HTTP_409_CONFLICT, "api is already registered")
         operation = await api_functions.create_provisioning_operation(
             validated_request,
             idempotency_key,
@@ -131,4 +129,4 @@ async def publish_api(
             operation=operation,
         )
     except ROUTER_HANDLED_EXCEPTIONS as error:
-        raise_http_exception_for_router_error(error)
+        return error_response_for_router_error(error)

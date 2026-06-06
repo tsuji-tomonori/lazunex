@@ -1,7 +1,8 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, Header, HTTPException, Path, status
+from fastapi import APIRouter, Body, Depends, Header, Path, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import JSONResponse
 
 from app.apis.api_access_requests.reject_api_access_request import functions as api_functions
 from app.apis.api_access_requests.reject_api_access_request.samples import (
@@ -18,7 +19,11 @@ from app.apis.responses import (
     error_responses,
     success_response,
 )
-from app.apis.router_errors import ROUTER_HANDLED_EXCEPTIONS, raise_http_exception_for_router_error
+from app.apis.router_errors import (
+    ROUTER_HANDLED_EXCEPTIONS,
+    api_error_response,
+    error_response_for_router_error,
+)
 from app.apis.sequence_types import CallerIdentity, RequestContext
 from app.apis.types import ResourceId
 from app.db.session import get_session
@@ -73,19 +78,13 @@ async def reject_api_access_request(
     caller: Annotated[CallerIdentity, Depends(get_caller_identity)],
     request_context: Annotated[RequestContext, Depends(get_request_context)],
     session: Annotated[AsyncSession, Depends(get_session)],
-) -> RejectApiAccessRequestResponse:
+) -> RejectApiAccessRequestResponse | JSONResponse:
     try:
         access_request = await api_functions.get_access_request(access_request_id, session)
         if not await api_functions.is_pending_access_request(access_request):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="access request is not pending",
-            )
+            return api_error_response(status.HTTP_409_CONFLICT, "access request is not pending")
         if not await api_functions.has_api_reviewer_permission(access_request, caller, session):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="caller is not an api reviewer",
-            )
+            return api_error_response(status.HTTP_403_FORBIDDEN, "caller is not an api reviewer")
         validated_request = await api_functions.validate_rejection_reason(request)
         await api_functions.append_access_request_rejecting_event(
             access_request,
@@ -124,4 +123,4 @@ async def reject_api_access_request(
         await session.commit()
         return await api_functions.build_reject_access_request_response(rejected_request, review)
     except ROUTER_HANDLED_EXCEPTIONS as error:
-        raise_http_exception_for_router_error(error)
+        return error_response_for_router_error(error)

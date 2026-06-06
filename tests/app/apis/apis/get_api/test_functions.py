@@ -11,6 +11,7 @@ from app.apis.apis.common import ApiVisibility, ScopeConfigObserved
 from app.apis.apis.get_api import functions, queries
 from app.apis.apis.get_api.samples import GET_API_RESPONSE_SAMPLE
 from app.apis.apis.get_api.schemas import GetApiResponse
+from app.apis.exceptions import ApiFunctionError
 from app.apis.sequence_types import CallerIdentity
 
 pytestmark = pytest.mark.anyio
@@ -79,7 +80,7 @@ async def test_get_api_detail_raises_not_found(
 
     monkeypatch.setattr(queries, "select_apis", select_apis)
 
-    with pytest.raises(HTTPException) as error:
+    with pytest.raises(ApiFunctionError) as error:
         await functions.get_api_detail(api_id, cast(AsyncSession, object()))
 
     assert error.value.status_code == 404

@@ -13,21 +13,21 @@ sequenceDiagram
   participant DB as DB
   User->>API: POST /projects
   API->>API: Project 作成リクエストを検証する。
-  API->>API: Idempotency-Key に対応する既存レコードを取得する。
-  API->>API: Project 作成用の provisioning operation を作成する。
-  API->>API: 冪等性レコードを作成または確認する。
-  API->>R_api_gateway_control: API Gateway API key を作成する。
-  API->>R_api_gateway_control: API Gateway Usage Plan を作成する。
-  API->>R_api_gateway_control: API Gateway Usage Plan Key 紐づけを作成する。
-  API->>R_identity: PKCE 用 public App Client を作成する。
-  API->>R_identity: Client Credentials 用 confidential App Client を作成する。
-  API->>R_secret_values: API key 値と client secret 値を hash 化する。
-  API->>API: Project、owner、API key、Usage Plan、App Client metadata を保存する。
-  API->>API: Project 関連 lifecycle event を追記する。
-  API->>API: provisioning operation/step event を追記する。
-  API->>API: 監査イベントを追記する。
-  API->>API: Project 作成レスポンスを組み立てる。
   alt 呼び出し元が Project を作成できる場合。
+    API->>API: Idempotency-Key に対応する既存レコードを取得する。
+    API->>API: Project 作成用の provisioning operation を作成する。
+    API->>API: 冪等性レコードを作成または確認する。
+    API->>R_api_gateway_control: API Gateway API key を作成する。
+    API->>R_api_gateway_control: API Gateway Usage Plan を作成する。
+    API->>R_api_gateway_control: API Gateway Usage Plan Key 紐づけを作成する。
+    API->>R_identity: PKCE 用 public App Client を作成する。
+    API->>R_identity: Client Credentials 用 confidential App Client を作成する。
+    API->>R_secret_values: API key 値と client secret 値を hash 化する。
+    API->>API: Project、owner、API key、Usage Plan、App Client metadata を保存する。
+    API->>API: Project 関連 lifecycle event を追記する。
+    API->>API: provisioning operation/step event を追記する。
+    API->>API: 監査イベントを追記する。
+    API->>API: Project 作成レスポンスを組み立てる。
     API->>DB: Project codeの重複作成を防ぐため、既存Projectを取得する。<br/>SQL 001_select_projects.sql<br/>テーブル projects
     API->>DB: 新規Projectの基本情報を保持するため、Projectを追加する。<br/>SQL 002_insert_projects.sql<br/>テーブル projects
     API->>DB: Project作成を履歴化するため、Projectイベントを追加する。<br/>SQL 003_insert_project_events.sql<br/>テーブル project_events
@@ -47,6 +47,27 @@ sequenceDiagram
     API->>DB: Idempotency-Keyに対応する既存レコードを取得する。<br/>SQL 019_select_idempotency_records.sql<br/>テーブル idempotency_records
     API->>DB: Project作成の処理結果として、監査イベントを追加する。<br/>SQL 020_insert_audit_events.sql<br/>テーブル audit_events
     API->>DB: Project作成の処理結果として、Project Cognito clientイベントを追加する。<br/>SQL 021_insert_project_cognito_client_events.sql<br/>テーブル project_cognito_client_events
+  end
+  alt 呼び出し元が Project を作成できない場合。
+    API-->>User: HTTP 403 Forbidden<br/>caller cannot create project
+  end
+  alt projectCode が空白である場合。
+    API-->>User: HTTP 400 Bad Request<br/>project_code must not be blank
+  end
+  alt ownerPrincipalId が空白である場合。
+    API-->>User: HTTP 400 Bad Request<br/>owner_principal_id must not be blank
+  end
+  alt refresh_token_validity が60分から10年の範囲外である場合。
+    API-->>User: HTTP 400 Bad Request<br/>refresh_token_validity must be between 60 minutes and 10 years
+  end
+  alt retry_grace_period_seconds が60秒を超える場合。
+    API-->>User: HTTP 400 Bad Request<br/>retry_grace_period_seconds must be 60 seconds or fewer
+  end
+  alt 登録対象 Project code が既に登録済みである場合。
+    API-->>User: HTTP 409 Conflict<br/>project code is already registered
+  end
+  alt confidential app client secret を取得できない場合。
+    API-->>User: HTTP 502 Bad Gateway<br/>confidential app client secret is missing
   end
   API-->>User: HTTP 201 Created
   API-->>User: HTTP 400 Bad Request

@@ -5,6 +5,7 @@ import json
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
+from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.apis.common import (
@@ -23,6 +24,7 @@ from app.apis.apis.publish_api.schemas import (
 )
 from app.apis.common import IdentityGroup, raise_missing_runtime_dependency
 from app.apis.deps import build_caller_identity
+from app.apis.exceptions import ApiFunctionError
 from app.apis.sequence_types import (
     ApiCatalogMetadataRef,
     ApiScopeRef,
@@ -70,14 +72,30 @@ async def get_caller_identity(
 async def validate_api_publish_request(request: PublishApiRequest) -> PublishApiRequest:
     """API 公開登録リクエストを検証する。"""
     if not request.api_code.strip():
-        raise ValueError("api_code must not be blank")
+        raise ApiFunctionError(
+            status.HTTP_400_BAD_REQUEST,
+            "api_code must not be blank",
+            summary="apiCode が空白である場合。",
+        )
     if not request.owner_principal_id.strip():
-        raise ValueError("owner_principal_id must not be blank")
+        raise ApiFunctionError(
+            status.HTTP_400_BAD_REQUEST,
+            "owner_principal_id must not be blank",
+            summary="ownerPrincipalId が空白である場合。",
+        )
     if not request.reviewers:
-        raise ValueError("reviewers must contain at least one reviewer")
+        raise ApiFunctionError(
+            status.HTTP_400_BAD_REQUEST,
+            "reviewers must contain at least one reviewer",
+            summary="reviewers が空である場合。",
+        )
     reviewer_principal_ids = [reviewer.reviewer_principal_id for reviewer in request.reviewers]
     if len(set(reviewer_principal_ids)) != len(reviewer_principal_ids):
-        raise ValueError("reviewers must not contain duplicate reviewer_principal_id values")
+        raise ApiFunctionError(
+            status.HTTP_400_BAD_REQUEST,
+            "reviewers must not contain duplicate reviewer_principal_id values",
+            summary="reviewers に重複する reviewerPrincipalId が含まれる場合。",
+        )
     return request
 
 
@@ -145,8 +163,13 @@ async def verify_api_gateway_stage_registration(
                 has_scope = scope_full_name in method.authorization_scopes
                 if request.apigw.scope_attachment_mode == ScopeAttachmentMode.VERIFY_ONLY:
                     if not method.api_key_required or not has_scope:
-                        raise ValueError(
-                            "API Gateway method is not configured for API key and Cognito scope"
+                        raise ApiFunctionError(
+                            status.HTTP_502_BAD_GATEWAY,
+                            "API Gateway method is not configured for API key and Cognito scope",
+                            summary=(
+                                "API Gateway method に API key と Cognito scope が"
+                                "設定されていない場合。"
+                            ),
                         )
                     continue
                 await api_gateway_control.update_method(
@@ -185,7 +208,11 @@ async def has_registered_api(
             queries.SelectApisParams(api_code=request.api_code),
         )
         if api_rows:
-            raise ValueError("api code is already registered")
+            raise ApiFunctionError(
+                status.HTTP_409_CONFLICT,
+                "api code is already registered",
+                summary="登録対象 API code が既に登録済みである場合。",
+            )
         stage_rows = await queries.select_api_gateway_stages_by_unique_key(
             session,
             queries.SelectApiGatewayStagesByUniqueKeyParams(
@@ -196,7 +223,11 @@ async def has_registered_api(
             ),
         )
         if stage_rows:
-            raise ValueError("API Gateway stage is already registered")
+            raise ApiFunctionError(
+                status.HTTP_409_CONFLICT,
+                "API Gateway stage is already registered",
+                summary="登録対象 API Gateway stage が既に登録済みである場合。",
+            )
         return False
     return raise_missing_runtime_dependency("has_registered_api")
 

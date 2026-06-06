@@ -55,6 +55,7 @@ class SequenceStep:
     return_type: str | None = None
     integration_resources: tuple[str, ...] = ()
     query_functions: tuple[str, ...] = ()
+    condition_label: str | None = None
 
 
 @dataclass(frozen=True)
@@ -66,12 +67,27 @@ class SqlStep:
 
 
 @dataclass(frozen=True)
+class ErrorReturnStep:
+    status_code: int
+    condition: str
+    detail: str
+
+
+@dataclass(frozen=True)
+class FunctionErrorMetadata:
+    status_code: int
+    detail: str
+    summary: str
+
+
+@dataclass(frozen=True)
 class FunctionMetadata:
     description: str
     arguments: tuple[str, ...]
     return_type: str | None
     integration_resources: tuple[str, ...] = ()
     query_functions: tuple[str, ...] = ()
+    errors: tuple[FunctionErrorMetadata, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -81,6 +97,7 @@ class ApiSequence:
     endpoint_name: str
     operation_id: str
     steps: list[SequenceStep]
+    error_returns: list[ErrorReturnStep]
     sql_steps: list[SqlStep]
     integration_resources: frozenset[str] = field(default_factory=lambda: frozenset[str]())
     method: str = "GET"
@@ -317,6 +334,55 @@ def called_query_functions(function: ast.AsyncFunctionDef | ast.FunctionDef) -> 
     return tuple(names)
 
 
+def called_local_functions(function: ast.AsyncFunctionDef | ast.FunctionDef) -> tuple[str, ...]:
+    names: list[str] = []
+    for node in ast.walk(function):
+        if not isinstance(node, ast.Call):
+            continue
+        if not isinstance(node.func, ast.Name):
+            continue
+        if node.func.id not in names:
+            names.append(node.func.id)
+    return tuple(names)
+
+
+def direct_function_errors(
+    function: ast.AsyncFunctionDef | ast.FunctionDef,
+) -> tuple[FunctionErrorMetadata, ...]:
+    errors: list[FunctionErrorMetadata] = []
+    for node in ast.walk(function):
+        if not isinstance(node, ast.Raise):
+            continue
+        call = node.exc
+        if not isinstance(call, ast.Call):
+            continue
+        if not isinstance(call.func, ast.Name) or call.func.id != "ApiFunctionError":
+            continue
+        if len(call.args) < 2:
+            continue
+        status_code = http_status_code(call.args[0])
+        detail = literal_string(call.args[1])
+        summary = literal_string(keyword_value(call, "summary"))
+        if status_code is None or detail is None or summary is None:
+            continue
+        errors.append(FunctionErrorMetadata(status_code, detail, summary))
+    return tuple(dict.fromkeys(errors))
+
+
+def imported_project_common_errors(
+    functions_path: Path,
+) -> dict[str, tuple[FunctionErrorMetadata, ...]]:
+    common_path = functions_path.parents[1] / "common.py"
+    if not common_path.exists() or common_path == functions_path:
+        return {}
+    tree = ast.parse(common_path.read_text(encoding="utf-8"), filename=str(common_path))
+    return {
+        node.name: direct_function_errors(node)
+        for node in tree.body
+        if isinstance(node, ast.AsyncFunctionDef | ast.FunctionDef)
+    }
+
+
 def function_arguments(function: ast.AsyncFunctionDef | ast.FunctionDef) -> tuple[str, ...]:
     arguments: list[str] = []
     for arg in [
@@ -354,11 +420,15 @@ def function_metadata(functions_path: Path) -> dict[str, FunctionMetadata]:
     tree = ast.parse(functions_path.read_text(encoding="utf-8"), filename=str(functions_path))
     ports = imported_integration_ports(tree)
     metadata: dict[str, FunctionMetadata] = {}
+    local_calls: dict[str, tuple[str, ...]] = {}
+    direct_errors: dict[str, tuple[FunctionErrorMetadata, ...]] = {}
     for node in tree.body:
         if not isinstance(node, ast.AsyncFunctionDef | ast.FunctionDef):
             continue
         if node.name.startswith("_"):
             continue
+        local_calls[node.name] = called_local_functions(node)
+        direct_errors[node.name] = direct_function_errors(node)
         metadata[node.name] = FunctionMetadata(
             description=docstring_summary(node),
             arguments=function_arguments(node),
@@ -366,6 +436,32 @@ def function_metadata(functions_path: Path) -> dict[str, FunctionMetadata]:
             integration_resources=called_integration_resources(node, ports),
             query_functions=called_query_functions(node),
         )
+    external_errors = imported_project_common_errors(functions_path)
+    resolved_errors = {
+        name: list(errors) for name, errors in {**external_errors, **direct_errors}.items()
+    }
+    changed = True
+    while changed:
+        changed = False
+        for name, calls in local_calls.items():
+            errors = resolved_errors.setdefault(name, [])
+            for called_name in calls:
+                for error in resolved_errors.get(called_name, ()):
+                    if error in errors:
+                        continue
+                    errors.append(error)
+                    changed = True
+    metadata = {
+        name: FunctionMetadata(
+            value.description,
+            value.arguments,
+            value.return_type,
+            value.integration_resources,
+            value.query_functions,
+            tuple(resolved_errors.get(name, ())),
+        )
+        for name, value in metadata.items()
+    }
     return metadata
 
 
@@ -374,13 +470,38 @@ def sequence_label(step: SequenceStep) -> str:
 
 
 def predicate_condition_label(step: SequenceStep) -> str:
-    description = step.description
+    if step.condition_label is not None:
+        return step.condition_label
+    return condition_label_from_description(step.description, negated=False)
+
+
+def condition_label_from_description(description: str, *, negated: bool) -> str:
     suffix = "かを判定する。"
     if not description.endswith(suffix):
+        validation_suffix = "を検証する。"
+        if description.endswith(validation_suffix):
+            condition = description.removesuffix("する。")
+            if negated:
+                return f"{condition}できない場合。"
+            return f"{condition}できる場合。"
         return description
     condition = description.removesuffix(suffix)
+    if negated:
+        if condition.endswith("可能"):
+            return f"{condition}でない場合。"
+        if condition.endswith("である"):
+            return f"{condition.removesuffix('である')}でない場合。"
+        if condition.endswith("存在する"):
+            return f"{condition.removesuffix('存在する')}存在しない場合。"
+        if condition.endswith("できる"):
+            return f"{condition.removesuffix('できる')}できない場合。"
+        if condition.endswith("済み"):
+            return f"{condition}でない場合。"
+        return f"{condition}が成立しない場合。"
     if condition.endswith("可能"):
         return f"{condition}な場合。"
+    if condition.endswith("済み"):
+        return f"{condition}である場合。"
     return f"{condition}場合。"
 
 
@@ -421,10 +542,28 @@ def endpoint_sequence_steps(
     metadata: dict[str, FunctionMetadata],
 ) -> list[SequenceStep]:
     steps: list[SequenceStep] = []
-    for node in ast.walk(function):
-        function_name = awaited_api_function_name(node)
-        if function_name is None:
-            continue
+
+    class Visitor(ast.NodeVisitor):
+        def visit_If(self, node: ast.If) -> None:
+            guarded_function_name = guarded_api_function_name(node)
+            if guarded_function_name is not None:
+                append_sequence_step(
+                    guarded_function_name,
+                    success_condition_label_for_guard(node.test, guarded_function_name, metadata),
+                )
+                for child in node.orelse:
+                    self.visit(child)
+                return
+            self.generic_visit(node)
+
+        def visit_Await(self, node: ast.Await) -> None:
+            function_name = awaited_api_function_name(node)
+            if function_name is None:
+                self.generic_visit(node)
+                return
+            append_sequence_step(function_name)
+
+    def append_sequence_step(function_name: str, condition_label: str | None = None) -> None:
         if function_name not in metadata:
             raise ValueError(f"{function_name} metadata is not found")
         function_metadata = metadata[function_name]
@@ -437,9 +576,174 @@ def endpoint_sequence_steps(
                 return_type=function_metadata.return_type,
                 integration_resources=function_metadata.integration_resources,
                 query_functions=function_metadata.query_functions,
+                condition_label=condition_label,
             )
         )
+
+    Visitor().visit(function)
     return steps
+
+
+def has_api_error_response_return(nodes: list[ast.stmt]) -> bool:
+    return any(
+        isinstance(node, ast.Return) and api_error_response_call(node) is not None for node in nodes
+    )
+
+
+def guarded_api_function_name(node: ast.If) -> str | None:
+    if not has_api_error_response_return(node.body):
+        return None
+    test = (
+        node.test.operand
+        if isinstance(node.test, ast.UnaryOp) and isinstance(node.test.op, ast.Not)
+        else node.test
+    )
+    function_name = api_function_call_name(test)
+    if function_name is None or not is_predicate_function(function_name):
+        return None
+    return function_name
+
+
+def success_condition_label_for_guard(
+    test: ast.AST,
+    function_name: str,
+    metadata: dict[str, FunctionMetadata],
+) -> str | None:
+    function_metadata = metadata.get(function_name)
+    if function_metadata is None:
+        return None
+    error_condition_is_negated = isinstance(test, ast.UnaryOp) and isinstance(test.op, ast.Not)
+    return condition_label_from_description(
+        function_metadata.description,
+        negated=not error_condition_is_negated,
+    )
+
+
+def api_function_call_name(node: ast.AST) -> str | None:
+    call = node
+    if isinstance(call, ast.Await):
+        call = call.value
+    if not isinstance(call, ast.Call):
+        return None
+    function = call.func
+    if not isinstance(function, ast.Attribute):
+        return None
+    if not isinstance(function.value, ast.Name):
+        return None
+    if function.value.id != "api_functions":
+        return None
+    return function.attr
+
+
+def condition_label_from_test(
+    node: ast.AST,
+    metadata: dict[str, FunctionMetadata],
+) -> str | None:
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
+        return condition_label_from_negated_test(node.operand, metadata)
+    return condition_label_from_positive_test(node, metadata)
+
+
+def condition_label_from_positive_test(
+    node: ast.AST,
+    metadata: dict[str, FunctionMetadata],
+) -> str | None:
+    function_name = api_function_call_name(node)
+    if function_name is None:
+        return None
+    function_metadata = metadata.get(function_name)
+    if function_metadata is None:
+        return None
+    return condition_label_from_description(function_metadata.description, negated=False)
+
+
+def condition_label_from_negated_test(
+    node: ast.AST,
+    metadata: dict[str, FunctionMetadata],
+) -> str | None:
+    function_name = api_function_call_name(node)
+    if function_name is None:
+        return None
+    function_metadata = metadata.get(function_name)
+    if function_metadata is None:
+        return None
+    return condition_label_from_description(function_metadata.description, negated=True)
+
+
+def api_error_response_call(node: ast.AST) -> ast.Call | None:
+    if not isinstance(node, ast.Return):
+        return None
+    call = node.value
+    if not isinstance(call, ast.Call):
+        return None
+    if not isinstance(call.func, ast.Name) or call.func.id != "api_error_response":
+        return None
+    return call
+
+
+def fallback_error_return_condition(detail: str | None) -> str:
+    if detail:
+        return f"router が {detail} と判定した場合。"
+    return "router がエラー条件に該当すると判定した場合。"
+
+
+def endpoint_error_returns(
+    function: ast.AsyncFunctionDef | ast.FunctionDef,
+    metadata: dict[str, FunctionMetadata],
+) -> list[ErrorReturnStep]:
+    error_returns: list[ErrorReturnStep] = []
+
+    class Visitor(ast.NodeVisitor):
+        def __init__(self) -> None:
+            self.conditions: list[str] = []
+
+        def visit_If(self, node: ast.If) -> None:
+            condition = condition_label_from_test(node.test, metadata)
+            if condition is None:
+                for child in node.body:
+                    self.visit(child)
+            else:
+                self.conditions.append(condition)
+                for child in node.body:
+                    self.visit(child)
+                self.conditions.pop()
+            for child in node.orelse:
+                self.visit(child)
+
+        def visit_Return(self, node: ast.Return) -> None:
+            call = api_error_response_call(node)
+            if call is None or len(call.args) < 2:
+                return
+            status_code = http_status_code(call.args[0])
+            if status_code is None:
+                return
+            detail = literal_string(call.args[1]) or ""
+            condition = (
+                self.conditions[-1] if self.conditions else fallback_error_return_condition(detail)
+            )
+            error_returns.append(ErrorReturnStep(status_code, condition, detail))
+
+    for statement in function.body:
+        Visitor().visit(statement)
+    return error_returns
+
+
+def endpoint_exception_error_returns(
+    steps: list[SequenceStep], metadata: dict[str, FunctionMetadata]
+) -> list[ErrorReturnStep]:
+    error_returns: list[ErrorReturnStep] = []
+    seen: set[tuple[int, str, str]] = set()
+    for step in steps:
+        function_metadata = metadata.get(step.function_name)
+        if function_metadata is None:
+            continue
+        for error in function_metadata.errors:
+            key = (error.status_code, error.summary, error.detail)
+            if key in seen:
+                continue
+            seen.add(key)
+            error_returns.append(ErrorReturnStep(error.status_code, error.summary, error.detail))
+    return error_returns
 
 
 def sql_action(filename: str) -> str:
@@ -538,6 +842,9 @@ def api_sequence_from_dir(
     function = endpoint_function(tree)
     metadata = function_metadata(functions_path)
     steps = endpoint_sequence_steps(function, metadata)
+    explicit_error_returns = endpoint_error_returns(function, metadata)
+    exception_error_returns = endpoint_exception_error_returns(steps, metadata)
+    error_returns = list(dict.fromkeys((*explicit_error_returns, *exception_error_returns)))
     query_filenames = query_sql_filenames(api_dir / "queries.py")
     called_query_filenames = {
         query_filenames[query_function]
@@ -553,6 +860,7 @@ def api_sequence_from_dir(
         endpoint_name=function.name,
         operation_id=endpoint_operation_id(function),
         steps=steps,
+        error_returns=error_returns,
         sql_steps=sql_sequence_steps(
             api_dir / "sql",
             query_sql_summaries(api_dir / "queries.py"),
@@ -636,6 +944,14 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
     for depth in range(alt_depth - 1, -1, -1):
         indent = "  " + ("  " * depth)
         lines.append(f"{indent}end")
+
+    for error_return in sequence.error_returns:
+        lines.append(f"  alt {error_return.condition}")
+        lines.append(
+            f"    API-->>User: {http_status_code_label(error_return.status_code)}"
+            f"<br/>{error_return.detail}"
+        )
+        lines.append("  end")
 
     for status_code in sequence.status_codes:
         lines.append(f"  API-->>User: {http_status_code_label(status_code)}")

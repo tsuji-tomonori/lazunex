@@ -1,0 +1,164 @@
+from __future__ import annotations
+
+import argparse
+import ast
+import re
+from dataclasses import dataclass
+from pathlib import Path
+
+from tools.generate_api_sequences import (
+    endpoint_exception_error_returns,
+    endpoint_function,
+    endpoint_sequence_steps,
+    function_metadata,
+)
+
+HTTP_STATUS_CODE_PATTERN = re.compile(r"HTTP_(?P<code>[0-9]{3})_(?P<reason>[A-Z0-9_]+)")
+HTTP_STATUS_NAMES = {
+    400: "HTTP_400_BAD_REQUEST",
+    401: "HTTP_401_UNAUTHORIZED",
+    403: "HTTP_403_FORBIDDEN",
+    404: "HTTP_404_NOT_FOUND",
+    409: "HTTP_409_CONFLICT",
+    422: "HTTP_422_UNPROCESSABLE_CONTENT",
+    429: "HTTP_429_TOO_MANY_REQUESTS",
+    500: "HTTP_500_INTERNAL_SERVER_ERROR",
+    502: "HTTP_502_BAD_GATEWAY",
+    503: "HTTP_503_SERVICE_UNAVAILABLE",
+}
+
+
+@dataclass(frozen=True, order=True)
+class RouterErrorResponseReturnIssue:
+    path: Path
+    line: int
+    status_name: str
+    message: str
+
+
+def _status_attr_code(node: ast.AST) -> tuple[int, str] | None:
+    if not isinstance(node, ast.Attribute):
+        return None
+    if not isinstance(node.value, ast.Name):
+        return None
+    if node.value.id != "status":
+        return None
+    match = HTTP_STATUS_CODE_PATTERN.fullmatch(node.attr)
+    if match is None:
+        return None
+    return int(match.group("code")), node.attr
+
+
+def _declared_error_response_statuses(function: ast.AsyncFunctionDef | ast.FunctionDef) -> set[int]:
+    statuses: set[int] = set()
+    for decorator in function.decorator_list:
+        if not isinstance(decorator, ast.Call):
+            continue
+        responses_keyword = next(
+            (keyword for keyword in decorator.keywords if keyword.arg == "responses"),
+            None,
+        )
+        if responses_keyword is None:
+            continue
+        for node in ast.walk(responses_keyword.value):
+            if not isinstance(node, ast.Call):
+                continue
+            if not isinstance(node.func, ast.Name) or node.func.id != "error_responses":
+                continue
+            for arg in node.args:
+                status = _status_attr_code(arg)
+                if status is not None:
+                    statuses.add(status[0])
+    return statuses
+
+
+def _returned_error_response_statuses(
+    function: ast.AsyncFunctionDef | ast.FunctionDef,
+) -> list[tuple[int, int, str]]:
+    statuses: list[tuple[int, int, str]] = []
+    for node in ast.walk(function):
+        if not isinstance(node, ast.Call):
+            continue
+        if not isinstance(node.func, ast.Name) or node.func.id != "api_error_response":
+            continue
+        if not node.args:
+            continue
+        status = _status_attr_code(node.args[0])
+        if status is not None:
+            statuses.append((node.lineno, status[0], status[1]))
+    return statuses
+
+
+def _returned_exception_statuses(
+    path: Path, router_function: ast.AsyncFunctionDef | ast.FunctionDef
+) -> list[tuple[int, int, str]]:
+    functions_path = path.with_name("functions.py")
+    if not functions_path.exists():
+        return []
+    metadata = function_metadata(functions_path)
+    steps = endpoint_sequence_steps(router_function, metadata)
+    return [
+        (
+            router_function.lineno,
+            error.status_code,
+            HTTP_STATUS_NAMES.get(error.status_code, f"HTTP_{error.status_code}"),
+        )
+        for error in endpoint_exception_error_returns(steps, metadata)
+    ]
+
+
+def check_router_error_response_returns(
+    api_root: Path = Path("src/app/apis"),
+) -> list[RouterErrorResponseReturnIssue]:
+    issues: list[RouterErrorResponseReturnIssue] = []
+    for path in sorted(api_root.glob("*/*/router.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        try:
+            route_functions = [endpoint_function(tree)]
+        except ValueError:
+            route_functions = [
+                node
+                for node in ast.walk(tree)
+                if isinstance(node, ast.AsyncFunctionDef | ast.FunctionDef)
+            ]
+        for node in route_functions:
+            declared = _declared_error_response_statuses(node)
+            if not declared:
+                continue
+            returned_statuses = [
+                *_returned_error_response_statuses(node),
+                *_returned_exception_statuses(path, node),
+            ]
+            for line, returned_status, returned_name in returned_statuses:
+                if returned_status in declared:
+                    continue
+                issues.append(
+                    RouterErrorResponseReturnIssue(
+                        path=path,
+                        line=line,
+                        status_name=returned_name,
+                        message="error response status is not declared in error_responses",
+                    )
+                )
+    return sorted(issues)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Check router api_error_response returns match declared error_responses."
+    )
+    parser.add_argument("--api-root", type=Path, default=Path("src/app/apis"))
+    args = parser.parse_args()
+
+    issues = check_router_error_response_returns(args.api_root)
+    if not issues:
+        print("All router api_error_response returns are declared in error_responses.")
+        return 0
+
+    for issue in issues:
+        print(f"{issue.path}:{issue.line}: {issue.status_name}: {issue.message}")
+    return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
