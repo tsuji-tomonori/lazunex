@@ -4,7 +4,10 @@ from typing import Any
 
 import pytest
 
-from app.apis.apis.list_apis.samples import LIST_APIS_RESPONSE_SAMPLE
+from app.apis.apis.list_apis.samples import (
+    LIST_APIS_RESPONSE_SAMPLE,
+    LIST_APIS_STATUS_SAMPLES,
+)
 from app.apis.base import sample_value
 
 
@@ -34,3 +37,24 @@ async def test_list_apis_router_returns_seeded_api_with_sqlite_db(
     assert body["items"][0]["apiId"] == seeded["apiId"]
     assert body["items"][0]["apiCode"] == "billing-api-v1"
     assert await router_count_rows(router_db_harness.session_factory, "apis") == 1
+
+
+@pytest.mark.anyio
+async def test_list_apis_sample_request_emits_router_error_log_to_stdio(
+    router_db_harness: Any,
+    capsys: Any,
+    monkeypatch: Any,
+    assert_router_error_log: Any,
+) -> None:
+    await assert_router_error_log(
+        router_db_harness=router_db_harness,
+        capsys=capsys,
+        monkeypatch=monkeypatch,
+        method="GET",
+        path_template="/apis",
+        status_samples=LIST_APIS_STATUS_SAMPLES,
+        success_status=200,
+        patch_target="app.apis.apis.list_apis.functions.has_api_list_permission",
+        message_id="listApis.router_error",
+        catalog_id="M002",
+    )

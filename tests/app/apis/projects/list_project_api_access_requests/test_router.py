@@ -7,6 +7,7 @@ import pytest
 from app.apis.base import sample_value
 from app.apis.projects.list_project_api_access_requests.samples import (
     LIST_PROJECT_API_ACCESS_REQUESTS_RESPONSE_SAMPLE,
+    LIST_PROJECT_API_ACCESS_REQUESTS_STATUS_SAMPLES,
 )
 
 
@@ -38,3 +39,24 @@ async def test_list_project_api_access_requests_router_returns_seeded_request_wi
     assert body["items"][0]["derivedState"] == "PENDING"
     assert body["items"][0]["review"] is None
     assert await router_count_rows(router_db_harness.session_factory, "api_access_requests") == 1
+
+
+@pytest.mark.anyio
+async def test_list_project_api_access_requests_sample_request_emits_router_error_log_to_stdio(
+    router_db_harness: Any,
+    capsys: Any,
+    monkeypatch: Any,
+    assert_router_error_log: Any,
+) -> None:
+    await assert_router_error_log(
+        router_db_harness=router_db_harness,
+        capsys=capsys,
+        monkeypatch=monkeypatch,
+        method="GET",
+        path_template="/projects/{projectId}/api-access-requests",
+        status_samples=LIST_PROJECT_API_ACCESS_REQUESTS_STATUS_SAMPLES,
+        success_status=200,
+        patch_target="app.apis.projects.list_project_api_access_requests.functions.get_project",
+        message_id="listProjectApiAccessRequests.router_error",
+        catalog_id="M002",
+    )

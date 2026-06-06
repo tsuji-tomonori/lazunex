@@ -5,7 +5,10 @@ from typing import Any
 import pytest
 
 from app.apis.base import sample_value
-from app.apis.projects.list_projects.samples import LIST_PROJECTS_RESPONSE_SAMPLE
+from app.apis.projects.list_projects.samples import (
+    LIST_PROJECTS_RESPONSE_SAMPLE,
+    LIST_PROJECTS_STATUS_SAMPLES,
+)
 
 
 @pytest.mark.anyio
@@ -32,3 +35,24 @@ async def test_list_projects_router_returns_seeded_project_with_sqlite_db(
     assert body["items"][0]["projectId"] == seeded["projectId"]
     assert body["items"][0]["projectCode"] == "payment-frontend"
     assert await router_count_rows(router_db_harness.session_factory, "project_members") == 1
+
+
+@pytest.mark.anyio
+async def test_list_projects_sample_request_emits_router_error_log_to_stdio(
+    router_db_harness: Any,
+    capsys: Any,
+    monkeypatch: Any,
+    assert_router_error_log: Any,
+) -> None:
+    await assert_router_error_log(
+        router_db_harness=router_db_harness,
+        capsys=capsys,
+        monkeypatch=monkeypatch,
+        method="GET",
+        path_template="/projects",
+        status_samples=LIST_PROJECTS_STATUS_SAMPLES,
+        success_status=200,
+        patch_target="app.apis.projects.list_projects.functions.has_project_list_permission",
+        message_id="listProjects.router_error",
+        catalog_id="M002",
+    )

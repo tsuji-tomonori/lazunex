@@ -8,6 +8,7 @@ import pytest
 from app.apis.api_access_requests.reject_api_access_request.samples import (
     REJECT_API_ACCESS_REQUEST_REQUEST_SAMPLE,
     REJECT_API_ACCESS_REQUEST_RESPONSE_SAMPLE,
+    REJECT_API_ACCESS_REQUEST_STATUS_SAMPLES,
 )
 from app.apis.base import sample_value
 
@@ -61,3 +62,24 @@ async def test_reject_api_access_request_router_persists_review_with_sqlite_db(
         == 3
     )
     assert await router_count_rows(router_db_harness.session_factory, "audit_events") == 4
+
+
+@pytest.mark.anyio
+async def test_reject_api_access_request_sample_request_emits_router_error_log_to_stdio(
+    router_db_harness: Any,
+    capsys: Any,
+    monkeypatch: Any,
+    assert_router_error_log: Any,
+) -> None:
+    await assert_router_error_log(
+        router_db_harness=router_db_harness,
+        capsys=capsys,
+        monkeypatch=monkeypatch,
+        method="POST",
+        path_template="/api-access-requests/{accessRequestId}/reject",
+        status_samples=REJECT_API_ACCESS_REQUEST_STATUS_SAMPLES,
+        success_status=200,
+        patch_target="app.apis.api_access_requests.reject_api_access_request.functions.get_access_request",
+        message_id="rejectApiAccessRequest.router_error",
+        catalog_id="M003",
+    )

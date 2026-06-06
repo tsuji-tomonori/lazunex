@@ -9,6 +9,7 @@ import pytest
 from app.apis.apis.publish_api.samples import (
     PUBLISH_API_REQUEST_SAMPLE,
     PUBLISH_API_RESPONSE_SAMPLE,
+    PUBLISH_API_STATUS_SAMPLES,
 )
 from app.apis.base import sample_value
 
@@ -97,3 +98,24 @@ async def test_publish_api_router_persists_catalog_and_events_with_sqlite_db(
     )
     assert len(router_db_harness.api_gateway.calls) == 3
     assert len(router_db_harness.identity.calls) == 2
+
+
+@pytest.mark.anyio
+async def test_publish_api_sample_request_emits_router_error_log_to_stdio(
+    router_db_harness: Any,
+    capsys: Any,
+    monkeypatch: Any,
+    assert_router_error_log: Any,
+) -> None:
+    await assert_router_error_log(
+        router_db_harness=router_db_harness,
+        capsys=capsys,
+        monkeypatch=monkeypatch,
+        method="POST",
+        path_template="/apis",
+        status_samples=PUBLISH_API_STATUS_SAMPLES,
+        success_status=201,
+        patch_target="app.apis.apis.publish_api.functions.validate_api_publish_request",
+        message_id="publishApi.router_error",
+        catalog_id="M004",
+    )

@@ -8,6 +8,7 @@ from app.apis.base import sample_value
 from app.apis.projects.update_project_public_client.samples import (
     UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE,
     UPDATE_PROJECT_PUBLIC_CLIENT_RESPONSE_SAMPLE,
+    UPDATE_PROJECT_PUBLIC_CLIENT_STATUS_SAMPLES,
 )
 
 
@@ -96,4 +97,25 @@ async def test_update_project_public_client_router_updates_metadata_with_sqlite_
             "provisioning_step_events",
         )
         == 0
+    )
+
+
+@pytest.mark.anyio
+async def test_update_project_public_client_sample_request_emits_router_error_log_to_stdio(
+    router_db_harness: Any,
+    capsys: Any,
+    monkeypatch: Any,
+    assert_router_error_log: Any,
+) -> None:
+    await assert_router_error_log(
+        router_db_harness=router_db_harness,
+        capsys=capsys,
+        monkeypatch=monkeypatch,
+        method="PATCH",
+        path_template="/projects/{projectId}/public-client",
+        status_samples=UPDATE_PROJECT_PUBLIC_CLIENT_STATUS_SAMPLES,
+        success_status=200,
+        patch_target="app.apis.projects.update_project_public_client.functions.validate_public_client_update_request",
+        message_id="updateProjectPublicClient.router_error",
+        catalog_id="M002",
     )

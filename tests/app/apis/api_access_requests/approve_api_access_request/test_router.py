@@ -10,6 +10,7 @@ from sqlalchemy import text
 from app.apis.api_access_requests.approve_api_access_request.samples import (
     APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE,
     APPROVE_API_ACCESS_REQUEST_RESPONSE_SAMPLE,
+    APPROVE_API_ACCESS_REQUEST_STATUS_SAMPLES,
 )
 from app.apis.api_access_requests.common import AuthMode
 from app.apis.base import sample_value
@@ -186,3 +187,24 @@ async def test_approve_api_access_request_router_rejects_duplicate_subscription(
 
     assert response.status_code == 409, response.text
     assert response.json()["error"]["message"] == "active subscription already exists"
+
+
+@pytest.mark.anyio
+async def test_approve_api_access_request_sample_request_emits_router_error_log_to_stdio(
+    router_db_harness: Any,
+    capsys: Any,
+    monkeypatch: Any,
+    assert_router_error_log: Any,
+) -> None:
+    await assert_router_error_log(
+        router_db_harness=router_db_harness,
+        capsys=capsys,
+        monkeypatch=monkeypatch,
+        method="POST",
+        path_template="/api-access-requests/{accessRequestId}/approve",
+        status_samples=APPROVE_API_ACCESS_REQUEST_STATUS_SAMPLES,
+        success_status=200,
+        patch_target="app.apis.api_access_requests.approve_api_access_request.functions.get_access_request",
+        message_id="approveApiAccessRequest.router_error",
+        catalog_id="M005",
+    )

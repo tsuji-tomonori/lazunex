@@ -9,6 +9,7 @@ from app.apis.base import sample_value
 from app.apis.projects.create_api_access_request.samples import (
     CREATE_API_ACCESS_REQUEST_REQUEST_SAMPLE,
     CREATE_API_ACCESS_REQUEST_RESPONSE_SAMPLE,
+    CREATE_API_ACCESS_REQUEST_STATUS_SAMPLES,
 )
 
 
@@ -58,3 +59,24 @@ async def test_create_api_access_request_router_persists_request_with_sqlite_db(
     assert json.loads(idempotency["response_payload"])["accessRequestId"] == body["accessRequestId"]
     assert await router_count_rows(router_db_harness.session_factory, "access_request_events") == 1
     assert await router_count_rows(router_db_harness.session_factory, "audit_events") == 3
+
+
+@pytest.mark.anyio
+async def test_create_api_access_request_sample_request_emits_router_error_log_to_stdio(
+    router_db_harness: Any,
+    capsys: Any,
+    monkeypatch: Any,
+    assert_router_error_log: Any,
+) -> None:
+    await assert_router_error_log(
+        router_db_harness=router_db_harness,
+        capsys=capsys,
+        monkeypatch=monkeypatch,
+        method="POST",
+        path_template="/projects/{projectId}/api-access-requests",
+        status_samples=CREATE_API_ACCESS_REQUEST_STATUS_SAMPLES,
+        success_status=201,
+        patch_target="app.apis.projects.create_api_access_request.functions.validate_create_access_request_request",
+        message_id="createApiAccessRequest.router_error",
+        catalog_id="M006",
+    )

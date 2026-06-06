@@ -7,6 +7,7 @@ import pytest
 from app.apis.base import sample_value
 from app.apis.projects.list_project_subscriptions.samples import (
     LIST_PROJECT_SUBSCRIPTIONS_RESPONSE_SAMPLE,
+    LIST_PROJECT_SUBSCRIPTIONS_STATUS_SAMPLES,
 )
 
 
@@ -42,4 +43,25 @@ async def test_list_project_subscriptions_router_returns_approved_subscription_w
             "project_api_subscriptions",
         )
         == 1
+    )
+
+
+@pytest.mark.anyio
+async def test_list_project_subscriptions_sample_request_emits_router_error_log_to_stdio(
+    router_db_harness: Any,
+    capsys: Any,
+    monkeypatch: Any,
+    assert_router_error_log: Any,
+) -> None:
+    await assert_router_error_log(
+        router_db_harness=router_db_harness,
+        capsys=capsys,
+        monkeypatch=monkeypatch,
+        method="GET",
+        path_template="/projects/{projectId}/subscriptions",
+        status_samples=LIST_PROJECT_SUBSCRIPTIONS_STATUS_SAMPLES,
+        success_status=200,
+        patch_target="app.apis.projects.list_project_subscriptions.functions.get_project",
+        message_id="listProjectSubscriptions.router_error",
+        catalog_id="M002",
     )

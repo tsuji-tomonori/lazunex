@@ -10,6 +10,7 @@ from app.apis.base import sample_value
 from app.apis.projects.create_project.samples import (
     CREATE_PROJECT_REQUEST_SAMPLE,
     CREATE_PROJECT_RESPONSE_SAMPLE,
+    CREATE_PROJECT_STATUS_SAMPLES,
 )
 
 
@@ -155,3 +156,24 @@ async def test_create_project_router_persists_resources_and_events_with_sqlite_d
     assert len(router_db_harness.api_gateway.calls) == 3
     assert len(router_db_harness.identity.calls) == 2
     assert len(router_db_harness.secret_values.calls) == 1
+
+
+@pytest.mark.anyio
+async def test_create_project_sample_request_emits_router_error_log_to_stdio(
+    router_db_harness: Any,
+    capsys: Any,
+    monkeypatch: Any,
+    assert_router_error_log: Any,
+) -> None:
+    await assert_router_error_log(
+        router_db_harness=router_db_harness,
+        capsys=capsys,
+        monkeypatch=monkeypatch,
+        method="POST",
+        path_template="/projects",
+        status_samples=CREATE_PROJECT_STATUS_SAMPLES,
+        success_status=201,
+        patch_target="app.apis.projects.create_project.functions.validate_create_project_request",
+        message_id="createProject.router_error",
+        catalog_id="M002",
+    )
