@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Path, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.base import sample_path_value
@@ -62,7 +62,11 @@ async def list_project_api_access_requests(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> ListProjectApiAccessRequestsResponse:
     project = await api_functions.get_project(project_id)
-    await api_functions.has_project_access_request_view_permission(project, caller)
+    if not await api_functions.has_project_access_request_view_permission(project, caller):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="caller cannot list project access requests",
+        )
     access_requests = await api_functions.get_project_access_requests(
         project,
         query,

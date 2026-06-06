@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.apis.list_apis import functions as api_functions
@@ -40,7 +40,11 @@ async def list_apis(
     caller: Annotated[CallerIdentity, Depends(get_caller_identity)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> ListApisResponse:
-    await api_functions.has_api_list_permission(caller)
+    if not await api_functions.has_api_list_permission(caller):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="caller cannot list apis",
+        )
     apis = await api_functions.get_viewable_apis(query, caller, session)
     page = await api_functions.apply_pagination(apis, query)
     return await api_functions.build_api_list_response(page)

@@ -90,7 +90,11 @@ async def approve_api_access_request(
             status_code=status.HTTP_409_CONFLICT,
             detail="access request is not pending",
         )
-    await api_functions.has_api_reviewer_permission(access_request, caller, session)
+    if not await api_functions.has_api_reviewer_permission(access_request, caller, session):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="caller is not an api reviewer",
+        )
     if not await api_functions.is_available_project_api_stage(access_request):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

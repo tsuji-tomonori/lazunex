@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Path, status
+from fastapi import APIRouter, Depends, HTTPException, Path, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.apis.get_api import functions as api_functions
@@ -51,5 +51,9 @@ async def get_api(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> GetApiResponse:
     api = await api_functions.get_api_detail(api_id, session)
-    await api_functions.is_viewable_api(api, caller)
+    if not await api_functions.is_viewable_api(api, caller):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="caller cannot view api",
+        )
     return await api_functions.build_api_detail_response(api)

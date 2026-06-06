@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, Header, Path, status
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Path, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.base import sample_path_value, sample_value
@@ -76,30 +76,54 @@ async def create_api_access_request(
 ) -> CreateApiAccessRequestResponse:
     validated_request = await api_functions.validate_create_access_request_request(request)
     project = await api_functions.get_project(project_id, caller, session)
-    await api_functions.has_project_owner_permission(project, caller)
-    await api_functions.is_published_api(
+    if not await api_functions.has_project_owner_permission(project, caller):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="caller is not a project owner",
+        )
+    if not await api_functions.is_published_api(
         validated_request.api_id,
         validated_request.api_stage_id,
         session,
-    )
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="api is not published",
+        )
     await api_functions.get_api_reviewer(
         validated_request.api_id,
         validated_request.api_stage_id,
         session,
     )
-    await api_functions.has_requested_auth_mode_clients(project, validated_request, session)
-    await api_functions.has_active_subscription(
+    if not await api_functions.has_requested_auth_mode_clients(
+        project,
+        validated_request,
+        session,
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="requested auth mode client is not configured",
+        )
+    if await api_functions.has_active_subscription(
         project,
         validated_request.api_id,
         validated_request.api_stage_id,
         session,
-    )
-    await api_functions.has_pending_access_request_for_project_api(
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="active subscription already exists",
+        )
+    if await api_functions.has_pending_access_request_for_project_api(
         project,
         validated_request.api_id,
         validated_request.api_stage_id,
         session,
-    )
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="pending access request already exists",
+        )
     access_request = await api_functions.save_api_access_request(
         project,
         validated_request,

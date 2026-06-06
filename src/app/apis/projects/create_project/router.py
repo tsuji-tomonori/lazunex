@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, Header, status
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.base import sample_value
@@ -69,7 +69,11 @@ async def create_project(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> CreateProjectResponse:
     validated_request = await api_functions.validate_create_project_request(request)
-    await api_functions.has_project_creation_permission(caller)
+    if not await api_functions.has_project_creation_permission(caller):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="caller cannot create project",
+        )
     await api_functions.get_idempotency_record(idempotency_key, session)
     operation = await api_functions.create_project_provisioning_operation(
         validated_request,

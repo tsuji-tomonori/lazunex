@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, Header, Path, status
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Path, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.base import sample_path_value, sample_value
@@ -80,7 +80,11 @@ async def update_project_public_client(
 ) -> UpdateProjectPublicClientResponse:
     validated_request = await api_functions.validate_public_client_update_request(request)
     project = await api_functions.get_project(project_id, caller, session)
-    await api_functions.has_project_owner_permission(project, caller)
+    if not await api_functions.has_project_owner_permission(project, caller):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="caller is not a project owner",
+        )
     public_client = await api_functions.get_public_app_client_metadata(project, caller, session)
     await api_functions.get_idempotency_record(idempotency_key, session)
     operation = await api_functions.create_provisioning_operation(

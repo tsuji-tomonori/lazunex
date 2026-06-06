@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.deps import get_caller_identity
@@ -40,7 +40,11 @@ async def list_projects(
     caller: Annotated[CallerIdentity, Depends(get_caller_identity)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> ListProjectsResponse:
-    await api_functions.has_project_list_permission(caller)
+    if not await api_functions.has_project_list_permission(caller):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="caller cannot list projects",
+        )
     projects = await api_functions.get_viewable_projects(query, caller, session)
     page = await api_functions.apply_pagination(projects, query)
     return await api_functions.build_project_list_response(page)

@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, Header, status
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.apis.publish_api import functions as api_functions
@@ -64,13 +64,25 @@ async def publish_api(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> PublishApiResponse:
     validated_request = await api_functions.validate_api_publish_request(request)
-    await api_functions.has_api_publish_permission(validated_request, caller)
+    if not await api_functions.has_api_publish_permission(validated_request, caller):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="caller cannot publish api",
+        )
     await api_functions.get_idempotency_record(idempotency_key, session)
-    await api_functions.verify_api_gateway_stage_registration(
+    if not await api_functions.verify_api_gateway_stage_registration(
         validated_request,
         api_gateway_control,
-    )
-    await api_functions.has_registered_api(validated_request, session)
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="API Gateway stage registration is not valid",
+        )
+    if await api_functions.has_registered_api(validated_request, session):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="api is already registered",
+        )
     operation = await api_functions.create_provisioning_operation(
         validated_request,
         idempotency_key,
