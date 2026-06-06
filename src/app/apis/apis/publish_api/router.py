@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, Header, status
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
@@ -49,6 +50,7 @@ ops_logger = get_operation_logger(__name__)
             status.HTTP_400_BAD_REQUEST,
             status.HTTP_403_FORBIDDEN,
             status.HTTP_409_CONFLICT,
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
             status.HTTP_502_BAD_GATEWAY,
             status.HTTP_503_SERVICE_UNAVAILABLE,
             samples=PUBLISH_API_STATUS_SAMPLES,
@@ -184,7 +186,67 @@ async def publish_api(
             session,
         )
         await api_functions.append_audit_event(api, caller, request_context, operation, session)
-        await session.commit()
+        try:
+            await session.commit()
+        except IntegrityError as error:
+            ops_logger.error(
+                "publishApi.db_integrity_error",
+                catalog_id="M005",
+                summary="DB整合性違反によりAPI公開登録のcommitが失敗した。",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="database integrity error",
+                when="API公開登録のDB transaction commitでIntegrityErrorを捕捉した場合。",
+                check_procedure="traceId/requestIdでログを検索し、API catalog/"
+                "provisioning/idempotencyの重複や参照整合性を確認する。",
+                remediation_procedure="DB内不整合を特定し、DBパッチまたはデータ補正を行う。"
+                "補正後、Cognito/API Gatewayと冪等性状態を確認してから"
+                "同一Idempotency-Keyで再実行する。",
+                context_model="traceId, actorPrincipalId, api.statusCode, "
+                "error.code, error.message, error.exceptionType",
+                operator_action="API catalog/provisioning/idempotency、Cognito/API Gateway、"
+                "制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。",
+                runbook="RUNBOOK-db-data-repair",
+                context=router_log_context(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="database integrity error",
+                    caller=caller,
+                    request_context=request_context,
+                    error=error,
+                ),
+            )
+            return api_error_response(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "database integrity error",
+            )
+        except SQLAlchemyError as error:
+            ops_logger.error(
+                "publishApi.db_commit_failed",
+                catalog_id="M006",
+                summary="DB commit失敗によりAPI公開登録を確定できなかった。",
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="database commit failed",
+                when="API公開登録のDB transaction commitでSQLAlchemyErrorを捕捉した場合。",
+                check_procedure="traceId/requestIdでログを検索し、DB接続、timeout、"
+                "transaction rollback状態を確認する。",
+                remediation_procedure="DB一時障害またはcommit失敗として扱い、rollbackを確認する。"
+                "利用者へ同一Idempotency-Keyでの再実行を依頼する。",
+                context_model="traceId, actorPrincipalId, api.statusCode, "
+                "error.code, error.message, error.exceptionType",
+                operator_action="DB接続状態、transaction rollback、idempotency状態を確認し、"
+                "必要に応じて利用者へ再実行を案内する。",
+                runbook="RUNBOOK-db-commit-retry",
+                context=router_log_context(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="database commit failed",
+                    caller=caller,
+                    request_context=request_context,
+                    error=error,
+                ),
+            )
+            return api_error_response(
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                "database commit failed",
+            )
         return await api_functions.build_publish_api_response(
             api,
             scope,

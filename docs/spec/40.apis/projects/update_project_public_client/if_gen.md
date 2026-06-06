@@ -52,12 +52,12 @@ _なし_
 | `403` | 認証済みの主体に対象リソースや操作への権限がない場合に返します。 | `application/json` | 7 field(s) |
 | `404` | 指定されたAPI、プロジェクト、利用申請などの対象リソースが存在しない場合に返します。 | `application/json` | 7 field(s) |
 | `409` | 重複作成、状態遷移の競合、または楽観ロックのversion不一致が発生した場合に返します。 | `application/json` | 7 field(s) |
+| `500` | Lazunex内部で想定外のエラーが発生した場合に返します。 | `application/json` | 7 field(s) |
 | `502` | API GatewayやCognitoなど外部AWSサービスから失敗応答を受け取った場合に返します。 | `application/json` | 7 field(s) |
 | `503` | API GatewayやCognitoなど外部AWSサービスが一時的に利用できない場合に返します。 | `application/json` | 7 field(s) |
 | `401` | 認証情報が未指定、期限切れ、または検証できない場合に返します。 | `application/json` | 7 field(s) |
 | `422` | path、query、header、bodyがOpenAPIスキーマの型や制約に一致しない場合に返します。 | `application/json` | 7 field(s) |
 | `429` | 呼び出し頻度が許可された上限を超えた場合に返します。 | `application/json` | 7 field(s) |
-| `500` | Lazunex内部で想定外のエラーが発生した場合に返します。 | `application/json` | 7 field(s) |
 
 ##### `200` Successful Response
 
@@ -134,6 +134,20 @@ Media type: `application/json`
 | `error.details[].reason` | `string` | yes | 入力検証エラーになった具体的な理由です。 | minLength=1 |
 | `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
 
+##### `500` Lazunex内部で想定外のエラーが発生した場合に返します。
+
+Media type: `application/json`
+
+| 項目 | 型 | 必須 | 説明 | 制約 |
+| --- | --- | --- | --- | --- |
+| `error` | `ErrorBody` | yes | エラーコード、メッセージ、追跡IDを含む共通エラー本文です。 | - |
+| `error.code` | `string` | yes | エラー種別を機械的に判定するためのコードです。 | minLength=1, maxLength=100 |
+| `error.message` | `string` | yes | 利用者または運用者に表示するエラーメッセージです。 | minLength=1 |
+| `error.details` | `array<ValidationErrorDetail>` | no | 入力検証エラーの詳細一覧です。 | - |
+| `error.details[].field` | `string` | yes | 入力検証エラーが発生したリクエスト項目です。 | minLength=1, maxLength=256 |
+| `error.details[].reason` | `string` | yes | 入力検証エラーになった具体的な理由です。 | minLength=1 |
+| `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
+
 ##### `502` API GatewayやCognitoなど外部AWSサービスから失敗応答を受け取った場合に返します。
 
 Media type: `application/json`
@@ -191,20 +205,6 @@ Media type: `application/json`
 | `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
 
 ##### `429` 呼び出し頻度が許可された上限を超えた場合に返します。
-
-Media type: `application/json`
-
-| 項目 | 型 | 必須 | 説明 | 制約 |
-| --- | --- | --- | --- | --- |
-| `error` | `ErrorBody` | yes | エラーコード、メッセージ、追跡IDを含む共通エラー本文です。 | - |
-| `error.code` | `string` | yes | エラー種別を機械的に判定するためのコードです。 | minLength=1, maxLength=100 |
-| `error.message` | `string` | yes | 利用者または運用者に表示するエラーメッセージです。 | minLength=1 |
-| `error.details` | `array<ValidationErrorDetail>` | no | 入力検証エラーの詳細一覧です。 | - |
-| `error.details[].field` | `string` | yes | 入力検証エラーが発生したリクエスト項目です。 | minLength=1, maxLength=256 |
-| `error.details[].reason` | `string` | yes | 入力検証エラーになった具体的な理由です。 | minLength=1 |
-| `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
-
-##### `500` Lazunex内部で想定外のエラーが発生した場合に返します。
 
 Media type: `application/json`
 

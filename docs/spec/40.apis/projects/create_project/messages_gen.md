@@ -9,10 +9,10 @@
 | domain | `projects` |
 | api | `create_project` |
 | routes | POST /projects (createProject) |
-| router | `src/app/apis/projects/create_project/router.py:63` |
-| messages | 2 |
-| logger wrapper calls | 2 |
-| levels | WARNING:1, ERROR:1 |
+| router | `src/app/apis/projects/create_project/router.py:65` |
+| messages | 4 |
+| logger wrapper calls | 4 |
+| levels | WARNING:1, ERROR:3 |
 
 ## 生成・検証方針
 
@@ -26,15 +26,19 @@
 
 | id | message_id | level | status | wrapper calls | ログ概要 | 説明 | 出力項目 | 対応すべきこと | runbook | 実装参照 |
 | :--- | :--- | :--- | ---: | ---: | :--- | :--- | :--- | :--- | :--- | :--- |
-| `M001` | `createProject.caller_cannot_create_project` | `WARNING` | 403 | 1 | 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 呼び出し元がProject作成権限を持たない場合。 | traceId, actorPrincipalId, api.statusCode, error.code, error.message | actorPrincipalIdとProject作成権限を確認する。 | RUNBOOK-authorization-forbidden | src/app/apis/projects/create_project/router.py:82<br>wrapper: src/app/apis/projects/create_project/router.py:82 (ops_logger.warning) |
-| `M002` | `createProject.router_error` | `ERROR` |  | 1 | Routerで捕捉した例外によりProject作成が失敗した。 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 | traceId, actorPrincipalId, api.statusCode, error.code, error.message, error.exceptionType | 同一routeの5xx率、直近deploy、DB/AWS依存の状態を確認する。 | RUNBOOK-unexpected-api-failure | src/app/apis/projects/create_project/router.py:181<br>wrapper: src/app/apis/projects/create_project/router.py:181 (ops_logger.error) |
+| `M001` | `createProject.caller_cannot_create_project` | `WARNING` | 403 | 1 | 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 呼び出し元がProject作成権限を持たない場合。 | traceId, actorPrincipalId, api.statusCode, error.code, error.message | actorPrincipalIdとProject作成権限を確認する。 | RUNBOOK-authorization-forbidden | src/app/apis/projects/create_project/router.py:84<br>wrapper: src/app/apis/projects/create_project/router.py:84 (ops_logger.warning) |
+| `M002` | `createProject.router_error` | `ERROR` |  | 1 | Routerで捕捉した例外によりProject作成が失敗した。 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 | traceId, actorPrincipalId, api.statusCode, error.code, error.message, error.exceptionType | 同一routeの5xx率、直近deploy、DB/AWS依存の状態を確認する。 | RUNBOOK-unexpected-api-failure | src/app/apis/projects/create_project/router.py:242<br>wrapper: src/app/apis/projects/create_project/router.py:242 (ops_logger.error) |
+| `M003` | `createProject.db_integrity_error` | `ERROR` | 500 | 1 | DB整合性違反によりProject作成のcommitが失敗した。 | Project作成のDB transaction commitでIntegrityErrorを捕捉した場合。 | traceId, actorPrincipalId, api.statusCode, error.code, error.message, error.exceptionType | Project関連テーブル、provisioning/idempotency、制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。 | RUNBOOK-db-data-repair | src/app/apis/projects/create_project/router.py:178<br>wrapper: src/app/apis/projects/create_project/router.py:178 (ops_logger.error) |
+| `M004` | `createProject.db_commit_failed` | `ERROR` | 503 | 1 | DB commit失敗によりProject作成を確定できなかった。 | Project作成のDB transaction commitでSQLAlchemyErrorを捕捉した場合。 | traceId, actorPrincipalId, api.statusCode, error.code, error.message, error.exceptionType | DB接続状態、transaction rollback、idempotency状態を確認し、必要に応じて利用者へ再実行を案内する。 | RUNBOOK-db-commit-retry | src/app/apis/projects/create_project/router.py:207<br>wrapper: src/app/apis/projects/create_project/router.py:207 (ops_logger.error) |
 
 ## loggerラッパー呼び出し一覧
 
 | source | function | wrapper | catalog_id | message_id | level_hint | context keys |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `src/app/apis/projects/create_project/router.py:82` | create_project | `ops_logger.warning` | `M001` | `createProject.caller_cannot_create_project` | `WARNING` |  |
-| `src/app/apis/projects/create_project/router.py:181` | create_project | `ops_logger.error` | `M002` | `createProject.router_error` | `ERROR` |  |
+| `src/app/apis/projects/create_project/router.py:84` | create_project | `ops_logger.warning` | `M001` | `createProject.caller_cannot_create_project` | `WARNING` |  |
+| `src/app/apis/projects/create_project/router.py:178` | create_project | `ops_logger.error` | `M003` | `createProject.db_integrity_error` | `ERROR` |  |
+| `src/app/apis/projects/create_project/router.py:207` | create_project | `ops_logger.error` | `M004` | `createProject.db_commit_failed` | `ERROR` |  |
+| `src/app/apis/projects/create_project/router.py:242` | create_project | `ops_logger.error` | `M002` | `createProject.router_error` | `ERROR` |  |
 
 ## strict検証で要求する項目
 

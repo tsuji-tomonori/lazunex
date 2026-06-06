@@ -9,10 +9,10 @@
 | domain | `projects` |
 | api | `update_project_public_client` |
 | routes | PATCH /projects/{projectId}/public-client (updateProjectPublicClient) |
-| router | `src/app/apis/projects/update_project_public_client/router.py:61` |
-| messages | 2 |
-| logger wrapper calls | 2 |
-| levels | WARNING:1, ERROR:1 |
+| router | `src/app/apis/projects/update_project_public_client/router.py:63` |
+| messages | 4 |
+| logger wrapper calls | 4 |
+| levels | WARNING:1, ERROR:3 |
 
 ## 生成・検証方針
 
@@ -26,15 +26,19 @@
 
 | id | message_id | level | status | wrapper calls | ログ概要 | 説明 | 出力項目 | 対応すべきこと | runbook | 実装参照 |
 | :--- | :--- | :--- | ---: | ---: | :--- | :--- | :--- | :--- | :--- | :--- |
-| `M001` | `updateProjectPublicClient.caller_is_not_a_project_owner` | `WARNING` | 403 | 1 | 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 呼び出し元が対象Projectのownerではない場合。 | traceId, actorPrincipalId, api.statusCode, resource.projectId, error.code, error.message | actorPrincipalId、projectId、Project member roleを確認する。 | RUNBOOK-authorization-forbidden | src/app/apis/projects/update_project_public_client/router.py:93<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:93 (ops_logger.warning) |
-| `M002` | `updateProjectPublicClient.router_error` | `ERROR` |  | 1 | Routerで捕捉した例外によりpublic app client更新が失敗した。 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 | traceId, actorPrincipalId, api.statusCode, resource.projectId, error.code, error.message, error.exceptionType | 同一routeの5xx率、直近deploy、Cognito/DB状態を確認する。 | RUNBOOK-unexpected-api-failure | src/app/apis/projects/update_project_public_client/router.py:169<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:169 (ops_logger.error) |
+| `M001` | `updateProjectPublicClient.caller_is_not_a_project_owner` | `WARNING` | 403 | 1 | 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 呼び出し元が対象Projectのownerではない場合。 | traceId, actorPrincipalId, api.statusCode, resource.projectId, error.code, error.message | actorPrincipalId、projectId、Project member roleを確認する。 | RUNBOOK-authorization-forbidden | src/app/apis/projects/update_project_public_client/router.py:95<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:95 (ops_logger.warning) |
+| `M002` | `updateProjectPublicClient.router_error` | `ERROR` |  | 1 | Routerで捕捉した例外によりpublic app client更新が失敗した。 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 | traceId, actorPrincipalId, api.statusCode, resource.projectId, error.code, error.message, error.exceptionType | 同一routeの5xx率、直近deploy、Cognito/DB状態を確認する。 | RUNBOOK-unexpected-api-failure | src/app/apis/projects/update_project_public_client/router.py:233<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:233 (ops_logger.error) |
+| `M003` | `updateProjectPublicClient.db_integrity_error` | `ERROR` | 500 | 1 | DB整合性違反によりpublic app client更新のcommitが失敗した。 | public app client更新のDB transaction commitでIntegrityErrorを捕捉した場合。 | traceId, actorPrincipalId, api.statusCode, resource.projectId, error.code, error.message, error.exceptionType | project/public_client/provisioning/idempotency、Cognito、制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。 | RUNBOOK-db-data-repair | src/app/apis/projects/update_project_public_client/router.py:167<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:167 (ops_logger.error) |
+| `M004` | `updateProjectPublicClient.db_commit_failed` | `ERROR` | 503 | 1 | DB commit失敗によりpublic app client更新を確定できなかった。 | public app client更新のDB transaction commitでSQLAlchemyErrorを捕捉した場合。 | traceId, actorPrincipalId, api.statusCode, resource.projectId, error.code, error.message, error.exceptionType | DB接続状態、transaction rollback、idempotency状態を確認し、必要に応じて利用者へ再実行を案内する。 | RUNBOOK-db-commit-retry | src/app/apis/projects/update_project_public_client/router.py:197<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:197 (ops_logger.error) |
 
 ## loggerラッパー呼び出し一覧
 
 | source | function | wrapper | catalog_id | message_id | level_hint | context keys |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `src/app/apis/projects/update_project_public_client/router.py:93` | update_project_public_client | `ops_logger.warning` | `M001` | `updateProjectPublicClient.caller_is_not_a_project_owner` | `WARNING` |  |
-| `src/app/apis/projects/update_project_public_client/router.py:169` | update_project_public_client | `ops_logger.error` | `M002` | `updateProjectPublicClient.router_error` | `ERROR` |  |
+| `src/app/apis/projects/update_project_public_client/router.py:95` | update_project_public_client | `ops_logger.warning` | `M001` | `updateProjectPublicClient.caller_is_not_a_project_owner` | `WARNING` |  |
+| `src/app/apis/projects/update_project_public_client/router.py:167` | update_project_public_client | `ops_logger.error` | `M003` | `updateProjectPublicClient.db_integrity_error` | `ERROR` |  |
+| `src/app/apis/projects/update_project_public_client/router.py:197` | update_project_public_client | `ops_logger.error` | `M004` | `updateProjectPublicClient.db_commit_failed` | `ERROR` |  |
+| `src/app/apis/projects/update_project_public_client/router.py:233` | update_project_public_client | `ops_logger.error` | `M002` | `updateProjectPublicClient.router_error` | `ERROR` |  |
 
 ## strict検証で要求する項目
 

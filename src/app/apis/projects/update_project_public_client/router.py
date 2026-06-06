@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, Header, Path, status
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
@@ -51,6 +52,7 @@ ops_logger = get_operation_logger(__name__)
             status.HTTP_403_FORBIDDEN,
             status.HTTP_404_NOT_FOUND,
             status.HTTP_409_CONFLICT,
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
             status.HTTP_502_BAD_GATEWAY,
             status.HTTP_503_SERVICE_UNAVAILABLE,
             samples=UPDATE_PROJECT_PUBLIC_CLIENT_STATUS_SAMPLES,
@@ -159,7 +161,69 @@ async def update_project_public_client(
             session,
         )
         await api_functions.append_audit_event(project, caller, request_context, operation, session)
-        await session.commit()
+        try:
+            await session.commit()
+        except IntegrityError as error:
+            ops_logger.error(
+                "updateProjectPublicClient.db_integrity_error",
+                catalog_id="M003",
+                summary="DB整合性違反によりpublic app client更新のcommitが失敗した。",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="database integrity error",
+                when="public app client更新のDB transaction commitでIntegrityErrorを捕捉した場合。",
+                check_procedure="traceId/requestIdでログを検索し、project/public_client/"
+                "provisioning/idempotencyの重複や参照整合性を確認する。",
+                remediation_procedure="DB内不整合を特定し、DBパッチまたはデータ補正を行う。"
+                "補正後、Cognitoと冪等性状態を確認してから同一Idempotency-Keyで再実行する。",
+                context_model="traceId, actorPrincipalId, api.statusCode, resource.projectId, "
+                "error.code, error.message, error.exceptionType",
+                operator_action="project/public_client/provisioning/idempotency、Cognito、"
+                "制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。",
+                runbook="RUNBOOK-db-data-repair",
+                context=router_log_context(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="database integrity error",
+                    caller=caller,
+                    request_context=request_context,
+                    resource={"projectId": project_id},
+                    error=error,
+                ),
+            )
+            return api_error_response(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "database integrity error",
+            )
+        except SQLAlchemyError as error:
+            ops_logger.error(
+                "updateProjectPublicClient.db_commit_failed",
+                catalog_id="M004",
+                summary="DB commit失敗によりpublic app client更新を確定できなかった。",
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="database commit failed",
+                when="public app client更新のDB transaction commitで"
+                "SQLAlchemyErrorを捕捉した場合。",
+                check_procedure="traceId/requestIdでログを検索し、DB接続、timeout、"
+                "transaction rollback状態を確認する。",
+                remediation_procedure="DB一時障害またはcommit失敗として扱い、rollbackを確認する。"
+                "利用者へ同一Idempotency-Keyでの再実行を依頼する。",
+                context_model="traceId, actorPrincipalId, api.statusCode, resource.projectId, "
+                "error.code, error.message, error.exceptionType",
+                operator_action="DB接続状態、transaction rollback、idempotency状態を確認し、"
+                "必要に応じて利用者へ再実行を案内する。",
+                runbook="RUNBOOK-db-commit-retry",
+                context=router_log_context(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="database commit failed",
+                    caller=caller,
+                    request_context=request_context,
+                    resource={"projectId": project_id},
+                    error=error,
+                ),
+            )
+            return api_error_response(
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                "database commit failed",
+            )
         return await api_functions.build_update_public_client_response(
             project,
             updated_metadata,

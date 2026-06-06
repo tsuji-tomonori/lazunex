@@ -44,5 +44,6 @@ CREATE_API_ACCESS_REQUEST_STATUS_SAMPLES = status_samples(
         422: "path、header、bodyがOpenAPIスキーマの型や制約に一致しない場合。",
         429: "呼び出し頻度が許可された上限を超えた場合。",
         500: "Lazunex内部で想定外のエラーが発生した場合。",
+        503: "DB commit失敗など一時的な内部依存障害が発生した場合。",
     },
 )
