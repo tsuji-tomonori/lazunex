@@ -95,6 +95,63 @@ _ALLOWED_SECRET_METADATA_KEYS = {
 }
 _MAX_STRING_LENGTH = 4096
 
+OPERATIONAL_LOG_CONTEXT_SCHEMA: Mapping[str, Mapping[str, str]] = {
+    "traceId": {
+        "description": "リクエストとログを横断して追跡する相関IDです。",
+    },
+    "requestId": {
+        "description": "実行基盤またはアプリケーションが付与するリクエストIDです。",
+    },
+    "actorPrincipalId": {
+        "description": "APIを呼び出した認証主体IDです。",
+    },
+    "api.method": {
+        "description": "呼び出されたAPIのHTTP methodです。",
+    },
+    "api.route": {
+        "description": "呼び出されたAPI routeです。",
+    },
+    "api.statusCode": {
+        "description": "API responseとして返したHTTP status codeです。",
+    },
+    "resource.*": {
+        "description": "操作対象リソースを識別するIDや属性です。",
+    },
+    "resource.projectId": {
+        "description": "操作対象Projectを一意に識別するIDです。",
+    },
+    "resource.apiId": {
+        "description": "操作対象APIを一意に識別するIDです。",
+    },
+    "resource.accessRequestId": {
+        "description": "操作対象API利用申請を一意に識別するIDです。",
+    },
+    "aws.service": {
+        "description": "連携先AWS service名です。",
+    },
+    "aws.action": {
+        "description": "連携先AWS API action名です。",
+    },
+    "metrics.durationMs": {
+        "description": "処理に要した時間をミリ秒で表した値です。",
+    },
+    "operationId": {
+        "description": "非同期provisioningや補償処理を追跡するoperation IDです。",
+    },
+    "error.*": {
+        "description": "エラーの分類、詳細、例外種別などをまとめた情報です。",
+    },
+    "error.code": {
+        "description": "エラー分類を表す機械処理向けコードです。",
+    },
+    "error.message": {
+        "description": "エラー内容を運用者が理解するための説明です。",
+    },
+    "error.exceptionType": {
+        "description": "捕捉された例外の型名です。",
+    },
+}
+
 
 class JsonOperationalLogFormatter(logging.Formatter):
     """Serialize Lazunex operational log records as JSON.

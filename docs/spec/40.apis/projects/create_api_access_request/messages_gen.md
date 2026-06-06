@@ -24,18 +24,283 @@
 
 ## メッセージ一覧
 
-| id | message_id | level | status | wrapper calls | ログ概要 | 説明 | 出力項目 | 対応すべきこと | runbook | 実装参照 |
-| :--- | :--- | :--- | ---: | ---: | :--- | :--- | :--- | :--- | :--- | :--- |
-| `M001` | `createApiAccessRequest.caller_is_not_a_project_owner` | `WARNING` | 403 | 1 | 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 呼び出し元が対象Projectのownerではない場合。 | traceId, actorPrincipalId, api.statusCode, resource.projectId, error.code, error.message | actorPrincipalId、projectId、Project member roleを確認する。 | RUNBOOK-authorization-forbidden | src/app/apis/projects/create_api_access_request/router.py:93<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:93 (ops_logger.warning) |
-| `M002` | `createApiAccessRequest.api_is_not_published` | `WARNING` | 404 | 1 | 対象APIが公開済みではないため、リクエストを拒否した。 | 指定されたAPI/stageが公開済みAPI catalogに存在しない場合。 | traceId, actorPrincipalId, api.statusCode, resource.projectId, error.code, error.message | apiId、apiStageId、公開登録状態を確認する。 | RUNBOOK-api-client-error | src/app/apis/projects/create_api_access_request/router.py:119<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:119 (ops_logger.warning) |
-| `M003` | `createApiAccessRequest.requested_auth_mode_client_is_not_configured` | `WARNING` | 409 | 1 | 要求された認証方式のclientが未設定のため、リクエストを拒否した。 | Projectに要求認証方式へ対応するclientが設定されていない場合。 | traceId, actorPrincipalId, api.statusCode, resource.projectId, error.code, error.message | Projectのpublic/confidential client設定とrequestedAuthModeを確認する。 | RUNBOOK-state-conflict-idempotency | src/app/apis/projects/create_api_access_request/router.py:175<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:175 (ops_logger.warning) |
-| `M004` | `createApiAccessRequest.active_subscription_already_exists` | `WARNING` | 409 | 1 | 有効なsubscriptionが既に存在するため、リクエストを拒否した。 | 同一Project/API stageのactive subscriptionが既に存在する場合。 | traceId, actorPrincipalId, api.statusCode, resource.projectId, error.code, error.message | 既存subscription、projectId、apiId、apiStageIdを確認する。 | RUNBOOK-state-conflict-idempotency | src/app/apis/projects/create_api_access_request/router.py:206<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:206 (ops_logger.warning) |
-| `M005` | `createApiAccessRequest.pending_access_request_already_exists` | `WARNING` | 409 | 1 | 審査待ち利用申請が既に存在するため、リクエストを拒否した。 | 同一Project/API stageのpending利用申請が既に存在する場合。 | traceId, actorPrincipalId, api.statusCode, resource.projectId, error.code, error.message | 既存access_request、projectId、apiId、apiStageIdを確認する。 | RUNBOOK-state-conflict-idempotency | src/app/apis/projects/create_api_access_request/router.py:236<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:236 (ops_logger.warning) |
-| `M006` | `createApiAccessRequest.router_error` | `ERROR` |  | 1 | Routerで捕捉した例外によりAPI利用申請作成が失敗した。 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 | traceId, actorPrincipalId, api.statusCode, resource.projectId, error.code, error.message, error.exceptionType | 同一routeの5xx率、直近deploy、DB状態を確認する。 | RUNBOOK-unexpected-api-failure | src/app/apis/projects/create_api_access_request/router.py:371<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:371 (ops_logger.error) |
-| `M007` | `createApiAccessRequest.db_integrity_error` | `ERROR` | 500 | 1 | DB整合性違反によりAPI利用申請作成のcommitが失敗した。 | API利用申請作成のDB transaction commitでIntegrityErrorを捕捉した場合。 | traceId, actorPrincipalId, api.statusCode, resource.projectId, error.code, error.message, error.exceptionType | project/access_request/idempotency、制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。 | RUNBOOK-db-data-repair | src/app/apis/projects/create_api_access_request/router.py:310<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:310 (ops_logger.error) |
-| `M008` | `createApiAccessRequest.db_commit_failed` | `ERROR` | 503 | 1 | DB commit失敗によりAPI利用申請作成を確定できなかった。 | API利用申請作成のDB transaction commitでSQLAlchemyErrorを捕捉した場合。 | traceId, actorPrincipalId, api.statusCode, resource.projectId, error.code, error.message, error.exceptionType | DB接続状態、transaction rollback、idempotency状態を確認し、必要に応じて利用者へ再実行を案内する。 | RUNBOOK-db-commit-retry | src/app/apis/projects/create_api_access_request/router.py:340<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:340 (ops_logger.error) |
-| `M009` | `createApiAccessRequest.api_reviewer_is_not_configured` | `WARNING` | 409 | 1 | 対象APIのreviewerが未設定のため、リクエストを拒否した。 | 対象API stageのreviewer情報が空の場合。 | traceId, actorPrincipalId, api.statusCode, resource.projectId, error.code, error.message | apiId、apiStageId、reviewer設定を確認する。 | RUNBOOK-api-client-error | src/app/apis/projects/create_api_access_request/router.py:146<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:146 (ops_logger.warning) |
-| `M010` | `createApiAccessRequest.idempotency_key_already_used` | `WARNING` | 409 | 1 | Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | Idempotency-Keyに対応する処理結果が既に存在する場合。 | traceId, actorPrincipalId, api.statusCode, resource.projectId, error.code, error.message | Idempotency-Key、operationId、既存responsePayloadを確認する。 | RUNBOOK-state-conflict-idempotency | src/app/apis/projects/create_api_access_request/router.py:263<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:263 (ops_logger.warning) |
+| id | message_id | ログ概要 |
+| :--- | :--- | :--- |
+| `M001` | `createApiAccessRequest.caller_is_not_a_project_owner` | 呼び出し元がProject ownerではないため、リクエストを拒否した。 |
+| `M002` | `createApiAccessRequest.api_is_not_published` | 対象APIが公開済みではないため、リクエストを拒否した。 |
+| `M003` | `createApiAccessRequest.requested_auth_mode_client_is_not_configured` | 要求された認証方式のclientが未設定のため、リクエストを拒否した。 |
+| `M004` | `createApiAccessRequest.active_subscription_already_exists` | 有効なsubscriptionが既に存在するため、リクエストを拒否した。 |
+| `M005` | `createApiAccessRequest.pending_access_request_already_exists` | 審査待ち利用申請が既に存在するため、リクエストを拒否した。 |
+| `M006` | `createApiAccessRequest.router_error` | Routerで捕捉した例外によりAPI利用申請作成が失敗した。 |
+| `M007` | `createApiAccessRequest.db_integrity_error` | DB整合性違反によりAPI利用申請作成のcommitが失敗した。 |
+| `M008` | `createApiAccessRequest.db_commit_failed` | DB commit失敗によりAPI利用申請作成を確定できなかった。 |
+| `M009` | `createApiAccessRequest.api_reviewer_is_not_configured` | 対象APIのreviewerが未設定のため、リクエストを拒否した。 |
+| `M010` | `createApiAccessRequest.idempotency_key_already_used` | Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
+
+## ログ詳細
+
+### `M001` `createApiAccessRequest.caller_is_not_a_project_owner`
+
+| 項目 | 内容 |
+| :--- | :--- |
+| id | `M001` |
+| message_id | `createApiAccessRequest.caller_is_not_a_project_owner` |
+| level | `WARNING` |
+| status | 403 |
+| wrapper calls | 1 |
+| ログ概要 | 呼び出し元がProject ownerではないため、リクエストを拒否した。 |
+| 説明 | 呼び出し元が対象Projectのownerではない場合。 |
+| 対応すべきこと | actorPrincipalId、projectId、Project member roleを確認する。 |
+| runbook | RUNBOOK-authorization-forbidden |
+| 実装参照 | src/app/apis/projects/create_api_access_request/router.py:93<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:93 (ops_logger.warning) |
+
+#### 出力項目
+
+| 出力項目 | 説明 |
+| :--- | :--- |
+| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | API responseとして返したHTTP status codeです。 |
+| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `error.code` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | エラー内容を運用者が理解するための説明です。 |
+
+### `M002` `createApiAccessRequest.api_is_not_published`
+
+| 項目 | 内容 |
+| :--- | :--- |
+| id | `M002` |
+| message_id | `createApiAccessRequest.api_is_not_published` |
+| level | `WARNING` |
+| status | 404 |
+| wrapper calls | 1 |
+| ログ概要 | 対象APIが公開済みではないため、リクエストを拒否した。 |
+| 説明 | 指定されたAPI/stageが公開済みAPI catalogに存在しない場合。 |
+| 対応すべきこと | apiId、apiStageId、公開登録状態を確認する。 |
+| runbook | RUNBOOK-api-client-error |
+| 実装参照 | src/app/apis/projects/create_api_access_request/router.py:119<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:119 (ops_logger.warning) |
+
+#### 出力項目
+
+| 出力項目 | 説明 |
+| :--- | :--- |
+| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | API responseとして返したHTTP status codeです。 |
+| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `error.code` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | エラー内容を運用者が理解するための説明です。 |
+
+### `M003` `createApiAccessRequest.requested_auth_mode_client_is_not_configured`
+
+| 項目 | 内容 |
+| :--- | :--- |
+| id | `M003` |
+| message_id | `createApiAccessRequest.requested_auth_mode_client_is_not_configured` |
+| level | `WARNING` |
+| status | 409 |
+| wrapper calls | 1 |
+| ログ概要 | 要求された認証方式のclientが未設定のため、リクエストを拒否した。 |
+| 説明 | Projectに要求認証方式へ対応するclientが設定されていない場合。 |
+| 対応すべきこと | Projectのpublic/confidential client設定とrequestedAuthModeを確認する。 |
+| runbook | RUNBOOK-state-conflict-idempotency |
+| 実装参照 | src/app/apis/projects/create_api_access_request/router.py:175<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:175 (ops_logger.warning) |
+
+#### 出力項目
+
+| 出力項目 | 説明 |
+| :--- | :--- |
+| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | API responseとして返したHTTP status codeです。 |
+| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `error.code` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | エラー内容を運用者が理解するための説明です。 |
+
+### `M004` `createApiAccessRequest.active_subscription_already_exists`
+
+| 項目 | 内容 |
+| :--- | :--- |
+| id | `M004` |
+| message_id | `createApiAccessRequest.active_subscription_already_exists` |
+| level | `WARNING` |
+| status | 409 |
+| wrapper calls | 1 |
+| ログ概要 | 有効なsubscriptionが既に存在するため、リクエストを拒否した。 |
+| 説明 | 同一Project/API stageのactive subscriptionが既に存在する場合。 |
+| 対応すべきこと | 既存subscription、projectId、apiId、apiStageIdを確認する。 |
+| runbook | RUNBOOK-state-conflict-idempotency |
+| 実装参照 | src/app/apis/projects/create_api_access_request/router.py:206<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:206 (ops_logger.warning) |
+
+#### 出力項目
+
+| 出力項目 | 説明 |
+| :--- | :--- |
+| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | API responseとして返したHTTP status codeです。 |
+| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `error.code` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | エラー内容を運用者が理解するための説明です。 |
+
+### `M005` `createApiAccessRequest.pending_access_request_already_exists`
+
+| 項目 | 内容 |
+| :--- | :--- |
+| id | `M005` |
+| message_id | `createApiAccessRequest.pending_access_request_already_exists` |
+| level | `WARNING` |
+| status | 409 |
+| wrapper calls | 1 |
+| ログ概要 | 審査待ち利用申請が既に存在するため、リクエストを拒否した。 |
+| 説明 | 同一Project/API stageのpending利用申請が既に存在する場合。 |
+| 対応すべきこと | 既存access_request、projectId、apiId、apiStageIdを確認する。 |
+| runbook | RUNBOOK-state-conflict-idempotency |
+| 実装参照 | src/app/apis/projects/create_api_access_request/router.py:236<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:236 (ops_logger.warning) |
+
+#### 出力項目
+
+| 出力項目 | 説明 |
+| :--- | :--- |
+| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | API responseとして返したHTTP status codeです。 |
+| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `error.code` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | エラー内容を運用者が理解するための説明です。 |
+
+### `M006` `createApiAccessRequest.router_error`
+
+| 項目 | 内容 |
+| :--- | :--- |
+| id | `M006` |
+| message_id | `createApiAccessRequest.router_error` |
+| level | `ERROR` |
+| status |  |
+| wrapper calls | 1 |
+| ログ概要 | Routerで捕捉した例外によりAPI利用申請作成が失敗した。 |
+| 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
+| 対応すべきこと | 同一routeの5xx率、直近deploy、DB状態を確認する。 |
+| runbook | RUNBOOK-unexpected-api-failure |
+| 実装参照 | src/app/apis/projects/create_api_access_request/router.py:371<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:371 (ops_logger.error) |
+
+#### 出力項目
+
+| 出力項目 | 説明 |
+| :--- | :--- |
+| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | API responseとして返したHTTP status codeです。 |
+| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `error.code` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | エラー内容を運用者が理解するための説明です。 |
+| `error.exceptionType` | 捕捉された例外の型名です。 |
+
+### `M007` `createApiAccessRequest.db_integrity_error`
+
+| 項目 | 内容 |
+| :--- | :--- |
+| id | `M007` |
+| message_id | `createApiAccessRequest.db_integrity_error` |
+| level | `ERROR` |
+| status | 500 |
+| wrapper calls | 1 |
+| ログ概要 | DB整合性違反によりAPI利用申請作成のcommitが失敗した。 |
+| 説明 | API利用申請作成のDB transaction commitでIntegrityErrorを捕捉した場合。 |
+| 対応すべきこと | project/access_request/idempotency、制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。 |
+| runbook | RUNBOOK-db-data-repair |
+| 実装参照 | src/app/apis/projects/create_api_access_request/router.py:310<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:310 (ops_logger.error) |
+
+#### 出力項目
+
+| 出力項目 | 説明 |
+| :--- | :--- |
+| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | API responseとして返したHTTP status codeです。 |
+| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `error.code` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | エラー内容を運用者が理解するための説明です。 |
+| `error.exceptionType` | 捕捉された例外の型名です。 |
+
+### `M008` `createApiAccessRequest.db_commit_failed`
+
+| 項目 | 内容 |
+| :--- | :--- |
+| id | `M008` |
+| message_id | `createApiAccessRequest.db_commit_failed` |
+| level | `ERROR` |
+| status | 503 |
+| wrapper calls | 1 |
+| ログ概要 | DB commit失敗によりAPI利用申請作成を確定できなかった。 |
+| 説明 | API利用申請作成のDB transaction commitでSQLAlchemyErrorを捕捉した場合。 |
+| 対応すべきこと | DB接続状態、transaction rollback、idempotency状態を確認し、必要に応じて利用者へ再実行を案内する。 |
+| runbook | RUNBOOK-db-commit-retry |
+| 実装参照 | src/app/apis/projects/create_api_access_request/router.py:340<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:340 (ops_logger.error) |
+
+#### 出力項目
+
+| 出力項目 | 説明 |
+| :--- | :--- |
+| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | API responseとして返したHTTP status codeです。 |
+| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `error.code` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | エラー内容を運用者が理解するための説明です。 |
+| `error.exceptionType` | 捕捉された例外の型名です。 |
+
+### `M009` `createApiAccessRequest.api_reviewer_is_not_configured`
+
+| 項目 | 内容 |
+| :--- | :--- |
+| id | `M009` |
+| message_id | `createApiAccessRequest.api_reviewer_is_not_configured` |
+| level | `WARNING` |
+| status | 409 |
+| wrapper calls | 1 |
+| ログ概要 | 対象APIのreviewerが未設定のため、リクエストを拒否した。 |
+| 説明 | 対象API stageのreviewer情報が空の場合。 |
+| 対応すべきこと | apiId、apiStageId、reviewer設定を確認する。 |
+| runbook | RUNBOOK-api-client-error |
+| 実装参照 | src/app/apis/projects/create_api_access_request/router.py:146<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:146 (ops_logger.warning) |
+
+#### 出力項目
+
+| 出力項目 | 説明 |
+| :--- | :--- |
+| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | API responseとして返したHTTP status codeです。 |
+| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `error.code` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | エラー内容を運用者が理解するための説明です。 |
+
+### `M010` `createApiAccessRequest.idempotency_key_already_used`
+
+| 項目 | 内容 |
+| :--- | :--- |
+| id | `M010` |
+| message_id | `createApiAccessRequest.idempotency_key_already_used` |
+| level | `WARNING` |
+| status | 409 |
+| wrapper calls | 1 |
+| ログ概要 | Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
+| 説明 | Idempotency-Keyに対応する処理結果が既に存在する場合。 |
+| 対応すべきこと | Idempotency-Key、operationId、既存responsePayloadを確認する。 |
+| runbook | RUNBOOK-state-conflict-idempotency |
+| 実装参照 | src/app/apis/projects/create_api_access_request/router.py:263<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:263 (ops_logger.warning) |
+
+#### 出力項目
+
+| 出力項目 | 説明 |
+| :--- | :--- |
+| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | API responseとして返したHTTP status codeです。 |
+| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `error.code` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | エラー内容を運用者が理解するための説明です。 |
 
 ## loggerラッパー呼び出し一覧
 

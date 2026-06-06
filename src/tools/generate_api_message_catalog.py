@@ -92,6 +92,10 @@ CATALOG_VARIABLE_NAMES = {
     "OPERATIONAL_MESSAGES",
     "MESSAGE_DEFINITIONS",
 }
+LOG_CONTEXT_SCHEMA_VARIABLE_NAMES = {
+    "OPERATIONAL_LOG_CONTEXT_SCHEMA",
+    "LOG_CONTEXT_SCHEMA",
+}
 CATALOG_CALL_NAMES = {
     "MessageDefinition",
     "MessageCatalogEntry",
@@ -432,6 +436,119 @@ def as_display(value: Any) -> str:
             dict(cast("Mapping[str, Any]", value)), ensure_ascii=False, sort_keys=True
         )
     return str(value)
+
+
+def log_context_schema_path(root: Path) -> Path:
+    return root / "src/app/core/logging.py"
+
+
+def default_log_context_schema() -> dict[str, str]:
+    return {
+        "traceId": "リクエストとログを横断して追跡する相関IDです。",
+        "requestId": "実行基盤またはアプリケーションが付与するリクエストIDです。",
+        "actorPrincipalId": "APIを呼び出した認証主体IDです。",
+        "api.method": "呼び出されたAPIのHTTP methodです。",
+        "api.route": "呼び出されたAPI routeです。",
+        "api.statusCode": "API responseとして返したHTTP status codeです。",
+        "resource.*": "操作対象リソースを識別するIDや属性です。",
+        "resource.projectId": "操作対象Projectを一意に識別するIDです。",
+        "resource.apiId": "操作対象APIを一意に識別するIDです。",
+        "resource.accessRequestId": "操作対象API利用申請を一意に識別するIDです。",
+        "aws.service": "連携先AWS service名です。",
+        "aws.action": "連携先AWS API action名です。",
+        "metrics.durationMs": "処理に要した時間をミリ秒で表した値です。",
+        "operationId": "非同期provisioningや補償処理を追跡するoperation IDです。",
+        "error.*": "エラーの分類、詳細、例外種別などをまとめた情報です。",
+        "error.code": "エラー分類を表す機械処理向けコードです。",
+        "error.message": "エラー内容を運用者が理解するための説明です。",
+        "error.exceptionType": "捕捉された例外の型名です。",
+    }
+
+
+def normalize_log_context_schema(value: Any) -> dict[str, str]:
+    if not isinstance(value, Mapping):
+        return {}
+    schema: dict[str, str] = {}
+    for raw_name, raw_definition in value.items():
+        name = str(raw_name).strip()
+        if not name:
+            continue
+        if isinstance(raw_definition, Mapping):
+            description = as_display(raw_definition.get("description"))
+        else:
+            description = as_display(raw_definition)
+        if description.strip():
+            schema[name] = description
+    return schema
+
+
+def load_log_context_schema(root: Path) -> dict[str, str]:
+    path = log_context_schema_path(root)
+    module = read_python_ast(path)
+    schema: dict[str, str] = {}
+    if module is not None:
+        for node in ast.walk(module):
+            value_node: ast.AST | None = None
+            target_names: set[str] = set()
+            if isinstance(node, ast.Assign):
+                value_node = node.value
+                for target in node.targets:
+                    if isinstance(target, ast.Name):
+                        target_names.add(target.id)
+            elif isinstance(node, ast.AnnAssign):
+                value_node = node.value
+                if isinstance(node.target, ast.Name):
+                    target_names.add(node.target.id)
+            if value_node is not None and target_names.intersection(
+                LOG_CONTEXT_SCHEMA_VARIABLE_NAMES
+            ):
+                schema.update(normalize_log_context_schema(literal_value(value_node)))
+    return {**default_log_context_schema(), **schema}
+
+
+def context_model_items(context_model: str) -> tuple[str, ...]:
+    return tuple(item.strip() for item in context_model.split(",") if item.strip())
+
+
+def context_field_description(name: str, schema: Mapping[str, str]) -> str:
+    if name in schema:
+        return schema[name]
+    parts = name.split(".")
+    for index in range(len(parts) - 1, 0, -1):
+        wildcard = ".".join([*parts[:index], "*"])
+        if wildcard in schema:
+            return schema[wildcard]
+    return f"`{name}` に出力されるログコンテキストです。"
+
+
+def render_context_model_table(context_model: str, schema: Mapping[str, str]) -> list[str]:
+    items = context_model_items(context_model)
+    if not items:
+        return [
+            "#### 出力項目",
+            "",
+            "出力項目は定義されていません。",
+            "",
+        ]
+    lines = [
+        "#### 出力項目",
+        "",
+        "| 出力項目 | 説明 |",
+        "| :--- | :--- |",
+    ]
+    for item in items:
+        lines.append(
+            "| "
+            + " | ".join(
+                [
+                    f"`{escape_markdown(item)}`",
+                    escape_markdown(context_field_description(item, schema)),
+                ]
+            )
+            + " |"
+        )
+    lines.append("")
+    return lines
 
 
 def read_python_ast(path: Path) -> ast.Module | None:
@@ -1341,6 +1458,7 @@ def api_routes_summary(api_dir: Path, root: Path) -> str:
 def render_catalog(catalog: ApiCatalog, root: Path) -> str:
     meta = catalog.meta
     api_dir = root / DEFAULT_API_ROOT / meta.domain / meta.api
+    log_context_schema = load_log_context_schema(root)
     route_summary = (
         api_routes_summary(api_dir, root)
         if api_dir.exists()
@@ -1377,9 +1495,30 @@ def render_catalog(catalog: ApiCatalog, root: Path) -> str:
         "",
         "## メッセージ一覧",
         "",
-        "| id | message_id | level | status | wrapper calls | ログ概要 | 説明 | 出力項目 | 対応すべきこと | runbook | 実装参照 |",
-        "| :--- | :--- | :--- | ---: | ---: | :--- | :--- | :--- | :--- | :--- | :--- |",
+        "| id | message_id | ログ概要 |",
+        "| :--- | :--- | :--- |",
     ]
+
+    for message in catalog.messages:
+        lines.append(
+            "| "
+            + " | ".join(
+                [
+                    f"`{escape_markdown(message.catalog_id)}`",
+                    f"`{escape_markdown(message.message_id)}`",
+                    escape_markdown(message.summary),
+                ]
+            )
+            + " |"
+        )
+
+    lines.extend(
+        [
+            "",
+            "## ログ詳細",
+            "",
+        ]
+    )
 
     for message in catalog.messages:
         action = (
@@ -1395,29 +1534,32 @@ def render_catalog(catalog: ApiCatalog, root: Path) -> str:
             source_parts.append("wrapper: " + ", ".join(message.emitted_from))
         if message.inferred:
             source_parts.append("inferred")
-        lines.append(
-            "| "
-            + " | ".join(
-                [
-                    f"`{escape_markdown(message.catalog_id)}`",
-                    f"`{escape_markdown(message.message_id)}`",
-                    f"`{escape_markdown(message.level)}`",
-                    str(message.status_code or ""),
-                    str(wrapper_calls_by_id[message.message_id]),
-                    escape_markdown(message.summary),
-                    escape_markdown(message.description),
-                    escape_markdown(message.context_model),
-                    escape_markdown(action),
-                    escape_markdown(message.runbook),
-                    escape_markdown("<br>".join(source_parts)),
-                ]
-            )
-            + " |"
+        detail_rows = [
+            ("id", f"`{escape_markdown(message.catalog_id)}`"),
+            ("message_id", f"`{escape_markdown(message.message_id)}`"),
+            ("level", f"`{escape_markdown(message.level)}`"),
+            ("status", str(message.status_code or "")),
+            ("wrapper calls", str(wrapper_calls_by_id[message.message_id])),
+            ("ログ概要", escape_markdown(message.summary)),
+            ("説明", escape_markdown(message.description)),
+            ("対応すべきこと", escape_markdown(action)),
+            ("runbook", escape_markdown(message.runbook)),
+            ("実装参照", escape_markdown("<br>".join(source_parts))),
+        ]
+        lines.extend(
+            [
+                f"### `{escape_markdown(message.catalog_id)}` `{escape_markdown(message.message_id)}`",
+                "",
+                "| 項目 | 内容 |",
+                "| :--- | :--- |",
+                *(f"| {label} | {value} |" for label, value in detail_rows),
+                "",
+                *render_context_model_table(message.context_model, log_context_schema),
+            ]
         )
 
     lines.extend(
         [
-            "",
             "## loggerラッパー呼び出し一覧",
             "",
             "| source | function | wrapper | catalog_id | message_id | level_hint | context keys |",

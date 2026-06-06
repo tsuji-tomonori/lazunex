@@ -52,6 +52,7 @@ MESSAGE_CATALOG = [
         "level": "INFO",
         "summary": "API処理が正常終了した。",
         "when": "2xx responseを返す直前。",
+        "context_model": "traceId, api.statusCode, error.code",
     }
 ]
 """,
@@ -75,12 +76,20 @@ MESSAGE_CATALOG = [
         require_api_wrapper_calls=True,
     ) == []
     rendered = render_catalog(catalog, tmp_path)
-    header = (
-        "| id | message_id | level | status | wrapper calls | ログ概要 | 説明 | "
-        "出力項目 | 対応すべきこと | runbook | 実装参照 |"
-    )
+    header = "| id | message_id | ログ概要 |"
     assert header in rendered
-    assert "`M001` | `listProjects.request_succeeded` | `INFO` |  | 1" in rendered
+    assert (
+        "`M001` | `listProjects.request_succeeded` | API処理が正常終了した。"
+        in rendered
+    )
+    assert "## ログ詳細" in rendered
+    assert "### `M001` `listProjects.request_succeeded`" in rendered
+    assert "| level | `INFO` |" in rendered
+    assert "| wrapper calls | 1 |" in rendered
+    assert "| 出力項目 |" not in rendered.split("#### 出力項目", maxsplit=1)[0]
+    assert "#### 出力項目" in rendered
+    assert "| `api.statusCode` | API responseとして返したHTTP status codeです。 |" in rendered
+    assert "| `error.code` | エラー分類を表す機械処理向けコードです。 |" in rendered
 
 
 def test_generate_api_message_catalog_main_writes_and_checks_docs(tmp_path: Path) -> None:

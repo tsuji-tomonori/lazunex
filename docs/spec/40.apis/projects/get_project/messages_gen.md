@@ -24,10 +24,65 @@
 
 ## メッセージ一覧
 
-| id | message_id | level | status | wrapper calls | ログ概要 | 説明 | 出力項目 | 対応すべきこと | runbook | 実装参照 |
-| :--- | :--- | :--- | ---: | ---: | :--- | :--- | :--- | :--- | :--- | :--- |
-| `M001` | `getProject.caller_cannot_view_project` | `WARNING` | 403 | 1 | 呼び出し元がProject詳細を参照できないため、リクエストを拒否した。 | 呼び出し元が対象Projectを参照できない場合。 | traceId, actorPrincipalId, api.statusCode, resource.projectId, error.code, error.message | actorPrincipalId、projectId、Project権限を確認する。 | RUNBOOK-authorization-forbidden | src/app/apis/projects/get_project/router.py:70<br>wrapper: src/app/apis/projects/get_project/router.py:70 (ops_logger.warning) |
-| `M002` | `getProject.router_error` | `ERROR` |  | 1 | Routerで捕捉した例外によりProject詳細取得が失敗した。 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 | traceId, actorPrincipalId, api.statusCode, resource.projectId, error.code, error.message, error.exceptionType | 同一routeの5xx率、直近deploy、DB状態を確認する。 | RUNBOOK-unexpected-api-failure | src/app/apis/projects/get_project/router.py:92<br>wrapper: src/app/apis/projects/get_project/router.py:92 (ops_logger.error) |
+| id | message_id | ログ概要 |
+| :--- | :--- | :--- |
+| `M001` | `getProject.caller_cannot_view_project` | 呼び出し元がProject詳細を参照できないため、リクエストを拒否した。 |
+| `M002` | `getProject.router_error` | Routerで捕捉した例外によりProject詳細取得が失敗した。 |
+
+## ログ詳細
+
+### `M001` `getProject.caller_cannot_view_project`
+
+| 項目 | 内容 |
+| :--- | :--- |
+| id | `M001` |
+| message_id | `getProject.caller_cannot_view_project` |
+| level | `WARNING` |
+| status | 403 |
+| wrapper calls | 1 |
+| ログ概要 | 呼び出し元がProject詳細を参照できないため、リクエストを拒否した。 |
+| 説明 | 呼び出し元が対象Projectを参照できない場合。 |
+| 対応すべきこと | actorPrincipalId、projectId、Project権限を確認する。 |
+| runbook | RUNBOOK-authorization-forbidden |
+| 実装参照 | src/app/apis/projects/get_project/router.py:70<br>wrapper: src/app/apis/projects/get_project/router.py:70 (ops_logger.warning) |
+
+#### 出力項目
+
+| 出力項目 | 説明 |
+| :--- | :--- |
+| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | API responseとして返したHTTP status codeです。 |
+| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `error.code` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | エラー内容を運用者が理解するための説明です。 |
+
+### `M002` `getProject.router_error`
+
+| 項目 | 内容 |
+| :--- | :--- |
+| id | `M002` |
+| message_id | `getProject.router_error` |
+| level | `ERROR` |
+| status |  |
+| wrapper calls | 1 |
+| ログ概要 | Routerで捕捉した例外によりProject詳細取得が失敗した。 |
+| 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
+| 対応すべきこと | 同一routeの5xx率、直近deploy、DB状態を確認する。 |
+| runbook | RUNBOOK-unexpected-api-failure |
+| 実装参照 | src/app/apis/projects/get_project/router.py:92<br>wrapper: src/app/apis/projects/get_project/router.py:92 (ops_logger.error) |
+
+#### 出力項目
+
+| 出力項目 | 説明 |
+| :--- | :--- |
+| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | API responseとして返したHTTP status codeです。 |
+| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `error.code` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | エラー内容を運用者が理解するための説明です。 |
+| `error.exceptionType` | 捕捉された例外の型名です。 |
 
 ## loggerラッパー呼び出し一覧
 

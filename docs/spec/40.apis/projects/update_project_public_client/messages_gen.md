@@ -24,13 +24,148 @@
 
 ## メッセージ一覧
 
-| id | message_id | level | status | wrapper calls | ログ概要 | 説明 | 出力項目 | 対応すべきこと | runbook | 実装参照 |
-| :--- | :--- | :--- | ---: | ---: | :--- | :--- | :--- | :--- | :--- | :--- |
-| `M001` | `updateProjectPublicClient.caller_is_not_a_project_owner` | `WARNING` | 403 | 1 | 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 呼び出し元が対象Projectのownerではない場合。 | traceId, actorPrincipalId, api.statusCode, resource.projectId, error.code, error.message | actorPrincipalId、projectId、Project member roleを確認する。 | RUNBOOK-authorization-forbidden | src/app/apis/projects/update_project_public_client/router.py:96<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:96 (ops_logger.warning) |
-| `M002` | `updateProjectPublicClient.router_error` | `ERROR` |  | 1 | Routerで捕捉した例外によりpublic app client更新が失敗した。 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 | traceId, actorPrincipalId, api.statusCode, resource.projectId, error.code, error.message, error.exceptionType | 同一routeの5xx率、直近deploy、Cognito/DB状態を確認する。 | RUNBOOK-unexpected-api-failure | src/app/apis/projects/update_project_public_client/router.py:261<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:261 (ops_logger.error) |
-| `M003` | `updateProjectPublicClient.db_integrity_error` | `ERROR` | 500 | 1 | DB整合性違反によりpublic app client更新のcommitが失敗した。 | public app client更新のDB transaction commitでIntegrityErrorを捕捉した場合。 | traceId, actorPrincipalId, api.statusCode, resource.projectId, error.code, error.message, error.exceptionType | project/public_client/provisioning/idempotency、Cognito、制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。 | RUNBOOK-db-data-repair | src/app/apis/projects/update_project_public_client/router.py:195<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:195 (ops_logger.error) |
-| `M004` | `updateProjectPublicClient.db_commit_failed` | `ERROR` | 503 | 1 | DB commit失敗によりpublic app client更新を確定できなかった。 | public app client更新のDB transaction commitでSQLAlchemyErrorを捕捉した場合。 | traceId, actorPrincipalId, api.statusCode, resource.projectId, error.code, error.message, error.exceptionType | DB接続状態、transaction rollback、idempotency状態を確認し、必要に応じて利用者へ再実行を案内する。 | RUNBOOK-db-commit-retry | src/app/apis/projects/update_project_public_client/router.py:225<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:225 (ops_logger.error) |
-| `M005` | `updateProjectPublicClient.idempotency_key_already_used` | `WARNING` | 409 | 1 | Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | Idempotency-Keyに対応する処理結果が既に存在する場合。 | traceId, actorPrincipalId, api.statusCode, resource.projectId, error.code, error.message | Idempotency-Key、operationId、既存responsePayloadを確認する。 | RUNBOOK-state-conflict-idempotency | src/app/apis/projects/update_project_public_client/router.py:122<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:122 (ops_logger.warning) |
+| id | message_id | ログ概要 |
+| :--- | :--- | :--- |
+| `M001` | `updateProjectPublicClient.caller_is_not_a_project_owner` | 呼び出し元がProject ownerではないため、リクエストを拒否した。 |
+| `M002` | `updateProjectPublicClient.router_error` | Routerで捕捉した例外によりpublic app client更新が失敗した。 |
+| `M003` | `updateProjectPublicClient.db_integrity_error` | DB整合性違反によりpublic app client更新のcommitが失敗した。 |
+| `M004` | `updateProjectPublicClient.db_commit_failed` | DB commit失敗によりpublic app client更新を確定できなかった。 |
+| `M005` | `updateProjectPublicClient.idempotency_key_already_used` | Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
+
+## ログ詳細
+
+### `M001` `updateProjectPublicClient.caller_is_not_a_project_owner`
+
+| 項目 | 内容 |
+| :--- | :--- |
+| id | `M001` |
+| message_id | `updateProjectPublicClient.caller_is_not_a_project_owner` |
+| level | `WARNING` |
+| status | 403 |
+| wrapper calls | 1 |
+| ログ概要 | 呼び出し元がProject ownerではないため、リクエストを拒否した。 |
+| 説明 | 呼び出し元が対象Projectのownerではない場合。 |
+| 対応すべきこと | actorPrincipalId、projectId、Project member roleを確認する。 |
+| runbook | RUNBOOK-authorization-forbidden |
+| 実装参照 | src/app/apis/projects/update_project_public_client/router.py:96<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:96 (ops_logger.warning) |
+
+#### 出力項目
+
+| 出力項目 | 説明 |
+| :--- | :--- |
+| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | API responseとして返したHTTP status codeです。 |
+| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `error.code` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | エラー内容を運用者が理解するための説明です。 |
+
+### `M002` `updateProjectPublicClient.router_error`
+
+| 項目 | 内容 |
+| :--- | :--- |
+| id | `M002` |
+| message_id | `updateProjectPublicClient.router_error` |
+| level | `ERROR` |
+| status |  |
+| wrapper calls | 1 |
+| ログ概要 | Routerで捕捉した例外によりpublic app client更新が失敗した。 |
+| 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
+| 対応すべきこと | 同一routeの5xx率、直近deploy、Cognito/DB状態を確認する。 |
+| runbook | RUNBOOK-unexpected-api-failure |
+| 実装参照 | src/app/apis/projects/update_project_public_client/router.py:261<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:261 (ops_logger.error) |
+
+#### 出力項目
+
+| 出力項目 | 説明 |
+| :--- | :--- |
+| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | API responseとして返したHTTP status codeです。 |
+| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `error.code` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | エラー内容を運用者が理解するための説明です。 |
+| `error.exceptionType` | 捕捉された例外の型名です。 |
+
+### `M003` `updateProjectPublicClient.db_integrity_error`
+
+| 項目 | 内容 |
+| :--- | :--- |
+| id | `M003` |
+| message_id | `updateProjectPublicClient.db_integrity_error` |
+| level | `ERROR` |
+| status | 500 |
+| wrapper calls | 1 |
+| ログ概要 | DB整合性違反によりpublic app client更新のcommitが失敗した。 |
+| 説明 | public app client更新のDB transaction commitでIntegrityErrorを捕捉した場合。 |
+| 対応すべきこと | project/public_client/provisioning/idempotency、Cognito、制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。 |
+| runbook | RUNBOOK-db-data-repair |
+| 実装参照 | src/app/apis/projects/update_project_public_client/router.py:195<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:195 (ops_logger.error) |
+
+#### 出力項目
+
+| 出力項目 | 説明 |
+| :--- | :--- |
+| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | API responseとして返したHTTP status codeです。 |
+| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `error.code` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | エラー内容を運用者が理解するための説明です。 |
+| `error.exceptionType` | 捕捉された例外の型名です。 |
+
+### `M004` `updateProjectPublicClient.db_commit_failed`
+
+| 項目 | 内容 |
+| :--- | :--- |
+| id | `M004` |
+| message_id | `updateProjectPublicClient.db_commit_failed` |
+| level | `ERROR` |
+| status | 503 |
+| wrapper calls | 1 |
+| ログ概要 | DB commit失敗によりpublic app client更新を確定できなかった。 |
+| 説明 | public app client更新のDB transaction commitでSQLAlchemyErrorを捕捉した場合。 |
+| 対応すべきこと | DB接続状態、transaction rollback、idempotency状態を確認し、必要に応じて利用者へ再実行を案内する。 |
+| runbook | RUNBOOK-db-commit-retry |
+| 実装参照 | src/app/apis/projects/update_project_public_client/router.py:225<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:225 (ops_logger.error) |
+
+#### 出力項目
+
+| 出力項目 | 説明 |
+| :--- | :--- |
+| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | API responseとして返したHTTP status codeです。 |
+| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `error.code` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | エラー内容を運用者が理解するための説明です。 |
+| `error.exceptionType` | 捕捉された例外の型名です。 |
+
+### `M005` `updateProjectPublicClient.idempotency_key_already_used`
+
+| 項目 | 内容 |
+| :--- | :--- |
+| id | `M005` |
+| message_id | `updateProjectPublicClient.idempotency_key_already_used` |
+| level | `WARNING` |
+| status | 409 |
+| wrapper calls | 1 |
+| ログ概要 | Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
+| 説明 | Idempotency-Keyに対応する処理結果が既に存在する場合。 |
+| 対応すべきこと | Idempotency-Key、operationId、既存responsePayloadを確認する。 |
+| runbook | RUNBOOK-state-conflict-idempotency |
+| 実装参照 | src/app/apis/projects/update_project_public_client/router.py:122<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:122 (ops_logger.warning) |
+
+#### 出力項目
+
+| 出力項目 | 説明 |
+| :--- | :--- |
+| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | API responseとして返したHTTP status codeです。 |
+| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `error.code` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | エラー内容を運用者が理解するための説明です。 |
 
 ## loggerラッパー呼び出し一覧
 
