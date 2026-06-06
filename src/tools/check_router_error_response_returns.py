@@ -26,6 +26,12 @@ HTTP_STATUS_NAMES = {
     502: "HTTP_502_BAD_GATEWAY",
     503: "HTTP_503_SERVICE_UNAVAILABLE",
 }
+EXTERNAL_API_ERROR_STATUSES = {
+    404,
+    409,
+    502,
+    503,
+}
 
 
 @dataclass(frozen=True, order=True)
@@ -49,8 +55,10 @@ def _status_attr_code(node: ast.AST) -> tuple[int, str] | None:
     return int(match.group("code")), node.attr
 
 
-def _declared_error_response_statuses(function: ast.AsyncFunctionDef | ast.FunctionDef) -> set[int]:
-    statuses: set[int] = set()
+def _declared_error_response_statuses(
+    function: ast.AsyncFunctionDef | ast.FunctionDef,
+) -> dict[int, str]:
+    statuses: dict[int, str] = {}
     for decorator in function.decorator_list:
         if not isinstance(decorator, ast.Call):
             continue
@@ -68,7 +76,7 @@ def _declared_error_response_statuses(function: ast.AsyncFunctionDef | ast.Funct
             for arg in node.args:
                 status = _status_attr_code(arg)
                 if status is not None:
-                    statuses.add(status[0])
+                    statuses[status[0]] = status[1]
     return statuses
 
 
@@ -107,6 +115,26 @@ def _returned_exception_statuses(
     ]
 
 
+def _returned_external_error_statuses(
+    path: Path, router_function: ast.AsyncFunctionDef | ast.FunctionDef
+) -> list[tuple[int, int, str]]:
+    functions_path = path.with_name("functions.py")
+    if not functions_path.exists():
+        return []
+    metadata = function_metadata(functions_path)
+    steps = endpoint_sequence_steps(router_function, metadata)
+    if not any(step.integration_resources for step in steps):
+        return []
+    return [
+        (
+            router_function.lineno,
+            status_code,
+            HTTP_STATUS_NAMES.get(status_code, f"HTTP_{status_code}"),
+        )
+        for status_code in sorted(EXTERNAL_API_ERROR_STATUSES)
+    ]
+
+
 def check_router_error_response_returns(
     api_root: Path = Path("src/app/apis"),
 ) -> list[RouterErrorResponseReturnIssue]:
@@ -128,7 +156,9 @@ def check_router_error_response_returns(
             returned_statuses = [
                 *_returned_error_response_statuses(node),
                 *_returned_exception_statuses(path, node),
+                *_returned_external_error_statuses(path, node),
             ]
+            returned_status_codes = {status_code for _line, status_code, _name in returned_statuses}
             for line, returned_status, returned_name in returned_statuses:
                 if returned_status in declared:
                     continue
@@ -140,19 +170,33 @@ def check_router_error_response_returns(
                         message="error response status is not declared in error_responses",
                     )
                 )
+            for declared_status, declared_name in declared.items():
+                if declared_status in returned_status_codes:
+                    continue
+                issues.append(
+                    RouterErrorResponseReturnIssue(
+                        path=path,
+                        line=node.lineno,
+                        status_name=declared_name,
+                        message=(
+                            "error_responses declares a status not returned by "
+                            "router implementation"
+                        ),
+                    )
+                )
     return sorted(issues)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Check router api_error_response returns match declared error_responses."
+        description="Check router error response returns exactly match declared error_responses."
     )
     parser.add_argument("--api-root", type=Path, default=Path("src/app/apis"))
     args = parser.parse_args()
 
     issues = check_router_error_response_returns(args.api_root)
     if not issues:
-        print("All router api_error_response returns are declared in error_responses.")
+        print("All router error response returns exactly match declared error_responses.")
         return 0
 
     for issue in issues:

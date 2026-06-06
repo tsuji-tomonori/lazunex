@@ -10,12 +10,36 @@ sequenceDiagram
   participant DB as DB
   User->>API: POST /projects/{projectId}/api-access-requests
   API->>API: 利用申請作成リクエストを検証する。
+  alt requestedReason が空白である場合。
+    API-->>User: HTTP 400 Bad Request<br/>requested_reason must not be blank
+  end
   API->>API: 対象 Project を取得する。
+  alt 対象 Project が存在しない、または呼び出し元が参照できない場合。
+    API-->>User: HTTP 404 Not Found<br/>project is not found or caller cannot access it
+  end
+  alt 呼び出し元が Project owner でない場合。
+    API-->>User: HTTP 403 Forbidden<br/>caller is not a project owner
+  end
   alt 呼び出し元が Project owner である場合。
+    alt 対象 API が公開済みでない場合。
+      API-->>User: HTTP 404 Not Found<br/>api is not published
+    end
     alt 対象 API が公開済みである場合。
       API->>API: 対象 API の reviewer 情報を取得する。
+      alt 対象 API の reviewer が設定されていない場合。
+        API-->>User: HTTP 409 Conflict<br/>api reviewer is not configured
+      end
+      alt requestedAuthMode に対応する Project client が存在しない場合。
+        API-->>User: HTTP 409 Conflict<br/>requested auth mode client is not configured
+      end
       alt requestedAuthMode に対応する Project client が存在する場合。
+        alt 同一 Project/API の active subscription が存在する場合。
+          API-->>User: HTTP 409 Conflict<br/>active subscription already exists
+        end
         alt 同一 Project/API の active subscription が存在しない場合。
+          alt 同一 Project/API の審査中申請が存在する場合。
+            API-->>User: HTTP 409 Conflict<br/>pending access request already exists
+          end
           alt 同一 Project/API の審査中申請が存在しない場合。
             API->>API: 利用申請を保存する。
             API->>API: Idempotency-Key に対応する既存レコードを取得する。
@@ -38,37 +62,4 @@ sequenceDiagram
       end
     end
   end
-  alt 呼び出し元が Project owner でない場合。
-    API-->>User: HTTP 403 Forbidden<br/>caller is not a project owner
-  end
-  alt 対象 API が公開済みでない場合。
-    API-->>User: HTTP 404 Not Found<br/>api is not published
-  end
-  alt requestedAuthMode に対応する Project client が存在しない場合。
-    API-->>User: HTTP 409 Conflict<br/>requested auth mode client is not configured
-  end
-  alt 同一 Project/API の active subscription が存在する場合。
-    API-->>User: HTTP 409 Conflict<br/>active subscription already exists
-  end
-  alt 同一 Project/API の審査中申請が存在する場合。
-    API-->>User: HTTP 409 Conflict<br/>pending access request already exists
-  end
-  alt requestedReason が空白である場合。
-    API-->>User: HTTP 400 Bad Request<br/>requested_reason must not be blank
-  end
-  alt 対象 Project が存在しない、または呼び出し元が参照できない場合。
-    API-->>User: HTTP 404 Not Found<br/>project is not found or caller cannot access it
-  end
-  alt 対象 API の reviewer が設定されていない場合。
-    API-->>User: HTTP 409 Conflict<br/>api reviewer is not configured
-  end
-  API-->>User: HTTP 201 Created
-  API-->>User: HTTP 400 Bad Request
-  API-->>User: HTTP 401 Unauthorized
-  API-->>User: HTTP 403 Forbidden
-  API-->>User: HTTP 404 Not Found
-  API-->>User: HTTP 409 Conflict
-  API-->>User: HTTP 422 Unprocessable Content
-  API-->>User: HTTP 429 Too Many Requests
-  API-->>User: HTTP 500 Internal Server Error
 ```

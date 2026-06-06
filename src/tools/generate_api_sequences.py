@@ -73,6 +73,13 @@ class ErrorReturnStep:
     detail: str
 
 
+type SequenceItem = SequenceStep | ErrorReturnStep
+
+
+def empty_sequence_items() -> list[SequenceItem]:
+    return []
+
+
 @dataclass(frozen=True)
 class FunctionErrorMetadata:
     status_code: int
@@ -99,6 +106,7 @@ class ApiSequence:
     steps: list[SequenceStep]
     error_returns: list[ErrorReturnStep]
     sql_steps: list[SqlStep]
+    items: list[SequenceItem] = field(default_factory=empty_sequence_items)
     integration_resources: frozenset[str] = field(default_factory=lambda: frozenset[str]())
     method: str = "GET"
     path: str = "/"
@@ -541,16 +549,36 @@ def endpoint_sequence_steps(
     function: ast.AsyncFunctionDef | ast.FunctionDef,
     metadata: dict[str, FunctionMetadata],
 ) -> list[SequenceStep]:
-    steps: list[SequenceStep] = []
+    return [
+        item
+        for item in endpoint_sequence_items(function, metadata)
+        if isinstance(item, SequenceStep)
+    ]
+
+
+def endpoint_sequence_items(
+    function: ast.AsyncFunctionDef | ast.FunctionDef,
+    metadata: dict[str, FunctionMetadata],
+) -> list[SequenceItem]:
+    items: list[SequenceItem] = []
 
     class Visitor(ast.NodeVisitor):
         def visit_If(self, node: ast.If) -> None:
             guarded_function_name = guarded_api_function_name(node)
             if guarded_function_name is not None:
+                for error_return in error_returns_from_if_body(node, metadata):
+                    items.append(error_return)
                 append_sequence_step(
                     guarded_function_name,
                     success_condition_label_for_guard(node.test, guarded_function_name, metadata),
                 )
+                for child in node.orelse:
+                    self.visit(child)
+                return
+            error_returns = error_returns_from_if_body(node, metadata)
+            if error_returns:
+                self.visit(node.test)
+                items.extend(error_returns)
                 for child in node.orelse:
                     self.visit(child)
                 return
@@ -567,21 +595,41 @@ def endpoint_sequence_steps(
         if function_name not in metadata:
             raise ValueError(f"{function_name} metadata is not found")
         function_metadata = metadata[function_name]
-        steps.append(
-            SequenceStep(
-                function_name=function_name,
-                target=function_target(function_name),
-                description=function_metadata.description,
-                arguments=function_metadata.arguments,
-                return_type=function_metadata.return_type,
-                integration_resources=function_metadata.integration_resources,
-                query_functions=function_metadata.query_functions,
-                condition_label=condition_label,
-            )
-        )
+        items.append(sequence_step_from_metadata(function_name, function_metadata, condition_label))
+        for error in function_metadata.errors:
+            items.append(ErrorReturnStep(error.status_code, error.summary, error.detail))
 
     Visitor().visit(function)
-    return steps
+    return dedupe_sequence_items(items)
+
+
+def sequence_step_from_metadata(
+    function_name: str,
+    function_metadata: FunctionMetadata,
+    condition_label: str | None = None,
+) -> SequenceStep:
+    return SequenceStep(
+        function_name=function_name,
+        target=function_target(function_name),
+        description=function_metadata.description,
+        arguments=function_metadata.arguments,
+        return_type=function_metadata.return_type,
+        integration_resources=function_metadata.integration_resources,
+        query_functions=function_metadata.query_functions,
+        condition_label=condition_label,
+    )
+
+
+def dedupe_sequence_items(items: list[SequenceItem]) -> list[SequenceItem]:
+    deduped: list[SequenceItem] = []
+    seen_errors: set[ErrorReturnStep] = set()
+    for item in items:
+        if isinstance(item, ErrorReturnStep):
+            if item in seen_errors:
+                continue
+            seen_errors.add(item)
+        deduped.append(item)
+    return deduped
 
 
 def has_api_error_response_return(nodes: list[ast.stmt]) -> bool:
@@ -728,6 +776,32 @@ def endpoint_error_returns(
     return error_returns
 
 
+def error_returns_from_if_body(
+    node: ast.If,
+    metadata: dict[str, FunctionMetadata],
+) -> list[ErrorReturnStep]:
+    condition = condition_label_from_test(node.test, metadata)
+    error_returns: list[ErrorReturnStep] = []
+    for statement in node.body:
+        if not isinstance(statement, ast.Return):
+            continue
+        call = api_error_response_call(statement)
+        if call is None or len(call.args) < 2:
+            continue
+        status_code = http_status_code(call.args[0])
+        if status_code is None:
+            continue
+        detail = literal_string(call.args[1]) or ""
+        error_returns.append(
+            ErrorReturnStep(
+                status_code,
+                condition or fallback_error_return_condition(detail),
+                detail,
+            )
+        )
+    return error_returns
+
+
 def endpoint_exception_error_returns(
     steps: list[SequenceStep], metadata: dict[str, FunctionMetadata]
 ) -> list[ErrorReturnStep]:
@@ -841,10 +915,9 @@ def api_sequence_from_dir(
     tree = ast.parse(router_path.read_text(encoding="utf-8"), filename=str(router_path))
     function = endpoint_function(tree)
     metadata = function_metadata(functions_path)
-    steps = endpoint_sequence_steps(function, metadata)
-    explicit_error_returns = endpoint_error_returns(function, metadata)
-    exception_error_returns = endpoint_exception_error_returns(steps, metadata)
-    error_returns = list(dict.fromkeys((*explicit_error_returns, *exception_error_returns)))
+    items = endpoint_sequence_items(function, metadata)
+    steps = [item for item in items if isinstance(item, SequenceStep)]
+    error_returns = [item for item in items if isinstance(item, ErrorReturnStep)]
     query_filenames = query_sql_filenames(api_dir / "queries.py")
     called_query_filenames = {
         query_filenames[query_function]
@@ -871,6 +944,7 @@ def api_sequence_from_dir(
             if integrations_root is not None
             else frozenset()
         ),
+        items=items,
         method=endpoint_route_method(function),
         path=endpoint_route_path(function),
         status_codes=endpoint_status_codes(function),
@@ -917,8 +991,20 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
 
     lines.append(f"  User->>API: {sequence.method} {sequence.path}")
 
+    rendered_items = sequence.items or [*sequence.steps, *sequence.error_returns]
     alt_depth = 0
-    for step in sequence.steps:
+    for item in rendered_items:
+        if isinstance(item, ErrorReturnStep):
+            indent = "  " + ("  " * alt_depth)
+            lines.append(f"{indent}alt {item.condition}")
+            lines.append(
+                f"{indent}  API-->>User: {http_status_code_label(item.status_code)}"
+                f"<br/>{item.detail}"
+            )
+            lines.append(f"{indent}end")
+            continue
+
+        step = item
         label = sequence_label(step)
         if is_predicate_function(step.function_name):
             indent = "  " + ("  " * alt_depth)
@@ -944,17 +1030,6 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
     for depth in range(alt_depth - 1, -1, -1):
         indent = "  " + ("  " * depth)
         lines.append(f"{indent}end")
-
-    for error_return in sequence.error_returns:
-        lines.append(f"  alt {error_return.condition}")
-        lines.append(
-            f"    API-->>User: {http_status_code_label(error_return.status_code)}"
-            f"<br/>{error_return.detail}"
-        )
-        lines.append("  end")
-
-    for status_code in sequence.status_codes:
-        lines.append(f"  API-->>User: {http_status_code_label(status_code)}")
 
     lines.extend(["```", ""])
     return "\n".join(lines)

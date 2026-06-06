@@ -9,19 +9,13 @@ sequenceDiagram
   participant API as API
   participant DB as DB
   User->>API: GET /apis
+  alt 呼び出し元が API 一覧を参照できない場合。
+    API-->>User: HTTP 403 Forbidden<br/>caller cannot list apis
+  end
   alt 呼び出し元が API 一覧を参照できる場合。
     API->>API: 呼び出し元が参照可能な公開 API を検索する。
     API->>API: 一覧取得結果に limit と nextToken を適用する。
     API->>API: API 一覧レスポンスを組み立てる。
     API->>DB: 参照可能なAPI一覧を返すため、検索条件に合うAPI catalog情報を取得する。<br/>SQL 001_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes
   end
-  alt 呼び出し元が API 一覧を参照できない場合。
-    API-->>User: HTTP 403 Forbidden<br/>caller cannot list apis
-  end
-  API-->>User: HTTP 200 OK
-  API-->>User: HTTP 401 Unauthorized
-  API-->>User: HTTP 403 Forbidden
-  API-->>User: HTTP 422 Unprocessable Content
-  API-->>User: HTTP 429 Too Many Requests
-  API-->>User: HTTP 500 Internal Server Error
 ```

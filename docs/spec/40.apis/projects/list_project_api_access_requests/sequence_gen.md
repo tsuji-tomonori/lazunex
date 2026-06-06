@@ -10,20 +10,13 @@ sequenceDiagram
   participant DB as DB
   User->>API: GET /projects/{projectId}/api-access-requests
   API->>API: 対象 Project を取得する。
+  alt 呼び出し元が Project 内の利用申請履歴を参照できない場合。
+    API-->>User: HTTP 403 Forbidden<br/>caller cannot list project access requests
+  end
   alt 呼び出し元が Project 内の利用申請履歴を参照できる場合。
     API->>API: Project に紐づく access request を検索する。
     API->>API: 一覧取得結果に limit と nextToken を適用する。
     API->>API: Project 利用申請一覧レスポンスを組み立てる。
     API->>DB: Projectの利用申請履歴を一覧表示するため、利用申請と審査結果を取得する。<br/>SQL 001_select_api_access_requests.sql<br/>テーブル api_access_requests, projects, apis, api_gateway_stages, api_access_reviews, api_reviewers, project_members
   end
-  alt 呼び出し元が Project 内の利用申請履歴を参照できない場合。
-    API-->>User: HTTP 403 Forbidden<br/>caller cannot list project access requests
-  end
-  API-->>User: HTTP 200 OK
-  API-->>User: HTTP 401 Unauthorized
-  API-->>User: HTTP 403 Forbidden
-  API-->>User: HTTP 404 Not Found
-  API-->>User: HTTP 422 Unprocessable Content
-  API-->>User: HTTP 429 Too Many Requests
-  API-->>User: HTTP 500 Internal Server Error
 ```

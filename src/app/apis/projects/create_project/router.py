@@ -46,12 +46,9 @@ router = APIRouter()
         status.HTTP_201_CREATED: success_response(CREATE_PROJECT_RESPONSE_SAMPLE),
         **error_responses(
             status.HTTP_400_BAD_REQUEST,
-            status.HTTP_401_UNAUTHORIZED,
             status.HTTP_403_FORBIDDEN,
+            status.HTTP_404_NOT_FOUND,
             status.HTTP_409_CONFLICT,
-            status.HTTP_422_UNPROCESSABLE_CONTENT,
-            status.HTTP_429_TOO_MANY_REQUESTS,
-            status.HTTP_500_INTERNAL_SERVER_ERROR,
             status.HTTP_502_BAD_GATEWAY,
             status.HTTP_503_SERVICE_UNAVAILABLE,
         ),

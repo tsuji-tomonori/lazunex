@@ -26,6 +26,7 @@ async def route() -> object:
     issues = check_router_error_response_returns(tmp_path / "src" / "app" / "apis")
 
     assert [(issue.status_name, issue.line) for issue in issues] == [
+        ("HTTP_400_BAD_REQUEST", 9),
         ("HTTP_409_CONFLICT", 10),
     ]
 
@@ -86,5 +87,6 @@ async def create_project():
     issues = check_router_error_response_returns(tmp_path / "src" / "app" / "apis")
 
     assert [(issue.status_name, issue.line) for issue in issues] == [
+        ("HTTP_400_BAD_REQUEST", 8),
         ("HTTP_409_CONFLICT", 8),
     ]

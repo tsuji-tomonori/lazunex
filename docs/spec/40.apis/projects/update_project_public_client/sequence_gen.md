@@ -11,7 +11,19 @@ sequenceDiagram
   participant DB as DB
   User->>API: PATCH /projects/{projectId}/public-client
   API->>API: public App Client 更新リクエストを検証する。
+  alt refresh_token_validity が60分から10年の範囲外である場合。
+    API-->>User: HTTP 400 Bad Request<br/>refresh_token_validity must be between 60 minutes and 10 years
+  end
+  alt retry_grace_period_seconds が60秒を超える場合。
+    API-->>User: HTTP 400 Bad Request<br/>retry_grace_period_seconds must be 60 seconds or fewer
+  end
   API->>API: 対象 Project を取得する。
+  alt 対象 Project の public App Client が存在しない、または呼び出し元が参照できない場合。
+    API-->>User: HTTP 404 Not Found<br/>project public client is not found or caller cannot access it
+  end
+  alt 呼び出し元が Project owner でない場合。
+    API-->>User: HTTP 403 Forbidden<br/>caller is not a project owner
+  end
   alt 呼び出し元が Project owner である場合。
     API->>API: Project の public App Client metadata を取得する。
     API->>API: Idempotency-Key に対応する既存レコードを取得する。
@@ -21,6 +33,9 @@ sequenceDiagram
     API->>API: callback URL、logout URL、token 設定を既存設定へ統合する。
     API->>R_identity: Cognito App Client を更新する。
     API->>API: public App Client metadata を更新する。
+    alt Project public App Client の row version が一致しない場合。
+      API-->>User: HTTP 409 Conflict<br/>project public client row version conflict
+    end
     API->>API: Project public client 更新イベントを追記する。
     API->>API: provisioning operation/step event を追記する。
     API->>API: 監査イベントを追記する。
@@ -36,30 +51,4 @@ sequenceDiagram
     API->>DB: Project public client更新の処理結果として、provisioning operation eventsを追加する。<br/>SQL 011_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
     API->>DB: Idempotency-Keyに対応する既存レコードを取得する。<br/>SQL 013_select_idempotency_records.sql<br/>テーブル idempotency_records
   end
-  alt 呼び出し元が Project owner でない場合。
-    API-->>User: HTTP 403 Forbidden<br/>caller is not a project owner
-  end
-  alt refresh_token_validity が60分から10年の範囲外である場合。
-    API-->>User: HTTP 400 Bad Request<br/>refresh_token_validity must be between 60 minutes and 10 years
-  end
-  alt retry_grace_period_seconds が60秒を超える場合。
-    API-->>User: HTTP 400 Bad Request<br/>retry_grace_period_seconds must be 60 seconds or fewer
-  end
-  alt 対象 Project の public App Client が存在しない、または呼び出し元が参照できない場合。
-    API-->>User: HTTP 404 Not Found<br/>project public client is not found or caller cannot access it
-  end
-  alt Project public App Client の row version が一致しない場合。
-    API-->>User: HTTP 409 Conflict<br/>project public client row version conflict
-  end
-  API-->>User: HTTP 200 OK
-  API-->>User: HTTP 400 Bad Request
-  API-->>User: HTTP 401 Unauthorized
-  API-->>User: HTTP 403 Forbidden
-  API-->>User: HTTP 404 Not Found
-  API-->>User: HTTP 409 Conflict
-  API-->>User: HTTP 422 Unprocessable Content
-  API-->>User: HTTP 429 Too Many Requests
-  API-->>User: HTTP 500 Internal Server Error
-  API-->>User: HTTP 502 Bad Gateway
-  API-->>User: HTTP 503 Service Unavailable
 ```

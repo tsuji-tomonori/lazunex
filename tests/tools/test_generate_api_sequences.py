@@ -462,11 +462,11 @@ def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
         "API->>DB: Project 詳細表示に必要な Project と member を取得する。"
         "<br/>SQL 001_select_projects.sql<br/>テーブル projects, project_members" in markdown
     )
-    assert "API-->>User: HTTP 200 OK" in markdown
+    assert "API-->>User: HTTP 200 OK" not in markdown
     assert "alt 呼び出し元が Project 詳細を参照できない場合。" in markdown
     assert "API-->>User: HTTP 403 Forbidden<br/>caller cannot view project" in markdown
-    assert "API-->>User: HTTP 404 Not Found" in markdown
-    assert markdown.rstrip().endswith("  API-->>User: HTTP 404 Not Found\n```")
+    assert "API-->>User: HTTP 404 Not Found" not in markdown
+    assert markdown.rstrip().endswith("  end\n```")
 
 
 def test_generate_sequences_and_check_mode(
