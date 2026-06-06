@@ -11,6 +11,7 @@ from app.apis.api_access_requests.approve_api_access_request.samples import (
     APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE,
     APPROVE_API_ACCESS_REQUEST_RESPONSE_SAMPLE,
 )
+from app.apis.api_access_requests.common import AuthMode
 from app.apis.base import sample_value
 
 
@@ -165,7 +166,7 @@ async def test_approve_api_access_request_router_rejects_duplicate_subscription(
                 "api_id": access_request["apiId"],
                 "api_stage_id": access_request["apiStageId"],
                 "access_request_id": access_request["accessRequestId"],
-                "approved_auth_mode": "PUBLIC_PKCE",
+                "approved_auth_mode": AuthMode.PUBLIC_PKCE,
                 "approved_by": "user-12345",
                 "approved_at": now,
                 "created_at": now,
