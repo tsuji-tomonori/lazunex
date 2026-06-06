@@ -9,7 +9,7 @@
 | domain | `projects` |
 | api | `get_project` |
 | routes | GET /projects/{projectId} (getProject) |
-| router | `src/app/apis/projects/get_project/router.py:53` |
+| router | `src/app/apis/projects/get_project/router.py:54` |
 | messages | 2 |
 | logger wrapper calls | 2 |
 | levels | WARNING:1, ERROR:1 |
@@ -44,7 +44,7 @@
 | 説明 | 呼び出し元が対象Projectを参照できない場合。 |
 | 対応すべきこと | actorPrincipalId、projectId、Project権限を確認する。 |
 | runbook | RUNBOOK-authorization-forbidden |
-| 実装参照 | src/app/apis/projects/get_project/router.py:70<br>wrapper: src/app/apis/projects/get_project/router.py:70 (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/get_project/router.py:71<br>wrapper: src/app/apis/projects/get_project/router.py:71 (ops_logger.warning) |
 
 #### 出力項目
 
@@ -70,7 +70,7 @@
 | 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
 | 対応すべきこと | 同一routeの5xx率、直近deploy、DB状態を確認する。 |
 | runbook | RUNBOOK-unexpected-api-failure |
-| 実装参照 | src/app/apis/projects/get_project/router.py:92<br>wrapper: src/app/apis/projects/get_project/router.py:92 (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/get_project/router.py:99<br>wrapper: src/app/apis/projects/get_project/router.py:99 (ops_logger.error) |
 
 #### 出力項目
 
@@ -88,8 +88,8 @@
 
 | source | function | wrapper | catalog_id | message_id | level_hint | context keys |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `src/app/apis/projects/get_project/router.py:70` | get_project | `ops_logger.warning` | `M001` | `getProject.caller_cannot_view_project` | `WARNING` |  |
-| `src/app/apis/projects/get_project/router.py:92` | get_project | `ops_logger.error` | `M002` | `getProject.router_error` | `ERROR` |  |
+| `src/app/apis/projects/get_project/router.py:71` | get_project | `ops_logger.warning` | `M001` | `getProject.caller_cannot_view_project` | `WARNING` |  |
+| `src/app/apis/projects/get_project/router.py:99` | get_project | `ops_logger.error` | `M002` | `getProject.router_error` | `ERROR` |  |
 
 ## strict検証で要求する項目
 

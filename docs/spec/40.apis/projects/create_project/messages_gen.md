@@ -9,7 +9,7 @@
 | domain | `projects` |
 | api | `create_project` |
 | routes | POST /projects (createProject) |
-| router | `src/app/apis/projects/create_project/router.py:66` |
+| router | `src/app/apis/projects/create_project/router.py:67` |
 | messages | 5 |
 | logger wrapper calls | 5 |
 | levels | WARNING:2, ERROR:3 |
@@ -47,7 +47,7 @@
 | 説明 | 呼び出し元がProject作成権限を持たない場合。 |
 | 対応すべきこと | actorPrincipalIdとProject作成権限を確認する。 |
 | runbook | RUNBOOK-authorization-forbidden |
-| 実装参照 | src/app/apis/projects/create_project/router.py:85<br>wrapper: src/app/apis/projects/create_project/router.py:85 (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/create_project/router.py:86<br>wrapper: src/app/apis/projects/create_project/router.py:86 (ops_logger.warning) |
 
 #### 出力項目
 
@@ -72,7 +72,7 @@
 | 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
 | 対応すべきこと | 同一routeの5xx率、直近deploy、DB/AWS依存の状態を確認する。 |
 | runbook | RUNBOOK-unexpected-api-failure |
-| 実装参照 | src/app/apis/projects/create_project/router.py:269<br>wrapper: src/app/apis/projects/create_project/router.py:269 (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/create_project/router.py:290<br>wrapper: src/app/apis/projects/create_project/router.py:290 (ops_logger.error) |
 
 #### 出力項目
 
@@ -98,7 +98,7 @@
 | 説明 | Project作成のDB transaction commitでIntegrityErrorを捕捉した場合。 |
 | 対応すべきこと | Project関連テーブル、provisioning/idempotency、制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。 |
 | runbook | RUNBOOK-db-data-repair |
-| 実装参照 | src/app/apis/projects/create_project/router.py:205<br>wrapper: src/app/apis/projects/create_project/router.py:205 (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/create_project/router.py:214<br>wrapper: src/app/apis/projects/create_project/router.py:214 (ops_logger.error) |
 
 #### 出力項目
 
@@ -124,7 +124,7 @@
 | 説明 | Project作成のDB transaction commitでSQLAlchemyErrorを捕捉した場合。 |
 | 対応すべきこと | DB接続状態、transaction rollback、idempotency状態を確認し、必要に応じて利用者へ再実行を案内する。 |
 | runbook | RUNBOOK-db-commit-retry |
-| 実装参照 | src/app/apis/projects/create_project/router.py:234<br>wrapper: src/app/apis/projects/create_project/router.py:234 (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/create_project/router.py:249<br>wrapper: src/app/apis/projects/create_project/router.py:249 (ops_logger.error) |
 
 #### 出力項目
 
@@ -150,7 +150,7 @@
 | 説明 | Idempotency-Keyに対応する処理結果が既に存在する場合。 |
 | 対応すべきこと | Idempotency-Key、operationId、既存responsePayloadを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/projects/create_project/router.py:109<br>wrapper: src/app/apis/projects/create_project/router.py:109 (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/create_project/router.py:113<br>wrapper: src/app/apis/projects/create_project/router.py:113 (ops_logger.warning) |
 
 #### 出力項目
 
@@ -166,11 +166,11 @@
 
 | source | function | wrapper | catalog_id | message_id | level_hint | context keys |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `src/app/apis/projects/create_project/router.py:85` | create_project | `ops_logger.warning` | `M001` | `createProject.caller_cannot_create_project` | `WARNING` |  |
-| `src/app/apis/projects/create_project/router.py:109` | create_project | `ops_logger.warning` | `M005` | `createProject.idempotency_key_already_used` | `WARNING` |  |
-| `src/app/apis/projects/create_project/router.py:205` | create_project | `ops_logger.error` | `M003` | `createProject.db_integrity_error` | `ERROR` |  |
-| `src/app/apis/projects/create_project/router.py:234` | create_project | `ops_logger.error` | `M004` | `createProject.db_commit_failed` | `ERROR` |  |
-| `src/app/apis/projects/create_project/router.py:269` | create_project | `ops_logger.error` | `M002` | `createProject.router_error` | `ERROR` |  |
+| `src/app/apis/projects/create_project/router.py:86` | create_project | `ops_logger.warning` | `M001` | `createProject.caller_cannot_create_project` | `WARNING` |  |
+| `src/app/apis/projects/create_project/router.py:113` | create_project | `ops_logger.warning` | `M005` | `createProject.idempotency_key_already_used` | `WARNING` |  |
+| `src/app/apis/projects/create_project/router.py:214` | create_project | `ops_logger.error` | `M003` | `createProject.db_integrity_error` | `ERROR` |  |
+| `src/app/apis/projects/create_project/router.py:249` | create_project | `ops_logger.error` | `M004` | `createProject.db_commit_failed` | `ERROR` |  |
+| `src/app/apis/projects/create_project/router.py:290` | create_project | `ops_logger.error` | `M002` | `createProject.router_error` | `ERROR` |  |
 
 ## strict検証で要求する項目
 

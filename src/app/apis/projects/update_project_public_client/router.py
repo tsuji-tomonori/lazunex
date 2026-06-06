@@ -24,6 +24,7 @@ from app.apis.responses import (
 from app.apis.router_errors import (
     ROUTER_HANDLED_EXCEPTIONS,
     api_error_response,
+    error_code_for_status,
     error_response_for_router_error,
     has_existing_idempotency_result,
     router_log_context,
@@ -31,7 +32,7 @@ from app.apis.router_errors import (
 )
 from app.apis.sequence_types import CallerIdentity, RequestContext
 from app.apis.types import ResourceId
-from app.core.logging import get_operation_logger
+from app.core.logging import get_operation_logger, operational_log_context_model
 from app.db.session import get_session
 from app.integrations.identity.deps import get_identity_admin_client
 from app.integrations.identity.port import IdentityAdminPort
@@ -101,8 +102,14 @@ async def update_project_public_client(
                 detail="caller is not a project owner",
                 when="呼び出し元が対象Projectのownerではない場合。",
                 why_production="public app client更新の認可拒否を運用で追跡するため。",
-                context_model="traceId, actorPrincipalId, api.statusCode, resource.projectId, "
-                "error.code, error.message",
+                context_model=operational_log_context_model(
+                    trace_id=request_context.correlation_id,
+                    actor_principal_id=caller.principal_id,
+                    api_status_code=status.HTTP_403_FORBIDDEN,
+                    resource_project_id=project_id,
+                    error_code=error_code_for_status(status.HTTP_403_FORBIDDEN),
+                    error_message="caller is not a project owner",
+                ),
                 operator_action="actorPrincipalId、projectId、Project member roleを確認する。",
                 runbook="RUNBOOK-authorization-forbidden",
                 context=router_log_context(
@@ -115,9 +122,7 @@ async def update_project_public_client(
             )
             return api_error_response(status.HTTP_403_FORBIDDEN, "caller is not a project owner")
         public_client = await api_functions.get_public_app_client_metadata(project, caller, session)
-        idempotency_record = await api_functions.get_idempotency_record(
-            idempotency_key, session
-        )
+        idempotency_record = await api_functions.get_idempotency_record(idempotency_key, session)
         if has_existing_idempotency_result(idempotency_record):
             ops_logger.warning(
                 "updateProjectPublicClient.idempotency_key_already_used",
@@ -127,8 +132,14 @@ async def update_project_public_client(
                 detail="idempotency key is already used",
                 when="Idempotency-Keyに対応する処理結果が既に存在する場合。",
                 why_production="冪等性キーの再利用やリトライ衝突を運用で追跡するため。",
-                context_model="traceId, actorPrincipalId, api.statusCode, resource.projectId, "
-                "error.code, error.message",
+                context_model=operational_log_context_model(
+                    trace_id=request_context.correlation_id,
+                    actor_principal_id=caller.principal_id,
+                    api_status_code=status.HTTP_409_CONFLICT,
+                    resource_project_id=project_id,
+                    error_code=error_code_for_status(status.HTTP_409_CONFLICT),
+                    error_message="idempotency key is already used",
+                ),
                 operator_action="Idempotency-Key、operationId、既存responsePayloadを確認する。",
                 runbook="RUNBOOK-state-conflict-idempotency",
                 context=router_log_context(
@@ -203,8 +214,15 @@ async def update_project_public_client(
                 "provisioning/idempotencyの重複や参照整合性を確認する。",
                 remediation_procedure="DB内不整合を特定し、DBパッチまたはデータ補正を行う。"
                 "補正後、Cognitoと冪等性状態を確認してから同一Idempotency-Keyで再実行する。",
-                context_model="traceId, actorPrincipalId, api.statusCode, resource.projectId, "
-                "error.code, error.message, error.exceptionType",
+                context_model=operational_log_context_model(
+                    trace_id=request_context.correlation_id,
+                    actor_principal_id=caller.principal_id,
+                    api_status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    resource_project_id=project_id,
+                    error_code=error_code_for_status(status.HTTP_500_INTERNAL_SERVER_ERROR),
+                    error_message="database integrity error",
+                    error_exception_type=type(error).__name__,
+                ),
                 operator_action="project/public_client/provisioning/idempotency、Cognito、"
                 "制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。",
                 runbook="RUNBOOK-db-data-repair",
@@ -234,8 +252,15 @@ async def update_project_public_client(
                 "transaction rollback状態を確認する。",
                 remediation_procedure="DB一時障害またはcommit失敗として扱い、rollbackを確認する。"
                 "利用者へ同一Idempotency-Keyでの再実行を依頼する。",
-                context_model="traceId, actorPrincipalId, api.statusCode, resource.projectId, "
-                "error.code, error.message, error.exceptionType",
+                context_model=operational_log_context_model(
+                    trace_id=request_context.correlation_id,
+                    actor_principal_id=caller.principal_id,
+                    api_status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    resource_project_id=project_id,
+                    error_code=error_code_for_status(status.HTTP_503_SERVICE_UNAVAILABLE),
+                    error_message="database commit failed",
+                    error_exception_type=type(error).__name__,
+                ),
                 operator_action="DB接続状態、transaction rollback、idempotency状態を確認し、"
                 "必要に応じて利用者へ再実行を案内する。",
                 runbook="RUNBOOK-db-commit-retry",
@@ -266,8 +291,15 @@ async def update_project_public_client(
             check_procedure="traceId/requestIdでログを検索し、"
             "routerで捕捉された例外種別とprojectIdを確認する。",
             remediation_procedure="原因を特定し、冪等性状態とCognito状態を確認してから再実行する。",
-            context_model="traceId, actorPrincipalId, api.statusCode, resource.projectId, "
-            "error.code, error.message, error.exceptionType",
+            context_model=operational_log_context_model(
+                trace_id=request_context.correlation_id,
+                actor_principal_id=caller.principal_id,
+                api_status_code=status_code_for_router_error(error),
+                resource_project_id=project_id,
+                error_code=error_code_for_status(status_code_for_router_error(error)),
+                error_message=str(error),
+                error_exception_type=type(error).__name__,
+            ),
             operator_action="同一routeの5xx率、直近deploy、Cognito/DB状態を確認する。",
             runbook="RUNBOOK-unexpected-api-failure",
             context=router_log_context(

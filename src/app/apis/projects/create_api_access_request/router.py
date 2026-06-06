@@ -24,6 +24,7 @@ from app.apis.responses import (
 from app.apis.router_errors import (
     ROUTER_HANDLED_EXCEPTIONS,
     api_error_response,
+    error_code_for_status,
     error_response_for_router_error,
     has_existing_idempotency_result,
     router_log_context,
@@ -31,7 +32,7 @@ from app.apis.router_errors import (
 )
 from app.apis.sequence_types import CallerIdentity, RequestContext
 from app.apis.types import ResourceId
-from app.core.logging import get_operation_logger
+from app.core.logging import get_operation_logger, operational_log_context_model
 from app.db.session import get_session
 
 router = APIRouter()
@@ -98,8 +99,14 @@ async def create_api_access_request(
                 detail="caller is not a project owner",
                 when="呼び出し元が対象Projectのownerではない場合。",
                 why_production="Project owner権限の認可拒否を運用で追跡するため。",
-                context_model="traceId, actorPrincipalId, api.statusCode, resource.projectId, "
-                "error.code, error.message",
+                context_model=operational_log_context_model(
+                    trace_id=request_context.correlation_id,
+                    actor_principal_id=caller.principal_id,
+                    api_status_code=status.HTTP_403_FORBIDDEN,
+                    resource_project_id=project_id,
+                    error_code=error_code_for_status(status.HTTP_403_FORBIDDEN),
+                    error_message="caller is not a project owner",
+                ),
                 operator_action="actorPrincipalId、projectId、Project member roleを確認する。",
                 runbook="RUNBOOK-authorization-forbidden",
                 context=router_log_context(
@@ -124,8 +131,14 @@ async def create_api_access_request(
                 detail="api is not published",
                 when="指定されたAPI/stageが公開済みAPI catalogに存在しない場合。",
                 why_production="利用申請対象APIの不整合を運用で追跡するため。",
-                context_model="traceId, actorPrincipalId, api.statusCode, resource.projectId, "
-                "error.code, error.message",
+                context_model=operational_log_context_model(
+                    trace_id=request_context.correlation_id,
+                    actor_principal_id=caller.principal_id,
+                    api_status_code=status.HTTP_404_NOT_FOUND,
+                    resource_project_id=project_id,
+                    error_code=error_code_for_status(status.HTTP_404_NOT_FOUND),
+                    error_message="api is not published",
+                ),
                 operator_action="apiId、apiStageId、公開登録状態を確認する。",
                 runbook="RUNBOOK-api-client-error",
                 context=router_log_context(
@@ -151,8 +164,14 @@ async def create_api_access_request(
                 detail="api reviewer is not configured",
                 when="対象API stageのreviewer情報が空の場合。",
                 why_production="API利用申請の審査担当設定不足を運用で追跡するため。",
-                context_model="traceId, actorPrincipalId, api.statusCode, resource.projectId, "
-                "error.code, error.message",
+                context_model=operational_log_context_model(
+                    trace_id=request_context.correlation_id,
+                    actor_principal_id=caller.principal_id,
+                    api_status_code=status.HTTP_409_CONFLICT,
+                    resource_project_id=project_id,
+                    error_code=error_code_for_status(status.HTTP_409_CONFLICT),
+                    error_message="api reviewer is not configured",
+                ),
                 operator_action="apiId、apiStageId、reviewer設定を確認する。",
                 runbook="RUNBOOK-api-client-error",
                 context=router_log_context(
@@ -163,9 +182,7 @@ async def create_api_access_request(
                     resource={"projectId": project_id},
                 ),
             )
-            return api_error_response(
-                status.HTTP_409_CONFLICT, "api reviewer is not configured"
-            )
+            return api_error_response(status.HTTP_409_CONFLICT, "api reviewer is not configured")
         has_requested_auth_mode_clients = await api_functions.has_requested_auth_mode_clients(
             project,
             validated_request,
@@ -180,8 +197,14 @@ async def create_api_access_request(
                 detail="requested auth mode client is not configured",
                 when="Projectに要求認証方式へ対応するclientが設定されていない場合。",
                 why_production="Project設定不足による利用申請失敗を運用で追跡するため。",
-                context_model="traceId, actorPrincipalId, api.statusCode, resource.projectId, "
-                "error.code, error.message",
+                context_model=operational_log_context_model(
+                    trace_id=request_context.correlation_id,
+                    actor_principal_id=caller.principal_id,
+                    api_status_code=status.HTTP_409_CONFLICT,
+                    resource_project_id=project_id,
+                    error_code=error_code_for_status(status.HTTP_409_CONFLICT),
+                    error_message="requested auth mode client is not configured",
+                ),
                 operator_action="Projectのpublic/confidential client設定と"
                 "requestedAuthModeを確認する。",
                 runbook="RUNBOOK-state-conflict-idempotency",
@@ -211,8 +234,14 @@ async def create_api_access_request(
                 detail="active subscription already exists",
                 when="同一Project/API stageのactive subscriptionが既に存在する場合。",
                 why_production="二重申請や状態競合を運用で追跡するため。",
-                context_model="traceId, actorPrincipalId, api.statusCode, resource.projectId, "
-                "error.code, error.message",
+                context_model=operational_log_context_model(
+                    trace_id=request_context.correlation_id,
+                    actor_principal_id=caller.principal_id,
+                    api_status_code=status.HTTP_409_CONFLICT,
+                    resource_project_id=project_id,
+                    error_code=error_code_for_status(status.HTTP_409_CONFLICT),
+                    error_message="active subscription already exists",
+                ),
                 operator_action="既存subscription、projectId、apiId、apiStageIdを確認する。",
                 runbook="RUNBOOK-state-conflict-idempotency",
                 context=router_log_context(
@@ -241,8 +270,14 @@ async def create_api_access_request(
                 detail="pending access request already exists",
                 when="同一Project/API stageのpending利用申請が既に存在する場合。",
                 why_production="重複申請や冪等性衝突を運用で追跡するため。",
-                context_model="traceId, actorPrincipalId, api.statusCode, resource.projectId, "
-                "error.code, error.message",
+                context_model=operational_log_context_model(
+                    trace_id=request_context.correlation_id,
+                    actor_principal_id=caller.principal_id,
+                    api_status_code=status.HTTP_409_CONFLICT,
+                    resource_project_id=project_id,
+                    error_code=error_code_for_status(status.HTTP_409_CONFLICT),
+                    error_message="pending access request already exists",
+                ),
                 operator_action="既存access_request、projectId、apiId、apiStageIdを確認する。",
                 runbook="RUNBOOK-state-conflict-idempotency",
                 context=router_log_context(
@@ -256,9 +291,7 @@ async def create_api_access_request(
             return api_error_response(
                 status.HTTP_409_CONFLICT, "pending access request already exists"
             )
-        idempotency_record = await api_functions.get_idempotency_record(
-            idempotency_key, session
-        )
+        idempotency_record = await api_functions.get_idempotency_record(idempotency_key, session)
         if has_existing_idempotency_result(idempotency_record):
             ops_logger.warning(
                 "createApiAccessRequest.idempotency_key_already_used",
@@ -268,8 +301,14 @@ async def create_api_access_request(
                 detail="idempotency key is already used",
                 when="Idempotency-Keyに対応する処理結果が既に存在する場合。",
                 why_production="冪等性キーの再利用やリトライ衝突を運用で追跡するため。",
-                context_model="traceId, actorPrincipalId, api.statusCode, resource.projectId, "
-                "error.code, error.message",
+                context_model=operational_log_context_model(
+                    trace_id=request_context.correlation_id,
+                    actor_principal_id=caller.principal_id,
+                    api_status_code=status.HTTP_409_CONFLICT,
+                    resource_project_id=project_id,
+                    error_code=error_code_for_status(status.HTTP_409_CONFLICT),
+                    error_message="idempotency key is already used",
+                ),
                 operator_action="Idempotency-Key、operationId、既存responsePayloadを確認する。",
                 runbook="RUNBOOK-state-conflict-idempotency",
                 context=router_log_context(
@@ -318,8 +357,15 @@ async def create_api_access_request(
                 "project/access_request/idempotencyの重複や参照整合性を確認する。",
                 remediation_procedure="DB内不整合を特定し、DBパッチまたはデータ補正を行う。"
                 "補正後、冪等性状態を確認してから同一Idempotency-Keyで再実行する。",
-                context_model="traceId, actorPrincipalId, api.statusCode, resource.projectId, "
-                "error.code, error.message, error.exceptionType",
+                context_model=operational_log_context_model(
+                    trace_id=request_context.correlation_id,
+                    actor_principal_id=caller.principal_id,
+                    api_status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    resource_project_id=project_id,
+                    error_code=error_code_for_status(status.HTTP_500_INTERNAL_SERVER_ERROR),
+                    error_message="database integrity error",
+                    error_exception_type=type(error).__name__,
+                ),
                 operator_action="project/access_request/idempotency、制約違反対象を確認し、"
                 "パッチ適用手順を作成してデータ補正を行う。",
                 runbook="RUNBOOK-db-data-repair",
@@ -348,8 +394,15 @@ async def create_api_access_request(
                 "transaction rollback状態を確認する。",
                 remediation_procedure="DB一時障害またはcommit失敗として扱い、rollbackを確認する。"
                 "利用者へ同一Idempotency-Keyでの再実行を依頼する。",
-                context_model="traceId, actorPrincipalId, api.statusCode, resource.projectId, "
-                "error.code, error.message, error.exceptionType",
+                context_model=operational_log_context_model(
+                    trace_id=request_context.correlation_id,
+                    actor_principal_id=caller.principal_id,
+                    api_status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    resource_project_id=project_id,
+                    error_code=error_code_for_status(status.HTTP_503_SERVICE_UNAVAILABLE),
+                    error_message="database commit failed",
+                    error_exception_type=type(error).__name__,
+                ),
                 operator_action="DB接続状態、transaction rollback、idempotency状態を確認し、"
                 "必要に応じて利用者へ再実行を案内する。",
                 runbook="RUNBOOK-db-commit-retry",
@@ -377,8 +430,15 @@ async def create_api_access_request(
             "routerで捕捉された例外種別とprojectIdを確認する。",
             remediation_procedure="原因を特定し、冪等性状態を確認してから"
             "同一Idempotency-Keyで再実行する。",
-            context_model="traceId, actorPrincipalId, api.statusCode, resource.projectId, "
-            "error.code, error.message, error.exceptionType",
+            context_model=operational_log_context_model(
+                trace_id=request_context.correlation_id,
+                actor_principal_id=caller.principal_id,
+                api_status_code=status_code_for_router_error(error),
+                resource_project_id=project_id,
+                error_code=error_code_for_status(status_code_for_router_error(error)),
+                error_message=str(error),
+                error_exception_type=type(error).__name__,
+            ),
             operator_action="同一routeの5xx率、直近deploy、DB状態を確認する。",
             runbook="RUNBOOK-unexpected-api-failure",
             context=router_log_context(

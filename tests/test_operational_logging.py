@@ -5,7 +5,12 @@ from typing import Any, cast
 
 from _pytest.logging import LogCaptureFixture
 
-from app.core.logging import bind_log_context, get_operation_logger, reset_log_context
+from app.core.logging import (
+    bind_log_context,
+    get_operation_logger,
+    operational_log_context_model,
+    reset_log_context,
+)
 
 
 def test_operation_logger_emits_structured_masked_event(caplog: LogCaptureFixture) -> None:
@@ -19,7 +24,12 @@ def test_operation_logger_emits_structured_masked_event(caplog: LogCaptureFixtur
             catalog_id="M001",
             summary="API処理が正常終了した。",
             when="2xx responseを返す直前。",
-            context_model="traceId, requestId, actorPrincipalId, api.statusCode",
+            context_model=operational_log_context_model(
+                trace_id="trace-1",
+                request_id="request-1",
+                actor_principal_id="user-1",
+                api_status_code=200,
+            ),
             operator_action="通常対応不要。",
             runbook="RUNBOOK-api-success",
             context={
@@ -42,7 +52,12 @@ def test_operation_logger_emits_structured_masked_event(caplog: LogCaptureFixtur
         "level": "INFO",
         "summary": "API処理が正常終了した。",
         "when": "2xx responseを返す直前。",
-        "contextModel": "traceId, requestId, actorPrincipalId, api.statusCode",
+        "contextModel": {
+            "traceId": "trace-1",
+            "requestId": "request-1",
+            "actorPrincipalId": "user-1",
+            "api.statusCode": 200,
+        },
         "operatorAction": "通常対応不要。",
         "runbook": "RUNBOOK-api-success",
     }

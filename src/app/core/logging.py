@@ -38,8 +38,12 @@ from enum import StrEnum
 from types import TracebackType
 from typing import Any, cast
 
+from pydantic import BaseModel, ConfigDict, Field
+from pydantic.alias_generators import to_camel
+
 JsonObject = dict[str, Any]
 LogContextToken = contextvars.Token[Mapping[str, Any] | None]
+LogContextModel = str | BaseModel | type[BaseModel]
 
 
 class LogLevel(StrEnum):
@@ -94,63 +98,115 @@ _ALLOWED_SECRET_METADATA_KEYS = {
     "enable_token_revocation",
 }
 _MAX_STRING_LENGTH = 4096
+_DOTTED_LOG_CONTEXT_PREFIXES = {"api", "resource", "aws", "metrics", "error"}
 
-OPERATIONAL_LOG_CONTEXT_SCHEMA: Mapping[str, Mapping[str, str]] = {
-    "traceId": {
-        "description": "リクエストとログを横断して追跡する相関IDです。",
-    },
-    "requestId": {
-        "description": "実行基盤またはアプリケーションが付与するリクエストIDです。",
-    },
-    "actorPrincipalId": {
-        "description": "APIを呼び出した認証主体IDです。",
-    },
-    "api.method": {
-        "description": "呼び出されたAPIのHTTP methodです。",
-    },
-    "api.route": {
-        "description": "呼び出されたAPI routeです。",
-    },
-    "api.statusCode": {
-        "description": "API responseとして返したHTTP status codeです。",
-    },
-    "resource.*": {
-        "description": "操作対象リソースを識別するIDや属性です。",
-    },
-    "resource.projectId": {
-        "description": "操作対象Projectを一意に識別するIDです。",
-    },
-    "resource.apiId": {
-        "description": "操作対象APIを一意に識別するIDです。",
-    },
-    "resource.accessRequestId": {
-        "description": "操作対象API利用申請を一意に識別するIDです。",
-    },
-    "aws.service": {
-        "description": "連携先AWS service名です。",
-    },
-    "aws.action": {
-        "description": "連携先AWS API action名です。",
-    },
-    "metrics.durationMs": {
-        "description": "処理に要した時間をミリ秒で表した値です。",
-    },
-    "operationId": {
-        "description": "非同期provisioningや補償処理を追跡するoperation IDです。",
-    },
-    "error.*": {
-        "description": "エラーの分類、詳細、例外種別などをまとめた情報です。",
-    },
-    "error.code": {
-        "description": "エラー分類を表す機械処理向けコードです。",
-    },
-    "error.message": {
-        "description": "エラー内容を運用者が理解するための説明です。",
-    },
-    "error.exceptionType": {
-        "description": "捕捉された例外の型名です。",
-    },
-}
+
+def _log_context_alias(field_name: str) -> str:
+    prefix, separator, rest = field_name.partition("_")
+    if separator and prefix in _DOTTED_LOG_CONTEXT_PREFIXES:
+        return f"{prefix}.{to_camel(rest)}"
+    return to_camel(field_name)
+
+
+class OperationalLogContextSchema(BaseModel):
+    """Schema for output fields listed in Lazunex operational message catalogs."""
+
+    model_config = ConfigDict(alias_generator=_log_context_alias, populate_by_name=True)
+
+    trace_id: str | None = Field(
+        default=None,
+        description="リクエストとログを横断して追跡する相関IDです。",
+    )
+    request_id: str | None = Field(
+        default=None,
+        description="実行基盤またはアプリケーションが付与するリクエストIDです。",
+    )
+    actor_principal_id: str | None = Field(
+        default=None,
+        description="APIを呼び出した認証主体IDです。",
+    )
+    api_method: str | None = Field(default=None, description="呼び出されたAPIのHTTP methodです。")
+    api_route: str | None = Field(default=None, description="呼び出されたAPI routeです。")
+    api_status_code: int | None = Field(
+        default=None,
+        description="API responseとして返したHTTP status codeです。",
+    )
+    resource: Mapping[str, Any] | None = Field(
+        default=None,
+        description="操作対象リソースを識別するIDや属性です。",
+    )
+    resource_project_id: str | None = Field(
+        default=None,
+        description="操作対象Projectを一意に識別するIDです。",
+    )
+    resource_api_id: str | None = Field(
+        default=None,
+        description="操作対象APIを一意に識別するIDです。",
+    )
+    resource_access_request_id: str | None = Field(
+        default=None,
+        description="操作対象API利用申請を一意に識別するIDです。",
+    )
+    aws_service: str | None = Field(default=None, description="連携先AWS service名です。")
+    aws_action: str | None = Field(default=None, description="連携先AWS API action名です。")
+    metrics_duration_ms: float | None = Field(
+        default=None,
+        description="処理に要した時間をミリ秒で表した値です。",
+    )
+    operation_id: str | None = Field(
+        default=None,
+        description="非同期provisioningや補償処理を追跡するoperation IDです。",
+    )
+    error: Mapping[str, Any] | None = Field(
+        default=None,
+        description="エラーの分類、詳細、例外種別などをまとめた情報です。",
+    )
+    error_code: str | None = Field(
+        default=None,
+        description="エラー分類を表す機械処理向けコードです。",
+    )
+    error_message: str | None = Field(
+        default=None,
+        description="エラー内容を運用者が理解するための説明です。",
+    )
+    error_exception_type: str | None = Field(
+        default=None,
+        description="捕捉された例外の型名です。",
+    )
+
+
+OPERATIONAL_LOG_CONTEXT_SCHEMA = OperationalLogContextSchema
+
+
+def operational_log_context_model(**values: Any) -> OperationalLogContextSchema:
+    fields = OPERATIONAL_LOG_CONTEXT_SCHEMA.model_fields
+    for field_name in values:
+        if field_name not in fields:
+            raise KeyError(field_name)
+    return OPERATIONAL_LOG_CONTEXT_SCHEMA.model_validate(values)
+
+
+def _context_model_display(
+    context_model: LogContextModel | None,
+) -> str | JsonObject | None:
+    if context_model is None:
+        return None
+    if isinstance(context_model, str):
+        return context_model
+    if isinstance(context_model, type):
+        return _context_model_alias_names(context_model)
+    return _context_model_payload(context_model)
+
+
+def _context_model_alias_names(model_type: type[BaseModel]) -> str:
+    aliases = [
+        str(field.alias or field_name) for field_name, field in model_type.model_fields.items()
+    ]
+    return ", ".join(aliases)
+
+
+def _context_model_payload(context_model: BaseModel) -> JsonObject:
+    return context_model.model_dump(mode="json", by_alias=True, exclude_none=True)
 
 
 class JsonOperationalLogFormatter(logging.Formatter):
@@ -265,7 +321,7 @@ class OperationalLogger:
         why_production: str | None = None,
         check_procedure: str | None = None,
         remediation_procedure: str | None = None,
-        context_model: str | None = None,
+        context_model: LogContextModel | None = None,
         operator_action: str | None = None,
         runbook: str | None = None,
         context: Mapping[str, Any] | None = None,
@@ -322,7 +378,7 @@ class OperationalLogger:
         why_production: str | None = None,
         check_procedure: str | None = None,
         remediation_procedure: str | None = None,
-        context_model: str | None = None,
+        context_model: LogContextModel | None = None,
         operator_action: str | None = None,
         runbook: str | None = None,
         context: Mapping[str, Any] | None = None,
@@ -358,7 +414,7 @@ class OperationalLogger:
         why_production: str | None = None,
         check_procedure: str | None = None,
         remediation_procedure: str | None = None,
-        context_model: str | None = None,
+        context_model: LogContextModel | None = None,
         operator_action: str | None = None,
         runbook: str | None = None,
         context: Mapping[str, Any] | None = None,
@@ -394,7 +450,7 @@ class OperationalLogger:
         why_production: str | None = None,
         check_procedure: str | None = None,
         remediation_procedure: str | None = None,
-        context_model: str | None = None,
+        context_model: LogContextModel | None = None,
         operator_action: str | None = None,
         runbook: str | None = None,
         context: Mapping[str, Any] | None = None,
@@ -432,7 +488,7 @@ class OperationalLogger:
         why_production: str | None = None,
         check_procedure: str | None = None,
         remediation_procedure: str | None = None,
-        context_model: str | None = None,
+        context_model: LogContextModel | None = None,
         operator_action: str | None = None,
         runbook: str | None = None,
         context: Mapping[str, Any] | None = None,
@@ -474,7 +530,7 @@ class OperationalLogger:
         why_production: str | None = None,
         check_procedure: str | None = None,
         remediation_procedure: str | None = None,
-        context_model: str | None = None,
+        context_model: LogContextModel | None = None,
         operator_action: str | None = None,
         runbook: str | None = None,
         context: Mapping[str, Any] | None = None,
@@ -513,7 +569,7 @@ class OperationalLogger:
         why_production: str | None = None,
         check_procedure: str | None = None,
         remediation_procedure: str | None = None,
-        context_model: str | None = None,
+        context_model: LogContextModel | None = None,
         operator_action: str | None = None,
         runbook: str | None = None,
         context: Mapping[str, Any] | None = None,
@@ -564,7 +620,7 @@ def emit_message(
     why_production: str | None = None,
     check_procedure: str | None = None,
     remediation_procedure: str | None = None,
-    context_model: str | None = None,
+    context_model: LogContextModel | None = None,
     operator_action: str | None = None,
     runbook: str | None = None,
     context: Mapping[str, Any] | None = None,
@@ -611,7 +667,7 @@ def _build_payload(
     why_production: str | None,
     check_procedure: str | None,
     remediation_procedure: str | None,
-    context_model: str | None,
+    context_model: LogContextModel | None,
     operator_action: str | None,
     runbook: str | None,
     context: Mapping[str, Any] | None,
@@ -657,7 +713,7 @@ def _build_payload(
             "whyProduction": why_production,
             "checkProcedure": check_procedure,
             "remediationProcedure": remediation_procedure,
-            "contextModel": context_model,
+            "contextModel": _context_model_display(context_model),
             "operatorAction": operator_action,
             "runbook": runbook,
         }.items()

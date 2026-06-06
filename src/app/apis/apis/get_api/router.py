@@ -16,13 +16,14 @@ from app.apis.responses import (
 from app.apis.router_errors import (
     ROUTER_HANDLED_EXCEPTIONS,
     api_error_response,
+    error_code_for_status,
     error_response_for_router_error,
     router_log_context,
     status_code_for_router_error,
 )
 from app.apis.sequence_types import CallerIdentity
 from app.apis.types import ResourceId
-from app.core.logging import get_operation_logger
+from app.core.logging import get_operation_logger, operational_log_context_model
 from app.db.session import get_session
 
 router = APIRouter()
@@ -68,8 +69,14 @@ async def get_api(
                 detail="caller cannot view api",
                 when="呼び出し元が対象APIを参照できない場合。",
                 why_production="API詳細の認可拒否を運用で追跡するため。",
-                context_model="traceId, actorPrincipalId, api.statusCode, resource.apiId, "
-                "error.code, error.message",
+                context_model=operational_log_context_model(
+                    trace_id=None,
+                    actor_principal_id=caller.principal_id,
+                    api_status_code=status.HTTP_403_FORBIDDEN,
+                    resource_api_id=api_id,
+                    error_code=error_code_for_status(status.HTTP_403_FORBIDDEN),
+                    error_message="caller cannot view api",
+                ),
                 operator_action="actorPrincipalId、apiId、API参照権限を確認する。",
                 runbook="RUNBOOK-authorization-forbidden",
                 context=router_log_context(
@@ -90,8 +97,15 @@ async def get_api(
             check_procedure="traceId/requestIdでログを検索し、"
             "routerで捕捉された例外種別とapiIdを確認する。",
             remediation_procedure="原因を特定し、再試行可能な処理は同一apiIdで再実行する。",
-            context_model="traceId, actorPrincipalId, api.statusCode, resource.apiId, "
-            "error.code, error.message, error.exceptionType",
+            context_model=operational_log_context_model(
+                trace_id=None,
+                actor_principal_id=caller.principal_id,
+                api_status_code=status_code_for_router_error(error),
+                resource_api_id=api_id,
+                error_code=error_code_for_status(status_code_for_router_error(error)),
+                error_message=str(error),
+                error_exception_type=type(error).__name__,
+            ),
             operator_action="同一routeの5xx率、直近deploy、DB状態を確認する。",
             runbook="RUNBOOK-unexpected-api-failure",
             context=router_log_context(

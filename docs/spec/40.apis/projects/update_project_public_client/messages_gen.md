@@ -9,7 +9,7 @@
 | domain | `projects` |
 | api | `update_project_public_client` |
 | routes | PATCH /projects/{projectId}/public-client (updateProjectPublicClient) |
-| router | `src/app/apis/projects/update_project_public_client/router.py:64` |
+| router | `src/app/apis/projects/update_project_public_client/router.py:65` |
 | messages | 5 |
 | logger wrapper calls | 5 |
 | levels | WARNING:2, ERROR:3 |
@@ -47,7 +47,7 @@
 | 説明 | 呼び出し元が対象Projectのownerではない場合。 |
 | 対応すべきこと | actorPrincipalId、projectId、Project member roleを確認する。 |
 | runbook | RUNBOOK-authorization-forbidden |
-| 実装参照 | src/app/apis/projects/update_project_public_client/router.py:96<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:96 (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/update_project_public_client/router.py:97<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:97 (ops_logger.warning) |
 
 #### 出力項目
 
@@ -73,7 +73,7 @@
 | 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
 | 対応すべきこと | 同一routeの5xx率、直近deploy、Cognito/DB状態を確認する。 |
 | runbook | RUNBOOK-unexpected-api-failure |
-| 実装参照 | src/app/apis/projects/update_project_public_client/router.py:261<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:261 (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/update_project_public_client/router.py:286<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:286 (ops_logger.error) |
 
 #### 出力項目
 
@@ -100,7 +100,7 @@
 | 説明 | public app client更新のDB transaction commitでIntegrityErrorを捕捉した場合。 |
 | 対応すべきこと | project/public_client/provisioning/idempotency、Cognito、制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。 |
 | runbook | RUNBOOK-db-data-repair |
-| 実装参照 | src/app/apis/projects/update_project_public_client/router.py:195<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:195 (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/update_project_public_client/router.py:206<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:206 (ops_logger.error) |
 
 #### 出力項目
 
@@ -127,7 +127,7 @@
 | 説明 | public app client更新のDB transaction commitでSQLAlchemyErrorを捕捉した場合。 |
 | 対応すべきこと | DB接続状態、transaction rollback、idempotency状態を確認し、必要に応じて利用者へ再実行を案内する。 |
 | runbook | RUNBOOK-db-commit-retry |
-| 実装参照 | src/app/apis/projects/update_project_public_client/router.py:225<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:225 (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/update_project_public_client/router.py:243<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:243 (ops_logger.error) |
 
 #### 出力項目
 
@@ -154,7 +154,7 @@
 | 説明 | Idempotency-Keyに対応する処理結果が既に存在する場合。 |
 | 対応すべきこと | Idempotency-Key、operationId、既存responsePayloadを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/projects/update_project_public_client/router.py:122<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:122 (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/update_project_public_client/router.py:127<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:127 (ops_logger.warning) |
 
 #### 出力項目
 
@@ -171,11 +171,11 @@
 
 | source | function | wrapper | catalog_id | message_id | level_hint | context keys |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `src/app/apis/projects/update_project_public_client/router.py:96` | update_project_public_client | `ops_logger.warning` | `M001` | `updateProjectPublicClient.caller_is_not_a_project_owner` | `WARNING` |  |
-| `src/app/apis/projects/update_project_public_client/router.py:122` | update_project_public_client | `ops_logger.warning` | `M005` | `updateProjectPublicClient.idempotency_key_already_used` | `WARNING` |  |
-| `src/app/apis/projects/update_project_public_client/router.py:195` | update_project_public_client | `ops_logger.error` | `M003` | `updateProjectPublicClient.db_integrity_error` | `ERROR` |  |
-| `src/app/apis/projects/update_project_public_client/router.py:225` | update_project_public_client | `ops_logger.error` | `M004` | `updateProjectPublicClient.db_commit_failed` | `ERROR` |  |
-| `src/app/apis/projects/update_project_public_client/router.py:261` | update_project_public_client | `ops_logger.error` | `M002` | `updateProjectPublicClient.router_error` | `ERROR` |  |
+| `src/app/apis/projects/update_project_public_client/router.py:97` | update_project_public_client | `ops_logger.warning` | `M001` | `updateProjectPublicClient.caller_is_not_a_project_owner` | `WARNING` |  |
+| `src/app/apis/projects/update_project_public_client/router.py:127` | update_project_public_client | `ops_logger.warning` | `M005` | `updateProjectPublicClient.idempotency_key_already_used` | `WARNING` |  |
+| `src/app/apis/projects/update_project_public_client/router.py:206` | update_project_public_client | `ops_logger.error` | `M003` | `updateProjectPublicClient.db_integrity_error` | `ERROR` |  |
+| `src/app/apis/projects/update_project_public_client/router.py:243` | update_project_public_client | `ops_logger.error` | `M004` | `updateProjectPublicClient.db_commit_failed` | `ERROR` |  |
+| `src/app/apis/projects/update_project_public_client/router.py:286` | update_project_public_client | `ops_logger.error` | `M002` | `updateProjectPublicClient.router_error` | `ERROR` |  |
 
 ## strict検証で要求する項目
 

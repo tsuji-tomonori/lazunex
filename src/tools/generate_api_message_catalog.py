@@ -96,6 +96,9 @@ LOG_CONTEXT_SCHEMA_VARIABLE_NAMES = {
     "OPERATIONAL_LOG_CONTEXT_SCHEMA",
     "LOG_CONTEXT_SCHEMA",
 }
+LOG_CONTEXT_MODEL_CALL_NAMES = {
+    "operational_log_context_model",
+}
 CATALOG_CALL_NAMES = {
     "MessageDefinition",
     "MessageCatalogEntry",
@@ -417,6 +420,18 @@ def literal_value(node: ast.AST | None) -> Any:
         return {
             keyword.arg: literal_value(keyword.value) for keyword in node.keywords if keyword.arg
         }
+    if isinstance(node, ast.Call) and call_name(node) in LOG_CONTEXT_MODEL_CALL_NAMES:
+        arg_aliases = [
+            log_context_alias_from_field_name(str(literal_value(arg)))
+            for arg in node.args
+            if isinstance(literal_value(arg), str)
+        ]
+        keyword_aliases = [
+            log_context_alias_from_field_name(keyword.arg)
+            for keyword in node.keywords
+            if keyword.arg
+        ]
+        return ", ".join([*arg_aliases, *keyword_aliases])
     try:
         return ast.unparse(node)
     except Exception:  # pragma: no cover - defensive for malformed ASTs
@@ -436,6 +451,21 @@ def as_display(value: Any) -> str:
             dict(cast("Mapping[str, Any]", value)), ensure_ascii=False, sort_keys=True
         )
     return str(value)
+
+
+def log_context_alias_from_field_name(field_name: str) -> str:
+    dotted_prefixes = {"api", "resource", "aws", "metrics", "error"}
+    prefix, separator, rest = field_name.partition("_")
+    if separator and prefix in dotted_prefixes:
+        return f"{prefix}.{snake_to_lower_camel(rest)}"
+    return snake_to_lower_camel(field_name)
+
+
+def snake_to_lower_camel(value: str) -> str:
+    parts = value.split("_")
+    if not parts:
+        return value
+    return parts[0] + "".join(part[:1].upper() + part[1:] for part in parts[1:])
 
 
 def log_context_schema_path(root: Path) -> Path:
@@ -482,11 +512,57 @@ def normalize_log_context_schema(value: Any) -> dict[str, str]:
     return schema
 
 
+def field_description_from_call(call: ast.Call) -> str:
+    if call_name(call) != "Field":
+        return ""
+    for keyword in call.keywords:
+        if keyword.arg != "description":
+            continue
+        return as_display(literal_value(keyword.value))
+    return ""
+
+
+def pydantic_log_context_schema(module: ast.Module) -> dict[str, str]:
+    model_names: set[str] = set()
+    for node in ast.walk(module):
+        if not isinstance(node, (ast.Assign, ast.AnnAssign)):
+            continue
+        value_node = node.value
+        if not isinstance(value_node, ast.Name):
+            continue
+        target_names: set[str] = set()
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    target_names.add(target.id)
+        elif isinstance(node.target, ast.Name):
+            target_names.add(node.target.id)
+        if target_names.intersection(LOG_CONTEXT_SCHEMA_VARIABLE_NAMES):
+            model_names.add(value_node.id)
+
+    schema: dict[str, str] = {}
+    for node in module.body:
+        if not isinstance(node, ast.ClassDef) or node.name not in model_names:
+            continue
+        for statement in node.body:
+            if not isinstance(statement, ast.AnnAssign):
+                continue
+            if not isinstance(statement.target, ast.Name):
+                continue
+            if not isinstance(statement.value, ast.Call):
+                continue
+            description = field_description_from_call(statement.value)
+            if description:
+                schema[log_context_alias_from_field_name(statement.target.id)] = description
+    return schema
+
+
 def load_log_context_schema(root: Path) -> dict[str, str]:
     path = log_context_schema_path(root)
     module = read_python_ast(path)
     schema: dict[str, str] = {}
     if module is not None:
+        schema.update(pydantic_log_context_schema(module))
         for node in ast.walk(module):
             value_node: ast.AST | None = None
             target_names: set[str] = set()
@@ -1400,7 +1476,7 @@ def router_error_returns_for_api(api_dir: Path, api_root: Path) -> tuple[ErrorRe
         router_tree = ast.parse((api_dir / "router.py").read_text(encoding="utf-8"))
         function = endpoint_function(router_tree)
         metadata = function_metadata(api_dir / "functions.py")
-    except (OSError, SyntaxError, ValueError):
+    except OSError, SyntaxError, ValueError:
         return ()
     return tuple(endpoint_error_returns(function, metadata))
 

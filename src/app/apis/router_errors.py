@@ -126,6 +126,10 @@ def error_response_for_external_error(error: ExternalApiError) -> JSONResponse:
 
 
 def _error_code(status_code: int) -> str:
+    return error_code_for_status(status_code)
+
+
+def error_code_for_status(status_code: int) -> str:
     if status_code == status.HTTP_400_BAD_REQUEST:
         return "BAD_REQUEST"
     if status_code == status.HTTP_401_UNAUTHORIZED:

@@ -21,13 +21,14 @@ from app.apis.responses import (
 from app.apis.router_errors import (
     ROUTER_HANDLED_EXCEPTIONS,
     api_error_response,
+    error_code_for_status,
     error_response_for_router_error,
     has_existing_idempotency_result,
     router_log_context,
     status_code_for_router_error,
 )
 from app.apis.sequence_types import CallerIdentity, RequestContext
-from app.core.logging import get_operation_logger
+from app.core.logging import get_operation_logger, operational_log_context_model
 from app.db.session import get_session
 from app.integrations.api_gateway_control.deps import get_api_gateway_control_client
 from app.integrations.api_gateway_control.port import ApiGatewayControlPort
@@ -90,8 +91,13 @@ async def create_project(
                 detail="caller cannot create project",
                 when="呼び出し元がProject作成権限を持たない場合。",
                 why_production="Project作成の認可拒否を運用で追跡するため。",
-                context_model="traceId, actorPrincipalId, api.statusCode, "
-                "error.code, error.message",
+                context_model=operational_log_context_model(
+                    trace_id=request_context.correlation_id,
+                    actor_principal_id=caller.principal_id,
+                    api_status_code=status.HTTP_403_FORBIDDEN,
+                    error_code=error_code_for_status(status.HTTP_403_FORBIDDEN),
+                    error_message="caller cannot create project",
+                ),
                 operator_action="actorPrincipalIdとProject作成権限を確認する。",
                 runbook="RUNBOOK-authorization-forbidden",
                 context=router_log_context(
@@ -102,9 +108,7 @@ async def create_project(
                 ),
             )
             return api_error_response(status.HTTP_403_FORBIDDEN, "caller cannot create project")
-        idempotency_record = await api_functions.get_idempotency_record(
-            idempotency_key, session
-        )
+        idempotency_record = await api_functions.get_idempotency_record(idempotency_key, session)
         if has_existing_idempotency_result(idempotency_record):
             ops_logger.warning(
                 "createProject.idempotency_key_already_used",
@@ -114,8 +118,13 @@ async def create_project(
                 detail="idempotency key is already used",
                 when="Idempotency-Keyに対応する処理結果が既に存在する場合。",
                 why_production="冪等性キーの再利用やリトライ衝突を運用で追跡するため。",
-                context_model="traceId, actorPrincipalId, api.statusCode, "
-                "error.code, error.message",
+                context_model=operational_log_context_model(
+                    trace_id=request_context.correlation_id,
+                    actor_principal_id=caller.principal_id,
+                    api_status_code=status.HTTP_409_CONFLICT,
+                    error_code=error_code_for_status(status.HTTP_409_CONFLICT),
+                    error_message="idempotency key is already used",
+                ),
                 operator_action="Idempotency-Key、operationId、既存responsePayloadを確認する。",
                 runbook="RUNBOOK-state-conflict-idempotency",
                 context=router_log_context(
@@ -213,8 +222,14 @@ async def create_project(
                 "project/provisioning/idempotencyの重複や参照整合性を確認する。",
                 remediation_procedure="DB内不整合を特定し、DBパッチまたはデータ補正を行う。"
                 "補正後、冪等性状態を確認してから同一Idempotency-Keyで再実行する。",
-                context_model="traceId, actorPrincipalId, api.statusCode, "
-                "error.code, error.message, error.exceptionType",
+                context_model=operational_log_context_model(
+                    trace_id=request_context.correlation_id,
+                    actor_principal_id=caller.principal_id,
+                    api_status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    error_code=error_code_for_status(status.HTTP_500_INTERNAL_SERVER_ERROR),
+                    error_message="database integrity error",
+                    error_exception_type=type(error).__name__,
+                ),
                 operator_action="Project関連テーブル、provisioning/idempotency、"
                 "制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。",
                 runbook="RUNBOOK-db-data-repair",
@@ -242,8 +257,14 @@ async def create_project(
                 "transaction rollback状態を確認する。",
                 remediation_procedure="DB一時障害またはcommit失敗として扱い、rollbackを確認する。"
                 "利用者へ同一Idempotency-Keyでの再実行を依頼する。",
-                context_model="traceId, actorPrincipalId, api.statusCode, "
-                "error.code, error.message, error.exceptionType",
+                context_model=operational_log_context_model(
+                    trace_id=request_context.correlation_id,
+                    actor_principal_id=caller.principal_id,
+                    api_status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    error_code=error_code_for_status(status.HTTP_503_SERVICE_UNAVAILABLE),
+                    error_message="database commit failed",
+                    error_exception_type=type(error).__name__,
+                ),
                 operator_action="DB接続状態、transaction rollback、idempotency状態を確認し、"
                 "必要に応じて利用者へ再実行を案内する。",
                 runbook="RUNBOOK-db-commit-retry",
@@ -275,8 +296,14 @@ async def create_project(
             "routerで捕捉された例外種別とidempotency keyを確認する。",
             remediation_procedure="原因を特定し、冪等性状態を確認してから"
             "同一Idempotency-Keyで再実行する。",
-            context_model="traceId, actorPrincipalId, api.statusCode, "
-            "error.code, error.message, error.exceptionType",
+            context_model=operational_log_context_model(
+                trace_id=request_context.correlation_id,
+                actor_principal_id=caller.principal_id,
+                api_status_code=status_code_for_router_error(error),
+                error_code=error_code_for_status(status_code_for_router_error(error)),
+                error_message=str(error),
+                error_exception_type=type(error).__name__,
+            ),
             operator_action="同一routeの5xx率、直近deploy、DB/AWS依存の状態を確認する。",
             runbook="RUNBOOK-unexpected-api-failure",
             context=router_log_context(

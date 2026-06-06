@@ -9,7 +9,7 @@
 | domain | `projects` |
 | api | `list_project_subscriptions` |
 | routes | GET /projects/{projectId}/subscriptions (listProjectSubscriptions) |
-| router | `src/app/apis/projects/list_project_subscriptions/router.py:53` |
+| router | `src/app/apis/projects/list_project_subscriptions/router.py:54` |
 | messages | 2 |
 | logger wrapper calls | 2 |
 | levels | WARNING:1, ERROR:1 |
@@ -44,7 +44,7 @@
 | 説明 | 呼び出し元が対象Projectのsubscription一覧を参照できない場合。 |
 | 対応すべきこと | actorPrincipalId、projectId、Project権限を確認する。 |
 | runbook | RUNBOOK-authorization-forbidden |
-| 実装参照 | src/app/apis/projects/list_project_subscriptions/router.py:74<br>wrapper: src/app/apis/projects/list_project_subscriptions/router.py:74 (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/list_project_subscriptions/router.py:75<br>wrapper: src/app/apis/projects/list_project_subscriptions/router.py:75 (ops_logger.warning) |
 
 #### 出力項目
 
@@ -70,7 +70,7 @@
 | 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
 | 対応すべきこと | 同一routeの5xx率、直近deploy、DB状態を確認する。 |
 | runbook | RUNBOOK-unexpected-api-failure |
-| 実装参照 | src/app/apis/projects/list_project_subscriptions/router.py:105<br>wrapper: src/app/apis/projects/list_project_subscriptions/router.py:105 (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/list_project_subscriptions/router.py:112<br>wrapper: src/app/apis/projects/list_project_subscriptions/router.py:112 (ops_logger.error) |
 
 #### 出力項目
 
@@ -88,8 +88,8 @@
 
 | source | function | wrapper | catalog_id | message_id | level_hint | context keys |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `src/app/apis/projects/list_project_subscriptions/router.py:74` | list_project_subscriptions | `ops_logger.warning` | `M001` | `listProjectSubscriptions.caller_cannot_list_project_subscriptions` | `WARNING` |  |
-| `src/app/apis/projects/list_project_subscriptions/router.py:105` | list_project_subscriptions | `ops_logger.error` | `M002` | `listProjectSubscriptions.router_error` | `ERROR` |  |
+| `src/app/apis/projects/list_project_subscriptions/router.py:75` | list_project_subscriptions | `ops_logger.warning` | `M001` | `listProjectSubscriptions.caller_cannot_list_project_subscriptions` | `WARNING` |  |
+| `src/app/apis/projects/list_project_subscriptions/router.py:112` | list_project_subscriptions | `ops_logger.error` | `M002` | `listProjectSubscriptions.router_error` | `ERROR` |  |
 
 ## strict検証で要求する項目
 
