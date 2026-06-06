@@ -21,8 +21,11 @@ from app.apis.router_errors import (
     ROUTER_HANDLED_EXCEPTIONS,
     api_error_response,
     error_response_for_router_error,
+    router_log_context,
+    status_code_for_router_error,
 )
 from app.apis.sequence_types import CallerIdentity, RequestContext
+from app.core.logging import get_operation_logger
 from app.db.session import get_session
 from app.integrations.api_gateway_control.deps import get_api_gateway_control_client
 from app.integrations.api_gateway_control.port import ApiGatewayControlPort
@@ -30,6 +33,7 @@ from app.integrations.identity.deps import get_identity_admin_client
 from app.integrations.identity.port import IdentityAdminPort
 
 router = APIRouter()
+ops_logger = get_operation_logger(__name__)
 
 
 @router.post(
@@ -70,16 +74,76 @@ async def publish_api(
     try:
         validated_request = await api_functions.validate_api_publish_request(request)
         if not await api_functions.has_api_publish_permission(validated_request, caller):
+            ops_logger.warning(
+                "publishApi.caller_cannot_publish_api",
+                catalog_id="M001",
+                summary="呼び出し元がAPIを公開登録できないため、リクエストを拒否した。",
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="caller cannot publish api",
+                when="呼び出し元がAPI公開登録権限を持たない場合。",
+                why_production="API公開登録の認可拒否を運用で追跡するため。",
+                context_model="traceId, actorPrincipalId, api.statusCode, "
+                "error.code, error.message",
+                operator_action="actorPrincipalIdとAPI公開登録権限を確認する。",
+                runbook="RUNBOOK-authorization-forbidden",
+                context=router_log_context(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="caller cannot publish api",
+                    caller=caller,
+                    request_context=request_context,
+                ),
+            )
             return api_error_response(status.HTTP_403_FORBIDDEN, "caller cannot publish api")
         await api_functions.get_idempotency_record(idempotency_key, session)
         if not await api_functions.verify_api_gateway_stage_registration(
             validated_request,
             api_gateway_control,
         ):
+            ops_logger.error(
+                "publishApi.api_gateway_stage_registration_is_not_valid",
+                catalog_id="M002",
+                summary="API Gateway stage登録を検証できないため、API公開登録を中断した。",
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="API Gateway stage registration is not valid",
+                when="API Gateway stage登録の検証に失敗した場合。",
+                check_procedure="traceIdでログを検索し、指定されたREST API/stageと"
+                "API Gatewayの実在状態を確認する。",
+                remediation_procedure="API Gateway stageを修正し、"
+                "同一Idempotency-Keyで再実行する。",
+                context_model="traceId, actorPrincipalId, api.statusCode, "
+                "error.code, error.message",
+                operator_action="API Gateway REST API ID、stage名、権限、リージョンを確認する。",
+                runbook="RUNBOOK-dependency-provisioning-failure",
+                context=router_log_context(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail="API Gateway stage registration is not valid",
+                    caller=caller,
+                    request_context=request_context,
+                ),
+            )
             return api_error_response(
                 status.HTTP_502_BAD_GATEWAY, "API Gateway stage registration is not valid"
             )
         if await api_functions.has_registered_api(validated_request, session):
+            ops_logger.warning(
+                "publishApi.api_is_already_registered",
+                catalog_id="M003",
+                summary="APIが既に登録済みのため、リクエストを拒否した。",
+                status_code=status.HTTP_409_CONFLICT,
+                detail="api is already registered",
+                when="同一API Gateway stageが既にAPI catalogに登録されている場合。",
+                why_production="API登録の重複や冪等性衝突を運用で追跡するため。",
+                context_model="traceId, actorPrincipalId, api.statusCode, "
+                "error.code, error.message",
+                operator_action="既存API metadataとIdempotency-Keyを確認する。",
+                runbook="RUNBOOK-state-conflict-idempotency",
+                context=router_log_context(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="api is already registered",
+                    caller=caller,
+                    request_context=request_context,
+                ),
+            )
             return api_error_response(status.HTTP_409_CONFLICT, "api is already registered")
         operation = await api_functions.create_provisioning_operation(
             validated_request,
@@ -127,4 +191,25 @@ async def publish_api(
             operation=operation,
         )
     except ROUTER_HANDLED_EXCEPTIONS as error:
+        ops_logger.error(
+            "publishApi.router_error",
+            catalog_id="M004",
+            summary="Routerで捕捉した例外によりAPI公開登録が失敗した。",
+            when="ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。",
+            check_procedure="traceId/requestIdでログを検索し、"
+            "routerで捕捉された例外種別とidempotency keyを確認する。",
+            remediation_procedure="原因を特定し、冪等性状態と外部依存の状態を確認してから"
+            "再実行する。",
+            context_model="traceId, actorPrincipalId, api.statusCode, "
+            "error.code, error.message, error.exceptionType",
+            operator_action="同一routeの5xx率、直近deploy、Cognito/API Gateway/DB状態を確認する。",
+            runbook="RUNBOOK-unexpected-api-failure",
+            context=router_log_context(
+                status_code=status_code_for_router_error(error),
+                detail=str(error),
+                caller=caller,
+                request_context=request_context,
+                error=error,
+            ),
+        )
         return error_response_for_router_error(error)

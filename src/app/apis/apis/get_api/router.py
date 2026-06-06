@@ -17,12 +17,16 @@ from app.apis.router_errors import (
     ROUTER_HANDLED_EXCEPTIONS,
     api_error_response,
     error_response_for_router_error,
+    router_log_context,
+    status_code_for_router_error,
 )
 from app.apis.sequence_types import CallerIdentity
 from app.apis.types import ResourceId
+from app.core.logging import get_operation_logger
 from app.db.session import get_session
 
 router = APIRouter()
+ops_logger = get_operation_logger(__name__)
 
 
 @router.get(
@@ -56,7 +60,46 @@ async def get_api(
     try:
         api = await api_functions.get_api_detail(api_id, session)
         if not await api_functions.is_viewable_api(api, caller):
+            ops_logger.warning(
+                "getApi.caller_cannot_view_api",
+                catalog_id="M001",
+                summary="呼び出し元がAPI詳細を参照できないため、リクエストを拒否した。",
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="caller cannot view api",
+                when="呼び出し元が対象APIを参照できない場合。",
+                why_production="API詳細の認可拒否を運用で追跡するため。",
+                context_model="traceId, actorPrincipalId, api.statusCode, resource.apiId, "
+                "error.code, error.message",
+                operator_action="actorPrincipalId、apiId、API参照権限を確認する。",
+                runbook="RUNBOOK-authorization-forbidden",
+                context=router_log_context(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="caller cannot view api",
+                    caller=caller,
+                    resource={"apiId": api_id},
+                ),
+            )
             return api_error_response(status.HTTP_403_FORBIDDEN, "caller cannot view api")
         return await api_functions.build_api_detail_response(api)
     except ROUTER_HANDLED_EXCEPTIONS as error:
+        ops_logger.error(
+            "getApi.router_error",
+            catalog_id="M002",
+            summary="Routerで捕捉した例外によりAPI詳細取得が失敗した。",
+            when="ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。",
+            check_procedure="traceId/requestIdでログを検索し、"
+            "routerで捕捉された例外種別とapiIdを確認する。",
+            remediation_procedure="原因を特定し、再試行可能な処理は同一apiIdで再実行する。",
+            context_model="traceId, actorPrincipalId, api.statusCode, resource.apiId, "
+            "error.code, error.message, error.exceptionType",
+            operator_action="同一routeの5xx率、直近deploy、DB状態を確認する。",
+            runbook="RUNBOOK-unexpected-api-failure",
+            context=router_log_context(
+                status_code=status_code_for_router_error(error),
+                detail=str(error),
+                caller=caller,
+                resource={"apiId": api_id},
+                error=error,
+            ),
+        )
         return error_response_for_router_error(error)

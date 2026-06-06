@@ -9,42 +9,37 @@
 | domain | `apis` |
 | api | `get_api` |
 | routes | GET /apis/{apiId} (getApi) |
-| router | `src/app/apis/apis/get_api/router.py:44` |
-| messages | 7 |
-| logger wrapper calls | 0 |
-| levels | INFO:1, WARNING:4, ERROR:2 |
+| router | `src/app/apis/apis/get_api/router.py:48` |
+| messages | 2 |
+| logger wrapper calls | 2 |
+| levels | WARNING:1, ERROR:1 |
 
 ## 生成・検証方針
 
-- `message_catalog.py` / `messages.py` / `operational_messages.py` / `ops.py` にある静的定義を優先する。
-- 実装中の `app.core.logging` ラッパー呼び出しを検出し、未定義なら暫定行として出力する。
+- WARNING以上のMessage catalogは `router.py` の `ops_logger.warning/error(...)` kwargsを一次情報にする。
+- `api_error_response(...)` のstatus/detailとlogger呼び出しのstatus/detailを照合する。
+- 実装中の `app.core.logging` ラッパー呼び出しを検出し、WARN以上はrouter内のemitとcatalog定義の一致を検証する。
 - `logging.getLogger(...)`、`logger.info(...)` などの直接呼び出しは許可しない。
 - WARNING以上は運用上の意味を持つ前提で、必要な確認手順・runbook・contextを検証対象にする。
 
 ## メッセージ一覧
 
-| message_id | Level | wrapper calls | 発生条件 | ログ概要 | 主なcontext | 対応 | runbook | 実装参照 |
-| :--- | :--- | ---: | :--- | :--- | :--- | :--- | :--- | :--- |
-| `getApi.request_succeeded` | `INFO` | 0 | 2xx responseを返す直前。 | API処理が正常終了した。 | traceId, requestId, actorPrincipalId, api.method, api.route, api.statusCode, metrics.durationMs | 通常対応不要。latencyや件数の傾向監視のみ行う。 |  | default:GET /apis/{apiId}<br>inferred |
-| `getApi.authentication_failed` | `WARNING` | 0 | 401 responseを返す直前。 | Bearer tokenがない、無効、期限切れ、または認証検証に失敗した。 | traceId, requestId, actorPrincipalId, api.method, api.route, api.statusCode, resource.*, error.code | traceId、client_id、token issuer、Cognito authorizer設定、直近のUser Pool変更を確認する。 | RUNBOOK-authentication-failure | default:GET /apis/{apiId}<br>inferred |
-| `getApi.authorization_forbidden` | `WARNING` | 0 | 403 responseを返す直前。 | 認可条件を満たさないためアクセスを拒否した。 | traceId, requestId, actorPrincipalId, api.method, api.route, api.statusCode, resource.*, error.code | actorPrincipalId、projectId、apiId、scopeFullName、reviewer登録、Usage Plan stage紐づけを確認する。 | RUNBOOK-authorization-forbidden | default:GET /apis/{apiId}<br>inferred |
-| `getApi.state_conflict` | `WARNING` | 0 | 409 responseを返す直前。 | 重複、状態不整合、または冪等性衝突によりリクエストを拒否した。 | traceId, requestId, actorPrincipalId, api.method, api.route, api.statusCode, resource.*, error.code | Idempotency-Key、request_hash、operationId、既存request/subscription、row_versionを確認する。 | RUNBOOK-state-conflict-idempotency | default:GET /apis/{apiId}<br>inferred |
-| `getApi.validation_failed` | `WARNING` | 0 | 400または422 responseを返す直前。 | 入力値またはヘッダのvalidationでリクエストを拒否した。 | traceId, requestId, actorPrincipalId, api.method, api.route, api.statusCode, resource.*, error.code | 同一callerや同一routeで急増している場合、request例とIF仕様を突合し利用者へ修正依頼する。 | RUNBOOK-api-client-error | default:GET /apis/{apiId}<br>inferred |
-| `getApi.dependency_failed` | `ERROR` | 0 | 502または503 responseを返す直前、またはprovisioning step失敗時。 | 外部依存またはAWS API連携に失敗した。 | traceId, requestId, actorPrincipalId, api.method, api.route, resource.*, aws.service, aws.action, error.code, error.message, metrics.durationMs | Cognito/API Gateway/Secrets Manager/DSQLの障害範囲を切り分け、必要に応じて運用リトライまたは補償処理を実行する。 | RUNBOOK-dependency-provisioning-failure | default:GET /apis/{apiId}<br>inferred |
-| `getApi.unexpected_failed` | `ERROR` | 0 | 500 responseを返す直前。 | 想定外例外によりAPI処理が失敗した。 | traceId, requestId, actorPrincipalId, api.method, api.route, resource.*, aws.service, aws.action, error.code, error.message, metrics.durationMs | 同一routeの5xx率、直近deploy、DB migration、外部依存の状態を確認する。 | RUNBOOK-unexpected-api-failure | default:GET /apis/{apiId}<br>inferred |
+| id | message_id | level | status | wrapper calls | ログ概要 | 説明 | 出力項目 | 対応すべきこと | runbook | 実装参照 |
+| :--- | :--- | :--- | ---: | ---: | :--- | :--- | :--- | :--- | :--- | :--- |
+| `M001` | `getApi.caller_cannot_view_api` | `WARNING` | 403 | 1 | 呼び出し元がAPI詳細を参照できないため、リクエストを拒否した。 | 呼び出し元が対象APIを参照できない場合。 | traceId, actorPrincipalId, api.statusCode, resource.apiId, error.code, error.message | actorPrincipalId、apiId、API参照権限を確認する。 | RUNBOOK-authorization-forbidden | src/app/apis/apis/get_api/router.py:63<br>wrapper: src/app/apis/apis/get_api/router.py:63 (ops_logger.warning) |
+| `M002` | `getApi.router_error` | `ERROR` |  | 1 | Routerで捕捉した例外によりAPI詳細取得が失敗した。 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 | traceId, actorPrincipalId, api.statusCode, resource.apiId, error.code, error.message, error.exceptionType | 同一routeの5xx率、直近deploy、DB状態を確認する。 | RUNBOOK-unexpected-api-failure | src/app/apis/apis/get_api/router.py:85<br>wrapper: src/app/apis/apis/get_api/router.py:85 (ops_logger.error) |
 
 ## loggerラッパー呼び出し一覧
 
-| source | function | wrapper | message_id | level_hint | context keys |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| - | - | - | - | - | - |
+| source | function | wrapper | catalog_id | message_id | level_hint | context keys |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `src/app/apis/apis/get_api/router.py:63` | get_api | `ops_logger.warning` | `M001` | `getApi.caller_cannot_view_api` | `WARNING` |  |
+| `src/app/apis/apis/get_api/router.py:85` | get_api | `ops_logger.error` | `M002` | `getApi.router_error` | `ERROR` |  |
 
 ## strict検証で要求する項目
 
 | Level | 必須項目 |
 | :--- | :--- |
-| `DEBUG` | なし |
-| `INFO` | summary |
 | `WARNING` | why_production |
 | `ERROR` | check_procedure, context_model, runbook |
 | `CRITICAL` | remediation_procedure, context_model, runbook, escalation |

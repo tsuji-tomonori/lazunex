@@ -24,9 +24,12 @@ from app.apis.router_errors import (
     ROUTER_HANDLED_EXCEPTIONS,
     api_error_response,
     error_response_for_router_error,
+    router_log_context,
+    status_code_for_router_error,
 )
 from app.apis.sequence_types import CallerIdentity, RequestContext
 from app.apis.types import ResourceId
+from app.core.logging import get_operation_logger
 from app.db.session import get_session
 from app.integrations.api_gateway_control.deps import get_api_gateway_control_client
 from app.integrations.api_gateway_control.port import ApiGatewayControlPort
@@ -34,6 +37,7 @@ from app.integrations.identity.deps import get_identity_admin_client
 from app.integrations.identity.port import IdentityAdminPort
 
 router = APIRouter()
+ops_logger = get_operation_logger(__name__)
 
 
 @router.post(
@@ -90,14 +94,98 @@ async def approve_api_access_request(
     try:
         access_request = await api_functions.get_access_request(access_request_id, session)
         if not await api_functions.is_pending_access_request(access_request):
+            ops_logger.warning(
+                "approveApiAccessRequest.access_request_is_not_pending",
+                catalog_id="M001",
+                summary="API利用申請が審査待ちではないため、承認リクエストを拒否した。",
+                status_code=status.HTTP_409_CONFLICT,
+                detail="access request is not pending",
+                when="対象API利用申請がpending状態ではない場合。",
+                why_production="二重レビューや状態競合を運用で追跡するため。",
+                context_model="traceId, actorPrincipalId, api.statusCode, "
+                "resource.accessRequestId, "
+                "error.code, error.message",
+                operator_action="accessRequestId、現在state、既存reviewを確認する。",
+                runbook="RUNBOOK-state-conflict-idempotency",
+                context=router_log_context(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="access request is not pending",
+                    caller=caller,
+                    request_context=request_context,
+                    resource={"accessRequestId": access_request_id},
+                ),
+            )
             return api_error_response(status.HTTP_409_CONFLICT, "access request is not pending")
         if not await api_functions.has_api_reviewer_permission(access_request, caller, session):
+            ops_logger.warning(
+                "approveApiAccessRequest.caller_is_not_an_api_reviewer",
+                catalog_id="M002",
+                summary="呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。",
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="caller is not an api reviewer",
+                when="呼び出し元が対象APIのreviewerではない場合。",
+                why_production="API reviewer認可拒否を運用で追跡するため。",
+                context_model="traceId, actorPrincipalId, api.statusCode, "
+                "resource.accessRequestId, "
+                "error.code, error.message",
+                operator_action="actorPrincipalId、apiId、reviewer設定を確認する。",
+                runbook="RUNBOOK-authorization-forbidden",
+                context=router_log_context(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="caller is not an api reviewer",
+                    caller=caller,
+                    request_context=request_context,
+                    resource={"accessRequestId": access_request_id},
+                ),
+            )
             return api_error_response(status.HTTP_403_FORBIDDEN, "caller is not an api reviewer")
         if not await api_functions.is_available_project_api_stage(access_request):
+            ops_logger.warning(
+                "approveApiAccessRequest.project_api_stage_is_not_available",
+                catalog_id="M003",
+                summary="Project/API stageが利用可能ではないため、承認リクエストを拒否した。",
+                status_code=status.HTTP_409_CONFLICT,
+                detail="project api stage is not available",
+                when="対象Project/API stageが承認可能な状態ではない場合。",
+                why_production="承認時の状態不整合を運用で追跡するため。",
+                context_model="traceId, actorPrincipalId, api.statusCode, "
+                "resource.accessRequestId, "
+                "error.code, error.message",
+                operator_action="projectId、apiId、apiStageId、Project/API状態を確認する。",
+                runbook="RUNBOOK-state-conflict-idempotency",
+                context=router_log_context(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="project api stage is not available",
+                    caller=caller,
+                    request_context=request_context,
+                    resource={"accessRequestId": access_request_id},
+                ),
+            )
             return api_error_response(
                 status.HTTP_409_CONFLICT, "project api stage is not available"
             )
         if await api_functions.has_active_subscription(access_request, session):
+            ops_logger.warning(
+                "approveApiAccessRequest.active_subscription_already_exists",
+                catalog_id="M004",
+                summary="有効なsubscriptionが既に存在するため、承認リクエストを拒否した。",
+                status_code=status.HTTP_409_CONFLICT,
+                detail="active subscription already exists",
+                when="同一Project/API stageのactive subscriptionが既に存在する場合。",
+                why_production="二重承認や状態競合を運用で追跡するため。",
+                context_model="traceId, actorPrincipalId, api.statusCode, "
+                "resource.accessRequestId, "
+                "error.code, error.message",
+                operator_action="既存subscription、projectId、apiId、apiStageIdを確認する。",
+                runbook="RUNBOOK-state-conflict-idempotency",
+                context=router_log_context(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="active subscription already exists",
+                    caller=caller,
+                    request_context=request_context,
+                    resource={"accessRequestId": access_request_id},
+                ),
+            )
             return api_error_response(
                 status.HTTP_409_CONFLICT, "active subscription already exists"
             )
@@ -202,4 +290,26 @@ async def approve_api_access_request(
             operation,
         )
     except ROUTER_HANDLED_EXCEPTIONS as error:
+        ops_logger.error(
+            "approveApiAccessRequest.router_error",
+            catalog_id="M005",
+            summary="Routerで捕捉した例外によりAPI利用申請承認が失敗した。",
+            when="ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。",
+            check_procedure="traceId/requestIdでログを検索し、"
+            "routerで捕捉された例外種別とaccessRequestIdを確認する。",
+            remediation_procedure="原因を特定し、冪等性状態と外部依存の状態を確認してから"
+            "再実行する。",
+            context_model="traceId, actorPrincipalId, api.statusCode, resource.accessRequestId, "
+            "error.code, error.message, error.exceptionType",
+            operator_action="同一routeの5xx率、直近deploy、Cognito/API Gateway/DB状態を確認する。",
+            runbook="RUNBOOK-unexpected-api-failure",
+            context=router_log_context(
+                status_code=status_code_for_router_error(error),
+                detail=str(error),
+                caller=caller,
+                request_context=request_context,
+                resource={"accessRequestId": access_request_id},
+                error=error,
+            ),
+        )
         return error_response_for_router_error(error)

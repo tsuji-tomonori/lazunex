@@ -1,4 +1,3 @@
-# ruff: noqa: E501
 """Catalog-driven operational logging for Lazunex.
 
 Application code must not call the stdlib logger directly.  API code should emit
@@ -59,6 +58,7 @@ class OperationalMessage:
 
     message_id: str
     level: LogLevel
+    catalog_id: str | None = None
     summary: str | None = None
     context: Mapping[str, Any] | None = None
     result: str | None = None
@@ -200,11 +200,23 @@ class OperationalLogger:
         message_id: str,
         *,
         level: LogLevel | str,
+        catalog_id: str | None = None,
         summary: str | None = None,
+        status_code: int | None = None,
+        detail: str | None = None,
+        when: str | None = None,
+        why_production: str | None = None,
+        check_procedure: str | None = None,
+        remediation_procedure: str | None = None,
+        context_model: str | None = None,
+        operator_action: str | None = None,
+        runbook: str | None = None,
         context: Mapping[str, Any] | None = None,
         result: str | None = None,
         error: Mapping[str, Any] | BaseException | None = None,
-        exc_info: bool | BaseException | tuple[type[BaseException], BaseException, TracebackType | None] = False,
+        exc_info: bool
+        | BaseException
+        | tuple[type[BaseException], BaseException, TracebackType | None] = False,
     ) -> None:
         """Emit a catalogued operational message.
 
@@ -218,8 +230,18 @@ class OperationalLogger:
             logger_name=self._name,
             logical_function=self._logical_function,
             message_id=message_id,
+            catalog_id=catalog_id,
             level=level_value,
             summary=summary,
+            status_code=status_code,
+            detail=detail,
+            when=when,
+            why_production=why_production,
+            check_procedure=check_procedure,
+            remediation_procedure=remediation_procedure,
+            context_model=context_model,
+            operator_action=operator_action,
+            runbook=runbook,
             context=context,
             result=result,
             error=error,
@@ -236,26 +258,88 @@ class OperationalLogger:
         message_id: str,
         *,
         summary: str | None = None,
+        catalog_id: str | None = None,
+        status_code: int | None = None,
+        detail: str | None = None,
+        when: str | None = None,
+        why_production: str | None = None,
+        check_procedure: str | None = None,
+        remediation_procedure: str | None = None,
+        context_model: str | None = None,
+        operator_action: str | None = None,
+        runbook: str | None = None,
         context: Mapping[str, Any] | None = None,
         result: str | None = None,
     ) -> None:
-        self.emit(message_id, level=LogLevel.DEBUG, summary=summary, context=context, result=result)
+        self.emit(
+            message_id,
+            level=LogLevel.DEBUG,
+            catalog_id=catalog_id,
+            summary=summary,
+            status_code=status_code,
+            detail=detail,
+            when=when,
+            why_production=why_production,
+            check_procedure=check_procedure,
+            remediation_procedure=remediation_procedure,
+            context_model=context_model,
+            operator_action=operator_action,
+            runbook=runbook,
+            context=context,
+            result=result,
+        )
 
     def info(
         self,
         message_id: str,
         *,
         summary: str | None = None,
+        catalog_id: str | None = None,
+        status_code: int | None = None,
+        detail: str | None = None,
+        when: str | None = None,
+        why_production: str | None = None,
+        check_procedure: str | None = None,
+        remediation_procedure: str | None = None,
+        context_model: str | None = None,
+        operator_action: str | None = None,
+        runbook: str | None = None,
         context: Mapping[str, Any] | None = None,
         result: str | None = None,
     ) -> None:
-        self.emit(message_id, level=LogLevel.INFO, summary=summary, context=context, result=result)
+        self.emit(
+            message_id,
+            level=LogLevel.INFO,
+            catalog_id=catalog_id,
+            summary=summary,
+            status_code=status_code,
+            detail=detail,
+            when=when,
+            why_production=why_production,
+            check_procedure=check_procedure,
+            remediation_procedure=remediation_procedure,
+            context_model=context_model,
+            operator_action=operator_action,
+            runbook=runbook,
+            context=context,
+            result=result,
+        )
 
     def warning(
         self,
         message_id: str,
         *,
         summary: str | None = None,
+        catalog_id: str | None = None,
+        status_code: int | None = None,
+        detail: str | None = None,
+        when: str | None = None,
+        why_production: str | None = None,
+        check_procedure: str | None = None,
+        remediation_procedure: str | None = None,
+        context_model: str | None = None,
+        operator_action: str | None = None,
+        runbook: str | None = None,
         context: Mapping[str, Any] | None = None,
         result: str | None = None,
         error: Mapping[str, Any] | BaseException | None = None,
@@ -263,7 +347,17 @@ class OperationalLogger:
         self.emit(
             message_id,
             level=LogLevel.WARNING,
+            catalog_id=catalog_id,
             summary=summary,
+            status_code=status_code,
+            detail=detail,
+            when=when,
+            why_production=why_production,
+            check_procedure=check_procedure,
+            remediation_procedure=remediation_procedure,
+            context_model=context_model,
+            operator_action=operator_action,
+            runbook=runbook,
             context=context,
             result=result,
             error=error,
@@ -274,15 +368,37 @@ class OperationalLogger:
         message_id: str,
         *,
         summary: str | None = None,
+        catalog_id: str | None = None,
+        status_code: int | None = None,
+        detail: str | None = None,
+        when: str | None = None,
+        why_production: str | None = None,
+        check_procedure: str | None = None,
+        remediation_procedure: str | None = None,
+        context_model: str | None = None,
+        operator_action: str | None = None,
+        runbook: str | None = None,
         context: Mapping[str, Any] | None = None,
         result: str | None = None,
         error: Mapping[str, Any] | BaseException | None = None,
-        exc_info: bool | BaseException | tuple[type[BaseException], BaseException, TracebackType | None] = False,
+        exc_info: bool
+        | BaseException
+        | tuple[type[BaseException], BaseException, TracebackType | None] = False,
     ) -> None:
         self.emit(
             message_id,
             level=LogLevel.ERROR,
+            catalog_id=catalog_id,
             summary=summary,
+            status_code=status_code,
+            detail=detail,
+            when=when,
+            why_production=why_production,
+            check_procedure=check_procedure,
+            remediation_procedure=remediation_procedure,
+            context_model=context_model,
+            operator_action=operator_action,
+            runbook=runbook,
             context=context,
             result=result,
             error=error,
@@ -294,6 +410,16 @@ class OperationalLogger:
         message_id: str,
         *,
         summary: str | None = None,
+        catalog_id: str | None = None,
+        status_code: int | None = None,
+        detail: str | None = None,
+        when: str | None = None,
+        why_production: str | None = None,
+        check_procedure: str | None = None,
+        remediation_procedure: str | None = None,
+        context_model: str | None = None,
+        operator_action: str | None = None,
+        runbook: str | None = None,
         context: Mapping[str, Any] | None = None,
         result: str | None = None,
         error: Mapping[str, Any] | BaseException | None = None,
@@ -301,7 +427,17 @@ class OperationalLogger:
         self.emit(
             message_id,
             level=LogLevel.ERROR,
+            catalog_id=catalog_id,
             summary=summary,
+            status_code=status_code,
+            detail=detail,
+            when=when,
+            why_production=why_production,
+            check_procedure=check_procedure,
+            remediation_procedure=remediation_procedure,
+            context_model=context_model,
+            operator_action=operator_action,
+            runbook=runbook,
             context=context,
             result=result,
             error=error,
@@ -313,15 +449,37 @@ class OperationalLogger:
         message_id: str,
         *,
         summary: str | None = None,
+        catalog_id: str | None = None,
+        status_code: int | None = None,
+        detail: str | None = None,
+        when: str | None = None,
+        why_production: str | None = None,
+        check_procedure: str | None = None,
+        remediation_procedure: str | None = None,
+        context_model: str | None = None,
+        operator_action: str | None = None,
+        runbook: str | None = None,
         context: Mapping[str, Any] | None = None,
         result: str | None = None,
         error: Mapping[str, Any] | BaseException | None = None,
-        exc_info: bool | BaseException | tuple[type[BaseException], BaseException, TracebackType | None] = False,
+        exc_info: bool
+        | BaseException
+        | tuple[type[BaseException], BaseException, TracebackType | None] = False,
     ) -> None:
         self.emit(
             message_id,
             level=LogLevel.CRITICAL,
+            catalog_id=catalog_id,
             summary=summary,
+            status_code=status_code,
+            detail=detail,
+            when=when,
+            why_production=why_production,
+            check_procedure=check_procedure,
+            remediation_procedure=remediation_procedure,
+            context_model=context_model,
+            operator_action=operator_action,
+            runbook=runbook,
             context=context,
             result=result,
             error=error,
@@ -329,7 +487,9 @@ class OperationalLogger:
         )
 
 
-def get_operation_logger(name: str | None = None, *, logical_function: str | None = None) -> OperationalLogger:
+def get_operation_logger(
+    name: str | None = None, *, logical_function: str | None = None
+) -> OperationalLogger:
     """Create a Lazunex operational logger wrapper."""
 
     return OperationalLogger(name or "lazunex", logical_function=logical_function)
@@ -339,18 +499,40 @@ def emit_message(
     message_id: str,
     *,
     level: LogLevel | str = LogLevel.INFO,
+    catalog_id: str | None = None,
     summary: str | None = None,
+    status_code: int | None = None,
+    detail: str | None = None,
+    when: str | None = None,
+    why_production: str | None = None,
+    check_procedure: str | None = None,
+    remediation_procedure: str | None = None,
+    context_model: str | None = None,
+    operator_action: str | None = None,
+    runbook: str | None = None,
     context: Mapping[str, Any] | None = None,
     result: str | None = None,
     error: Mapping[str, Any] | BaseException | None = None,
-    exc_info: bool | BaseException | tuple[type[BaseException], BaseException, TracebackType | None] = False,
+    exc_info: bool
+    | BaseException
+    | tuple[type[BaseException], BaseException, TracebackType | None] = False,
 ) -> None:
     """Module-level emission helper for simple call sites."""
 
     get_operation_logger("lazunex").emit(
         message_id,
         level=level,
+        catalog_id=catalog_id,
         summary=summary,
+        status_code=status_code,
+        detail=detail,
+        when=when,
+        why_production=why_production,
+        check_procedure=check_procedure,
+        remediation_procedure=remediation_procedure,
+        context_model=context_model,
+        operator_action=operator_action,
+        runbook=runbook,
         context=context,
         result=result,
         error=error,
@@ -363,8 +545,18 @@ def _build_payload(
     logger_name: str,
     logical_function: str | None,
     message_id: str,
+    catalog_id: str | None,
     level: LogLevel,
     summary: str | None,
+    status_code: int | None,
+    detail: str | None,
+    when: str | None,
+    why_production: str | None,
+    check_procedure: str | None,
+    remediation_procedure: str | None,
+    context_model: str | None,
+    operator_action: str | None,
+    runbook: str | None,
     context: Mapping[str, Any] | None,
     result: str | None,
     error: Mapping[str, Any] | BaseException | None,
@@ -378,9 +570,11 @@ def _build_payload(
         "level": level.value,
         "service": os.getenv("SERVICE_NAME", "lazunex"),
         "env": os.getenv("ENV_NAME", os.getenv("APP_ENV", "local")),
-        "logicalFunction": logical_function
-        or os.getenv("LOGICAL_FUNCTION", "management_api"),
+        "logicalFunction": logical_function or os.getenv("LOGICAL_FUNCTION", "management_api"),
         "logger": logger_name,
+        "messageCatalogId": catalog_id
+        if catalog_id is not None
+        else base_context.pop("messageCatalogId", base_context.pop("catalogId", None)),
         "messageId": message_id,
         "summary": summary,
         "traceId": base_context.pop("traceId", None),
@@ -393,6 +587,27 @@ def _build_payload(
         "result": result if result is not None else base_context.pop("result", None),
         "error": _normalize_error(error) if error is not None else base_context.pop("error", None),
     }
+    message_catalog = {
+        key: value
+        for key, value in {
+            "id": payload["messageCatalogId"],
+            "messageId": message_id,
+            "level": level.value,
+            "summary": summary,
+            "statusCode": status_code,
+            "detail": detail,
+            "when": when,
+            "whyProduction": why_production,
+            "checkProcedure": check_procedure,
+            "remediationProcedure": remediation_procedure,
+            "contextModel": context_model,
+            "operatorAction": operator_action,
+            "runbook": runbook,
+        }.items()
+        if value is not None
+    }
+    if message_catalog:
+        payload["messageCatalog"] = message_catalog
     if base_context:
         payload["context"] = base_context
     return cast("JsonObject", _mask_secrets(payload))
@@ -439,7 +654,9 @@ def _exception_to_error(
 
 
 def _normalize_exc_info(
-    exc_info: bool | BaseException | tuple[type[BaseException], BaseException, TracebackType | None],
+    exc_info: bool
+    | BaseException
+    | tuple[type[BaseException], BaseException, TracebackType | None],
 ) -> bool | tuple[type[BaseException], BaseException, TracebackType | None]:
     if isinstance(exc_info, BaseException):
         return (type(exc_info), exc_info, exc_info.__traceback__)

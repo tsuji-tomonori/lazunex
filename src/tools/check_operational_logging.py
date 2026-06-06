@@ -49,6 +49,11 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
         help="Require every wrapper message_id to exist in message_catalog.py.",
     )
     parser.add_argument(
+        "--fail-on-missing-catalog-id",
+        action="store_true",
+        help="Require every wrapper call to contain a literal catalog_id.",
+    )
+    parser.add_argument(
         "--require-api-wrapper-calls",
         action="store_true",
         help="Require each API directory to contain at least one wrapper call.",
@@ -80,6 +85,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 strict=args.strict,
                 fail_on_undocumented_emits=args.fail_on_undocumented_emits,
                 fail_on_missing_message_id=True,
+                fail_on_missing_catalog_id=args.fail_on_missing_catalog_id,
                 fail_on_level_mismatch=True,
                 require_api_wrapper_calls=args.require_api_wrapper_calls,
             )

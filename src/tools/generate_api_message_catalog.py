@@ -44,6 +44,18 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, cast
 
+if __package__ in {None, ""}:
+    sys.path.append(str(Path(__file__).resolve().parents[1]))
+
+from tools.generate_api_sequences import (
+    HTTP_STATUS_REASON_PHRASES,
+    ErrorReturnStep,
+    api_sequence_from_dir,
+    endpoint_error_returns,
+    endpoint_function,
+    function_metadata,
+)
+
 DEFAULT_API_ROOT = Path("src/app/apis")
 DEFAULT_SCAN_ROOT = Path("src/app")
 DEFAULT_DOCS_ROOT = Path("docs/spec/40.apis")
@@ -93,19 +105,31 @@ CATALOG_CALL_NAMES = {
 MESSAGE_ID_KW_NAMES = (
     "message_id",
     "messageId",
-    "id",
     "code",
     "event_id",
     "eventId",
+)
+CATALOG_ID_FIELD_NAMES = (
+    "catalog_id",
+    "catalogId",
+    "message_catalog_id",
+    "messageCatalogId",
+    "message_number",
+    "messageNumber",
 )
 LEVEL_KW_NAMES = ("level", "severity")
 
 FIELD_ALIASES: dict[str, str] = {
     "messageId": "message_id",
-    "id": "message_id",
     "code": "message_id",
     "event_id": "message_id",
     "eventId": "message_id",
+    "id": "catalog_id",
+    "catalogId": "catalog_id",
+    "message_catalog_id": "catalog_id",
+    "messageCatalogId": "catalog_id",
+    "message_number": "catalog_id",
+    "messageNumber": "catalog_id",
     "severity": "level",
     "description": "summary",
     "title": "summary",
@@ -120,6 +144,8 @@ FIELD_ALIASES: dict[str, str] = {
     "context": "context_model",
     "contexts": "context_model",
     "runbook_url": "runbook",
+    "status": "status_code",
+    "statusCode": "status_code",
 }
 
 CONTEXT_BY_LEVEL: dict[str, str] = {
@@ -136,9 +162,7 @@ LOGGER_METHODS = {"debug", "info", "warning", "warn", "error", "exception", "cri
 LOGGER_FACTORY_METHODS = {"getLogger", "get_logger"}
 LOGGER_VARIABLE_NAMES = {"logger", "log", "LOGGER", "LOG", "_logger", "_log"}
 FORBIDDEN_LOG_MODULES = {"logging", "structlog", "loguru"}
-DEFAULT_ALLOWED_DIRECT_LOGGER_FILES = (
-    "src/app/core/logging.py",
-)
+DEFAULT_ALLOWED_DIRECT_LOGGER_FILES = ("src/app/core/logging.py",)
 
 # Lazunex wrapper detection ------------------------------------------------
 
@@ -195,12 +219,14 @@ class ApiMeta:
 class WrapperCall:
     """One call to app.core.logging's operational wrapper."""
 
+    catalog_id: str | None
     message_id: str | None
     level_hint: str | None
     source: str
     function_name: str | None
     wrapper: str
     context_keys: tuple[str, ...] = field(default_factory=tuple)
+    catalog_fields: Mapping[str, Any] = field(default_factory=lambda: {})
 
 
 @dataclass(frozen=True)
@@ -216,8 +242,11 @@ class DirectLoggerViolation:
 
 @dataclass(frozen=True)
 class MessageDefinition:
+    catalog_id: str
     message_id: str
     level: str
+    status_code: int | None = None
+    detail: str = ""
     summary: str = ""
     when: str = ""
     why_production: str = ""
@@ -233,8 +262,18 @@ class MessageDefinition:
     inferred: bool = False
 
     @property
-    def sort_key(self) -> tuple[int, str]:
-        return (LEVEL_ORDER.get(self.level, 999), self.message_id)
+    def sort_key(self) -> tuple[int, str, str]:
+        if self.catalog_id:
+            return (0, self.catalog_id, self.message_id)
+        return (1, f"{LEVEL_ORDER.get(self.level, 999):03d}", self.message_id)
+
+    @property
+    def description(self) -> str:
+        if self.when:
+            return self.when
+        if self.why_production:
+            return self.why_production
+        return self.summary
 
     def with_emitted_from(self, locations: Iterable[str]) -> MessageDefinition:
         current = set(self.emitted_from)
@@ -243,7 +282,9 @@ class MessageDefinition:
 
     def missing_required_fields(self) -> tuple[str, ...]:
         missing: list[str] = []
-        for field_name in REQUIRED_FIELDS_BY_LEVEL.get(self.level, ()):  # unknown level handled separately
+        for field_name in REQUIRED_FIELDS_BY_LEVEL.get(
+            self.level, ()
+        ):  # unknown level handled separately
             value = getattr(self, field_name)
             if not str(value).strip():
                 missing.append(field_name)
@@ -256,6 +297,8 @@ class ApiCatalog:
     messages: tuple[MessageDefinition, ...]
     wrapper_calls: tuple[WrapperCall, ...]
     explicit_message_ids: frozenset[str]
+    router_error_returns: tuple[ErrorReturnStep, ...] = ()
+    has_router_error_handler_return: bool = False
 
 
 @dataclass(frozen=True)
@@ -295,6 +338,25 @@ def normalize_message_id(value: Any) -> str:
     text = str(value).strip()
     text = text.replace(" ", "_")
     return text
+
+
+def normalize_catalog_id(value: Any) -> str:
+    text = str(value).strip()
+    return text
+
+
+def normalize_status_code(value: Any) -> int | None:
+    if isinstance(value, int):
+        return value
+    text = str(value).strip()
+    if not text:
+        return None
+    if text.isdecimal():
+        return int(text)
+    match = re.search(r"HTTP_(?P<code>[0-9]{3})_", text)
+    if match is not None:
+        return int(match.group("code"))
+    return None
 
 
 def get_keyword(call: ast.Call, names: Sequence[str]) -> ast.AST | None:
@@ -348,7 +410,9 @@ def literal_value(node: ast.AST | None) -> Any:
     if isinstance(node, ast.Attribute):
         return dotted_name(node)
     if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "dict":
-        return {keyword.arg: literal_value(keyword.value) for keyword in node.keywords if keyword.arg}
+        return {
+            keyword.arg: literal_value(keyword.value) for keyword in node.keywords if keyword.arg
+        }
     try:
         return ast.unparse(node)
     except Exception:  # pragma: no cover - defensive for malformed ASTs
@@ -364,7 +428,9 @@ def as_display(value: Any) -> str:
         items = cast("Iterable[Any]", value)
         return ", ".join(as_display(item) for item in items)
     if isinstance(value, Mapping):
-        return json.dumps(dict(cast("Mapping[str, Any]", value)), ensure_ascii=False, sort_keys=True)
+        return json.dumps(
+            dict(cast("Mapping[str, Any]", value)), ensure_ascii=False, sort_keys=True
+        )
     return str(value)
 
 
@@ -395,17 +461,16 @@ def extract_mapping_from_call(call: ast.Call) -> dict[str, Any]:
     return data
 
 
-def normalize_definition(data: Mapping[str, Any], source: str, *, inferred: bool = False) -> MessageDefinition | None:
+def normalize_definition(
+    data: Mapping[str, Any], source: str, *, inferred: bool = False
+) -> MessageDefinition | None:
     normalized: dict[str, Any] = {}
     for raw_key, raw_value in data.items():
         key = FIELD_ALIASES.get(str(raw_key), str(raw_key))
         normalized[key] = raw_value
 
     message_id = normalize_message_id(
-        normalized.get("message_id")
-        or normalized.get("message")
-        or normalized.get("name")
-        or ""
+        normalized.get("message_id") or normalized.get("message") or normalized.get("name") or ""
     )
     if not message_id:
         return None
@@ -422,8 +487,11 @@ def normalize_definition(data: Mapping[str, Any], source: str, *, inferred: bool
 
     level = normalize_level(normalized.get("level"), fallback="INFO")
     return MessageDefinition(
+        catalog_id=normalize_catalog_id(normalized.get("catalog_id") or ""),
         message_id=message_id,
         level=level,
+        status_code=normalize_status_code(normalized.get("status_code")),
+        detail=as_display(normalized.get("detail")),
         summary=as_display(normalized.get("summary")),
         when=as_display(normalized.get("when")),
         why_production=as_display(normalized.get("why_production")),
@@ -487,7 +555,9 @@ def parse_catalog_file(path: Path, root: Path) -> list[MessageDefinition]:
             definitions.extend(definitions_from_literal(literal_value(value_node), source))
 
         if isinstance(node, ast.Call) and call_name(node) in CATALOG_CALL_NAMES:
-            definition = normalize_definition(extract_mapping_from_call(node), f"{source}:{node.lineno}")
+            definition = normalize_definition(
+                extract_mapping_from_call(node), f"{source}:{node.lineno}"
+            )
             if definition:
                 definitions.append(definition)
     return definitions
@@ -512,7 +582,9 @@ def parse_route_meta(router_path: Path, root: Path, api_dir: Path) -> list[ApiMe
                 continue
             path_value = literal_value(decorator.args[0]) if decorator.args else ""
             operation_id_node = get_keyword(decorator, ("operation_id", "operationId"))
-            operation_id = as_display(literal_value(operation_id_node)) if operation_id_node else node.name
+            operation_id = (
+                as_display(literal_value(operation_id_node)) if operation_id_node else node.name
+            )
             metas.append(
                 ApiMeta(
                     domain=domain,
@@ -536,8 +608,22 @@ def message_id_from_call(call: ast.Call) -> str | None:
             return normalize_message_id(value)
     for arg in call.args[:2]:
         value = literal_value(arg)
-        if isinstance(value, str) and value.strip() and re.match(r"^[A-Za-z][A-Za-z0-9_.:-]*$", value):
+        if (
+            isinstance(value, str)
+            and value.strip()
+            and re.match(r"^[A-Za-z][A-Za-z0-9_.:-]*$", value)
+        ):
             return normalize_message_id(value)
+    return None
+
+
+def catalog_id_from_call(call: ast.Call) -> str | None:
+    kw_node = get_keyword(call, CATALOG_ID_FIELD_NAMES)
+    if kw_node is None:
+        return None
+    value = literal_value(kw_node)
+    if isinstance(value, str) and value.strip():
+        return normalize_catalog_id(value)
     return None
 
 
@@ -560,6 +646,35 @@ def literal_context_keys(call: ast.Call) -> tuple[str, ...]:
         mapping = cast("Mapping[Any, Any]", value)  # type: ignore[redundant-cast]
         return tuple(sorted(str(key) for key in mapping))
     return ()
+
+
+def catalog_fields_from_call(call: ast.Call) -> dict[str, Any]:
+    fields: dict[str, Any] = {}
+    for keyword in call.keywords:
+        if keyword.arg is None:
+            continue
+        if keyword.arg in {"context", "extra", "payload"}:
+            continue
+        key = FIELD_ALIASES.get(keyword.arg, keyword.arg)
+        if key in {
+            "catalog_id",
+            "message_id",
+            "level",
+            "summary",
+            "status_code",
+            "detail",
+            "when",
+            "why_production",
+            "check_procedure",
+            "remediation_procedure",
+            "context_model",
+            "operator_action",
+            "runbook",
+            "escalation",
+            "tags",
+        }:
+            fields[key] = literal_value(keyword.value)
+    return fields
 
 
 def is_dotted_call(node: ast.Call, modules: set[str], names: set[str]) -> bool:
@@ -641,7 +756,10 @@ class WrapperCallVisitor(ast.NodeVisitor):
             level_hint = level_hint_from_wrapper_method(node.func.id, node)
         elif isinstance(node.func, ast.Attribute):
             receiver = dotted_name(node.func.value)
-            if isinstance(node.func.value, ast.Name) and node.func.value.id in self.wrapper_variables:
+            if (
+                isinstance(node.func.value, ast.Name)
+                and node.func.value.id in self.wrapper_variables
+            ):
                 if node.func.attr in WRAPPER_METHOD_LEVELS:
                     wrapper_name = f"{node.func.value.id}.{node.func.attr}"
                     level_hint = level_hint_from_wrapper_method(node.func.attr, node)
@@ -651,12 +769,14 @@ class WrapperCallVisitor(ast.NodeVisitor):
         if wrapper_name:
             self.calls.append(
                 WrapperCall(
+                    catalog_id=catalog_id_from_call(node),
                     message_id=message_id_from_call(node),
                     level_hint=level_hint,
                     source=f"{repo_relative(self.path, self.root)}:{node.lineno}",
                     function_name=self.current_function,
                     wrapper=wrapper_name,
                     context_keys=literal_context_keys(node),
+                    catalog_fields=catalog_fields_from_call(node),
                 )
             )
         self.generic_visit(node)
@@ -793,15 +913,24 @@ class DirectLoggerVisitor(ast.NodeVisitor):
                 self._add(node, "direct-logger-call", f"{node.func.id}(...) is not allowed")
         elif isinstance(node.func, ast.Attribute):
             receiver = dotted_name(node.func.value)
-            if receiver in self.logging_module_aliases and node.func.attr in LOGGER_METHODS | LOGGER_FACTORY_METHODS:
-                self._add(node, "direct-logger-call", f"{receiver}.{node.func.attr}(...) is not allowed")
+            if (
+                receiver in self.logging_module_aliases
+                and node.func.attr in LOGGER_METHODS | LOGGER_FACTORY_METHODS
+            ):
+                self._add(
+                    node, "direct-logger-call", f"{receiver}.{node.func.attr}(...) is not allowed"
+                )
             if isinstance(node.func.value, ast.Name):
                 base_name = node.func.value.id
                 if base_name in self.wrapper_variables:
                     self.generic_visit(node)
                     return
                 if base_name in self.logger_variables and node.func.attr in LOGGER_METHODS:
-                    self._add(node, "direct-logger-call", f"{base_name}.{node.func.attr}(...) is not allowed")
+                    self._add(
+                        node,
+                        "direct-logger-call",
+                        f"{base_name}.{node.func.attr}(...) is not allowed",
+                    )
         self.generic_visit(node)
 
     def _is_logging_factory_call(self, call: ast.Call) -> bool:
@@ -851,7 +980,10 @@ def find_direct_logger_violations(
     scan_root: Path,
     allowed_files: Sequence[str],
 ) -> list[DirectLoggerViolation]:
-    allowed = {((root / item).resolve() if not Path(item).is_absolute() else Path(item).resolve()) for item in allowed_files}
+    allowed = {
+        ((root / item).resolve() if not Path(item).is_absolute() else Path(item).resolve())
+        for item in allowed_files
+    }
     violations: list[DirectLoggerViolation] = []
     for path in iter_python_files(scan_root):
         if path.resolve() in allowed:
@@ -870,11 +1002,105 @@ def output_path_for_api(meta: ApiMeta, docs_root: Path, output_name: str) -> Pat
 
 
 def default_http_messages(meta: ApiMeta) -> list[MessageDefinition]:
+    return router_error_messages_from_returns(meta, ())
+
+
+def router_error_messages_from_returns(
+    meta: ApiMeta,
+    error_returns: Iterable[ErrorReturnStep],
+) -> list[MessageDefinition]:
+    prefix = meta.operation_id
+    route = f"{meta.method} {meta.path}".strip() or f"{meta.domain}/{meta.api}"
+    common_source = f"router:{route}"
+    messages: dict[tuple[int, str], MessageDefinition] = {}
+    for error_return in error_returns:
+        level = "ERROR" if error_return.status_code >= 500 else "WARNING"
+        suffix = message_suffix_for_error_return(error_return)
+        message_id = f"{prefix}.{suffix}"
+        context_model = CONTEXT_BY_LEVEL[level]
+        summary = summary_for_error_return(error_return)
+        action = action_for_error_return(error_return)
+        messages.setdefault(
+            (error_return.status_code, message_id),
+            MessageDefinition(
+                catalog_id="",
+                message_id=message_id,
+                level=level,
+                summary=summary,
+                when=error_return.condition,
+                why_production=why_production_for_error_return(error_return),
+                check_procedure=check_procedure_for_error_return(error_return),
+                remediation_procedure=remediation_for_error_return(error_return),
+                operator_action=action,
+                context_model=context_model,
+                runbook=runbook_for_error_return(error_return),
+                source=common_source,
+                inferred=True,
+            ),
+        )
+    return list(messages.values())
+
+
+def message_suffix_for_error_return(error_return: ErrorReturnStep) -> str:
+    if error_return.status_code >= 500:
+        return "router_error"
+    slug = re.sub(r"[^A-Za-z0-9]+", "_", error_return.detail).strip("_").lower()
+    if not slug:
+        slug = HTTP_STATUS_REASON_PHRASES.get(error_return.status_code, "client_error").lower()
+    return slug
+
+
+def summary_for_error_return(error_return: ErrorReturnStep) -> str:
+    if error_return.status_code >= 500:
+        return "Routerで捕捉した例外によりAPI処理が失敗した。"
+    condition = error_return.condition.removesuffix("。")
+    condition = condition.removesuffix("場合")
+    return f"{condition}ため、リクエストを拒否した。"
+
+
+def why_production_for_error_return(error_return: ErrorReturnStep) -> str:
+    if error_return.status_code >= 500:
+        return ""
+    return "利用者操作、権限、リソース状態、冪等性衝突などの拒否理由を運用で追跡するため。"
+
+
+def check_procedure_for_error_return(error_return: ErrorReturnStep) -> str:
+    if error_return.status_code >= 500:
+        return "traceId/requestIdでログを検索し、routerで捕捉された例外種別と直前のmessage_idを確認する。"
+    return ""
+
+
+def remediation_for_error_return(error_return: ErrorReturnStep) -> str:
+    if error_return.status_code >= 500:
+        return "原因を特定し、再試行可能な処理は同一operationとして再実行する。必要に応じてrollbackまたはhotfixを行う。"
+    return ""
+
+
+def action_for_error_return(error_return: ErrorReturnStep) -> str:
+    if error_return.status_code >= 500:
+        return "同一routeの5xx率、直近deploy、DB migration、外部依存の状態を確認する。"
+    return "traceId、actorPrincipalId、対象resource、request条件を確認し、利用者操作または状態不整合の原因を切り分ける。"
+
+
+def runbook_for_error_return(error_return: ErrorReturnStep) -> str:
+    if error_return.status_code >= 500:
+        return "RUNBOOK-unexpected-api-failure"
+    if error_return.status_code in {400, 422}:
+        return "RUNBOOK-api-client-error"
+    if error_return.status_code == 403:
+        return "RUNBOOK-authorization-forbidden"
+    if error_return.status_code == 409:
+        return "RUNBOOK-state-conflict-idempotency"
+    return "RUNBOOK-api-client-error"
+
+
+def legacy_default_http_messages(meta: ApiMeta) -> list[MessageDefinition]:
     prefix = meta.operation_id
     route = f"{meta.method} {meta.path}".strip() or f"{meta.domain}/{meta.api}"
     common_source = f"default:{route}"
     return [
         MessageDefinition(
+            catalog_id="",
             message_id=f"{prefix}.request_succeeded",
             level="INFO",
             summary="API処理が正常終了した。",
@@ -885,6 +1111,7 @@ def default_http_messages(meta: ApiMeta) -> list[MessageDefinition]:
             inferred=True,
         ),
         MessageDefinition(
+            catalog_id="",
             message_id=f"{prefix}.validation_failed",
             level="WARNING",
             summary="入力値またはヘッダのvalidationでリクエストを拒否した。",
@@ -897,6 +1124,7 @@ def default_http_messages(meta: ApiMeta) -> list[MessageDefinition]:
             inferred=True,
         ),
         MessageDefinition(
+            catalog_id="",
             message_id=f"{prefix}.authentication_failed",
             level="WARNING",
             summary="Bearer tokenがない、無効、期限切れ、または認証検証に失敗した。",
@@ -909,6 +1137,7 @@ def default_http_messages(meta: ApiMeta) -> list[MessageDefinition]:
             inferred=True,
         ),
         MessageDefinition(
+            catalog_id="",
             message_id=f"{prefix}.authorization_forbidden",
             level="WARNING",
             summary="認可条件を満たさないためアクセスを拒否した。",
@@ -921,6 +1150,7 @@ def default_http_messages(meta: ApiMeta) -> list[MessageDefinition]:
             inferred=True,
         ),
         MessageDefinition(
+            catalog_id="",
             message_id=f"{prefix}.state_conflict",
             level="WARNING",
             summary="重複、状態不整合、または冪等性衝突によりリクエストを拒否した。",
@@ -933,6 +1163,7 @@ def default_http_messages(meta: ApiMeta) -> list[MessageDefinition]:
             inferred=True,
         ),
         MessageDefinition(
+            catalog_id="",
             message_id=f"{prefix}.dependency_failed",
             level="ERROR",
             summary="外部依存またはAWS API連携に失敗した。",
@@ -946,6 +1177,7 @@ def default_http_messages(meta: ApiMeta) -> list[MessageDefinition]:
             inferred=True,
         ),
         MessageDefinition(
+            catalog_id="",
             message_id=f"{prefix}.unexpected_failed",
             level="ERROR",
             summary="想定外例外によりAPI処理が失敗した。",
@@ -962,43 +1194,23 @@ def default_http_messages(meta: ApiMeta) -> list[MessageDefinition]:
 
 
 def inferred_from_wrapper_call(meta: ApiMeta, call: WrapperCall) -> MessageDefinition:
-    message_id = call.message_id or f"{meta.operation_id}.undocumented_message"
     level = normalize_level(call.level_hint, fallback="INFO")
-    summary = f"{message_id} がloggerラッパーからemitされた。"
-    when = f"{call.source} の {call.function_name or 'module'} 実行時。"
-    context_model = ", ".join(call.context_keys) or CONTEXT_BY_LEVEL.get(level, CONTEXT_BY_LEVEL["INFO"])
-    base = MessageDefinition(
-        message_id=message_id,
-        level=level,
-        summary=summary,
-        when=when,
-        context_model=context_model,
-        source=call.source,
-        inferred=True,
-    )
-    if level == "WARNING":
-        return replace(
-            base,
-            why_production="本番で確認すべき注意事象として実装からemitされるため。",
-            operator_action="message_catalog.pyで発生条件、確認手順、対応手順を明示する。",
-            runbook=f"RUNBOOK-{meta.domain}-{meta.api}-warning",
+    data = dict(call.catalog_fields)
+    data.setdefault("catalog_id", call.catalog_id or "")
+    data.setdefault("message_id", call.message_id or f"{meta.operation_id}.undocumented_message")
+    data.setdefault("level", level)
+    if call.context_keys:
+        data.setdefault("context_model", ", ".join(call.context_keys))
+    definition = normalize_definition(data, call.source, inferred=not bool(call.catalog_fields))
+    if definition is None:
+        return MessageDefinition(
+            catalog_id=call.catalog_id or "",
+            message_id=call.message_id or f"{meta.operation_id}.undocumented_message",
+            level=level,
+            source=call.source,
+            inferred=True,
         )
-    if level == "ERROR":
-        return replace(
-            base,
-            check_procedure="traceId/requestIdでログを検索し、直前の処理stepとerror contextを確認する。",
-            remediation_procedure="原因を特定し、再試行可能な処理は同一operationとして再実行する。",
-            operator_action="message_catalog.pyでAPI固有の確認手順とrunbookへ置き換える。",
-            runbook=f"RUNBOOK-{meta.domain}-{meta.api}-error",
-        )
-    if level == "CRITICAL":
-        return replace(
-            base,
-            remediation_procedure="即時影響範囲を確認し、サービスオーナーへエスカレーションする。",
-            escalation=f"{meta.domain}/{meta.api} owner",
-            runbook=f"RUNBOOK-{meta.domain}-{meta.api}-critical",
-        )
-    return base
+    return definition
 
 
 def collect_api_dirs(api_root: Path) -> list[Path]:
@@ -1021,8 +1233,13 @@ def build_api_catalogs(
             path = api_dir / filename
             if path.exists():
                 catalog_defs.extend(parse_catalog_file(path, root))
-        explicit_ids = frozenset(definition.message_id for definition in catalog_defs)
         wrapper_calls = parse_wrapper_calls(api_dir, root)
+        explicit_ids = frozenset(
+            [
+                *(definition.message_id for definition in catalog_defs),
+                *(call.message_id for call in wrapper_calls if call.message_id),
+            ]
+        )
         calls_by_id: dict[str, list[WrapperCall]] = {}
         for call in wrapper_calls:
             if call.message_id:
@@ -1030,9 +1247,6 @@ def build_api_catalogs(
 
         meta = metas[0]
         definitions_by_id: dict[str, MessageDefinition] = {}
-        if include_http_defaults:
-            for definition in default_http_messages(meta):
-                definitions_by_id.setdefault(definition.message_id, definition)
         for definition in catalog_defs:
             definitions_by_id[definition.message_id] = definition
         for message_id, calls in calls_by_id.items():
@@ -1042,16 +1256,81 @@ def build_api_catalogs(
                 f"{call.source} ({call.wrapper})" for call in calls
             )
 
-        messages = tuple(sorted(definitions_by_id.values(), key=lambda message: message.sort_key))
+        router_error_returns = (
+            router_error_returns_for_api(api_dir, api_root) if include_http_defaults else ()
+        )
+        messages = assign_catalog_ids(
+            tuple(sorted(definitions_by_id.values(), key=lambda message: message.sort_key))
+        )
         catalogs.append(
             ApiCatalog(
                 meta=meta,
                 messages=messages,
                 wrapper_calls=tuple(wrapper_calls),
                 explicit_message_ids=explicit_ids,
+                router_error_returns=tuple(router_error_returns),
+                has_router_error_handler_return=has_router_error_handler_return(
+                    api_dir / "router.py"
+                ),
             )
         )
     return catalogs
+
+
+def router_error_returns_for_api(api_dir: Path, api_root: Path) -> tuple[ErrorReturnStep, ...]:
+    del api_root
+    try:
+        router_tree = ast.parse((api_dir / "router.py").read_text(encoding="utf-8"))
+        function = endpoint_function(router_tree)
+        metadata = function_metadata(api_dir / "functions.py")
+    except (OSError, SyntaxError, ValueError):
+        return ()
+    return tuple(endpoint_error_returns(function, metadata))
+
+
+def has_router_error_handler_return(router_path: Path) -> bool:
+    module = read_python_ast(router_path)
+    if module is None:
+        return False
+    for node in ast.walk(module):
+        if not isinstance(node, ast.Return):
+            continue
+        call = node.value
+        if not isinstance(call, ast.Call):
+            continue
+        if isinstance(call.func, ast.Name) and call.func.id == "error_response_for_router_error":
+            return True
+    return False
+
+
+def router_error_messages(
+    api_dir: Path,
+    root: Path,
+    api_root: Path,
+    meta: ApiMeta,
+) -> list[MessageDefinition]:
+    try:
+        sequence = api_sequence_from_dir(api_dir, api_root)
+    except OSError, SyntaxError, ValueError:
+        return default_http_messages(meta)
+    return router_error_messages_from_returns(meta, sequence.error_returns)
+
+
+def assign_catalog_ids(messages: tuple[MessageDefinition, ...]) -> tuple[MessageDefinition, ...]:
+    used_ids = {message.catalog_id for message in messages if message.catalog_id}
+    next_number = 1
+    assigned: list[MessageDefinition] = []
+    for message in messages:
+        if message.catalog_id:
+            assigned.append(message)
+            continue
+        while f"M{next_number:03d}" in used_ids:
+            next_number += 1
+        catalog_id = f"M{next_number:03d}"
+        used_ids.add(catalog_id)
+        next_number += 1
+        assigned.append(replace(message, catalog_id=catalog_id))
+    return tuple(assigned)
 
 
 def api_routes_summary(api_dir: Path, root: Path) -> str:
@@ -1062,9 +1341,15 @@ def api_routes_summary(api_dir: Path, root: Path) -> str:
 def render_catalog(catalog: ApiCatalog, root: Path) -> str:
     meta = catalog.meta
     api_dir = root / DEFAULT_API_ROOT / meta.domain / meta.api
-    route_summary = api_routes_summary(api_dir, root) if api_dir.exists() else f"{meta.method} {meta.path} ({meta.operation_id})"
+    route_summary = (
+        api_routes_summary(api_dir, root)
+        if api_dir.exists()
+        else f"{meta.method} {meta.path} ({meta.operation_id})"
+    )
     counter = Counter(message.level for message in catalog.messages)
-    wrapper_calls_by_id = Counter(call.message_id for call in catalog.wrapper_calls if call.message_id)
+    wrapper_calls_by_id = Counter(
+        call.message_id for call in catalog.wrapper_calls if call.message_id
+    )
     lines: list[str] = [
         GENERATED_COMMENT,
         "",
@@ -1084,19 +1369,25 @@ def render_catalog(catalog: ApiCatalog, root: Path) -> str:
         "",
         "## 生成・検証方針",
         "",
-        "- `message_catalog.py` / `messages.py` / `operational_messages.py` / `ops.py` にある静的定義を優先する。",
-        "- 実装中の `app.core.logging` ラッパー呼び出しを検出し、未定義なら暫定行として出力する。",
+        "- WARNING以上のMessage catalogは `router.py` の `ops_logger.warning/error(...)` kwargsを一次情報にする。",
+        "- `api_error_response(...)` のstatus/detailとlogger呼び出しのstatus/detailを照合する。",
+        "- 実装中の `app.core.logging` ラッパー呼び出しを検出し、WARN以上はrouter内のemitとcatalog定義の一致を検証する。",
         "- `logging.getLogger(...)`、`logger.info(...)` などの直接呼び出しは許可しない。",
         "- WARNING以上は運用上の意味を持つ前提で、必要な確認手順・runbook・contextを検証対象にする。",
         "",
         "## メッセージ一覧",
         "",
-        "| message_id | Level | wrapper calls | 発生条件 | ログ概要 | 主なcontext | 対応 | runbook | 実装参照 |",
-        "| :--- | :--- | ---: | :--- | :--- | :--- | :--- | :--- | :--- |",
+        "| id | message_id | level | status | wrapper calls | ログ概要 | 説明 | 出力項目 | 対応すべきこと | runbook | 実装参照 |",
+        "| :--- | :--- | :--- | ---: | ---: | :--- | :--- | :--- | :--- | :--- | :--- |",
     ]
 
     for message in catalog.messages:
-        action = message.operator_action or message.remediation_procedure or message.check_procedure or "通常対応不要。"
+        action = (
+            message.operator_action
+            or message.remediation_procedure
+            or message.check_procedure
+            or "通常対応不要。"
+        )
         source_parts: list[str] = []
         if message.source:
             source_parts.append(message.source)
@@ -1108,11 +1399,13 @@ def render_catalog(catalog: ApiCatalog, root: Path) -> str:
             "| "
             + " | ".join(
                 [
+                    f"`{escape_markdown(message.catalog_id)}`",
                     f"`{escape_markdown(message.message_id)}`",
                     f"`{escape_markdown(message.level)}`",
+                    str(message.status_code or ""),
                     str(wrapper_calls_by_id[message.message_id]),
-                    escape_markdown(message.when),
                     escape_markdown(message.summary),
+                    escape_markdown(message.description),
                     escape_markdown(message.context_model),
                     escape_markdown(action),
                     escape_markdown(message.runbook),
@@ -1127,8 +1420,8 @@ def render_catalog(catalog: ApiCatalog, root: Path) -> str:
             "",
             "## loggerラッパー呼び出し一覧",
             "",
-            "| source | function | wrapper | message_id | level_hint | context keys |",
-            "| :--- | :--- | :--- | :--- | :--- | :--- |",
+            "| source | function | wrapper | catalog_id | message_id | level_hint | context keys |",
+            "| :--- | :--- | :--- | :--- | :--- | :--- | :--- |",
         ]
     )
     if catalog.wrapper_calls:
@@ -1140,6 +1433,7 @@ def render_catalog(catalog: ApiCatalog, root: Path) -> str:
                         f"`{escape_markdown(call.source)}`",
                         escape_markdown(call.function_name or ""),
                         f"`{escape_markdown(call.wrapper)}`",
+                        f"`{escape_markdown(call.catalog_id or '')}`",
                         f"`{escape_markdown(call.message_id or '<missing>')}`",
                         f"`{escape_markdown(call.level_hint or '')}`",
                         escape_markdown(", ".join(call.context_keys)),
@@ -1148,7 +1442,7 @@ def render_catalog(catalog: ApiCatalog, root: Path) -> str:
                 + " |"
             )
     else:
-        lines.append("| - | - | - | - | - | - |")
+        lines.append("| - | - | - | - | - | - | - |")
 
     lines.extend(
         [
@@ -1159,45 +1453,54 @@ def render_catalog(catalog: ApiCatalog, root: Path) -> str:
             "| :--- | :--- |",
         ]
     )
-    for level in ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"):
+    for level in ("WARNING", "ERROR", "CRITICAL"):
         required = ", ".join(REQUIRED_FIELDS_BY_LEVEL[level]) or "なし"
         lines.append(f"| `{level}` | {required} |")
     lines.append("")
     return "\n".join(lines)
 
 
-def render_index(catalogs: Sequence[ApiCatalog], docs_root: Path, output_name: str, root: Path) -> str:
+def render_index(
+    catalogs: Sequence[ApiCatalog], docs_root: Path, output_name: str, root: Path
+) -> str:
     lines: list[str] = [
         GENERATED_COMMENT,
         "",
         "# API message catalog index",
         "",
-        "| domain | api | route | output | messages | wrapper calls | DEBUG | INFO | WARNING | ERROR | CRITICAL |",
-        "| :--- | :--- | :--- | :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| domain | api | route | id | message_id | level | status | ログ概要 | 出力項目 | 対応すべきこと | runbook | output |",
+        "| :--- | :--- | :--- | :--- | :--- | :--- | ---: | :--- | :--- | :--- | :--- | :--- |",
     ]
     for catalog in sorted(catalogs, key=lambda item: (item.meta.domain, item.meta.api)):
         meta = catalog.meta
-        counter = Counter(message.level for message in catalog.messages)
         output_path = output_path_for_api(meta, docs_root, output_name)
-        lines.append(
-            "| "
-            + " | ".join(
-                [
-                    f"`{escape_markdown(meta.domain)}`",
-                    f"`{escape_markdown(meta.api)}`",
-                    escape_markdown(f"{meta.method} {meta.path}".strip()),
-                    f"`{escape_markdown(repo_relative(output_path, root))}`",
-                    str(len(catalog.messages)),
-                    str(len(catalog.wrapper_calls)),
-                    str(counter["DEBUG"]),
-                    str(counter["INFO"]),
-                    str(counter["WARNING"]),
-                    str(counter["ERROR"]),
-                    str(counter["CRITICAL"]),
-                ]
+        for message in catalog.messages:
+            action = (
+                message.operator_action
+                or message.remediation_procedure
+                or message.check_procedure
+                or "通常対応不要。"
             )
-            + " |"
-        )
+            lines.append(
+                "| "
+                + " | ".join(
+                    [
+                        f"`{escape_markdown(meta.domain)}`",
+                        f"`{escape_markdown(meta.api)}`",
+                        escape_markdown(f"{meta.method} {meta.path}".strip()),
+                        f"`{escape_markdown(message.catalog_id)}`",
+                        f"`{escape_markdown(message.message_id)}`",
+                        f"`{escape_markdown(message.level)}`",
+                        str(message.status_code or ""),
+                        escape_markdown(message.summary),
+                        escape_markdown(message.context_model),
+                        escape_markdown(action),
+                        escape_markdown(message.runbook),
+                        f"`{escape_markdown(repo_relative(output_path, root))}`",
+                    ]
+                )
+                + " |"
+            )
     lines.append("")
     return "\n".join(lines)
 
@@ -1228,6 +1531,7 @@ def validate_catalogs(
     strict: bool,
     fail_on_undocumented_emits: bool,
     fail_on_missing_message_id: bool,
+    fail_on_missing_catalog_id: bool,
     fail_on_level_mismatch: bool,
     require_api_wrapper_calls: bool,
 ) -> list[str]:
@@ -1235,13 +1539,46 @@ def validate_catalogs(
     for catalog in catalogs:
         api_ref = f"{catalog.meta.domain}/{catalog.meta.api}"
         seen: set[str] = set()
+        seen_catalog_ids: set[str] = set()
         definitions_by_id = {message.message_id: message for message in catalog.messages}
+        definitions_by_catalog_id = {message.catalog_id: message for message in catalog.messages}
+        wrapper_calls_by_message_id = {
+            wrapper_call.message_id
+            for wrapper_call in catalog.wrapper_calls
+            if wrapper_call.message_id
+        }
+        router_return_refs = {
+            (error_return.status_code, error_return.detail)
+            for error_return in catalog.router_error_returns
+        }
         for message in catalog.messages:
             if message.message_id in seen:
                 errors.append(f"{api_ref}: duplicate message_id {message.message_id}")
             seen.add(message.message_id)
+            if message.catalog_id in seen_catalog_ids:
+                errors.append(f"{api_ref}: duplicate catalog id {message.catalog_id}")
+            seen_catalog_ids.add(message.catalog_id)
             if message.level not in LEVEL_ORDER:
                 errors.append(f"{api_ref}: {message.message_id}: unknown level {message.level}")
+            if LEVEL_ORDER.get(message.level, 0) >= LEVEL_ORDER["WARNING"]:
+                if "router.py" not in message.source:
+                    errors.append(
+                        f"{api_ref}: {message.message_id}: WARN以上のMessage catalogはrouter.pyで定義してください"
+                    )
+                if (
+                    fail_on_undocumented_emits
+                    and message.message_id not in wrapper_calls_by_message_id
+                ):
+                    errors.append(
+                        f"{api_ref}: {message.message_id}: WARN以上のMessage catalogに対応するrouter logger emitがありません"
+                    )
+            if message.status_code is not None and message.detail:
+                ref = (message.status_code, message.detail)
+                if ref not in router_return_refs:
+                    errors.append(
+                        f"{api_ref}: {message.message_id}: router returnと一致しないstatus/detail "
+                        f"({message.status_code}, {message.detail})"
+                    )
             if strict:
                 missing = message.missing_required_fields()
                 if missing:
@@ -1251,14 +1588,71 @@ def validate_catalogs(
                     )
         if require_api_wrapper_calls and not catalog.wrapper_calls:
             errors.append(f"{api_ref}: no app.core.logging wrapper call found")
+        for error_return in catalog.router_error_returns:
+            matching_messages = [
+                message
+                for message in catalog.messages
+                if message.status_code == error_return.status_code
+                and message.detail == error_return.detail
+            ]
+            if not matching_messages:
+                errors.append(
+                    f"{api_ref}: router return ({error_return.status_code}, {error_return.detail}) "
+                    "に対応するrouter logger emit metadataがありません"
+                )
+        if catalog.has_router_error_handler_return:
+            expected_router_error_id = f"{catalog.meta.operation_id}.router_error"
+            router_error_message = definitions_by_id.get(expected_router_error_id)
+            if router_error_message is None:
+                errors.append(
+                    f"{api_ref}: error_response_for_router_error returnに対応する "
+                    f"{expected_router_error_id} がrouter logger emit metadataにありません"
+                )
+            elif router_error_message.level != "ERROR":
+                errors.append(
+                    f"{api_ref}: {expected_router_error_id}: router error message level must be ERROR"
+                )
         for wrapper_call in catalog.wrapper_calls:
+            if (
+                wrapper_call.level_hint in {"WARNING", "ERROR", "CRITICAL"}
+                and "/router.py:" not in wrapper_call.source
+            ):
+                errors.append(
+                    f"{api_ref}: WARN以上のlogger wrapper callはrouter.pyに限定してください "
+                    f"({wrapper_call.source})"
+                )
+            if fail_on_missing_catalog_id and not wrapper_call.catalog_id:
+                errors.append(
+                    f"{api_ref}: wrapper call has no literal catalog_id ({wrapper_call.source})"
+                )
+            if wrapper_call.catalog_id:
+                definition_by_catalog_id = definitions_by_catalog_id.get(wrapper_call.catalog_id)
+                if definition_by_catalog_id is None:
+                    errors.append(
+                        f"{api_ref}: wrapper catalog_id {wrapper_call.catalog_id} is not documented "
+                        f"({wrapper_call.source})"
+                    )
+                elif (
+                    wrapper_call.message_id
+                    and definition_by_catalog_id.message_id != wrapper_call.message_id
+                ):
+                    errors.append(
+                        f"{api_ref}: wrapper catalog_id {wrapper_call.catalog_id} points to "
+                        f"{definition_by_catalog_id.message_id}, not {wrapper_call.message_id} "
+                        f"({wrapper_call.source})"
+                    )
             if not wrapper_call.message_id:
                 if fail_on_missing_message_id:
-                    errors.append(f"{api_ref}: wrapper call has no literal message_id ({wrapper_call.source})")
+                    errors.append(
+                        f"{api_ref}: wrapper call has no literal message_id ({wrapper_call.source})"
+                    )
                 continue
-            if fail_on_undocumented_emits and wrapper_call.message_id not in catalog.explicit_message_ids:
+            if (
+                fail_on_undocumented_emits
+                and wrapper_call.message_id not in catalog.explicit_message_ids
+            ):
                 errors.append(
-                    f"{api_ref}: wrapper message_id {wrapper_call.message_id} is not documented in message_catalog.py "
+                    f"{api_ref}: wrapper message_id {wrapper_call.message_id} is not documented in router/catalog definitions "
                     f"({wrapper_call.source})"
                 )
             definition = definitions_by_id.get(wrapper_call.message_id)
@@ -1276,14 +1670,36 @@ def validate_catalogs(
 
 
 def parse_args(argv: Sequence[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Generate API-level operational message catalog Markdown.")
-    parser.add_argument("--root", type=Path, default=Path("."), help="Repository root. Defaults to current directory.")
-    parser.add_argument("--api-root", type=Path, default=DEFAULT_API_ROOT, help="API root relative to --root.")
-    parser.add_argument("--scan-root", type=Path, default=DEFAULT_SCAN_ROOT, help="Python source root for direct logger checks.")
-    parser.add_argument("--docs-root", type=Path, default=DEFAULT_DOCS_ROOT, help="Docs root relative to --root.")
-    parser.add_argument("--output-name", default=DEFAULT_OUTPUT_NAME, help="Generated file name per API.")
-    parser.add_argument("--check", action="store_true", help="Do not write files; fail if generated output differs.")
-    parser.add_argument("--strict", action="store_true", help="Validate required operational fields by log level.")
+    parser = argparse.ArgumentParser(
+        description="Generate API-level operational message catalog Markdown."
+    )
+    parser.add_argument(
+        "--root",
+        type=Path,
+        default=Path("."),
+        help="Repository root. Defaults to current directory.",
+    )
+    parser.add_argument(
+        "--api-root", type=Path, default=DEFAULT_API_ROOT, help="API root relative to --root."
+    )
+    parser.add_argument(
+        "--scan-root",
+        type=Path,
+        default=DEFAULT_SCAN_ROOT,
+        help="Python source root for direct logger checks.",
+    )
+    parser.add_argument(
+        "--docs-root", type=Path, default=DEFAULT_DOCS_ROOT, help="Docs root relative to --root."
+    )
+    parser.add_argument(
+        "--output-name", default=DEFAULT_OUTPUT_NAME, help="Generated file name per API."
+    )
+    parser.add_argument(
+        "--check", action="store_true", help="Do not write files; fail if generated output differs."
+    )
+    parser.add_argument(
+        "--strict", action="store_true", help="Validate required operational fields by log level."
+    )
     parser.add_argument(
         "--enforce-logger-wrapper",
         action="store_true",
@@ -1305,6 +1721,11 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
         help="Fail if a wrapper call does not contain a literal message_id.",
     )
     parser.add_argument(
+        "--fail-on-missing-catalog-id",
+        action="store_true",
+        help="Fail if a wrapper call does not contain a literal catalog_id.",
+    )
+    parser.add_argument(
         "--fail-on-level-mismatch",
         action="store_true",
         help="Fail if wrapper method level differs from message_catalog.py level.",
@@ -1320,9 +1741,19 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
         default=list(DEFAULT_ALLOWED_DIRECT_LOGGER_FILES),
         help="Repo-relative file allowed to call stdlib logging directly. Can be repeated.",
     )
-    parser.add_argument("--no-http-defaults", action="store_true", help="Do not include inferred common HTTP lifecycle messages.")
-    parser.add_argument("--no-index", action="store_true", help="Do not generate the cross-API message index.")
-    parser.add_argument("--list-direct-logger", action="store_true", help="Print direct logger violations even without failing.")
+    parser.add_argument(
+        "--no-http-defaults",
+        action="store_true",
+        help="Do not include inferred common HTTP lifecycle messages.",
+    )
+    parser.add_argument(
+        "--no-index", action="store_true", help="Do not generate the cross-API message index."
+    )
+    parser.add_argument(
+        "--list-direct-logger",
+        action="store_true",
+        help="Print direct logger violations even without failing.",
+    )
     return parser.parse_args(argv)
 
 
@@ -1337,9 +1768,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     fail_on_direct_logger = args.fail_on_direct_logger or enforce_logger_wrapper
     fail_on_undocumented_emits = args.fail_on_undocumented_emits or enforce_logger_wrapper
     fail_on_missing_message_id = args.fail_on_missing_message_id or enforce_logger_wrapper
+    fail_on_missing_catalog_id = args.fail_on_missing_catalog_id or enforce_logger_wrapper
     fail_on_level_mismatch = args.fail_on_level_mismatch or enforce_logger_wrapper
 
-    catalogs = build_api_catalogs(root=root, api_root=api_root, include_http_defaults=not args.no_http_defaults)
+    catalogs = build_api_catalogs(
+        root=root, api_root=api_root, include_http_defaults=not args.no_http_defaults
+    )
     if not catalogs:
         print(f"[ERROR] no API router.py found under {api_root}", file=sys.stderr)
         return 2
@@ -1362,6 +1796,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             strict=args.strict,
             fail_on_undocumented_emits=fail_on_undocumented_emits,
             fail_on_missing_message_id=fail_on_missing_message_id,
+            fail_on_missing_catalog_id=fail_on_missing_catalog_id,
             fail_on_level_mismatch=fail_on_level_mismatch,
             require_api_wrapper_calls=args.require_api_wrapper_calls,
         )
@@ -1388,7 +1823,10 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     changed = [result.path for result in results if result.changed]
     if args.check and changed:
-        print(f"[ERROR] {len(changed)} generated message catalog file(s) are out of date.", file=sys.stderr)
+        print(
+            f"[ERROR] {len(changed)} generated message catalog file(s) are out of date.",
+            file=sys.stderr,
+        )
         return 1
 
     if changed:

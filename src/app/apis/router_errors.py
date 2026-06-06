@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import HTTPException, status
 from starlette.responses import JSONResponse
 
 from app.apis.exceptions import ApiFunctionError
 from app.apis.responses import ErrorBody, ErrorResponse
+from app.apis.sequence_types import CallerIdentity, RequestContext
 from app.integrations.common_errors import (
     ExternalApiConflictError,
     ExternalApiError,
@@ -49,6 +52,54 @@ def error_response_for_router_error(
     if isinstance(error, ApiFunctionError):
         return error_response_for_api_function_error(error)
     return error_response_for_external_error(error)
+
+
+def status_code_for_router_error(error: ApiFunctionError | ExternalApiError | HTTPException) -> int:
+    """Routerで捕捉した例外をHTTP status codeへ変換する。"""
+    if isinstance(error, HTTPException):
+        return error.status_code
+    if isinstance(error, ApiFunctionError):
+        return error.status_code
+    if isinstance(error, ExternalApiNotFoundError):
+        return status.HTTP_404_NOT_FOUND
+    if isinstance(error, ExternalApiConflictError):
+        return status.HTTP_409_CONFLICT
+    if isinstance(error, ExternalApiTimeoutError | ExternalApiUnavailableError):
+        return status.HTTP_503_SERVICE_UNAVAILABLE
+    return status.HTTP_502_BAD_GATEWAY
+
+
+def router_log_context(
+    *,
+    status_code: int,
+    detail: str,
+    caller: CallerIdentity | None = None,
+    request_context: RequestContext | None = None,
+    resource: dict[str, Any] | None = None,
+    error: BaseException | None = None,
+) -> dict[str, Any]:
+    """Routerがwarn以上の運用ログをemitするときの共通contextを組み立てる。"""
+    context: dict[str, Any] = {
+        "api": {"statusCode": status_code},
+        "error": {
+            "code": _error_code(status_code),
+            "message": detail,
+        },
+    }
+    if caller is not None:
+        context["actorPrincipalId"] = caller.principal_id
+    if request_context is not None:
+        context["traceId"] = request_context.correlation_id
+        context["request"] = {
+            "sourceIp": request_context.source_ip,
+            "userAgent": request_context.user_agent,
+            "actorType": request_context.actor_type,
+        }
+    if resource:
+        context["resource"] = resource
+    if error is not None:
+        context["error"]["exceptionType"] = type(error).__name__
+    return context
 
 
 def error_response_for_api_function_error(error: ApiFunctionError) -> JSONResponse:

@@ -24,14 +24,18 @@ from app.apis.router_errors import (
     ROUTER_HANDLED_EXCEPTIONS,
     api_error_response,
     error_response_for_router_error,
+    router_log_context,
+    status_code_for_router_error,
 )
 from app.apis.sequence_types import CallerIdentity, RequestContext
 from app.apis.types import ResourceId
+from app.core.logging import get_operation_logger
 from app.db.session import get_session
 from app.integrations.identity.deps import get_identity_admin_client
 from app.integrations.identity.port import IdentityAdminPort
 
 router = APIRouter()
+ops_logger = get_operation_logger(__name__)
 
 
 @router.patch(
@@ -86,6 +90,26 @@ async def update_project_public_client(
         validated_request = await api_functions.validate_public_client_update_request(request)
         project = await api_functions.get_project(project_id, caller, session)
         if not await api_functions.has_project_owner_permission(project, caller):
+            ops_logger.warning(
+                "updateProjectPublicClient.caller_is_not_a_project_owner",
+                catalog_id="M001",
+                summary="呼び出し元がProject ownerではないため、リクエストを拒否した。",
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="caller is not a project owner",
+                when="呼び出し元が対象Projectのownerではない場合。",
+                why_production="public app client更新の認可拒否を運用で追跡するため。",
+                context_model="traceId, actorPrincipalId, api.statusCode, resource.projectId, "
+                "error.code, error.message",
+                operator_action="actorPrincipalId、projectId、Project member roleを確認する。",
+                runbook="RUNBOOK-authorization-forbidden",
+                context=router_log_context(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="caller is not a project owner",
+                    caller=caller,
+                    request_context=request_context,
+                    resource={"projectId": project_id},
+                ),
+            )
             return api_error_response(status.HTTP_403_FORBIDDEN, "caller is not a project owner")
         public_client = await api_functions.get_public_app_client_metadata(project, caller, session)
         await api_functions.get_idempotency_record(idempotency_key, session)
@@ -142,4 +166,25 @@ async def update_project_public_client(
             operation,
         )
     except ROUTER_HANDLED_EXCEPTIONS as error:
+        ops_logger.error(
+            "updateProjectPublicClient.router_error",
+            catalog_id="M002",
+            summary="Routerで捕捉した例外によりpublic app client更新が失敗した。",
+            when="ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。",
+            check_procedure="traceId/requestIdでログを検索し、"
+            "routerで捕捉された例外種別とprojectIdを確認する。",
+            remediation_procedure="原因を特定し、冪等性状態とCognito状態を確認してから再実行する。",
+            context_model="traceId, actorPrincipalId, api.statusCode, resource.projectId, "
+            "error.code, error.message, error.exceptionType",
+            operator_action="同一routeの5xx率、直近deploy、Cognito/DB状態を確認する。",
+            runbook="RUNBOOK-unexpected-api-failure",
+            context=router_log_context(
+                status_code=status_code_for_router_error(error),
+                detail=str(error),
+                caller=caller,
+                request_context=request_context,
+                resource={"projectId": project_id},
+                error=error,
+            ),
+        )
         return error_response_for_router_error(error)

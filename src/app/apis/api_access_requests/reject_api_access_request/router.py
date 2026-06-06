@@ -24,12 +24,16 @@ from app.apis.router_errors import (
     ROUTER_HANDLED_EXCEPTIONS,
     api_error_response,
     error_response_for_router_error,
+    router_log_context,
+    status_code_for_router_error,
 )
 from app.apis.sequence_types import CallerIdentity, RequestContext
 from app.apis.types import ResourceId
+from app.core.logging import get_operation_logger
 from app.db.session import get_session
 
 router = APIRouter()
+ops_logger = get_operation_logger(__name__)
 
 
 @router.post(
@@ -81,8 +85,50 @@ async def reject_api_access_request(
     try:
         access_request = await api_functions.get_access_request(access_request_id, session)
         if not await api_functions.is_pending_access_request(access_request):
+            ops_logger.warning(
+                "rejectApiAccessRequest.access_request_is_not_pending",
+                catalog_id="M001",
+                summary="API利用申請が審査待ちではないため、却下リクエストを拒否した。",
+                status_code=status.HTTP_409_CONFLICT,
+                detail="access request is not pending",
+                when="対象API利用申請がpending状態ではない場合。",
+                why_production="二重レビューや状態競合を運用で追跡するため。",
+                context_model="traceId, actorPrincipalId, api.statusCode, "
+                "resource.accessRequestId, "
+                "error.code, error.message",
+                operator_action="accessRequestId、現在state、既存reviewを確認する。",
+                runbook="RUNBOOK-state-conflict-idempotency",
+                context=router_log_context(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="access request is not pending",
+                    caller=caller,
+                    request_context=request_context,
+                    resource={"accessRequestId": access_request_id},
+                ),
+            )
             return api_error_response(status.HTTP_409_CONFLICT, "access request is not pending")
         if not await api_functions.has_api_reviewer_permission(access_request, caller, session):
+            ops_logger.warning(
+                "rejectApiAccessRequest.caller_is_not_an_api_reviewer",
+                catalog_id="M002",
+                summary="呼び出し元がAPI reviewerではないため、却下リクエストを拒否した。",
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="caller is not an api reviewer",
+                when="呼び出し元が対象APIのreviewerではない場合。",
+                why_production="API reviewer認可拒否を運用で追跡するため。",
+                context_model="traceId, actorPrincipalId, api.statusCode, "
+                "resource.accessRequestId, "
+                "error.code, error.message",
+                operator_action="actorPrincipalId、apiId、reviewer設定を確認する。",
+                runbook="RUNBOOK-authorization-forbidden",
+                context=router_log_context(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="caller is not an api reviewer",
+                    caller=caller,
+                    request_context=request_context,
+                    resource={"accessRequestId": access_request_id},
+                ),
+            )
             return api_error_response(status.HTTP_403_FORBIDDEN, "caller is not an api reviewer")
         validated_request = await api_functions.validate_rejection_reason(request)
         await api_functions.append_access_request_rejecting_event(
@@ -122,4 +168,26 @@ async def reject_api_access_request(
         await session.commit()
         return await api_functions.build_reject_access_request_response(rejected_request, review)
     except ROUTER_HANDLED_EXCEPTIONS as error:
+        ops_logger.error(
+            "rejectApiAccessRequest.router_error",
+            catalog_id="M003",
+            summary="Routerで捕捉した例外によりAPI利用申請却下が失敗した。",
+            when="ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。",
+            check_procedure="traceId/requestIdでログを検索し、"
+            "routerで捕捉された例外種別とaccessRequestIdを確認する。",
+            remediation_procedure="原因を特定し、冪等性状態を確認してから"
+            "同一Idempotency-Keyで再実行する。",
+            context_model="traceId, actorPrincipalId, api.statusCode, resource.accessRequestId, "
+            "error.code, error.message, error.exceptionType",
+            operator_action="同一routeの5xx率、直近deploy、DB状態を確認する。",
+            runbook="RUNBOOK-unexpected-api-failure",
+            context=router_log_context(
+                status_code=status_code_for_router_error(error),
+                detail=str(error),
+                caller=caller,
+                request_context=request_context,
+                resource={"accessRequestId": access_request_id},
+                error=error,
+            ),
+        )
         return error_response_for_router_error(error)
