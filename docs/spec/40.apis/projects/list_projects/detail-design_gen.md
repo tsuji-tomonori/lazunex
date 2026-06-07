@@ -27,13 +27,13 @@ _正常系で作成/更新/削除するリソースはありません。_
 
 | 項目 | 説明 | 値の取得元 |
 | --- | --- | --- |
-| `items` | 一覧レスポンスに含まれるリソース配列です。 | page.items を list 化 |
-| `items.projectId` | API利用単位となるプロジェクトを一意に識別するIDです。 | page.items を list 化 |
-| `items.projectCode` | 利用者がプロジェクトを識別するためのコードです。 | page.items を list 化 |
-| `items.name` | 利用者に表示するリソース名です。 | page.items を list 化 |
-| `items.description` | 利用者に表示するリソースの概要説明です。 | page.items を list 化 |
-| `items.ownerPrincipalId` | プロジェクトまたはAPIの所有者を表す認証主体IDです。 | page.items を list 化 |
-| `items.departmentCode` | プロジェクトを所管する部署コードです。 | page.items を list 化 |
-| `items.derivedState` | イベント履歴から導出した対象リソースの現在状態です。 | page.items を list 化 |
-| `items.subscriptionCount` | プロジェクトに紐づく有効なAPI利用権の件数です。 | page.items を list 化 |
+| `items` | 一覧レスポンスに含まれるリソース配列です。 | ProjectListItemResponse[] |
+| `items.projectId` | API利用単位となるプロジェクトを一意に識別するIDです。 | DB: projects.projectId |
+| `items.projectCode` | 利用者がプロジェクトを識別するためのコードです。 | DB: projects.projectCode |
+| `items.name` | 利用者に表示するリソース名です。 | DB: projects.name |
+| `items.description` | 利用者に表示するリソースの概要説明です。 | DB: projects.description |
+| `items.ownerPrincipalId` | プロジェクトまたはAPIの所有者を表す認証主体IDです。 | DB: projects.ownerPrincipalId |
+| `items.departmentCode` | プロジェクトを所管する部署コードです。 | DB: projects.departmentCode |
+| `items.derivedState` | イベント履歴から導出した対象リソースの現在状態です。 | ProjectDerivedState.ACTIVE |
+| `items.subscriptionCount` | プロジェクトに紐づく有効なAPI利用権の件数です。 | DB row.subscriptionCount or 0 |
 | `nextToken` | 次ページを取得するために前回レスポンスから受け取る継続tokenです。 | page.next_token |

@@ -28,16 +28,16 @@ _正常系で作成/更新/削除するリソースはありません。_
 
 | 項目 | 説明 | 値の取得元 |
 | --- | --- | --- |
-| `items` | 一覧レスポンスに含まれるリソース配列です。 | page.items を list 化 |
-| `items.subscriptionId` | 承認済みAPI利用権を一意に識別するIDです。 | page.items を list 化 |
-| `items.apiId` | APIカタログ上のAPIを一意に識別するIDです。 | page.items を list 化 |
-| `items.apiCode` | 利用者がAPIカタログ上のAPIを識別するためのコードです。 | page.items を list 化 |
-| `items.apiName` | APIカタログに表示されるAPI名です。 | page.items を list 化 |
-| `items.apiStageId` | API Gateway stageに対応するLazunex内のstage IDです。 | page.items を list 化 |
-| `items.stageName` | API Gatewayにデプロイされているstage名です。 | page.items を list 化 |
-| `items.invokeUrl` | 対象API Gateway stageを呼び出すためのベースURLです。 | page.items を list 化 |
-| `items.scopeFullName` | Cognito access tokenに要求されるresource server付きの完全なscope名です。 | page.items を list 化 |
-| `items.approvedAuthMode` | 審査者が承認したAPI利用時の認証方式です。 | page.items を list 化 |
-| `items.derivedState` | イベント履歴から導出した対象リソースの現在状態です。 | page.items を list 化 |
-| `items.approvedAt` | API利用権が承認された日時です。 | page.items を list 化 |
+| `items` | 一覧レスポンスに含まれるリソース配列です。 | ProjectSubscriptionItemResponse[] |
+| `items.subscriptionId` | 承認済みAPI利用権を一意に識別するIDです。 | DB: project_api_subscriptions.subscriptionId |
+| `items.apiId` | APIカタログ上のAPIを一意に識別するIDです。 | DB: project_api_subscriptions.apiId |
+| `items.apiCode` | 利用者がAPIカタログ上のAPIを識別するためのコードです。 | DB: apis.apiCode |
+| `items.apiName` | APIカタログに表示されるAPI名です。 | DB: apis.name |
+| `items.apiStageId` | API Gateway stageに対応するLazunex内のstage IDです。 | DB: project_api_subscriptions.apiStageId |
+| `items.stageName` | API Gatewayにデプロイされているstage名です。 | DB: api_gateway_stages.apigwStageName |
+| `items.invokeUrl` | 対象API Gateway stageを呼び出すためのベースURLです。 | DB: api_gateway_stages.invokeUrl |
+| `items.scopeFullName` | Cognito access tokenに要求されるresource server付きの完全なscope名です。 | DB: api_cognito_scopes.scopeFullName |
+| `items.approvedAuthMode` | 審査者が承認したAPI利用時の認証方式です。 | DB: project_api_subscriptions.approvedAuthMode から導出 |
+| `items.derivedState` | イベント履歴から導出した対象リソースの現在状態です。 | SubscriptionDerivedState.ACTIVE |
+| `items.approvedAt` | API利用権が承認された日時です。 | DB: project_api_subscriptions.approvedAt |
 | `nextToken` | 次ページを取得するために前回レスポンスから受け取る継続tokenです。 | page.next_token |

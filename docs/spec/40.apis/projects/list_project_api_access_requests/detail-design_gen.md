@@ -28,21 +28,21 @@ _正常系で作成/更新/削除するリソースはありません。_
 
 | 項目 | 説明 | 値の取得元 |
 | --- | --- | --- |
-| `items` | 一覧レスポンスに含まれるリソース配列です。 | page.items を list 化 |
-| `items.accessRequestId` | API利用申請を一意に識別するIDです。 | page.items を list 化 |
-| `items.projectId` | API利用単位となるプロジェクトを一意に識別するIDです。 | page.items を list 化 |
-| `items.apiId` | APIカタログ上のAPIを一意に識別するIDです。 | page.items を list 化 |
-| `items.apiCode` | 利用者がAPIカタログ上のAPIを識別するためのコードです。 | page.items を list 化 |
-| `items.apiName` | APIカタログに表示されるAPI名です。 | page.items を list 化 |
-| `items.apiStageId` | API Gateway stageに対応するLazunex内のstage IDです。 | page.items を list 化 |
-| `items.stageName` | API Gatewayにデプロイされているstage名です。 | page.items を list 化 |
-| `items.requestedAuthMode` | 申請者が希望するAPI利用時の認証方式です。 | page.items を list 化 |
-| `items.requestedReason` | 申請者がAPI利用を希望する理由です。 | page.items を list 化 |
-| `items.derivedState` | イベント履歴から導出した対象リソースの現在状態です。 | page.items を list 化 |
-| `items.requestedBy` | API利用申請を作成した認証主体IDです。 | page.items を list 化 |
-| `items.requestedAt` | API利用申請が作成された日時です。 | page.items を list 化 |
-| `items.review` | API利用申請に対する審査結果情報です。 | page.items を list 化 |
-| `items.review.reviewerPrincipalId` | API利用申請を審査できる認証主体IDです。 | page.items を list 化 |
-| `items.review.reviewedAt` | API利用申請が審査された日時です。 | page.items を list 化 |
-| `items.review.reviewComment` | 審査者が承認または却下時に記録するコメントです。 | page.items を list 化 |
+| `items` | 一覧レスポンスに含まれるリソース配列です。 | ProjectApiAccessRequestItemResponse[] |
+| `items.accessRequestId` | API利用申請を一意に識別するIDです。 | DB: api_access_requests.accessRequestId |
+| `items.projectId` | API利用単位となるプロジェクトを一意に識別するIDです。 | DB: api_access_requests.projectId |
+| `items.apiId` | APIカタログ上のAPIを一意に識別するIDです。 | DB: api_access_requests.apiId |
+| `items.apiCode` | 利用者がAPIカタログ上のAPIを識別するためのコードです。 | DB: apis.apiCode |
+| `items.apiName` | APIカタログに表示されるAPI名です。 | DB: apis.name |
+| `items.apiStageId` | API Gateway stageに対応するLazunex内のstage IDです。 | DB: api_access_requests.apiStageId |
+| `items.stageName` | API Gatewayにデプロイされているstage名です。 | DB: api_gateway_stages.apigwStageName |
+| `items.requestedAuthMode` | 申請者が希望するAPI利用時の認証方式です。 | DB: api_access_requests.requestedAuthMode から導出 |
+| `items.requestedReason` | 申請者がAPI利用を希望する理由です。 | DB: api_access_requests.requestedReason |
+| `items.derivedState` | イベント履歴から導出した対象リソースの現在状態です。 | DB: api_access_reviews.decision から導出 |
+| `items.requestedBy` | API利用申請を作成した認証主体IDです。 | DB: api_access_requests.requestedBy |
+| `items.requestedAt` | API利用申請が作成された日時です。 | DB: api_access_requests.requestedAt |
+| `items.review` | API利用申請に対する審査結果情報です。 | AccessRequestReviewResponse: DB: api_access_reviews.reviewerPrincipalId, DB: api_access_reviews.reviewedAt, DB: api_access_reviews.reviewComment or '' |
+| `items.review.reviewerPrincipalId` | API利用申請を審査できる認証主体IDです。 | DB: api_access_reviews.reviewerPrincipalId |
+| `items.review.reviewedAt` | API利用申請が審査された日時です。 | DB: api_access_reviews.reviewedAt |
+| `items.review.reviewComment` | 審査者が承認または却下時に記録するコメントです。 | DB: api_access_reviews.reviewComment or '' |
 | `nextToken` | 次ページを取得するために前回レスポンスから受け取る継続tokenです。 | page.next_token |

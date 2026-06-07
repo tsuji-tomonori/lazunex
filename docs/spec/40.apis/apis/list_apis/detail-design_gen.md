@@ -27,17 +27,17 @@ _正常系で作成/更新/削除するリソースはありません。_
 
 | 項目 | 説明 | 値の取得元 |
 | --- | --- | --- |
-| `items` | 一覧レスポンスに含まれるリソース配列です。 | page.items を list 化 |
-| `items.apiId` | APIカタログ上のAPIを一意に識別するIDです。 | page.items を list 化 |
-| `items.apiCode` | 利用者がAPIカタログ上のAPIを識別するためのコードです。 | page.items を list 化 |
-| `items.name` | 利用者に表示するリソース名です。 | page.items を list 化 |
-| `items.description` | 利用者に表示するリソースの概要説明です。 | page.items を list 化 |
-| `items.providerName` | API提供者として表示する組織名またはチーム名です。 | page.items を list 化 |
-| `items.visibility` | APIカタログ上での公開範囲です。 | page.items を list 化 |
-| `items.derivedState` | イベント履歴から導出した対象リソースの現在状態です。 | page.items を list 化 |
-| `items.stage` | APIカタログに紐づく代表stage情報です。 | page.items を list 化 |
-| `items.stage.apiStageId` | API Gateway stageに対応するLazunex内のstage IDです。 | page.items を list 化 |
-| `items.stage.stageName` | API Gatewayにデプロイされているstage名です。 | page.items を list 化 |
-| `items.stage.invokeUrl` | 対象API Gateway stageを呼び出すためのベースURLです。 | page.items を list 化 |
-| `items.scopeFullName` | Cognito access tokenに要求されるresource server付きの完全なscope名です。 | page.items を list 化 |
+| `items` | 一覧レスポンスに含まれるリソース配列です。 | ApiListItemResponse[] |
+| `items.apiId` | APIカタログ上のAPIを一意に識別するIDです。 | DB: apis.apiId |
+| `items.apiCode` | 利用者がAPIカタログ上のAPIを識別するためのコードです。 | DB: apis.apiCode |
+| `items.name` | 利用者に表示するリソース名です。 | DB: apis.name |
+| `items.description` | 利用者に表示するリソースの概要説明です。 | DB: apis.description |
+| `items.providerName` | API提供者として表示する組織名またはチーム名です。 | DB: apis.providerName |
+| `items.visibility` | APIカタログ上での公開範囲です。 | DB: apis.visibility から導出 |
+| `items.derivedState` | イベント履歴から導出した対象リソースの現在状態です。 | ApiDerivedState.PUBLISHED |
+| `items.stage` | APIカタログに紐づく代表stage情報です。 | ApiListStageResponse: DB: api_gateway_stages.apiStageId, DB: api_gateway_stages.apigwStageName, DB: api_gateway_stages.invokeUrl |
+| `items.stage.apiStageId` | API Gateway stageに対応するLazunex内のstage IDです。 | DB: api_gateway_stages.apiStageId |
+| `items.stage.stageName` | API Gatewayにデプロイされているstage名です。 | DB: api_gateway_stages.apigwStageName |
+| `items.stage.invokeUrl` | 対象API Gateway stageを呼び出すためのベースURLです。 | DB: api_gateway_stages.invokeUrl |
+| `items.scopeFullName` | Cognito access tokenに要求されるresource server付きの完全なscope名です。 | DB: api_cognito_scopes.scopeFullName |
 | `nextToken` | 次ページを取得するために前回レスポンスから受け取る継続tokenです。 | page.next_token |

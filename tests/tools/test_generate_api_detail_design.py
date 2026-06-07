@@ -200,3 +200,100 @@ CREATE TABLE widgets (
     assert "### 外部リソース `CreateWidgetInput`" in content
     assert "| `widgetId` | widget.widget_id |" in generated_content
     assert "| `externalId` | 外部リソースIDです。 | external.external_id |" in content
+
+
+def test_api_detail_design_resolves_list_item_sources_to_db_columns(tmp_path: Path) -> None:
+    api_root = tmp_path / "src/app/apis"
+    api_dir = api_root / "projects/list_widgets"
+    docs_root = tmp_path / "docs/spec/40.apis"
+    ddl_path = tmp_path / "src/db/ddl.sql"
+    api_dir.mkdir(parents=True, exist_ok=True)
+    ddl_path.parent.mkdir(parents=True)
+    ddl_path.write_text(
+        """
+CREATE TABLE widgets (
+    widget_id TEXT NOT NULL,
+    name TEXT NOT NULL
+);
+""",
+        encoding="utf-8",
+    )
+    (api_root / "router_errors.py").write_text(
+        "ROUTER_HANDLED_EXCEPTIONS = (ApiFunctionError,)\n",
+        encoding="utf-8",
+    )
+    (api_dir / "router.py").write_text(
+        """
+from fastapi import APIRouter
+
+router = APIRouter()
+
+@router.get("/widgets", operation_id="listWidgets", response_model=ListWidgetsResponse)
+async def list_widgets():
+    page = await api_functions.get_widgets(session)
+    return await api_functions.build_widget_list_response(page)
+""",
+        encoding="utf-8",
+    )
+    (api_dir / "schemas.py").write_text(
+        """
+from pydantic import Field
+from app.apis.base import ApiBaseModel
+
+class WidgetItemResponse(ApiBaseModel):
+    widget_id: str = Field(description="Widget IDです。")
+    name: str = Field(description="Widget名です。")
+
+class ListWidgetsResponse(ApiBaseModel):
+    items: list[WidgetItemResponse] = Field(description="Widget一覧です。")
+""",
+        encoding="utf-8",
+    )
+    (api_dir / "queries.py").write_text(
+        """
+from pathlib import Path
+from pydantic import BaseModel
+
+SQL_DIR = Path(__file__).with_name("sql")
+
+class SelectWidgetsRow(BaseModel):
+    widget_id: str
+    name: str
+
+async def select_widgets(session) -> list[SelectWidgetsRow]:
+    return await fetch_all(session, SQL_DIR / "001_select_widgets.sql", None, SelectWidgetsRow)
+""",
+        encoding="utf-8",
+    )
+    (api_dir / "sql").mkdir()
+    (api_dir / "sql/001_select_widgets.sql").write_text(
+        """
+SELECT
+    w.widget_id,
+    w.name
+FROM widgets AS w;
+""",
+        encoding="utf-8",
+    )
+    (api_dir / "functions.py").write_text(
+        """
+async def get_widgets(session):
+    rows = await queries.select_widgets(session)
+    items = tuple(_to_response_item(row) for row in rows)
+    return SequencePage(items=items, next_token=None)
+
+async def build_widget_list_response(page):
+    return ListWidgetsResponse(items=list(page.items))
+
+def _to_response_item(row: queries.SelectWidgetsRow) -> WidgetItemResponse:
+    return WidgetItemResponse(widget_id=row.widget_id, name=row.name)
+""",
+        encoding="utf-8",
+    )
+
+    content = generate_detail_designs(api_root, docs_root, ddl_path)[
+        docs_root / "projects/list_widgets/detail-design_gen.md"
+    ]
+
+    assert "| `items.widgetId` | Widget IDです。 | DB: widgets.widgetId |" in content
+    assert "| `items.name` | Widget名です。 | DB: widgets.name |" in content

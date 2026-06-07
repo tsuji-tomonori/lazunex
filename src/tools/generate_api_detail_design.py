@@ -69,6 +69,7 @@ class SqlSpec:
 class QuerySpec:
     function_name: str
     params_class: str
+    row_class: str
     sql_filename: str
     summary: str
     tables: tuple[str, ...]
@@ -381,6 +382,34 @@ def sql_tables(path: Path) -> tuple[str, ...]:
     return tuple(tables)
 
 
+def table_aliases(expression: Expression) -> dict[str, str]:
+    aliases: dict[str, str] = {}
+    for table in expression.find_all(exp.Table):
+        if table.name:
+            aliases[table.name] = table.name
+            aliases[table.alias_or_name] = table.name
+    return aliases
+
+
+def select_output_sources(path: Path) -> dict[str, str]:
+    text = path.read_text(encoding="utf-8")
+    statement = next((item for item in sqlglot.parse(text, read="postgres") if item), None)
+    if not isinstance(statement, exp.Select):
+        return {}
+    aliases = table_aliases(statement)
+    sources: dict[str, str] = {}
+    for expression in statement.expressions:
+        output_name = expression.alias_or_name
+        source = expression.this if isinstance(expression, exp.Alias) else expression
+        if not output_name or not isinstance(source, exp.Column):
+            continue
+        table = aliases.get(source.table or "")
+        if table is None:
+            continue
+        sources[to_camel(output_name)] = f"DB: {table}.{to_camel(source.name)}"
+    return sources
+
+
 def sql_action_spec(path: Path) -> SqlSpec | None:
     text = path.read_text(encoding="utf-8")
     statement = next((item for item in sqlglot.parse(text, read="postgres") if item), None)
@@ -440,19 +469,39 @@ def query_specs(queries_path: Path) -> dict[str, QuerySpec]:
         if sql_file is None:
             continue
         params_class = ""
+        row_class = ""
         returns = node.returns
         _ = returns
         for arg in node.args.args:
             if arg.arg == "params" and arg.annotation is not None:
                 params_class = ast.unparse(arg.annotation)
+        for child in ast.walk(node):
+            if not isinstance(child, ast.Call):
+                continue
+            if call_name(child.func) != "fetch_all" or len(child.args) < 4:
+                continue
+            row_class = ast.unparse(child.args[3])
         specs[node.name] = QuerySpec(
             function_name=node.name,
             params_class=params_class,
+            row_class=row_class,
             sql_filename=sql_file,
             summary=clean_docstring(ast.get_docstring(node)),
             tables=sql_tables(queries_path.with_name("sql") / sql_file),
         )
     return specs
+
+
+def query_row_source_maps(
+    api_dir: Path,
+    queries: dict[str, QuerySpec],
+) -> dict[str, dict[str, str]]:
+    maps: dict[str, dict[str, str]] = {}
+    for query in queries.values():
+        if not query.row_class:
+            continue
+        maps[query.row_class] = select_output_sources(api_dir / "sql" / query.sql_filename)
+    return maps
 
 
 def model_fields_by_class(path: Path) -> dict[str, tuple[str, ...]]:
@@ -587,6 +636,44 @@ def source_expression(node: ast.AST | None, origins: dict[str, str] | None = Non
             if key is not None
         ) + "}"
     return format_origin_expression(ast.unparse(node), origins)
+
+
+def source_expression_with_row_maps(
+    node: ast.AST | None,
+    origins: dict[str, str],
+    row_sources_by_arg: dict[str, dict[str, str]],
+) -> str:
+    if node is None:
+        return "-"
+    if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
+        row_sources = row_sources_by_arg.get(node.value.id)
+        if row_sources is not None:
+            return row_sources.get(to_camel(node.attr), f"DB row.{to_camel(node.attr)}")
+    if isinstance(node, ast.Call):
+        name = call_name(node.func) or ast.unparse(node.func)
+        if node.args:
+            inner = source_expression_with_row_maps(node.args[0], origins, row_sources_by_arg)
+            if inner.startswith("DB:"):
+                return f"{inner} から導出"
+        if name.endswith("Response"):
+            child_sources = [
+                source_expression_with_row_maps(keyword.value, origins, row_sources_by_arg)
+                for keyword in node.keywords
+                if keyword.arg
+            ]
+            db_sources = tuple(
+                dict.fromkeys(source for source in child_sources if source.startswith("DB:"))
+            )
+            if db_sources:
+                return f"{name}: " + ", ".join(db_sources)
+            return f"{name}(...)"
+    if isinstance(node, ast.BoolOp):
+        operator = " or " if isinstance(node.op, ast.Or) else " and "
+        return operator.join(
+            source_expression_with_row_maps(value, origins, row_sources_by_arg)
+            for value in node.values
+        )
+    return source_expression(node, origins)
 
 
 def target_names(node: ast.AST) -> list[str]:
@@ -805,17 +892,102 @@ def response_constructor_values(
     return values
 
 
+def row_sources_by_function_arg(
+    function: ast.AsyncFunctionDef | ast.FunctionDef,
+    row_source_maps: dict[str, dict[str, str]],
+) -> dict[str, dict[str, str]]:
+    sources: dict[str, dict[str, str]] = {}
+    for arg in function.args.args:
+        if arg.annotation is None:
+            continue
+        annotation = ast.unparse(arg.annotation)
+        row_class = annotation.split(".")[-1]
+        if row_class in row_source_maps:
+            sources[arg.arg] = row_source_maps[row_class]
+    return sources
+
+
+def response_constructor_source_maps(
+    functions_path: Path,
+    query_by_name: dict[str, QuerySpec],
+    endpoint_origins: dict[str, str],
+    row_source_maps: dict[str, dict[str, str]],
+) -> dict[str, dict[str, str]]:
+    tree = ast.parse(functions_path.read_text(encoding="utf-8"), filename=str(functions_path))
+    maps: dict[str, dict[str, str]] = {}
+    for function in tree.body:
+        if not isinstance(function, ast.AsyncFunctionDef | ast.FunctionDef):
+            continue
+        origins = collect_function_origins(function, query_by_name, endpoint_origins)
+        row_sources = row_sources_by_function_arg(function, row_source_maps)
+        for node in ast.walk(function):
+            if not isinstance(node, ast.Call):
+                continue
+            class_name = call_name(node.func)
+            if class_name is None or not class_name.endswith("Response"):
+                continue
+            fields = maps.setdefault(class_name, {})
+            for keyword in node.keywords:
+                if keyword.arg:
+                    fields[to_camel(keyword.arg)] = source_expression_with_row_maps(
+                        keyword.value,
+                        origins,
+                        row_sources,
+                    )
+    return maps
+
+
+def list_item_schema_name(response_schema: SchemaSpec | None) -> str | None:
+    if response_schema is None:
+        return None
+    for field in response_schema.fields:
+        if field.name == "items" and field.type_name.startswith("list["):
+            return field.type_name.removeprefix("list[").removesuffix("]")
+    return None
+
+
+def nested_schema_name(schema: SchemaSpec | None, field_name: str) -> str | None:
+    if schema is None:
+        return None
+    for field in schema.fields:
+        if field.name != field_name:
+            continue
+        return strip_optional_type(field.type_name)
+    return None
+
+
 def response_value_rows(
     response_schema: SchemaSpec | None,
     specs: dict[str, SchemaSpec],
     values: dict[str, str],
+    constructor_sources: dict[str, dict[str, str]] | None = None,
 ) -> tuple[tuple[str, str, str], ...]:
+    constructor_sources = constructor_sources or {}
     if response_schema is None:
         return ()
+    item_schema_name = list_item_schema_name(response_schema)
+    item_schema = specs.get(item_schema_name or "")
+    item_sources = constructor_sources.get(item_schema_name or "", {})
     rows: list[tuple[str, str, str]] = []
     for field in schema_field_rows(response_schema, specs):
         top = field.name.split(".", 1)[0]
-        rows.append((field.name, field.description, values.get(field.name) or values.get(top, "-")))
+        source = values.get(field.name) or values.get(top, "-")
+        if field.name == "items" and item_schema_name:
+            source = f"{item_schema_name}[]"
+        elif field.name.startswith("items.") and item_schema_name:
+            tail = field.name.removeprefix("items.")
+            if "." in tail:
+                nested_field, nested_tail = tail.split(".", 1)
+                nested_name = nested_schema_name(item_schema, nested_field)
+                source = constructor_sources.get(nested_name or "", {}).get(nested_tail, source)
+            else:
+                nested_name = nested_schema_name(item_schema, tail)
+                nested_sources = constructor_sources.get(nested_name or "", {})
+                if nested_sources:
+                    source = f"{nested_name}: " + ", ".join(dict.fromkeys(nested_sources.values()))
+                else:
+                    source = item_sources.get(tail, source)
+        rows.append((field.name, field.description, source))
     return tuple(rows)
 
 
@@ -839,6 +1011,7 @@ def api_detail_design_from_dir(
     endpoint = endpoint_function(router_tree)
     specs = schema_specs(api_dir / "schemas.py")
     queries = query_specs(api_dir / "queries.py")
+    row_source_maps = query_row_source_maps(api_dir, queries)
     endpoint_origins = endpoint_input_origins(endpoint)
     request_schema_name = endpoint_body_schema(endpoint)
     response_schema_name = endpoint_response_model(endpoint)
@@ -873,6 +1046,12 @@ def api_detail_design_from_dir(
                 response_schema_name,
                 queries,
                 endpoint_origins,
+            ),
+            response_constructor_source_maps(
+                api_dir / "functions.py",
+                queries,
+                endpoint_origins,
+                row_source_maps,
             ),
         ),
         ddl_tables=ddl_tables or {},
