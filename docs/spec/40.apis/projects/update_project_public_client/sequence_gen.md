@@ -10,6 +10,12 @@ sequenceDiagram
   participant R_identity as Resource: identity
   participant DB as DB
   User->>API: PATCH /projects/{projectId}/public-client
+  alt X-Principal-Id ヘッダが未指定または空文字の場合。
+    API-->>User: HTTP 401 Unauthorized<br/>X-Principal-Id header is required.
+  end
+  alt Path/Query/Header/Body が型または制約に一致しない場合。
+    API-->>User: HTTP 422 Unprocessable Content<br/>request validation failed
+  end
   API->>API: public App Client 更新リクエストを検証する。
   alt refresh_token_validity が60分から10年の範囲外である場合。
     API-->>User: HTTP 400 Bad Request<br/>refresh_token_validity must be between 60 minutes and 10 years

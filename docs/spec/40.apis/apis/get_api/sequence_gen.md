@@ -9,6 +9,12 @@ sequenceDiagram
   participant API as API
   participant DB as DB
   User->>API: GET /apis/{apiId}
+  alt X-Principal-Id ヘッダが未指定または空文字の場合。
+    API-->>User: HTTP 401 Unauthorized<br/>X-Principal-Id header is required.
+  end
+  alt Path/Query/Header/Body が型または制約に一致しない場合。
+    API-->>User: HTTP 422 Unprocessable Content<br/>request validation failed
+  end
   API->>DB: API 詳細レスポンスに必要な情報を取得する。<br/>SQL 001_select_apis.sql<br/>テーブル apis, api_gateway_stages, api_cognito_scopes, api_reviewers
   alt 対象 API が存在しない場合。
     API-->>User: HTTP 404 Not Found<br/>API not found

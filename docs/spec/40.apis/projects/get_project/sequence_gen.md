@@ -9,6 +9,12 @@ sequenceDiagram
   participant API as API
   participant DB as DB
   User->>API: GET /projects/{projectId}
+  alt X-Principal-Id ヘッダが未指定または空文字の場合。
+    API-->>User: HTTP 401 Unauthorized<br/>X-Principal-Id header is required.
+  end
+  alt Path/Query/Header/Body が型または制約に一致しない場合。
+    API-->>User: HTTP 422 Unprocessable Content<br/>request validation failed
+  end
   API->>DB: Project 詳細レスポンスに必要な情報を取得する。<br/>SQL 001_select_projects.sql<br/>テーブル projects, project_api_keys, project_usage_plans, project_cognito_clients, project_cognito_client_urls, project_members
   alt 対象 Project が存在しない、または呼び出し元が参照できない場合。
     API-->>User: HTTP 404 Not Found<br/>Project not found

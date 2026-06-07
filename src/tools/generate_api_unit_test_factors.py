@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from tools.generate_api_sequences import (
+    ErrorReturnStep,
     api_dirs,
     api_error_response_call,
     condition_label_from_description,
@@ -16,6 +17,7 @@ from tools.generate_api_sequences import (
     endpoint_route_path,
     error_response_for_router_error_call,
     http_status_code,
+    implicit_router_error_returns,
     keyword_value,
     literal_string,
 )
@@ -51,6 +53,7 @@ class ApiUnitTestFactors:
     method: str
     path: str
     success_status: int
+    implicit_router_errors: tuple[ErrorReturnStep, ...]
     factors: tuple[TestFactor, ...]
 
 
@@ -463,6 +466,7 @@ def api_unit_test_factors_from_dir(api_dir: Path, api_root: Path) -> ApiUnitTest
         method=endpoint_route_method(function),
         path=endpoint_route_path(function),
         success_status=endpoint_success_status(function),
+        implicit_router_errors=implicit_router_error_returns(function),
         factors=endpoint_factors(
             function,
             source.splitlines(),
@@ -479,6 +483,14 @@ def endpoint_success_status(function: ast.AsyncFunctionDef | ast.FunctionDef) ->
         if status_code := http_status_code(keyword_value(decorator, "status_code")):
             return status_code
     return 200
+
+
+def implicit_router_error_source(error: ErrorReturnStep) -> str:
+    if error.status_code == 401:
+        return "FastAPI Depends(get_caller_identity)"
+    if error.status_code == 422:
+        return "FastAPI/Pydantic request validation"
+    return "FastAPI router pre-processing"
 
 
 def product_cases(factors: tuple[TestFactor, ...]) -> list[TestCase]:
@@ -525,6 +537,27 @@ def render_factor_elements_section(factors: tuple[TestFactor, ...]) -> list[str]
                 f"{markdown_escape(element.name)} | {markdown_escape(element.expected)} |"
             )
         lines.append("")
+    return lines
+
+
+def render_implicit_router_errors_section(errors: tuple[ErrorReturnStep, ...]) -> list[str]:
+    lines = ["## 0. Router層の暗黙処理", ""]
+    if not errors:
+        lines.extend(["_暗黙的な認証依存または入力検証のケースはありません。_", ""])
+        return lines
+    lines.extend(
+        [
+            "| Case ID | 処理 | 発生条件 | 期待観点 |",
+            "| --- | --- | --- | --- |",
+        ]
+    )
+    for index, error in enumerate(errors, start=1):
+        lines.append(
+            f"| `R{index:03d}` | {markdown_escape(implicit_router_error_source(error))} | "
+            f"{markdown_escape(error.condition)} | "
+            f"HTTP {error.status_code} error response: {markdown_escape(error.detail)} |"
+        )
+    lines.append("")
     return lines
 
 
@@ -588,6 +621,7 @@ def render_unit_test_markdown(doc: ApiUnitTestFactors) -> str:
         f"- Operation: `{doc.operation_id}`",
         f"- Endpoint: `{doc.method} {doc.path}`",
         "",
+        *render_implicit_router_errors_section(doc.implicit_router_errors),
         *render_factor_elements_section(doc.factors),
         *render_product_cases_section(doc.factors),
         *render_test_details_section(doc.factors, success_status=doc.success_status),

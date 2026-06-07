@@ -4,6 +4,7 @@ from tools.generate_api_unit_test_factors import (
     api_unit_test_factors_from_dir,
     generate_unit_test_factors,
     product_cases,
+    render_implicit_router_errors_section,
     render_unit_test_markdown,
 )
 
@@ -12,12 +13,15 @@ def write_router(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         """
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, Query, status
 
 router = APIRouter()
 
 @router.post("/projects", operation_id="createProject")
-async def create_project():
+async def create_project(
+    query: Annotated[CreateProjectQuery, Query()],
+    caller: Annotated[CallerIdentity, Depends(get_caller_identity)],
+):
     try:
         # Project 作成権限がない場合。
         if not await api_functions.has_project_creation_permission(caller):
@@ -68,6 +72,7 @@ def test_api_unit_test_factors_from_router_ast(tmp_path: Path) -> None:
     assert doc.operation_id == "createProject"
     assert doc.method == "POST"
     assert doc.path == "/projects"
+    assert [error.status_code for error in doc.implicit_router_errors] == [401, 422]
     assert [factor.kind for factor in doc.factors] == [
         "条件分岐",
         "条件分岐",
@@ -143,9 +148,21 @@ def test_render_unit_test_markdown_uses_three_sections(tmp_path: Path) -> None:
     assert "| `TC007` |" in content
     assert "| `TC008` |" not in content
     assert "| `TC001` | `成立` | - | - | - |" in content
+    assert "## 0. Router層の暗黙処理" in content
+    assert "| `R001` | FastAPI Depends(get_caller_identity) |" in content
+    assert "| `R002` | FastAPI/Pydantic request validation |" in content
     assert "| `F04-raised-apifunctionerror` | ApiFunctionError |" in content
     assert "| `F04-raised-externalapierror` | ExternalApiError |" in content
     assert "| `F04-raised-httpexception` | HTTPException |" in content
     assert "`F01` 条件分岐: " in content
     assert "条件分岐 L" not in content
     assert "例外処理 L" not in content
+
+
+def test_render_implicit_router_errors_section_renders_none() -> None:
+    assert render_implicit_router_errors_section(()) == [
+        "## 0. Router層の暗黙処理",
+        "",
+        "_暗黙的な認証依存または入力検証のケースはありません。_",
+        "",
+    ]

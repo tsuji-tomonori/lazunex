@@ -31,6 +31,7 @@ from tools.generate_api_sequences import (
     function_target,
     generate_sequences,
     http_status_code_label,
+    implicit_router_error_returns,
     imported_integration_ports,
     integration_resource_for_target,
     integration_resources,
@@ -261,6 +262,35 @@ async def publish_api():
     assert endpoint_route_path(function) == "/apis"
     assert endpoint_status_codes(function) == (201, 401, 422, 429, 500, 400, 409, 503)
     assert http_status_code_label(400) == "HTTP 400 Bad Request"
+
+
+def test_implicit_router_error_returns_detects_auth_and_validation() -> None:
+    tree = ast.parse(
+        """
+@router.post("/projects/{projectId}", operation_id="createProject")
+async def create_project(
+    project_id: Annotated[ResourceId, Path(alias="projectId")],
+    request: Annotated[CreateProjectRequest, Body()],
+    caller: Annotated[CallerIdentity, Depends(get_caller_identity)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+):
+    return {}
+"""
+    )
+    function = endpoint_function(tree)
+
+    assert implicit_router_error_returns(function) == (
+        ErrorReturnStep(
+            401,
+            "X-Principal-Id ヘッダが未指定または空文字の場合。",
+            "X-Principal-Id header is required.",
+        ),
+        ErrorReturnStep(
+            422,
+            "Path/Query/Header/Body が型または制約に一致しない場合。",
+            "request validation failed",
+        ),
+    )
 
 
 def test_endpoint_error_returns_reads_router_error_schema_returns() -> None:

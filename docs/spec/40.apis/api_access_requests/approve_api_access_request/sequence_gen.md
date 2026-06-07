@@ -11,6 +11,12 @@ sequenceDiagram
   participant R_identity as Resource: identity
   participant DB as DB
   User->>API: POST /api-access-requests/{accessRequestId}/approve
+  alt X-Principal-Id ヘッダが未指定または空文字の場合。
+    API-->>User: HTTP 401 Unauthorized<br/>X-Principal-Id header is required.
+  end
+  alt Path/Query/Header/Body が型または制約に一致しない場合。
+    API-->>User: HTTP 422 Unprocessable Content<br/>request validation failed
+  end
   Note over API,DB: DB transaction範囲開始 (最初のDB操作からcommit/rollbackまで)
   API->>DB: 承認対象の利用申請を取得する。<br/>SQL 001_select_api_access_requests.sql<br/>テーブル api_access_requests, projects, apis, api_gateway_stages, api_cognito_scopes, api_access_reviews
   alt 承認対象の審査中利用申請が存在しない場合。

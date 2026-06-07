@@ -9,6 +9,12 @@ sequenceDiagram
   participant API as API
   participant DB as DB
   User->>API: GET /apis
+  alt X-Principal-Id ヘッダが未指定または空文字の場合。
+    API-->>User: HTTP 401 Unauthorized<br/>X-Principal-Id header is required.
+  end
+  alt Path/Query/Header/Body が型または制約に一致しない場合。
+    API-->>User: HTTP 422 Unprocessable Content<br/>request validation failed
+  end
   alt 呼び出し元が API 一覧を参照できない場合。
     API-->>User: HTTP 403 Forbidden<br/>caller cannot list apis
   end

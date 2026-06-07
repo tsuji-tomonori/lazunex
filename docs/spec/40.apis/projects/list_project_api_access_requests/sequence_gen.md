@@ -9,6 +9,12 @@ sequenceDiagram
   participant API as API
   participant DB as DB
   User->>API: GET /projects/{projectId}/api-access-requests
+  alt X-Principal-Id ヘッダが未指定または空文字の場合。
+    API-->>User: HTTP 401 Unauthorized<br/>X-Principal-Id header is required.
+  end
+  alt Path/Query/Header/Body が型または制約に一致しない場合。
+    API-->>User: HTTP 422 Unprocessable Content<br/>request validation failed
+  end
   API->>API: 対象 Project の参照を組み立てる。
   alt 呼び出し元が Project 内の利用申請履歴を参照できない場合。
     API-->>User: HTTP 403 Forbidden<br/>caller cannot list project access requests

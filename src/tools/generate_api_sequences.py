@@ -48,6 +48,10 @@ HTTP_STATUS_REASON_PHRASES = {
 PREDICATES = {"has", "is"}
 ROUTER_ERROR_CONDITION = "Router で捕捉した例外を error response に変換する場合。"
 ROUTER_ERROR_DETAIL = "internal server error"
+MISSING_PRINCIPAL_CONDITION = "X-Principal-Id ヘッダが未指定または空文字の場合。"
+MISSING_PRINCIPAL_DETAIL = "X-Principal-Id header is required."
+REQUEST_VALIDATION_CONDITION = "Path/Query/Header/Body が型または制約に一致しない場合。"
+REQUEST_VALIDATION_DETAIL = "request validation failed"
 
 
 @dataclass(frozen=True)
@@ -282,6 +286,84 @@ def annotation_text(node: ast.AST | None) -> str | None:
     if node is None:
         return None
     return ast.unparse(node)
+
+
+def call_name(node: ast.AST) -> str | None:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    return None
+
+
+def annotation_has_call(
+    node: ast.AST | None,
+    names: frozenset[str],
+) -> bool:
+    if node is None:
+        return False
+    for child in ast.walk(node):
+        if not isinstance(child, ast.Call):
+            continue
+        name = call_name(child.func)
+        if name in names:
+            return True
+    return False
+
+
+def annotation_has_depends_call(
+    node: ast.AST | None,
+    dependency_name: str,
+) -> bool:
+    if node is None:
+        return False
+    for child in ast.walk(node):
+        if not isinstance(child, ast.Call):
+            continue
+        if call_name(child.func) != "Depends":
+            continue
+        if child.args and call_name(child.args[0]) == dependency_name:
+            return True
+    return False
+
+
+def endpoint_uses_caller_identity_dependency(
+    function: ast.AsyncFunctionDef | ast.FunctionDef,
+) -> bool:
+    return any(
+        annotation_has_depends_call(arg.annotation, "get_caller_identity")
+        for arg in function.args.args
+    )
+
+
+def endpoint_has_request_validation(
+    function: ast.AsyncFunctionDef | ast.FunctionDef,
+) -> bool:
+    validation_calls = frozenset({"Path", "Query", "Header", "Body", "Cookie"})
+    return any(annotation_has_call(arg.annotation, validation_calls) for arg in function.args.args)
+
+
+def implicit_router_error_returns(
+    function: ast.AsyncFunctionDef | ast.FunctionDef,
+) -> tuple[ErrorReturnStep, ...]:
+    returns: list[ErrorReturnStep] = []
+    if endpoint_uses_caller_identity_dependency(function):
+        returns.append(
+            ErrorReturnStep(
+                401,
+                MISSING_PRINCIPAL_CONDITION,
+                MISSING_PRINCIPAL_DETAIL,
+            )
+        )
+    if endpoint_has_request_validation(function):
+        returns.append(
+            ErrorReturnStep(
+                422,
+                REQUEST_VALIDATION_CONDITION,
+                REQUEST_VALIDATION_DETAIL,
+            )
+        )
+    return tuple(returns)
 
 
 def imported_integration_ports(tree: ast.AST) -> dict[str, str]:
@@ -1033,7 +1115,10 @@ def api_sequence_from_dir(
     tree = ast.parse(router_path.read_text(encoding="utf-8"), filename=str(router_path))
     function = endpoint_function(tree)
     metadata = function_metadata(functions_path)
-    items = endpoint_sequence_items(function, metadata, endpoint_success_status_code(function))
+    items = [
+        *implicit_router_error_returns(function),
+        *endpoint_sequence_items(function, metadata, endpoint_success_status_code(function)),
+    ]
     steps = [item for item in items if isinstance(item, SequenceStep)]
     error_returns = [item for item in items if isinstance(item, ErrorReturnStep)]
     success_returns = [item for item in items if isinstance(item, SuccessReturnStep)]

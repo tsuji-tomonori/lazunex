@@ -11,6 +11,12 @@ sequenceDiagram
   participant R_identity as Resource: identity
   participant DB as DB
   User->>API: POST /apis
+  alt X-Principal-Id ヘッダが未指定または空文字の場合。
+    API-->>User: HTTP 401 Unauthorized<br/>X-Principal-Id header is required.
+  end
+  alt Path/Query/Header/Body が型または制約に一致しない場合。
+    API-->>User: HTTP 422 Unprocessable Content<br/>request validation failed
+  end
   API->>API: API 公開登録リクエストを検証する。
   alt apiCode が空白である場合。
     API-->>User: HTTP 400 Bad Request<br/>api_code must not be blank

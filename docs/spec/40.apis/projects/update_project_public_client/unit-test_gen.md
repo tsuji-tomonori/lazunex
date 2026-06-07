@@ -5,6 +5,13 @@
 - Operation: `updateProjectPublicClient`
 - Endpoint: `PATCH /projects/{projectId}/public-client`
 
+## 0. Router層の暗黙処理
+
+| Case ID | 処理 | 発生条件 | 期待観点 |
+| --- | --- | --- | --- |
+| `R001` | FastAPI Depends(get_caller_identity) | X-Principal-Id ヘッダが未指定または空文字の場合。 | HTTP 401 error response: X-Principal-Id header is required. |
+| `R002` | FastAPI/Pydantic request validation | Path/Query/Header/Body が型または制約に一致しない場合。 | HTTP 422 error response: request validation failed |
+
 ## 1. 要因ごとの要素
 
 ### F01 条件分岐

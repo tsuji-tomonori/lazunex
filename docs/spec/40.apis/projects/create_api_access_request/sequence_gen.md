@@ -9,6 +9,12 @@ sequenceDiagram
   participant API as API
   participant DB as DB
   User->>API: POST /projects/{projectId}/api-access-requests
+  alt X-Principal-Id ヘッダが未指定または空文字の場合。
+    API-->>User: HTTP 401 Unauthorized<br/>X-Principal-Id header is required.
+  end
+  alt Path/Query/Header/Body が型または制約に一致しない場合。
+    API-->>User: HTTP 422 Unprocessable Content<br/>request validation failed
+  end
   API->>API: 利用申請作成リクエストを検証する。
   alt requestedReason が空白である場合。
     API-->>User: HTTP 400 Bad Request<br/>requested_reason must not be blank
