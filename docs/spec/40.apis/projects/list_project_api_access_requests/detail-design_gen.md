@@ -28,7 +28,7 @@ _正常系で作成/更新/削除するリソースはありません。_
 
 | 項目 | 説明 | 値の取得元 |
 | --- | --- | --- |
-| `items` | 一覧レスポンスに含まれるリソース配列です。 | ProjectApiAccessRequestItemResponse[] |
+| `items` | 一覧レスポンスに含まれるリソース配列です。 |  |
 | `items.accessRequestId` | API利用申請を一意に識別するIDです。 | DB: api_access_requests.accessRequestId |
 | `items.projectId` | API利用単位となるプロジェクトを一意に識別するIDです。 | DB: api_access_requests.projectId |
 | `items.apiId` | APIカタログ上のAPIを一意に識別するIDです。 | DB: api_access_requests.apiId |
@@ -41,7 +41,7 @@ _正常系で作成/更新/削除するリソースはありません。_
 | `items.derivedState` | イベント履歴から導出した対象リソースの現在状態です。 | DB: api_access_reviews.decision から導出 |
 | `items.requestedBy` | API利用申請を作成した認証主体IDです。 | DB: api_access_requests.requestedBy |
 | `items.requestedAt` | API利用申請が作成された日時です。 | DB: api_access_requests.requestedAt |
-| `items.review` | API利用申請に対する審査結果情報です。 | AccessRequestReviewResponse: DB: api_access_reviews.reviewerPrincipalId, DB: api_access_reviews.reviewedAt, DB: api_access_reviews.reviewComment or '' |
+| `items.review` | API利用申請に対する審査結果情報です。 |  |
 | `items.review.reviewerPrincipalId` | API利用申請を審査できる認証主体IDです。 | DB: api_access_reviews.reviewerPrincipalId |
 | `items.review.reviewedAt` | API利用申請が審査された日時です。 | DB: api_access_reviews.reviewedAt |
 | `items.review.reviewComment` | 審査者が承認または却下時に記録するコメントです。 | DB: api_access_reviews.reviewComment or '' |

@@ -27,7 +27,7 @@ _正常系で作成/更新/削除するリソースはありません。_
 
 | 項目 | 説明 | 値の取得元 |
 | --- | --- | --- |
-| `items` | 一覧レスポンスに含まれるリソース配列です。 | ApiListItemResponse[] |
+| `items` | 一覧レスポンスに含まれるリソース配列です。 |  |
 | `items.apiId` | APIカタログ上のAPIを一意に識別するIDです。 | DB: apis.apiId |
 | `items.apiCode` | 利用者がAPIカタログ上のAPIを識別するためのコードです。 | DB: apis.apiCode |
 | `items.name` | 利用者に表示するリソース名です。 | DB: apis.name |
@@ -35,7 +35,7 @@ _正常系で作成/更新/削除するリソースはありません。_
 | `items.providerName` | API提供者として表示する組織名またはチーム名です。 | DB: apis.providerName |
 | `items.visibility` | APIカタログ上での公開範囲です。 | DB: apis.visibility から導出 |
 | `items.derivedState` | イベント履歴から導出した対象リソースの現在状態です。 | ApiDerivedState.PUBLISHED |
-| `items.stage` | APIカタログに紐づく代表stage情報です。 | ApiListStageResponse: DB: api_gateway_stages.apiStageId, DB: api_gateway_stages.apigwStageName, DB: api_gateway_stages.invokeUrl |
+| `items.stage` | APIカタログに紐づく代表stage情報です。 |  |
 | `items.stage.apiStageId` | API Gateway stageに対応するLazunex内のstage IDです。 | DB: api_gateway_stages.apiStageId |
 | `items.stage.stageName` | API Gatewayにデプロイされているstage名です。 | DB: api_gateway_stages.apigwStageName |
 | `items.stage.invokeUrl` | 対象API Gateway stageを呼び出すためのベースURLです。 | DB: api_gateway_stages.invokeUrl |

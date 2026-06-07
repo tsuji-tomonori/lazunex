@@ -28,7 +28,7 @@ _正常系で作成/更新/削除するリソースはありません。_
 
 | 項目 | 説明 | 値の取得元 |
 | --- | --- | --- |
-| `items` | 一覧レスポンスに含まれるリソース配列です。 | ProjectSubscriptionItemResponse[] |
+| `items` | 一覧レスポンスに含まれるリソース配列です。 |  |
 | `items.subscriptionId` | 承認済みAPI利用権を一意に識別するIDです。 | DB: project_api_subscriptions.subscriptionId |
 | `items.apiId` | APIカタログ上のAPIを一意に識別するIDです。 | DB: project_api_subscriptions.apiId |
 | `items.apiCode` | 利用者がAPIカタログ上のAPIを識別するためのコードです。 | DB: apis.apiCode |

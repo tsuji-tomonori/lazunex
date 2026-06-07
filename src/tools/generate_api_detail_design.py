@@ -973,7 +973,7 @@ def response_value_rows(
         top = field.name.split(".", 1)[0]
         source = values.get(field.name) or values.get(top, "-")
         if field.name == "items" and item_schema_name:
-            source = f"{item_schema_name}[]"
+            source = ""
         elif field.name.startswith("items.") and item_schema_name:
             tail = field.name.removeprefix("items.")
             if "." in tail:
@@ -982,11 +982,7 @@ def response_value_rows(
                 source = constructor_sources.get(nested_name or "", {}).get(nested_tail, source)
             else:
                 nested_name = nested_schema_name(item_schema, tail)
-                nested_sources = constructor_sources.get(nested_name or "", {})
-                if nested_sources:
-                    source = f"{nested_name}: " + ", ".join(dict.fromkeys(nested_sources.values()))
-                else:
-                    source = item_sources.get(tail, source)
+                source = "" if nested_name in specs else item_sources.get(tail, source)
         rows.append((field.name, field.description, source))
     return tuple(rows)
 

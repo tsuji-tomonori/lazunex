@@ -243,6 +243,10 @@ from app.apis.base import ApiBaseModel
 class WidgetItemResponse(ApiBaseModel):
     widget_id: str = Field(description="Widget IDです。")
     name: str = Field(description="Widget名です。")
+    review: WidgetReviewResponse = Field(description="Widgetレビューです。")
+
+class WidgetReviewResponse(ApiBaseModel):
+    reviewer_id: str = Field(description="Reviewer IDです。")
 
 class ListWidgetsResponse(ApiBaseModel):
     items: list[WidgetItemResponse] = Field(description="Widget一覧です。")
@@ -259,6 +263,7 @@ SQL_DIR = Path(__file__).with_name("sql")
 class SelectWidgetsRow(BaseModel):
     widget_id: str
     name: str
+    reviewer_id: str
 
 async def select_widgets(session) -> list[SelectWidgetsRow]:
     return await fetch_all(session, SQL_DIR / "001_select_widgets.sql", None, SelectWidgetsRow)
@@ -270,8 +275,10 @@ async def select_widgets(session) -> list[SelectWidgetsRow]:
         """
 SELECT
     w.widget_id,
-    w.name
-FROM widgets AS w;
+    w.name,
+    r.reviewer_id
+FROM widgets AS w
+JOIN widget_reviews AS r ON r.widget_id = w.widget_id;
 """,
         encoding="utf-8",
     )
@@ -286,7 +293,11 @@ async def build_widget_list_response(page):
     return ListWidgetsResponse(items=list(page.items))
 
 def _to_response_item(row: queries.SelectWidgetsRow) -> WidgetItemResponse:
-    return WidgetItemResponse(widget_id=row.widget_id, name=row.name)
+    return WidgetItemResponse(
+        widget_id=row.widget_id,
+        name=row.name,
+        review=WidgetReviewResponse(reviewer_id=row.reviewer_id),
+    )
 """,
         encoding="utf-8",
     )
@@ -295,5 +306,11 @@ def _to_response_item(row: queries.SelectWidgetsRow) -> WidgetItemResponse:
         docs_root / "projects/list_widgets/detail-design_gen.md"
     ]
 
+    assert "| `items` | Widget一覧です。 |  |" in content
     assert "| `items.widgetId` | Widget IDです。 | DB: widgets.widgetId |" in content
     assert "| `items.name` | Widget名です。 | DB: widgets.name |" in content
+    assert "| `items.review` | Widgetレビューです。 |  |" in content
+    assert (
+        "| `items.review.reviewerId` | Reviewer IDです。 | DB: widget_reviews.reviewerId |"
+        in content
+    )

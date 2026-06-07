@@ -27,7 +27,7 @@ _正常系で作成/更新/削除するリソースはありません。_
 
 | 項目 | 説明 | 値の取得元 |
 | --- | --- | --- |
-| `items` | 一覧レスポンスに含まれるリソース配列です。 | ProjectListItemResponse[] |
+| `items` | 一覧レスポンスに含まれるリソース配列です。 |  |
 | `items.projectId` | API利用単位となるプロジェクトを一意に識別するIDです。 | DB: projects.projectId |
 | `items.projectCode` | 利用者がプロジェクトを識別するためのコードです。 | DB: projects.projectCode |
 | `items.name` | 利用者に表示するリソース名です。 | DB: projects.name |
