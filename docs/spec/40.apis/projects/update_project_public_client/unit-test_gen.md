@@ -14,7 +14,7 @@
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01-true` | 成立 | HTTP 403 error response: caller is not a project owner; log message_id: updateProjectPublicClient.caller_is_not_a_project_owner; log summary: 呼び出し元がProject ownerではないため、リクエストを拒否した。 |
+| `F01-true` | 成立 | HTTP 403 error response: caller is not a project owner<br>log message_id: updateProjectPublicClient.caller_is_not_a_project_owner<br>log summary: 呼び出し元がProject ownerではないため、リクエストを拒否した。 |
 | `F01-false` | 不成立 | 条件不成立側または後続処理を継続する。 |
 
 ### F02 条件分岐
@@ -24,7 +24,7 @@
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F02-true` | 成立 | HTTP 409 error response: idempotency key is already used; log message_id: updateProjectPublicClient.idempotency_key_already_used; log summary: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
+| `F02-true` | 成立 | HTTP 409 error response: idempotency key is already used<br>log message_id: updateProjectPublicClient.idempotency_key_already_used<br>log summary: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
 | `F02-false` | 不成立 | 条件不成立側または後続処理を継続する。 |
 
 ### F03 例外処理
@@ -35,7 +35,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F03-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F03-raised` | 発生する | HTTP 500 error response: database integrity error; log message_id: updateProjectPublicClient.db_integrity_error; log summary: DB整合性違反によりpublic app client更新のcommitが失敗した。 |
+| `F03-raised` | 発生する | HTTP 500 error response: database integrity error<br>log message_id: updateProjectPublicClient.db_integrity_error<br>log summary: DB整合性違反によりpublic app client更新のcommitが失敗した。 |
 
 ### F04 例外処理
 
@@ -45,7 +45,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F04-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04-raised` | 発生する | HTTP 503 error response: database commit failed; log message_id: updateProjectPublicClient.db_commit_failed; log summary: DB commit失敗によりpublic app client更新を確定できなかった。 |
+| `F04-raised` | 発生する | HTTP 503 error response: database commit failed<br>log message_id: updateProjectPublicClient.db_commit_failed<br>log summary: DB commit失敗によりpublic app client更新を確定できなかった。 |
 
 ### F05 例外処理
 
@@ -55,7 +55,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F05-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05-raised` | 発生する | router error response; log message_id: updateProjectPublicClient.router_error; log summary: Routerで捕捉した例外によりpublic app client更新が失敗した。 |
+| `F05-raised` | 発生する | router error response<br>log message_id: updateProjectPublicClient.router_error<br>log summary: Routerで捕捉した例外によりpublic app client更新が失敗した。 |
 
 ## 2. 直積したテストケース一覧
 
@@ -74,14 +74,14 @@
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not a project owner; log message_id: updateProjectPublicClient.caller_is_not_a_project_owner; log summary: 呼び出し元がProject ownerではないため、リクエストを拒否した。 |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not a project owner<br>log message_id: updateProjectPublicClient.caller_is_not_a_project_owner<br>log summary: 呼び出し元がProject ownerではないため、リクエストを拒否した。 |
 
 ### TC002
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used; log message_id: updateProjectPublicClient.idempotency_key_already_used; log summary: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used<br>log message_id: updateProjectPublicClient.idempotency_key_already_used<br>log summary: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
 
 ### TC003
 
@@ -102,7 +102,7 @@
 | `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 | `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生する | router error response; log message_id: updateProjectPublicClient.router_error; log summary: Routerで捕捉した例外によりpublic app client更新が失敗した。 |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生する | router error response<br>log message_id: updateProjectPublicClient.router_error<br>log summary: Routerで捕捉した例外によりpublic app client更新が失敗した。 |
 
 ### TC005
 
@@ -111,7 +111,7 @@
 | `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed; log message_id: updateProjectPublicClient.db_commit_failed; log summary: DB commit失敗によりpublic app client更新を確定できなかった。 |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed<br>log message_id: updateProjectPublicClient.db_commit_failed<br>log summary: DB commit失敗によりpublic app client更新を確定できなかった。 |
 
 ### TC006
 
@@ -119,4 +119,4 @@
 | --- | --- | --- |
 | `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error; log message_id: updateProjectPublicClient.db_integrity_error; log summary: DB整合性違反によりpublic app client更新のcommitが失敗した。 |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error<br>log message_id: updateProjectPublicClient.db_integrity_error<br>log summary: DB整合性違反によりpublic app client更新のcommitが失敗した。 |

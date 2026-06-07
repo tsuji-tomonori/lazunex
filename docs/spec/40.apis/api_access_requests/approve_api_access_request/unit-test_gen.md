@@ -14,7 +14,7 @@
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01-true` | 成立 | HTTP 409 error response: access request is not pending; log message_id: approveApiAccessRequest.access_request_is_not_pending; log summary: API利用申請が審査待ちではないため、承認リクエストを拒否した。 |
+| `F01-true` | 成立 | HTTP 409 error response: access request is not pending<br>log message_id: approveApiAccessRequest.access_request_is_not_pending<br>log summary: API利用申請が審査待ちではないため、承認リクエストを拒否した。 |
 | `F01-false` | 不成立 | 条件不成立側または後続処理を継続する。 |
 
 ### F02 条件分岐
@@ -24,7 +24,7 @@
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F02-true` | 成立 | HTTP 403 error response: caller is not an api reviewer; log message_id: approveApiAccessRequest.caller_is_not_an_api_reviewer; log summary: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 |
+| `F02-true` | 成立 | HTTP 403 error response: caller is not an api reviewer<br>log message_id: approveApiAccessRequest.caller_is_not_an_api_reviewer<br>log summary: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 |
 | `F02-false` | 不成立 | 条件不成立側または後続処理を継続する。 |
 
 ### F03 条件分岐
@@ -34,7 +34,7 @@
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F03-true` | 成立 | HTTP 409 error response: project api stage is not available; log message_id: approveApiAccessRequest.project_api_stage_is_not_available; log summary: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 |
+| `F03-true` | 成立 | HTTP 409 error response: project api stage is not available<br>log message_id: approveApiAccessRequest.project_api_stage_is_not_available<br>log summary: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 |
 | `F03-false` | 不成立 | 条件不成立側または後続処理を継続する。 |
 
 ### F04 条件分岐
@@ -44,7 +44,7 @@
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F04-true` | 成立 | HTTP 409 error response: active subscription already exists; log message_id: approveApiAccessRequest.active_subscription_already_exists; log summary: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 |
+| `F04-true` | 成立 | HTTP 409 error response: active subscription already exists<br>log message_id: approveApiAccessRequest.active_subscription_already_exists<br>log summary: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 |
 | `F04-false` | 不成立 | 条件不成立側または後続処理を継続する。 |
 
 ### F05 条件分岐
@@ -54,7 +54,7 @@
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F05-true` | 成立 | HTTP 409 error response: idempotency key is already used; log message_id: approveApiAccessRequest.idempotency_key_already_used; log summary: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
+| `F05-true` | 成立 | HTTP 409 error response: idempotency key is already used<br>log message_id: approveApiAccessRequest.idempotency_key_already_used<br>log summary: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
 | `F05-false` | 不成立 | 条件不成立側または後続処理を継続する。 |
 
 ### F06 例外処理
@@ -65,7 +65,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F06-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06-raised` | 発生する | HTTP 500 error response: database integrity error; log message_id: approveApiAccessRequest.db_integrity_error; log summary: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 |
+| `F06-raised` | 発生する | HTTP 500 error response: database integrity error<br>log message_id: approveApiAccessRequest.db_integrity_error<br>log summary: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 |
 
 ### F07 例外処理
 
@@ -75,7 +75,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F07-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07-raised` | 発生する | HTTP 503 error response: database commit failed; log message_id: approveApiAccessRequest.db_commit_failed; log summary: DB commit失敗によりAPI利用申請承認を確定できなかった。 |
+| `F07-raised` | 発生する | HTTP 503 error response: database commit failed<br>log message_id: approveApiAccessRequest.db_commit_failed<br>log summary: DB commit失敗によりAPI利用申請承認を確定できなかった。 |
 
 ### F08 例外処理
 
@@ -85,7 +85,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F08-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08-raised` | 発生する | router error response; log message_id: approveApiAccessRequest.router_error; log summary: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 |
+| `F08-raised` | 発生する | router error response<br>log message_id: approveApiAccessRequest.router_error<br>log summary: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 |
 
 ## 2. 直積したテストケース一覧
 
@@ -107,14 +107,14 @@
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending; log message_id: approveApiAccessRequest.access_request_is_not_pending; log summary: API利用申請が審査待ちではないため、承認リクエストを拒否した。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending<br>log message_id: approveApiAccessRequest.access_request_is_not_pending<br>log summary: API利用申請が審査待ちではないため、承認リクエストを拒否した。 |
 
 ### TC002
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer; log message_id: approveApiAccessRequest.caller_is_not_an_api_reviewer; log summary: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer<br>log message_id: approveApiAccessRequest.caller_is_not_an_api_reviewer<br>log summary: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 |
 
 ### TC003
 
@@ -122,7 +122,7 @@
 | --- | --- | --- |
 | `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available; log message_id: approveApiAccessRequest.project_api_stage_is_not_available; log summary: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available<br>log message_id: approveApiAccessRequest.project_api_stage_is_not_available<br>log summary: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 |
 
 ### TC004
 
@@ -131,7 +131,7 @@
 | `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists; log message_id: approveApiAccessRequest.active_subscription_already_exists; log summary: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists<br>log message_id: approveApiAccessRequest.active_subscription_already_exists<br>log summary: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 |
 
 ### TC005
 
@@ -141,7 +141,7 @@
 | `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used; log message_id: approveApiAccessRequest.idempotency_key_already_used; log summary: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used<br>log message_id: approveApiAccessRequest.idempotency_key_already_used<br>log summary: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
 
 ### TC006
 
@@ -168,7 +168,7 @@
 | `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 | `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response; log message_id: approveApiAccessRequest.router_error; log summary: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response<br>log message_id: approveApiAccessRequest.router_error<br>log summary: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 |
 
 ### TC008
 
@@ -180,7 +180,7 @@
 | `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed; log message_id: approveApiAccessRequest.db_commit_failed; log summary: DB commit失敗によりAPI利用申請承認を確定できなかった。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed<br>log message_id: approveApiAccessRequest.db_commit_failed<br>log summary: DB commit失敗によりAPI利用申請承認を確定できなかった。 |
 
 ### TC009
 
@@ -191,4 +191,4 @@
 | `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error; log message_id: approveApiAccessRequest.db_integrity_error; log summary: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error<br>log message_id: approveApiAccessRequest.db_integrity_error<br>log summary: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 |

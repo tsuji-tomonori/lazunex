@@ -14,7 +14,7 @@
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01-true` | 成立 | HTTP 403 error response: caller cannot list project subscriptions; log message_id: listProjectSubscriptions.caller_cannot_list_project_subscriptions; log summary: 呼び出し元がProjectの利用可能API一覧を参照できないため、リクエストを拒否した。 |
+| `F01-true` | 成立 | HTTP 403 error response: caller cannot list project subscriptions<br>log message_id: listProjectSubscriptions.caller_cannot_list_project_subscriptions<br>log summary: 呼び出し元がProjectの利用可能API一覧を参照できないため、リクエストを拒否した。 |
 | `F01-false` | 不成立 | 条件不成立側または後続処理を継続する。 |
 
 ### F02 例外処理
@@ -25,7 +25,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F02-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F02-raised` | 発生する | router error response; log message_id: listProjectSubscriptions.router_error; log summary: Routerで捕捉した例外によりProject subscription一覧取得が失敗した。 |
+| `F02-raised` | 発生する | router error response<br>log message_id: listProjectSubscriptions.router_error<br>log summary: Routerで捕捉した例外によりProject subscription一覧取得が失敗した。 |
 
 ## 2. 直積したテストケース一覧
 
@@ -41,7 +41,7 @@
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L74: 呼び出し元がProjectの利用可能API一覧を参照できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot list project subscriptions; log message_id: listProjectSubscriptions.caller_cannot_list_project_subscriptions; log summary: 呼び出し元がProjectの利用可能API一覧を参照できないため、リクエストを拒否した。 |
+| `F01` 条件分岐 L74: 呼び出し元がProjectの利用可能API一覧を参照できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot list project subscriptions<br>log message_id: listProjectSubscriptions.caller_cannot_list_project_subscriptions<br>log summary: 呼び出し元がProjectの利用可能API一覧を参照できないため、リクエストを拒否した。 |
 
 ### TC002
 
@@ -56,4 +56,4 @@
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F01` 条件分岐 L74: 呼び出し元がProjectの利用可能API一覧を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 例外処理 L111: Routerで捕捉した例外によりProject subscription一覧取得が失敗した。 | 発生する | router error response; log message_id: listProjectSubscriptions.router_error; log summary: Routerで捕捉した例外によりProject subscription一覧取得が失敗した。 |
+| `F02` 例外処理 L111: Routerで捕捉した例外によりProject subscription一覧取得が失敗した。 | 発生する | router error response<br>log message_id: listProjectSubscriptions.router_error<br>log summary: Routerで捕捉した例外によりProject subscription一覧取得が失敗した。 |

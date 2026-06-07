@@ -9,11 +9,11 @@ from pathlib import Path
 
 CASE_ID_PATTERN = re.compile(r"^### (?P<case_id>TC[0-9]+)$")
 HTTP_EXPECTATION_PATTERN = re.compile(
-    r"HTTP (?P<status>[0-9]{3}) error response: (?P<detail>[^|;]+)"
+    r"HTTP (?P<status>[0-9]{3}) error response: (?P<detail>[^|;<]+)"
 )
 SUCCESS_EXPECTATION_PATTERN = re.compile(r"HTTP (?P<status>[0-9]{3}) success response")
 LOG_EXPECTATION_PATTERN = re.compile(
-    r"log message_id: (?P<message_id>[^;|]+); log summary: (?P<summary>[^|]+)"
+    r"log message_id: (?P<message_id>[^|;<]+)(?:; |<br>)log summary: (?P<summary>[^|]+)"
 )
 
 

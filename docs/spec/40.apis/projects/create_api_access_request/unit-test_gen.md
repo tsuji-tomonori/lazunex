@@ -14,7 +14,7 @@
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01-true` | 成立 | HTTP 403 error response: caller is not a project owner; log message_id: createApiAccessRequest.caller_is_not_a_project_owner; log summary: 呼び出し元がProject ownerではないため、リクエストを拒否した。 |
+| `F01-true` | 成立 | HTTP 403 error response: caller is not a project owner<br>log message_id: createApiAccessRequest.caller_is_not_a_project_owner<br>log summary: 呼び出し元がProject ownerではないため、リクエストを拒否した。 |
 | `F01-false` | 不成立 | 条件不成立側または後続処理を継続する。 |
 
 ### F02 条件分岐
@@ -24,7 +24,7 @@
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F02-true` | 成立 | HTTP 404 error response: api is not published; log message_id: createApiAccessRequest.api_is_not_published; log summary: 対象APIが公開済みではないため、リクエストを拒否した。 |
+| `F02-true` | 成立 | HTTP 404 error response: api is not published<br>log message_id: createApiAccessRequest.api_is_not_published<br>log summary: 対象APIが公開済みではないため、リクエストを拒否した。 |
 | `F02-false` | 不成立 | 条件不成立側または後続処理を継続する。 |
 
 ### F03 条件分岐
@@ -34,7 +34,7 @@
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F03-true` | 成立 | HTTP 409 error response: api reviewer is not configured; log message_id: createApiAccessRequest.api_reviewer_is_not_configured; log summary: 対象APIのreviewerが未設定のため、リクエストを拒否した。 |
+| `F03-true` | 成立 | HTTP 409 error response: api reviewer is not configured<br>log message_id: createApiAccessRequest.api_reviewer_is_not_configured<br>log summary: 対象APIのreviewerが未設定のため、リクエストを拒否した。 |
 | `F03-false` | 不成立 | 条件不成立側または後続処理を継続する。 |
 
 ### F04 条件分岐
@@ -44,7 +44,7 @@
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F04-true` | 成立 | HTTP 409 error response: requested auth mode client is not configured; log message_id: createApiAccessRequest.requested_auth_mode_client_is_not_configured; log summary: 要求された認証方式のclientが未設定のため、リクエストを拒否した。 |
+| `F04-true` | 成立 | HTTP 409 error response: requested auth mode client is not configured<br>log message_id: createApiAccessRequest.requested_auth_mode_client_is_not_configured<br>log summary: 要求された認証方式のclientが未設定のため、リクエストを拒否した。 |
 | `F04-false` | 不成立 | 条件不成立側または後続処理を継続する。 |
 
 ### F05 条件分岐
@@ -54,7 +54,7 @@
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F05-true` | 成立 | HTTP 409 error response: active subscription already exists; log message_id: createApiAccessRequest.active_subscription_already_exists; log summary: 有効なsubscriptionが既に存在するため、リクエストを拒否した。 |
+| `F05-true` | 成立 | HTTP 409 error response: active subscription already exists<br>log message_id: createApiAccessRequest.active_subscription_already_exists<br>log summary: 有効なsubscriptionが既に存在するため、リクエストを拒否した。 |
 | `F05-false` | 不成立 | 条件不成立側または後続処理を継続する。 |
 
 ### F06 条件分岐
@@ -64,7 +64,7 @@
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F06-true` | 成立 | HTTP 409 error response: pending access request already exists; log message_id: createApiAccessRequest.pending_access_request_already_exists; log summary: 審査待ち利用申請が既に存在するため、リクエストを拒否した。 |
+| `F06-true` | 成立 | HTTP 409 error response: pending access request already exists<br>log message_id: createApiAccessRequest.pending_access_request_already_exists<br>log summary: 審査待ち利用申請が既に存在するため、リクエストを拒否した。 |
 | `F06-false` | 不成立 | 条件不成立側または後続処理を継続する。 |
 
 ### F07 条件分岐
@@ -74,7 +74,7 @@
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F07-true` | 成立 | HTTP 409 error response: idempotency key is already used; log message_id: createApiAccessRequest.idempotency_key_already_used; log summary: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
+| `F07-true` | 成立 | HTTP 409 error response: idempotency key is already used<br>log message_id: createApiAccessRequest.idempotency_key_already_used<br>log summary: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
 | `F07-false` | 不成立 | 条件不成立側または後続処理を継続する。 |
 
 ### F08 例外処理
@@ -85,7 +85,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F08-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08-raised` | 発生する | HTTP 500 error response: database integrity error; log message_id: createApiAccessRequest.db_integrity_error; log summary: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 |
+| `F08-raised` | 発生する | HTTP 500 error response: database integrity error<br>log message_id: createApiAccessRequest.db_integrity_error<br>log summary: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 |
 
 ### F09 例外処理
 
@@ -95,7 +95,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F09-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F09-raised` | 発生する | HTTP 503 error response: database commit failed; log message_id: createApiAccessRequest.db_commit_failed; log summary: DB commit失敗によりAPI利用申請作成を確定できなかった。 |
+| `F09-raised` | 発生する | HTTP 503 error response: database commit failed<br>log message_id: createApiAccessRequest.db_commit_failed<br>log summary: DB commit失敗によりAPI利用申請作成を確定できなかった。 |
 
 ### F10 例外処理
 
@@ -105,7 +105,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F10-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F10-raised` | 発生する | router error response; log message_id: createApiAccessRequest.router_error; log summary: Routerで捕捉した例外によりAPI利用申請作成が失敗した。 |
+| `F10-raised` | 発生する | router error response<br>log message_id: createApiAccessRequest.router_error<br>log summary: Routerで捕捉した例外によりAPI利用申請作成が失敗した。 |
 
 ## 2. 直積したテストケース一覧
 
@@ -129,14 +129,14 @@
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L93: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not a project owner; log message_id: createApiAccessRequest.caller_is_not_a_project_owner; log summary: 呼び出し元がProject ownerではないため、リクエストを拒否した。 |
+| `F01` 条件分岐 L93: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not a project owner<br>log message_id: createApiAccessRequest.caller_is_not_a_project_owner<br>log summary: 呼び出し元がProject ownerではないため、リクエストを拒否した。 |
 
 ### TC002
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F01` 条件分岐 L93: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L121: 対象APIが公開済みではないため、リクエストを拒否した。 | 成立 | HTTP 404 error response: api is not published; log message_id: createApiAccessRequest.api_is_not_published; log summary: 対象APIが公開済みではないため、リクエストを拒否した。 |
+| `F02` 条件分岐 L121: 対象APIが公開済みではないため、リクエストを拒否した。 | 成立 | HTTP 404 error response: api is not published<br>log message_id: createApiAccessRequest.api_is_not_published<br>log summary: 対象APIが公開済みではないため、リクエストを拒否した。 |
 
 ### TC003
 
@@ -144,7 +144,7 @@
 | --- | --- | --- |
 | `F01` 条件分岐 L93: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F02` 条件分岐 L121: 対象APIが公開済みではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L158: 対象APIのreviewerが未設定のため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api reviewer is not configured; log message_id: createApiAccessRequest.api_reviewer_is_not_configured; log summary: 対象APIのreviewerが未設定のため、リクエストを拒否した。 |
+| `F03` 条件分岐 L158: 対象APIのreviewerが未設定のため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api reviewer is not configured<br>log message_id: createApiAccessRequest.api_reviewer_is_not_configured<br>log summary: 対象APIのreviewerが未設定のため、リクエストを拒否した。 |
 
 ### TC004
 
@@ -153,7 +153,7 @@
 | `F01` 条件分岐 L93: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F02` 条件分岐 L121: 対象APIが公開済みではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F03` 条件分岐 L158: 対象APIのreviewerが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L191: 要求された認証方式のclientが未設定のため、リクエストを拒否した。 | 成立 | HTTP 409 error response: requested auth mode client is not configured; log message_id: createApiAccessRequest.requested_auth_mode_client_is_not_configured; log summary: 要求された認証方式のclientが未設定のため、リクエストを拒否した。 |
+| `F04` 条件分岐 L191: 要求された認証方式のclientが未設定のため、リクエストを拒否した。 | 成立 | HTTP 409 error response: requested auth mode client is not configured<br>log message_id: createApiAccessRequest.requested_auth_mode_client_is_not_configured<br>log summary: 要求された認証方式のclientが未設定のため、リクエストを拒否した。 |
 
 ### TC005
 
@@ -163,7 +163,7 @@
 | `F02` 条件分岐 L121: 対象APIが公開済みではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F03` 条件分岐 L158: 対象APIのreviewerが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F04` 条件分岐 L191: 要求された認証方式のclientが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L228: 有効なsubscriptionが既に存在するため、リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists; log message_id: createApiAccessRequest.active_subscription_already_exists; log summary: 有効なsubscriptionが既に存在するため、リクエストを拒否した。 |
+| `F05` 条件分岐 L228: 有効なsubscriptionが既に存在するため、リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists<br>log message_id: createApiAccessRequest.active_subscription_already_exists<br>log summary: 有効なsubscriptionが既に存在するため、リクエストを拒否した。 |
 
 ### TC006
 
@@ -174,7 +174,7 @@
 | `F03` 条件分岐 L158: 対象APIのreviewerが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F04` 条件分岐 L191: 要求された認証方式のclientが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F05` 条件分岐 L228: 有効なsubscriptionが既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 条件分岐 L264: 審査待ち利用申請が既に存在するため、リクエストを拒否した。 | 成立 | HTTP 409 error response: pending access request already exists; log message_id: createApiAccessRequest.pending_access_request_already_exists; log summary: 審査待ち利用申請が既に存在するため、リクエストを拒否した。 |
+| `F06` 条件分岐 L264: 審査待ち利用申請が既に存在するため、リクエストを拒否した。 | 成立 | HTTP 409 error response: pending access request already exists<br>log message_id: createApiAccessRequest.pending_access_request_already_exists<br>log summary: 審査待ち利用申請が既に存在するため、リクエストを拒否した。 |
 
 ### TC007
 
@@ -186,7 +186,7 @@
 | `F04` 条件分岐 L191: 要求された認証方式のclientが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F05` 条件分岐 L228: 有効なsubscriptionが既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F06` 条件分岐 L264: 審査待ち利用申請が既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F07` 条件分岐 L295: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used; log message_id: createApiAccessRequest.idempotency_key_already_used; log summary: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
+| `F07` 条件分岐 L295: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used<br>log message_id: createApiAccessRequest.idempotency_key_already_used<br>log summary: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
 
 ### TC008
 
@@ -217,7 +217,7 @@
 | `F07` 条件分岐 L295: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F08` 例外処理 L348: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 | `F09` 例外処理 L385: DB commit失敗によりAPI利用申請作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F10` 例外処理 L423: Routerで捕捉した例外によりAPI利用申請作成が失敗した。 | 発生する | router error response; log message_id: createApiAccessRequest.router_error; log summary: Routerで捕捉した例外によりAPI利用申請作成が失敗した。 |
+| `F10` 例外処理 L423: Routerで捕捉した例外によりAPI利用申請作成が失敗した。 | 発生する | router error response<br>log message_id: createApiAccessRequest.router_error<br>log summary: Routerで捕捉した例外によりAPI利用申請作成が失敗した。 |
 
 ### TC010
 
@@ -231,7 +231,7 @@
 | `F06` 条件分岐 L264: 審査待ち利用申請が既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F07` 条件分岐 L295: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F08` 例外処理 L348: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F09` 例外処理 L385: DB commit失敗によりAPI利用申請作成を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed; log message_id: createApiAccessRequest.db_commit_failed; log summary: DB commit失敗によりAPI利用申請作成を確定できなかった。 |
+| `F09` 例外処理 L385: DB commit失敗によりAPI利用申請作成を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed<br>log message_id: createApiAccessRequest.db_commit_failed<br>log summary: DB commit失敗によりAPI利用申請作成を確定できなかった。 |
 
 ### TC011
 
@@ -244,4 +244,4 @@
 | `F05` 条件分岐 L228: 有効なsubscriptionが既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F06` 条件分岐 L264: 審査待ち利用申請が既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F07` 条件分岐 L295: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F08` 例外処理 L348: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error; log message_id: createApiAccessRequest.db_integrity_error; log summary: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 |
+| `F08` 例外処理 L348: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error<br>log message_id: createApiAccessRequest.db_integrity_error<br>log summary: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 |

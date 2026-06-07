@@ -218,7 +218,7 @@ def append_log_expectation(summary: str, nodes: Iterable[ast.stmt]) -> str:
     if log_expectation is None:
         return summary
     message_id, log_summary = log_expectation
-    return f"{summary}; log message_id: {message_id}; log summary: {log_summary}"
+    return f"{summary}<br>log message_id: {message_id}<br>log summary: {log_summary}"
 
 
 def first_response_summary(nodes: Iterable[ast.stmt]) -> str | None:

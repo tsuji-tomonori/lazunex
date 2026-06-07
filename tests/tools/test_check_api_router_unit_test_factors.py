@@ -36,8 +36,8 @@ SPEC = (
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F01` 条件分岐 | 成立 | """
-    "HTTP 403 error response: caller cannot create project; "
-    "log message_id: createProject.caller_cannot_create_project; "
+    "HTTP 403 error response: caller cannot create project<br>"
+    "log message_id: createProject.caller_cannot_create_project<br>"
     "log summary: 拒否した。 |\n"
     """
 
