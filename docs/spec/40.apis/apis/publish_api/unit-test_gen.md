@@ -55,7 +55,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F05-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05-raised` | 発生する | HTTP 500 error response: database integrity error<br>log message_id: publishApi.db_integrity_error<br>log summary: DB整合性違反によりAPI公開登録のcommitが失敗した。 |
+| `F05-raised` | 発生する: IntegrityError | HTTP 500 error response: database integrity error<br>log message_id: publishApi.db_integrity_error<br>log summary: DB整合性違反によりAPI公開登録のcommitが失敗した。 |
 
 ### F06 例外処理
 
@@ -65,7 +65,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F06-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06-raised` | 発生する | HTTP 503 error response: database commit failed<br>log message_id: publishApi.db_commit_failed<br>log summary: DB commit失敗によりAPI公開登録を確定できなかった。 |
+| `F06-raised` | 発生する: SQLAlchemyError | HTTP 503 error response: database commit failed<br>log message_id: publishApi.db_commit_failed<br>log summary: DB commit失敗によりAPI公開登録を確定できなかった。 |
 
 ### F07 例外処理
 
@@ -75,7 +75,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F07-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07-raised` | 発生する | router error response<br>log message_id: publishApi.router_error<br>log summary: Routerで捕捉した例外によりAPI公開登録が失敗した。 |
+| `F07-raised` | 発生する: ApiFunctionError<br>発生する: ExternalApiError<br>発生する: HTTPException | router error response<br>log message_id: publishApi.router_error<br>log summary: Routerで捕捉した例外によりAPI公開登録が失敗した。 |
 
 ## 2. 直積したテストケース一覧
 
@@ -86,9 +86,9 @@
 | `TC003` | `不成立` | `不成立` | `成立` | - | - | - | - |
 | `TC004` | `不成立` | `不成立` | `不成立` | `成立` | - | - | - |
 | `TC005` | `不成立` | `不成立` | `不成立` | `不成立` | `発生しない` | `発生しない` | `発生しない` |
-| `TC006` | `不成立` | `不成立` | `不成立` | `不成立` | `発生しない` | `発生しない` | `発生する` |
-| `TC007` | `不成立` | `不成立` | `不成立` | `不成立` | `発生しない` | `発生する` | - |
-| `TC008` | `不成立` | `不成立` | `不成立` | `不成立` | `発生する` | - | - |
+| `TC006` | `不成立` | `不成立` | `不成立` | `不成立` | `発生しない` | `発生しない` | `発生する: ApiFunctionError<br>発生する: ExternalApiError<br>発生する: HTTPException` |
+| `TC007` | `不成立` | `不成立` | `不成立` | `不成立` | `発生しない` | `発生する: SQLAlchemyError` | - |
+| `TC008` | `不成立` | `不成立` | `不成立` | `不成立` | `発生する: IntegrityError` | - | - |
 
 ## 3. テスト詳細
 
@@ -145,7 +145,7 @@
 | `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 | `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response<br>log message_id: publishApi.router_error<br>log summary: Routerで捕捉した例外によりAPI公開登録が失敗した。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する: ApiFunctionError<br>発生する: ExternalApiError<br>発生する: HTTPException | router error response<br>log message_id: publishApi.router_error<br>log summary: Routerで捕捉した例外によりAPI公開登録が失敗した。 |
 
 ### TC007
 
@@ -156,7 +156,7 @@
 | `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed<br>log message_id: publishApi.db_commit_failed<br>log summary: DB commit失敗によりAPI公開登録を確定できなかった。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する: SQLAlchemyError | HTTP 503 error response: database commit failed<br>log message_id: publishApi.db_commit_failed<br>log summary: DB commit失敗によりAPI公開登録を確定できなかった。 |
 
 ### TC008
 
@@ -166,4 +166,4 @@
 | `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error<br>log message_id: publishApi.db_integrity_error<br>log summary: DB整合性違反によりAPI公開登録のcommitが失敗した。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する: IntegrityError | HTTP 500 error response: database integrity error<br>log message_id: publishApi.db_integrity_error<br>log summary: DB整合性違反によりAPI公開登録のcommitが失敗した。 |

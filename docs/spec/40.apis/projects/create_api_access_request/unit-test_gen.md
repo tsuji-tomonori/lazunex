@@ -85,7 +85,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F08-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08-raised` | 発生する | HTTP 500 error response: database integrity error<br>log message_id: createApiAccessRequest.db_integrity_error<br>log summary: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 |
+| `F08-raised` | 発生する: IntegrityError | HTTP 500 error response: database integrity error<br>log message_id: createApiAccessRequest.db_integrity_error<br>log summary: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 |
 
 ### F09 例外処理
 
@@ -95,7 +95,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F09-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F09-raised` | 発生する | HTTP 503 error response: database commit failed<br>log message_id: createApiAccessRequest.db_commit_failed<br>log summary: DB commit失敗によりAPI利用申請作成を確定できなかった。 |
+| `F09-raised` | 発生する: SQLAlchemyError | HTTP 503 error response: database commit failed<br>log message_id: createApiAccessRequest.db_commit_failed<br>log summary: DB commit失敗によりAPI利用申請作成を確定できなかった。 |
 
 ### F10 例外処理
 
@@ -105,7 +105,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F10-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F10-raised` | 発生する | router error response<br>log message_id: createApiAccessRequest.router_error<br>log summary: Routerで捕捉した例外によりAPI利用申請作成が失敗した。 |
+| `F10-raised` | 発生する: ApiFunctionError<br>発生する: ExternalApiError<br>発生する: HTTPException | router error response<br>log message_id: createApiAccessRequest.router_error<br>log summary: Routerで捕捉した例外によりAPI利用申請作成が失敗した。 |
 
 ## 2. 直積したテストケース一覧
 
@@ -119,9 +119,9 @@
 | `TC006` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `成立` | - | - | - | - |
 | `TC007` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `成立` | - | - | - |
 | `TC008` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `発生しない` | `発生しない` | `発生しない` |
-| `TC009` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `発生しない` | `発生しない` | `発生する` |
-| `TC010` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `発生しない` | `発生する` | - |
-| `TC011` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `発生する` | - | - |
+| `TC009` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `発生しない` | `発生しない` | `発生する: ApiFunctionError<br>発生する: ExternalApiError<br>発生する: HTTPException` |
+| `TC010` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `発生しない` | `発生する: SQLAlchemyError` | - |
+| `TC011` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `不成立` | `発生する: IntegrityError` | - | - |
 
 ## 3. テスト詳細
 
@@ -217,7 +217,7 @@
 | `F07` 条件分岐 L295: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F08` 例外処理 L348: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 | `F09` 例外処理 L385: DB commit失敗によりAPI利用申請作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F10` 例外処理 L423: Routerで捕捉した例外によりAPI利用申請作成が失敗した。 | 発生する | router error response<br>log message_id: createApiAccessRequest.router_error<br>log summary: Routerで捕捉した例外によりAPI利用申請作成が失敗した。 |
+| `F10` 例外処理 L423: Routerで捕捉した例外によりAPI利用申請作成が失敗した。 | 発生する: ApiFunctionError<br>発生する: ExternalApiError<br>発生する: HTTPException | router error response<br>log message_id: createApiAccessRequest.router_error<br>log summary: Routerで捕捉した例外によりAPI利用申請作成が失敗した。 |
 
 ### TC010
 
@@ -231,7 +231,7 @@
 | `F06` 条件分岐 L264: 審査待ち利用申請が既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F07` 条件分岐 L295: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F08` 例外処理 L348: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F09` 例外処理 L385: DB commit失敗によりAPI利用申請作成を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed<br>log message_id: createApiAccessRequest.db_commit_failed<br>log summary: DB commit失敗によりAPI利用申請作成を確定できなかった。 |
+| `F09` 例外処理 L385: DB commit失敗によりAPI利用申請作成を確定できなかった。 | 発生する: SQLAlchemyError | HTTP 503 error response: database commit failed<br>log message_id: createApiAccessRequest.db_commit_failed<br>log summary: DB commit失敗によりAPI利用申請作成を確定できなかった。 |
 
 ### TC011
 
@@ -244,4 +244,4 @@
 | `F05` 条件分岐 L228: 有効なsubscriptionが既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F06` 条件分岐 L264: 審査待ち利用申請が既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F07` 条件分岐 L295: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F08` 例外処理 L348: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error<br>log message_id: createApiAccessRequest.db_integrity_error<br>log summary: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 |
+| `F08` 例外処理 L348: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 | 発生する: IntegrityError | HTTP 500 error response: database integrity error<br>log message_id: createApiAccessRequest.db_integrity_error<br>log summary: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 |

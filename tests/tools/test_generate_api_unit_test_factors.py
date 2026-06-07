@@ -35,6 +35,15 @@ async def create_project():
     )
 
 
+def write_router_errors(path: Path) -> None:
+    path.write_text(
+        """
+ROUTER_HANDLED_EXCEPTIONS = (ApiFunctionError, ExternalApiError, HTTPException)
+""",
+        encoding="utf-8",
+    )
+
+
 def write_functions(path: Path) -> None:
     path.write_text(
         '''
@@ -49,6 +58,8 @@ async def has_project_creation_permission(caller):
 def test_api_unit_test_factors_from_router_ast(tmp_path: Path) -> None:
     api_root = tmp_path / "src/app/apis"
     api_dir = api_root / "projects/create_project"
+    api_root.mkdir(parents=True)
+    write_router_errors(api_root / "router_errors.py")
     write_router(api_dir / "router.py")
     write_functions(api_dir / "functions.py")
 
@@ -63,13 +74,20 @@ def test_api_unit_test_factors_from_router_ast(tmp_path: Path) -> None:
         "例外処理",
         "例外処理",
     ]
-    assert doc.factors[0].source == "not await api_functions.has_project_creation_permission(caller)"
+    assert doc.factors[0].source == (
+        "not await api_functions.has_project_creation_permission(caller)"
+    )
     assert doc.factors[0].title.endswith("Project 作成権限がない場合。")
     assert doc.factors[0].elements[0].expected == (
         "HTTP 403 error response: caller cannot create project"
     )
     assert doc.factors[2].source == "SQLAlchemyError"
     assert doc.factors[2].title.endswith("DB commit が一時的に失敗した場合。")
+    assert doc.factors[3].elements[1].name == (
+        "発生する: ApiFunctionError<br>"
+        "発生する: ExternalApiError<br>"
+        "発生する: HTTPException"
+    )
     assert doc.factors[3].elements[1].expected == "router error response"
     assert len(product_cases(doc.factors)) == 5
     assert product_cases(doc.factors)[0][0] == doc.factors[0].elements[0]
@@ -104,6 +122,8 @@ def test_render_unit_test_markdown_uses_three_sections(tmp_path: Path) -> None:
     api_root = tmp_path / "src/app/apis"
     docs_root = tmp_path / "docs/spec/40.apis"
     api_dir = api_root / "projects/create_project"
+    api_root.mkdir(parents=True)
+    write_router_errors(api_root / "router_errors.py")
     write_router(api_dir / "router.py")
     write_functions(api_dir / "functions.py")
 
@@ -118,4 +138,5 @@ def test_render_unit_test_markdown_uses_three_sections(tmp_path: Path) -> None:
     assert "| `TC005` |" in content
     assert "| `TC006` |" not in content
     assert "| `TC001` | `成立` | - | - | - |" in content
+    assert "発生する: ApiFunctionError<br>発生する: ExternalApiError" in content
     assert "`F01` 条件分岐 L" in content

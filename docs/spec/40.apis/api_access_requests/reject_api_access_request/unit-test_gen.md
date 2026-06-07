@@ -45,7 +45,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F04-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04-raised` | 発生する | HTTP 500 error response: database integrity error<br>log message_id: rejectApiAccessRequest.db_integrity_error<br>log summary: DB整合性違反によりAPI利用申請却下のcommitが失敗した。 |
+| `F04-raised` | 発生する: IntegrityError | HTTP 500 error response: database integrity error<br>log message_id: rejectApiAccessRequest.db_integrity_error<br>log summary: DB整合性違反によりAPI利用申請却下のcommitが失敗した。 |
 
 ### F05 例外処理
 
@@ -55,7 +55,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F05-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05-raised` | 発生する | HTTP 503 error response: database commit failed<br>log message_id: rejectApiAccessRequest.db_commit_failed<br>log summary: DB commit失敗によりAPI利用申請却下を確定できなかった。 |
+| `F05-raised` | 発生する: SQLAlchemyError | HTTP 503 error response: database commit failed<br>log message_id: rejectApiAccessRequest.db_commit_failed<br>log summary: DB commit失敗によりAPI利用申請却下を確定できなかった。 |
 
 ### F06 例外処理
 
@@ -65,7 +65,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F06-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06-raised` | 発生する | router error response<br>log message_id: rejectApiAccessRequest.router_error<br>log summary: Routerで捕捉した例外によりAPI利用申請却下が失敗した。 |
+| `F06-raised` | 発生する: ApiFunctionError<br>発生する: ExternalApiError<br>発生する: HTTPException | router error response<br>log message_id: rejectApiAccessRequest.router_error<br>log summary: Routerで捕捉した例外によりAPI利用申請却下が失敗した。 |
 
 ## 2. 直積したテストケース一覧
 
@@ -75,9 +75,9 @@
 | `TC002` | `不成立` | `成立` | - | - | - | - |
 | `TC003` | `不成立` | `不成立` | `成立` | - | - | - |
 | `TC004` | `不成立` | `不成立` | `不成立` | `発生しない` | `発生しない` | `発生しない` |
-| `TC005` | `不成立` | `不成立` | `不成立` | `発生しない` | `発生しない` | `発生する` |
-| `TC006` | `不成立` | `不成立` | `不成立` | `発生しない` | `発生する` | - |
-| `TC007` | `不成立` | `不成立` | `不成立` | `発生する` | - | - |
+| `TC005` | `不成立` | `不成立` | `不成立` | `発生しない` | `発生しない` | `発生する: ApiFunctionError<br>発生する: ExternalApiError<br>発生する: HTTPException` |
+| `TC006` | `不成立` | `不成立` | `不成立` | `発生しない` | `発生する: SQLAlchemyError` | - |
+| `TC007` | `不成立` | `不成立` | `不成立` | `発生する: IntegrityError` | - | - |
 
 ## 3. テスト詳細
 
@@ -123,7 +123,7 @@
 | `F03` 条件分岐 L149: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F04` 例外処理 L215: DB整合性違反によりAPI利用申請却下のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 | `F05` 例外処理 L252: DB commit失敗によりAPI利用申請却下を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L290: Routerで捕捉した例外によりAPI利用申請却下が失敗した。 | 発生する | router error response<br>log message_id: rejectApiAccessRequest.router_error<br>log summary: Routerで捕捉した例外によりAPI利用申請却下が失敗した。 |
+| `F06` 例外処理 L290: Routerで捕捉した例外によりAPI利用申請却下が失敗した。 | 発生する: ApiFunctionError<br>発生する: ExternalApiError<br>発生する: HTTPException | router error response<br>log message_id: rejectApiAccessRequest.router_error<br>log summary: Routerで捕捉した例外によりAPI利用申請却下が失敗した。 |
 
 ### TC006
 
@@ -133,7 +133,7 @@
 | `F02` 条件分岐 L119: 呼び出し元がAPI reviewerではないため、却下リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F03` 条件分岐 L149: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F04` 例外処理 L215: DB整合性違反によりAPI利用申請却下のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L252: DB commit失敗によりAPI利用申請却下を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed<br>log message_id: rejectApiAccessRequest.db_commit_failed<br>log summary: DB commit失敗によりAPI利用申請却下を確定できなかった。 |
+| `F05` 例外処理 L252: DB commit失敗によりAPI利用申請却下を確定できなかった。 | 発生する: SQLAlchemyError | HTTP 503 error response: database commit failed<br>log message_id: rejectApiAccessRequest.db_commit_failed<br>log summary: DB commit失敗によりAPI利用申請却下を確定できなかった。 |
 
 ### TC007
 
@@ -142,4 +142,4 @@
 | `F01` 条件分岐 L91: API利用申請が審査待ちではないため、却下リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F02` 条件分岐 L119: 呼び出し元がAPI reviewerではないため、却下リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F03` 条件分岐 L149: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 例外処理 L215: DB整合性違反によりAPI利用申請却下のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error<br>log message_id: rejectApiAccessRequest.db_integrity_error<br>log summary: DB整合性違反によりAPI利用申請却下のcommitが失敗した。 |
+| `F04` 例外処理 L215: DB整合性違反によりAPI利用申請却下のcommitが失敗した。 | 発生する: IntegrityError | HTTP 500 error response: database integrity error<br>log message_id: rejectApiAccessRequest.db_integrity_error<br>log summary: DB整合性違反によりAPI利用申請却下のcommitが失敗した。 |

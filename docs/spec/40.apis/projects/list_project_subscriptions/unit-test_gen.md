@@ -25,7 +25,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F02-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F02-raised` | 発生する | router error response<br>log message_id: listProjectSubscriptions.router_error<br>log summary: Routerで捕捉した例外によりProject subscription一覧取得が失敗した。 |
+| `F02-raised` | 発生する: ApiFunctionError<br>発生する: ExternalApiError<br>発生する: HTTPException | router error response<br>log message_id: listProjectSubscriptions.router_error<br>log summary: Routerで捕捉した例外によりProject subscription一覧取得が失敗した。 |
 
 ## 2. 直積したテストケース一覧
 
@@ -33,7 +33,7 @@
 | --- | --- | --- |
 | `TC001` | `成立` | - |
 | `TC002` | `不成立` | `発生しない` |
-| `TC003` | `不成立` | `発生する` |
+| `TC003` | `不成立` | `発生する: ApiFunctionError<br>発生する: ExternalApiError<br>発生する: HTTPException` |
 
 ## 3. テスト詳細
 
@@ -56,4 +56,4 @@
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F01` 条件分岐 L74: 呼び出し元がProjectの利用可能API一覧を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 例外処理 L111: Routerで捕捉した例外によりProject subscription一覧取得が失敗した。 | 発生する | router error response<br>log message_id: listProjectSubscriptions.router_error<br>log summary: Routerで捕捉した例外によりProject subscription一覧取得が失敗した。 |
+| `F02` 例外処理 L111: Routerで捕捉した例外によりProject subscription一覧取得が失敗した。 | 発生する: ApiFunctionError<br>発生する: ExternalApiError<br>発生する: HTTPException | router error response<br>log message_id: listProjectSubscriptions.router_error<br>log summary: Routerで捕捉した例外によりProject subscription一覧取得が失敗した。 |

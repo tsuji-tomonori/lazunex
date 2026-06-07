@@ -71,6 +71,47 @@ def exception_type_text(node: ast.AST | None) -> str:
     return ast.unparse(node)
 
 
+def exception_type_texts(
+    node: ast.AST | None,
+    exception_aliases: dict[str, tuple[str, ...]],
+) -> tuple[str, ...]:
+    if node is None:
+        return ("Exception",)
+    if isinstance(node, ast.Tuple):
+        return tuple(exception_type_text(element) for element in node.elts)
+    if isinstance(node, ast.Name) and node.id in exception_aliases:
+        return exception_aliases[node.id]
+    return (exception_type_text(node),)
+
+
+def raised_exception_element_name(exception_types: tuple[str, ...]) -> str:
+    return "<br>".join(f"発生する: {exception_type}" for exception_type in exception_types)
+
+
+def exception_aliases(api_root: Path) -> dict[str, tuple[str, ...]]:
+    router_errors_path = api_root / "router_errors.py"
+    if not router_errors_path.exists():
+        return {}
+    tree = ast.parse(
+        router_errors_path.read_text(encoding="utf-8"),
+        filename=str(router_errors_path),
+    )
+    aliases: dict[str, tuple[str, ...]] = {}
+    for node in tree.body:
+        target: ast.expr | None = None
+        value: ast.expr | None = None
+        if isinstance(node, ast.Assign) and len(node.targets) == 1:
+            target = node.targets[0]
+            value = node.value
+        elif isinstance(node, ast.AnnAssign):
+            target = node.target
+            value = node.value
+        if not isinstance(target, ast.Name) or not isinstance(value, ast.Tuple):
+            continue
+        aliases[target.id] = tuple(exception_type_text(element) for element in value.elts)
+    return aliases
+
+
 def clean_comment(value: str) -> str:
     return value.removeprefix("#").strip()
 
@@ -283,8 +324,10 @@ def except_factor(
     handler: ast.ExceptHandler,
     index: int,
     source_lines: list[str],
+    exception_aliases: dict[str, tuple[str, ...]],
 ) -> TestFactor:
     exception_type = exception_type_text(handler.type)
+    exception_types = exception_type_texts(handler.type, exception_aliases)
     description = (
         comment_for_line(source_lines, handler.lineno)
         or literal_summary_from_body(handler.body)
@@ -303,7 +346,7 @@ def except_factor(
             ),
             FactorElement(
                 key="raised",
-                name="発生する",
+                name=raised_exception_element_name(exception_types),
                 expected=branch_expected(handler.body, "例外を捕捉してエラー処理を実行する。"),
                 terminal=branch_is_terminal(handler.body),
             ),
@@ -315,6 +358,7 @@ def endpoint_factors(
     function: ast.AsyncFunctionDef | ast.FunctionDef,
     source_lines: list[str],
     function_descriptions: dict[str, str],
+    exception_aliases: dict[str, tuple[str, ...]],
 ) -> tuple[TestFactor, ...]:
     factors: list[TestFactor] = []
 
@@ -327,7 +371,9 @@ def endpoint_factors(
             for child in node.body:
                 self.visit(child)
             for handler in node.handlers:
-                factors.append(except_factor(handler, len(factors) + 1, source_lines))
+                factors.append(
+                    except_factor(handler, len(factors) + 1, source_lines, exception_aliases)
+                )
                 for child in handler.body:
                     self.visit(child)
             for child in [*node.orelse, *node.finalbody]:
@@ -353,7 +399,12 @@ def api_unit_test_factors_from_dir(api_dir: Path, api_root: Path) -> ApiUnitTest
         method=endpoint_route_method(function),
         path=endpoint_route_path(function),
         success_status=endpoint_success_status(function),
-        factors=endpoint_factors(function, source.splitlines(), descriptions),
+        factors=endpoint_factors(
+            function,
+            source.splitlines(),
+            descriptions,
+            exception_aliases(api_root),
+        ),
     )
 
 
