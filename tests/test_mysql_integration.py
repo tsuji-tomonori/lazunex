@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import AsyncIterator, Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
@@ -11,6 +12,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from testcontainers.mysql import MySqlContainer  # pyright: ignore[reportMissingTypeStubs]
 
+from app.apis.projects.create_project.queries import InsertProjectsParams, insert_projects
 from app.db.query import execute_sql
 from app.db.session import create_async_db_engine, create_session_factory
 
@@ -30,7 +32,7 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
     )
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def mysql_container_url() -> Iterator[str]:
     try:
         with MySqlContainer(
@@ -182,3 +184,50 @@ async def test_mysql_json_cast_insert_works_through_query_layer(
 
     assert row["name"] == "請求"
     assert row["enabled"] == "true"
+
+
+@pytest.mark.anyio
+async def test_mysql_create_project_insert_sql_works_through_query_wrapper(
+    mysql_session: AsyncSession,
+) -> None:
+    await apply_schema(mysql_session)
+
+    project_id = uuid4()
+    now = datetime.now(UTC)
+    await insert_projects(
+        mysql_session,
+        InsertProjectsParams(
+            project_id=project_id,
+            project_code="mysql-project",
+            name="MySQL Project",
+            description="MySQL integration test project.",
+            owner_principal_id="principal-001",
+            department_code="dept-001",
+            now=now,
+            actor_principal_id="principal-001",
+        ),
+    )
+    await mysql_session.commit()
+
+    result = await mysql_session.execute(
+        text(
+            """
+            SELECT
+                project_id,
+                project_code,
+                created_at,
+                updated_at,
+                row_version
+            FROM projects
+            WHERE project_id = :project_id
+            """
+        ),
+        {"project_id": str(project_id)},
+    )
+    row = result.mappings().one()
+
+    assert row["project_id"] == str(project_id)
+    assert row["project_code"] == "mysql-project"
+    assert row["created_at"] == now.replace(tzinfo=None)
+    assert row["updated_at"] == now.replace(tzinfo=None)
+    assert row["row_version"] == 1
