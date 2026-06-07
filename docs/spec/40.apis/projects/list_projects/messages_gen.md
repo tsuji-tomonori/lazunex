@@ -48,16 +48,17 @@
 
 #### 出力項目
 
-| 出力項目 | 説明 |
-| :--- | :--- |
-| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
-| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
-| `api.statusCode` | API responseとして返したHTTP status codeです。 |
-| `error.code` | エラー分類を表す機械処理向けコードです。 |
-| `error.message` | エラー内容を運用者が理解するための説明です。 |
-| `resource.derivedState` | 一覧復帰時に同じ絞り込みを再現するためのProject状態条件です。 |
-| `resource.keyword` | 一覧復帰時に同じ絞り込みを再現するための検索キーワードです。 |
-| `resource.ownerPrincipalId` | 一覧復帰時に同じ絞り込みを再現するためのProject所有者IDです。 |
+| 出力項目 | 型 | 説明 |
+| :--- | :--- | :--- |
+| `traceId` | `-` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | `-` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | `-` | API responseとして返したHTTP status codeです。 |
+| `error.code` | `-` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | `-` | エラー内容を運用者が理解するための説明です。 |
+| `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
+| `resource.derivedState` | `ProjectDerivedState \| null` | 一覧復帰時に同じ絞り込みを再現するためのProject状態条件です。 |
+| `resource.keyword` | `string \| null` | 一覧復帰時に同じ絞り込みを再現するための検索キーワードです。 |
+| `resource.ownerPrincipalId` | `string \| null` | 一覧復帰時に同じ絞り込みを再現するためのProject所有者IDです。 |
 
 ### `M002` `listProjects.router_api_function_error`
 
@@ -76,17 +77,18 @@
 
 #### 出力項目
 
-| 出力項目 | 説明 |
-| :--- | :--- |
-| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
-| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
-| `api.statusCode` | API responseとして返したHTTP status codeです。 |
-| `error.code` | エラー分類を表す機械処理向けコードです。 |
-| `error.message` | エラー内容を運用者が理解するための説明です。 |
-| `error.exceptionType` | 捕捉された例外の型名です。 |
-| `resource.derivedState` | 一覧復帰時に同じ絞り込みを再現するためのProject状態条件です。 |
-| `resource.keyword` | 一覧復帰時に同じ絞り込みを再現するための検索キーワードです。 |
-| `resource.ownerPrincipalId` | 一覧復帰時に同じ絞り込みを再現するためのProject所有者IDです。 |
+| 出力項目 | 型 | 説明 |
+| :--- | :--- | :--- |
+| `traceId` | `-` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | `-` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | `-` | API responseとして返したHTTP status codeです。 |
+| `error.code` | `-` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | `-` | エラー内容を運用者が理解するための説明です。 |
+| `error.exceptionType` | `-` | 捕捉された例外の型名です。 |
+| `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
+| `resource.derivedState` | `ProjectDerivedState \| null` | 一覧復帰時に同じ絞り込みを再現するためのProject状態条件です。 |
+| `resource.keyword` | `string \| null` | 一覧復帰時に同じ絞り込みを再現するための検索キーワードです。 |
+| `resource.ownerPrincipalId` | `string \| null` | 一覧復帰時に同じ絞り込みを再現するためのProject所有者IDです。 |
 
 ## loggerラッパー呼び出し一覧
 

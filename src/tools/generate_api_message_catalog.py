@@ -562,11 +562,51 @@ def pydantic_log_context_schema(module: ast.Module) -> dict[str, str]:
     return schema
 
 
+def annotation_name(node: ast.AST) -> str:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Subscript):
+        return annotation_name(node.value)
+    if isinstance(node, ast.Attribute):
+        return dotted_name(node) or node.attr
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
+        parts = [annotation_name(node.left), annotation_name(node.right)]
+        return " | ".join(part for part in parts if part)
+    if isinstance(node, ast.Constant) and node.value is None:
+        return "null"
+    try:
+        return ast.unparse(node)
+    except Exception:  # pragma: no cover - defensive for malformed ASTs
+        return ""
+
+
+def error_resource_field_type(annotation: ast.AST) -> str:
+    raw_type = annotation_name(annotation)
+    replacements = {
+        "str": "string",
+        "int": "integer",
+        "bool": "boolean",
+        "ResourceId": "string",
+        "ProjectCode": "string",
+        "ApiCode": "string",
+        "PrincipalId": "string",
+        "DisplayName": "string",
+        "SearchKeyword": "string",
+        "RowVersion": "integer",
+        "None": "null",
+    }
+    for source, target in replacements.items():
+        raw_type = re.sub(rf"\b{re.escape(source)}\b", target, raw_type)
+    return raw_type or "-"
+
+
 def api_error_resource_schema(api_dir: Path) -> dict[str, str]:
     module = read_python_ast(api_dir / "schemas.py")
     if module is None:
         return {}
-    schema: dict[str, str] = {}
+    schema: dict[str, str] = {
+        "resource": "ログに出力するAPI固有のErrorResourceです。",
+    }
     for node in module.body:
         if not isinstance(node, ast.ClassDef) or node.name != "ErrorResource":
             continue
@@ -581,6 +621,25 @@ def api_error_resource_schema(api_dir: Path) -> dict[str, str]:
             if description:
                 schema[f"resource.{snake_to_lower_camel(statement.target.id)}"] = description
     return schema
+
+
+def api_error_resource_types(api_dir: Path) -> dict[str, str]:
+    module = read_python_ast(api_dir / "schemas.py")
+    if module is None:
+        return {}
+    types: dict[str, str] = {"resource": "ErrorResource"}
+    for node in module.body:
+        if not isinstance(node, ast.ClassDef) or node.name != "ErrorResource":
+            continue
+        for statement in node.body:
+            if not isinstance(statement, ast.AnnAssign):
+                continue
+            if not isinstance(statement.target, ast.Name):
+                continue
+            types[f"resource.{snake_to_lower_camel(statement.target.id)}"] = (
+                error_resource_field_type(statement.annotation)
+            )
+    return types
 
 
 def load_log_context_schema(root: Path) -> dict[str, str]:
@@ -612,6 +671,19 @@ def context_model_items(context_model: str) -> tuple[str, ...]:
     return tuple(item.strip() for item in context_model.split(",") if item.strip())
 
 
+def context_model_items_with_resource_root(context_model: str) -> tuple[str, ...]:
+    items: list[str] = []
+    has_resource_root = False
+    for item in context_model_items(context_model):
+        if item == "resource":
+            has_resource_root = True
+        if item.startswith("resource.") and not has_resource_root and "resource" not in items:
+            items.append("resource")
+            has_resource_root = True
+        items.append(item)
+    return tuple(items)
+
+
 def context_field_description(name: str, schema: Mapping[str, str]) -> str:
     if name in schema:
         return schema[name]
@@ -623,8 +695,16 @@ def context_field_description(name: str, schema: Mapping[str, str]) -> str:
     return f"`{name}` に出力されるログコンテキストです。"
 
 
-def render_context_model_table(context_model: str, schema: Mapping[str, str]) -> list[str]:
-    items = context_model_items(context_model)
+def context_field_type(name: str, types: Mapping[str, str]) -> str:
+    return types.get(name, "-")
+
+
+def render_context_model_table(
+    context_model: str,
+    schema: Mapping[str, str],
+    types: Mapping[str, str],
+) -> list[str]:
+    items = context_model_items_with_resource_root(context_model)
     if not items:
         return [
             "#### 出力項目",
@@ -635,8 +715,8 @@ def render_context_model_table(context_model: str, schema: Mapping[str, str]) ->
     lines = [
         "#### 出力項目",
         "",
-        "| 出力項目 | 説明 |",
-        "| :--- | :--- |",
+        "| 出力項目 | 型 | 説明 |",
+        "| :--- | :--- | :--- |",
     ]
     for item in items:
         lines.append(
@@ -644,6 +724,7 @@ def render_context_model_table(context_model: str, schema: Mapping[str, str]) ->
             + " | ".join(
                 [
                     f"`{escape_markdown(item)}`",
+                    f"`{escape_markdown(context_field_type(item, types))}`",
                     escape_markdown(context_field_description(item, schema)),
                 ]
             )
@@ -1626,6 +1707,7 @@ def render_catalog(catalog: ApiCatalog, root: Path) -> str:
     api_dir = root / DEFAULT_API_ROOT / meta.domain / meta.api
     log_context_schema = load_log_context_schema(root)
     log_context_schema.update(api_error_resource_schema(api_dir))
+    log_context_types = api_error_resource_types(api_dir)
     route_summary = (
         api_routes_summary(api_dir, root)
         if api_dir.exists()
@@ -1721,7 +1803,11 @@ def render_catalog(catalog: ApiCatalog, root: Path) -> str:
                 "| :--- | :--- |",
                 *(f"| {label} | {value} |" for label, value in detail_rows),
                 "",
-                *render_context_model_table(message.context_model, log_context_schema),
+                *render_context_model_table(
+                    message.context_model,
+                    log_context_schema,
+                    log_context_types,
+                ),
             ]
         )
 

@@ -109,8 +109,8 @@ MESSAGE_CATALOG = [
     assert "| wrapper calls | 1 |" in rendered
     assert "| 出力項目 |" not in rendered.split("#### 出力項目", maxsplit=1)[0]
     assert "#### 出力項目" in rendered
-    assert "| `api.statusCode` | テスト用のHTTP status code説明です。 |" in rendered
-    assert "| `error.code` | テスト用のerror code説明です。 |" in rendered
+    assert "| `api.statusCode` | `-` | テスト用のHTTP status code説明です。 |" in rendered
+    assert "| `error.code` | `-` | テスト用のerror code説明です。 |" in rendered
 
 
 def test_generate_api_message_catalog_main_writes_and_checks_docs(tmp_path: Path) -> None:
@@ -236,11 +236,15 @@ async def has_project_list_permission(caller) -> bool:
     assert "呼び出し元が Project 一覧を参照できない場合。" in rendered
     assert "RUNBOOK-authorization-forbidden" in rendered
     assert (
-        "| `resource.derivedState` | "
+        "| `resource` | `ErrorResource` | "
+        "ログに出力するAPI固有のErrorResourceです。 |" in rendered
+    )
+    assert (
+        "| `resource.derivedState` | `string \\| null` | "
         "一覧復帰時に同じ絞り込みを再現するためのProject状態条件です。 |" in rendered
     )
     assert (
-        "| `resource.keyword` | "
+        "| `resource.keyword` | `string \\| null` | "
         "一覧復帰時に同じ絞り込みを再現するための検索キーワードです。 |" in rendered
     )
     assert "resource.derivedState, resource.keyword" in rendered

@@ -51,19 +51,20 @@
 
 #### 出力項目
 
-| 出力項目 | 説明 |
-| :--- | :--- |
-| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
-| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
-| `api.statusCode` | API responseとして返したHTTP status codeです。 |
-| `error.code` | エラー分類を表す機械処理向けコードです。 |
-| `error.message` | エラー内容を運用者が理解するための説明です。 |
-| `request.actorType` | リクエスト実行主体の種別です。 |
-| `request.sourceIp` | 呼び出し元IPアドレスです。 |
-| `request.userAgent` | 呼び出し元User-Agentです。 |
-| `resource.idempotencyKey` | 同じProject作成リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
-| `resource.ownerPrincipalId` | 作成対象Projectの所有者確認、権限確認、問い合わせに使用する認証主体IDです。 |
-| `resource.projectCode` | 作成対象Projectの重複確認、状態確認、再送に使用するProject codeです。 |
+| 出力項目 | 型 | 説明 |
+| :--- | :--- | :--- |
+| `traceId` | `-` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | `-` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | `-` | API responseとして返したHTTP status codeです。 |
+| `error.code` | `-` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | `-` | エラー内容を運用者が理解するための説明です。 |
+| `request.actorType` | `-` | リクエスト実行主体の種別です。 |
+| `request.sourceIp` | `-` | 呼び出し元IPアドレスです。 |
+| `request.userAgent` | `-` | 呼び出し元User-Agentです。 |
+| `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
+| `resource.idempotencyKey` | `string \| null` | 同じProject作成リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
+| `resource.ownerPrincipalId` | `string \| null` | 作成対象Projectの所有者確認、権限確認、問い合わせに使用する認証主体IDです。 |
+| `resource.projectCode` | `string \| null` | 作成対象Projectの重複確認、状態確認、再送に使用するProject codeです。 |
 
 ### `M002` `createProject.router_api_function_error`
 
@@ -82,20 +83,21 @@
 
 #### 出力項目
 
-| 出力項目 | 説明 |
-| :--- | :--- |
-| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
-| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
-| `api.statusCode` | API responseとして返したHTTP status codeです。 |
-| `error.code` | エラー分類を表す機械処理向けコードです。 |
-| `error.message` | エラー内容を運用者が理解するための説明です。 |
-| `error.exceptionType` | 捕捉された例外の型名です。 |
-| `request.actorType` | リクエスト実行主体の種別です。 |
-| `request.sourceIp` | 呼び出し元IPアドレスです。 |
-| `request.userAgent` | 呼び出し元User-Agentです。 |
-| `resource.idempotencyKey` | 同じProject作成リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
-| `resource.ownerPrincipalId` | 作成対象Projectの所有者確認、権限確認、問い合わせに使用する認証主体IDです。 |
-| `resource.projectCode` | 作成対象Projectの重複確認、状態確認、再送に使用するProject codeです。 |
+| 出力項目 | 型 | 説明 |
+| :--- | :--- | :--- |
+| `traceId` | `-` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | `-` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | `-` | API responseとして返したHTTP status codeです。 |
+| `error.code` | `-` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | `-` | エラー内容を運用者が理解するための説明です。 |
+| `error.exceptionType` | `-` | 捕捉された例外の型名です。 |
+| `request.actorType` | `-` | リクエスト実行主体の種別です。 |
+| `request.sourceIp` | `-` | 呼び出し元IPアドレスです。 |
+| `request.userAgent` | `-` | 呼び出し元User-Agentです。 |
+| `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
+| `resource.idempotencyKey` | `string \| null` | 同じProject作成リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
+| `resource.ownerPrincipalId` | `string \| null` | 作成対象Projectの所有者確認、権限確認、問い合わせに使用する認証主体IDです。 |
+| `resource.projectCode` | `string \| null` | 作成対象Projectの重複確認、状態確認、再送に使用するProject codeです。 |
 
 ### `M003` `createProject.db_integrity_error`
 
@@ -114,20 +116,21 @@
 
 #### 出力項目
 
-| 出力項目 | 説明 |
-| :--- | :--- |
-| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
-| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
-| `api.statusCode` | API responseとして返したHTTP status codeです。 |
-| `error.code` | エラー分類を表す機械処理向けコードです。 |
-| `error.message` | エラー内容を運用者が理解するための説明です。 |
-| `error.exceptionType` | 捕捉された例外の型名です。 |
-| `request.actorType` | リクエスト実行主体の種別です。 |
-| `request.sourceIp` | 呼び出し元IPアドレスです。 |
-| `request.userAgent` | 呼び出し元User-Agentです。 |
-| `resource.idempotencyKey` | 同じProject作成リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
-| `resource.ownerPrincipalId` | 作成対象Projectの所有者確認、権限確認、問い合わせに使用する認証主体IDです。 |
-| `resource.projectCode` | 作成対象Projectの重複確認、状態確認、再送に使用するProject codeです。 |
+| 出力項目 | 型 | 説明 |
+| :--- | :--- | :--- |
+| `traceId` | `-` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | `-` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | `-` | API responseとして返したHTTP status codeです。 |
+| `error.code` | `-` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | `-` | エラー内容を運用者が理解するための説明です。 |
+| `error.exceptionType` | `-` | 捕捉された例外の型名です。 |
+| `request.actorType` | `-` | リクエスト実行主体の種別です。 |
+| `request.sourceIp` | `-` | 呼び出し元IPアドレスです。 |
+| `request.userAgent` | `-` | 呼び出し元User-Agentです。 |
+| `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
+| `resource.idempotencyKey` | `string \| null` | 同じProject作成リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
+| `resource.ownerPrincipalId` | `string \| null` | 作成対象Projectの所有者確認、権限確認、問い合わせに使用する認証主体IDです。 |
+| `resource.projectCode` | `string \| null` | 作成対象Projectの重複確認、状態確認、再送に使用するProject codeです。 |
 
 ### `M004` `createProject.db_commit_failed`
 
@@ -146,20 +149,21 @@
 
 #### 出力項目
 
-| 出力項目 | 説明 |
-| :--- | :--- |
-| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
-| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
-| `api.statusCode` | API responseとして返したHTTP status codeです。 |
-| `error.code` | エラー分類を表す機械処理向けコードです。 |
-| `error.message` | エラー内容を運用者が理解するための説明です。 |
-| `error.exceptionType` | 捕捉された例外の型名です。 |
-| `request.actorType` | リクエスト実行主体の種別です。 |
-| `request.sourceIp` | 呼び出し元IPアドレスです。 |
-| `request.userAgent` | 呼び出し元User-Agentです。 |
-| `resource.idempotencyKey` | 同じProject作成リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
-| `resource.ownerPrincipalId` | 作成対象Projectの所有者確認、権限確認、問い合わせに使用する認証主体IDです。 |
-| `resource.projectCode` | 作成対象Projectの重複確認、状態確認、再送に使用するProject codeです。 |
+| 出力項目 | 型 | 説明 |
+| :--- | :--- | :--- |
+| `traceId` | `-` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | `-` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | `-` | API responseとして返したHTTP status codeです。 |
+| `error.code` | `-` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | `-` | エラー内容を運用者が理解するための説明です。 |
+| `error.exceptionType` | `-` | 捕捉された例外の型名です。 |
+| `request.actorType` | `-` | リクエスト実行主体の種別です。 |
+| `request.sourceIp` | `-` | 呼び出し元IPアドレスです。 |
+| `request.userAgent` | `-` | 呼び出し元User-Agentです。 |
+| `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
+| `resource.idempotencyKey` | `string \| null` | 同じProject作成リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
+| `resource.ownerPrincipalId` | `string \| null` | 作成対象Projectの所有者確認、権限確認、問い合わせに使用する認証主体IDです。 |
+| `resource.projectCode` | `string \| null` | 作成対象Projectの重複確認、状態確認、再送に使用するProject codeです。 |
 
 ### `M005` `createProject.idempotency_key_already_used`
 
@@ -178,19 +182,20 @@
 
 #### 出力項目
 
-| 出力項目 | 説明 |
-| :--- | :--- |
-| `traceId` | リクエストとログを横断して追跡する相関IDです。 |
-| `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
-| `api.statusCode` | API responseとして返したHTTP status codeです。 |
-| `error.code` | エラー分類を表す機械処理向けコードです。 |
-| `error.message` | エラー内容を運用者が理解するための説明です。 |
-| `request.actorType` | リクエスト実行主体の種別です。 |
-| `request.sourceIp` | 呼び出し元IPアドレスです。 |
-| `request.userAgent` | 呼び出し元User-Agentです。 |
-| `resource.idempotencyKey` | 同じProject作成リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
-| `resource.ownerPrincipalId` | 作成対象Projectの所有者確認、権限確認、問い合わせに使用する認証主体IDです。 |
-| `resource.projectCode` | 作成対象Projectの重複確認、状態確認、再送に使用するProject codeです。 |
+| 出力項目 | 型 | 説明 |
+| :--- | :--- | :--- |
+| `traceId` | `-` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | `-` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | `-` | API responseとして返したHTTP status codeです。 |
+| `error.code` | `-` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | `-` | エラー内容を運用者が理解するための説明です。 |
+| `request.actorType` | `-` | リクエスト実行主体の種別です。 |
+| `request.sourceIp` | `-` | 呼び出し元IPアドレスです。 |
+| `request.userAgent` | `-` | 呼び出し元User-Agentです。 |
+| `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
+| `resource.idempotencyKey` | `string \| null` | 同じProject作成リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
+| `resource.ownerPrincipalId` | `string \| null` | 作成対象Projectの所有者確認、権限確認、問い合わせに使用する認証主体IDです。 |
+| `resource.projectCode` | `string \| null` | 作成対象Projectの重複確認、状態確認、再送に使用するProject codeです。 |
 
 ## loggerラッパー呼び出し一覧
 
