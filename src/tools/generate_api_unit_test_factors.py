@@ -10,6 +10,7 @@ from pathlib import Path
 from tools.generate_api_sequences import (
     api_dirs,
     api_error_response_call,
+    condition_label_from_description,
     endpoint_function,
     endpoint_operation_id,
     endpoint_route_method,
@@ -65,6 +66,110 @@ def exception_type_text(node: ast.AST | None) -> str:
     return ast.unparse(node)
 
 
+def clean_comment(value: str) -> str:
+    return value.removeprefix("#").strip()
+
+
+def comment_for_line(source_lines: list[str], lineno: int) -> str | None:
+    if not 1 <= lineno <= len(source_lines):
+        return None
+    current_line = source_lines[lineno - 1]
+    if "#" in current_line:
+        inline_comment = current_line.split("#", 1)[1].strip()
+        if inline_comment:
+            return inline_comment
+
+    comments: list[str] = []
+    for line in reversed(source_lines[: lineno - 1]):
+        stripped = line.strip()
+        if not stripped:
+            if comments:
+                break
+            continue
+        if not stripped.startswith("#"):
+            break
+        comments.append(clean_comment(stripped))
+    comments.reverse()
+    if comments:
+        return " ".join(comments)
+    return None
+
+
+def literal_summary_from_body(nodes: Iterable[ast.stmt]) -> str | None:
+    for node in nodes:
+        for child in ast.walk(node):
+            if not isinstance(child, ast.Call):
+                continue
+            for keyword in child.keywords:
+                if keyword.arg != "summary":
+                    continue
+                summary = literal_string(keyword.value)
+                if summary:
+                    return summary
+    return None
+
+
+def function_docstrings(functions_path: Path) -> dict[str, str]:
+    if not functions_path.exists():
+        return {}
+    tree = ast.parse(functions_path.read_text(encoding="utf-8"), filename=str(functions_path))
+    descriptions: dict[str, str] = {}
+    for node in tree.body:
+        if not isinstance(node, ast.AsyncFunctionDef | ast.FunctionDef):
+            continue
+        docstring = ast.get_docstring(node)
+        if docstring:
+            descriptions[node.name] = " ".join(docstring.strip().split())
+    return descriptions
+
+
+def api_function_names(node: ast.AST) -> list[str]:
+    names: list[str] = []
+    for child in ast.walk(node):
+        call = child.value if isinstance(child, ast.Await) else child
+        if not isinstance(call, ast.Call):
+            continue
+        function = call.func
+        if not isinstance(function, ast.Attribute):
+            continue
+        if not isinstance(function.value, ast.Name) or function.value.id != "api_functions":
+            continue
+        if function.attr not in names:
+            names.append(function.attr)
+    return names
+
+
+def condition_description_from_docstring(
+    node: ast.AST,
+    descriptions: dict[str, str],
+) -> str | None:
+    names = api_function_names(node)
+    if not names:
+        return None
+    description = descriptions.get(names[0])
+    if description is None:
+        return None
+    negated = isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not)
+    return condition_label_from_description(description, negated=negated)
+
+
+def factor_description(
+    *,
+    node: ast.AST,
+    condition_node: ast.AST | None = None,
+    source_lines: list[str],
+    body: Iterable[ast.stmt],
+    fallback: str,
+    function_descriptions: dict[str, str],
+) -> str:
+    return (
+        comment_for_line(source_lines, node.lineno)
+        or literal_summary_from_body(body)
+        or condition_description_from_docstring(condition_node or node, function_descriptions)
+        or fallback
+    )
+
+
 def response_summary_from_return(node: ast.stmt) -> str | None:
     if not isinstance(node, ast.Return):
         return None
@@ -96,12 +201,25 @@ def branch_expected(nodes: list[ast.stmt], fallback: str) -> str:
     return first_response_summary(nodes) or fallback
 
 
-def if_factor(node: ast.If, index: int) -> TestFactor:
+def if_factor(
+    node: ast.If,
+    index: int,
+    source_lines: list[str],
+    function_descriptions: dict[str, str],
+) -> TestFactor:
     expression = expression_text(node.test)
+    description = factor_description(
+        node=node,
+        condition_node=node.test,
+        source_lines=source_lines,
+        body=node.body,
+        fallback=expression,
+        function_descriptions=function_descriptions,
+    )
     return TestFactor(
         factor_id=f"F{index:02d}",
         kind="条件分岐",
-        title=f"条件分岐 L{node.lineno}: `{expression}`",
+        title=f"条件分岐 L{node.lineno}: {description}",
         source=expression,
         elements=(
             FactorElement(
@@ -118,12 +236,21 @@ def if_factor(node: ast.If, index: int) -> TestFactor:
     )
 
 
-def except_factor(handler: ast.ExceptHandler, index: int) -> TestFactor:
+def except_factor(
+    handler: ast.ExceptHandler,
+    index: int,
+    source_lines: list[str],
+) -> TestFactor:
     exception_type = exception_type_text(handler.type)
+    description = (
+        comment_for_line(source_lines, handler.lineno)
+        or literal_summary_from_body(handler.body)
+        or exception_type
+    )
     return TestFactor(
         factor_id=f"F{index:02d}",
         kind="例外処理",
-        title=f"例外処理 L{handler.lineno}: `{exception_type}`",
+        title=f"例外処理 L{handler.lineno}: {description}",
         source=exception_type,
         elements=(
             FactorElement(
@@ -140,19 +267,23 @@ def except_factor(handler: ast.ExceptHandler, index: int) -> TestFactor:
     )
 
 
-def endpoint_factors(function: ast.AsyncFunctionDef | ast.FunctionDef) -> tuple[TestFactor, ...]:
+def endpoint_factors(
+    function: ast.AsyncFunctionDef | ast.FunctionDef,
+    source_lines: list[str],
+    function_descriptions: dict[str, str],
+) -> tuple[TestFactor, ...]:
     factors: list[TestFactor] = []
 
     class Visitor(ast.NodeVisitor):
         def visit_If(self, node: ast.If) -> None:
-            factors.append(if_factor(node, len(factors) + 1))
+            factors.append(if_factor(node, len(factors) + 1, source_lines, function_descriptions))
             self.generic_visit(node)
 
         def visit_Try(self, node: ast.Try) -> None:
             for child in node.body:
                 self.visit(child)
             for handler in node.handlers:
-                factors.append(except_factor(handler, len(factors) + 1))
+                factors.append(except_factor(handler, len(factors) + 1, source_lines))
                 for child in handler.body:
                     self.visit(child)
             for child in [*node.orelse, *node.finalbody]:
@@ -165,8 +296,10 @@ def endpoint_factors(function: ast.AsyncFunctionDef | ast.FunctionDef) -> tuple[
 
 def api_unit_test_factors_from_dir(api_dir: Path, api_root: Path) -> ApiUnitTestFactors:
     router_path = api_dir / "router.py"
-    tree = ast.parse(router_path.read_text(encoding="utf-8"), filename=str(router_path))
+    source = router_path.read_text(encoding="utf-8")
+    tree = ast.parse(source, filename=str(router_path))
     function = endpoint_function(tree)
+    descriptions = function_docstrings(api_dir / "functions.py")
     relative = api_dir.relative_to(api_root)
     domain, api = relative.parts
     return ApiUnitTestFactors(
@@ -175,7 +308,7 @@ def api_unit_test_factors_from_dir(api_dir: Path, api_root: Path) -> ApiUnitTest
         operation_id=endpoint_operation_id(function),
         method=endpoint_route_method(function),
         path=endpoint_route_path(function),
-        factors=endpoint_factors(function),
+        factors=endpoint_factors(function, source.splitlines(), descriptions),
     )
 
 

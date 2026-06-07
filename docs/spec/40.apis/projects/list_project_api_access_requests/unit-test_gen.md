@@ -9,7 +9,7 @@
 
 ### F01 条件分岐
 
-- 対象: 条件分岐 L74: `not await api_functions.has_project_access_request_view_permission(project, caller)`
+- 対象: 条件分岐 L74: 呼び出し元がProjectのAPI利用申請一覧を参照できないため、リクエストを拒否した。
 - AST: `not await api_functions.has_project_access_request_view_permission(project, caller)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -19,7 +19,7 @@
 
 ### F02 例外処理
 
-- 対象: 例外処理 L111: `ROUTER_HANDLED_EXCEPTIONS`
+- 対象: 例外処理 L111: Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。
 - AST: `ROUTER_HANDLED_EXCEPTIONS`
 
 | 要素ID | 要素 | 期待観点 |
@@ -42,26 +42,26 @@
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L74: `not await api_functions.has_project_access_request_view_permission(project, caller)` | 成立 | HTTP 403 error response: caller cannot list project access requests |
-| `F02` 例外処理 L111: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L74: 呼び出し元がProjectのAPI利用申請一覧を参照できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot list project access requests |
+| `F02` 例外処理 L111: Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC002
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L74: `not await api_functions.has_project_access_request_view_permission(project, caller)` | 成立 | HTTP 403 error response: caller cannot list project access requests |
-| `F02` 例外処理 L111: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L74: 呼び出し元がProjectのAPI利用申請一覧を参照できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot list project access requests |
+| `F02` 例外処理 L111: Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。 | 発生する | router error response |
 
 ### TC003
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L74: `not await api_functions.has_project_access_request_view_permission(project, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 例外処理 L111: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L74: 呼び出し元がProjectのAPI利用申請一覧を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 例外処理 L111: Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC004
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L74: `not await api_functions.has_project_access_request_view_permission(project, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 例外処理 L111: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L74: 呼び出し元がProjectのAPI利用申請一覧を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 例外処理 L111: Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。 | 発生する | router error response |

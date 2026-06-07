@@ -9,7 +9,7 @@
 
 ### F01 条件分岐
 
-- 対象: 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)`
+- 対象: 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。
 - AST: `not await api_functions.has_project_owner_permission(project, caller)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -19,7 +19,7 @@
 
 ### F02 条件分岐
 
-- 対象: 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)`
+- 対象: 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。
 - AST: `has_existing_idempotency_result(idempotency_record)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -29,7 +29,7 @@
 
 ### F03 例外処理
 
-- 対象: 例外処理 L205: `IntegrityError`
+- 対象: 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。
 - AST: `IntegrityError`
 
 | 要素ID | 要素 | 期待観点 |
@@ -39,7 +39,7 @@
 
 ### F04 例外処理
 
-- 対象: 例外処理 L242: `SQLAlchemyError`
+- 対象: 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。
 - AST: `SQLAlchemyError`
 
 | 要素ID | 要素 | 期待観点 |
@@ -49,7 +49,7 @@
 
 ### F05 例外処理
 
-- 対象: 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS`
+- 対象: 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。
 - AST: `ROUTER_HANDLED_EXCEPTIONS`
 
 | 要素ID | 要素 | 期待観点 |
@@ -100,318 +100,318 @@
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 成立 | HTTP 403 error response: caller is not a project owner |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L205: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not a project owner |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC002
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 成立 | HTTP 403 error response: caller is not a project owner |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L205: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not a project owner |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生する | router error response |
 
 ### TC003
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 成立 | HTTP 403 error response: caller is not a project owner |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L205: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not a project owner |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC004
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 成立 | HTTP 403 error response: caller is not a project owner |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L205: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not a project owner |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生する | router error response |
 
 ### TC005
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 成立 | HTTP 403 error response: caller is not a project owner |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L205: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not a project owner |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC006
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 成立 | HTTP 403 error response: caller is not a project owner |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L205: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not a project owner |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生する | router error response |
 
 ### TC007
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 成立 | HTTP 403 error response: caller is not a project owner |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L205: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not a project owner |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC008
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 成立 | HTTP 403 error response: caller is not a project owner |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L205: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not a project owner |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生する | router error response |
 
 ### TC009
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 成立 | HTTP 403 error response: caller is not a project owner |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L205: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not a project owner |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC010
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 成立 | HTTP 403 error response: caller is not a project owner |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L205: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not a project owner |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生する | router error response |
 
 ### TC011
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 成立 | HTTP 403 error response: caller is not a project owner |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L205: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not a project owner |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC012
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 成立 | HTTP 403 error response: caller is not a project owner |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L205: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not a project owner |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生する | router error response |
 
 ### TC013
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 成立 | HTTP 403 error response: caller is not a project owner |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L205: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not a project owner |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC014
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 成立 | HTTP 403 error response: caller is not a project owner |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L205: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not a project owner |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生する | router error response |
 
 ### TC015
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 成立 | HTTP 403 error response: caller is not a project owner |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L205: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not a project owner |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC016
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 成立 | HTTP 403 error response: caller is not a project owner |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L205: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not a project owner |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生する | router error response |
 
 ### TC017
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L205: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC018
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L205: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生する | router error response |
 
 ### TC019
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L205: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC020
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L205: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生する | router error response |
 
 ### TC021
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L205: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC022
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L205: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生する | router error response |
 
 ### TC023
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L205: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC024
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L205: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生する | router error response |
 
 ### TC025
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L205: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC026
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L205: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生する | router error response |
 
 ### TC027
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L205: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC028
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L205: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生する | router error response |
 
 ### TC029
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L205: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC030
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L205: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生する | router error response |
 
 ### TC031
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L205: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC032
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L96: `not await api_functions.has_project_owner_permission(project, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L126: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L205: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L242: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L285: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L96: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L126: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 例外処理 L205: DB整合性違反によりpublic app client更新のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F04` 例外処理 L242: DB commit失敗によりpublic app client更新を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F05` 例外処理 L285: Routerで捕捉した例外によりpublic app client更新が失敗した。 | 発生する | router error response |

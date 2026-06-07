@@ -9,7 +9,7 @@
 
 ### F01 条件分岐
 
-- 対象: 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)`
+- 対象: 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。
 - AST: `not await api_functions.has_api_publish_permission(validated_request, caller)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -19,7 +19,7 @@
 
 ### F02 条件分岐
 
-- 対象: 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)`
+- 対象: 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。
 - AST: `has_existing_idempotency_result(idempotency_record)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -29,7 +29,7 @@
 
 ### F03 条件分岐
 
-- 対象: 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)`
+- 対象: 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。
 - AST: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -39,7 +39,7 @@
 
 ### F04 条件分岐
 
-- 対象: 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)`
+- 対象: 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。
 - AST: `await api_functions.has_registered_api(validated_request, session)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -49,7 +49,7 @@
 
 ### F05 例外処理
 
-- 対象: 例外処理 L237: `IntegrityError`
+- 対象: 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。
 - AST: `IntegrityError`
 
 | 要素ID | 要素 | 期待観点 |
@@ -59,7 +59,7 @@
 
 ### F06 例外処理
 
-- 対象: 例外処理 L273: `SQLAlchemyError`
+- 対象: 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。
 - AST: `SQLAlchemyError`
 
 | 要素ID | 要素 | 期待観点 |
@@ -69,7 +69,7 @@
 
 ### F07 例外処理
 
-- 対象: 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS`
+- 対象: 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。
 - AST: `ROUTER_HANDLED_EXCEPTIONS`
 
 | 要素ID | 要素 | 期待観点 |
@@ -216,1534 +216,1534 @@
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC002
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC003
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC004
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC005
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC006
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC007
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC008
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC009
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC010
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC011
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC012
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC013
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC014
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC015
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC016
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC017
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC018
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC019
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC020
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC021
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC022
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC023
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC024
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC025
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC026
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC027
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC028
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC029
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC030
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC031
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC032
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC033
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC034
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC035
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC036
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC037
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC038
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC039
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC040
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC041
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC042
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC043
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC044
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC045
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC046
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC047
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC048
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC049
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC050
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC051
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC052
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC053
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC054
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC055
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC056
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC057
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC058
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC059
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC060
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC061
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC062
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC063
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC064
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 成立 | HTTP 403 error response: caller cannot publish api |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC065
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC066
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC067
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC068
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC069
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC070
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC071
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC072
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC073
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC074
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC075
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC076
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC077
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC078
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC079
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC080
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC081
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC082
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC083
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC084
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC085
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC086
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC087
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC088
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC089
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC090
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC091
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC092
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC093
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC094
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC095
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC096
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC097
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC098
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC099
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC100
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC101
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC102
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC103
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC104
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC105
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC106
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC107
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC108
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC109
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC110
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC111
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC112
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC113
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC114
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC115
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC116
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC117
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC118
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC119
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC120
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 成立 | HTTP 409 error response: api is already registered |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC121
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC122
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC123
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC124
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC125
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC126
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
 
 ### TC127
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC128
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: `not await api_functions.has_api_publish_permission(validated_request, caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: `not await api_functions.update_api_gateway_stage_registration(validated_request, api_gateway_control)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: `await api_functions.has_registered_api(validated_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F06` 例外処理 L273: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F07` 例外処理 L313: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |

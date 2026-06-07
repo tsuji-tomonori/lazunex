@@ -9,7 +9,7 @@
 
 ### F01 条件分岐
 
-- 対象: 条件分岐 L52: `not await api_functions.has_api_list_permission(caller)`
+- 対象: 条件分岐 L52: 呼び出し元がAPI一覧を参照できないため、リクエストを拒否した。
 - AST: `not await api_functions.has_api_list_permission(caller)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -19,7 +19,7 @@
 
 ### F02 例外処理
 
-- 対象: 例外処理 L81: `ROUTER_HANDLED_EXCEPTIONS`
+- 対象: 例外処理 L81: Routerで捕捉した例外によりAPI一覧取得が失敗した。
 - AST: `ROUTER_HANDLED_EXCEPTIONS`
 
 | 要素ID | 要素 | 期待観点 |
@@ -42,26 +42,26 @@
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L52: `not await api_functions.has_api_list_permission(caller)` | 成立 | HTTP 403 error response: caller cannot list apis |
-| `F02` 例外処理 L81: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L52: 呼び出し元がAPI一覧を参照できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot list apis |
+| `F02` 例外処理 L81: Routerで捕捉した例外によりAPI一覧取得が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC002
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L52: `not await api_functions.has_api_list_permission(caller)` | 成立 | HTTP 403 error response: caller cannot list apis |
-| `F02` 例外処理 L81: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L52: 呼び出し元がAPI一覧を参照できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot list apis |
+| `F02` 例外処理 L81: Routerで捕捉した例外によりAPI一覧取得が失敗した。 | 発生する | router error response |
 
 ### TC003
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L52: `not await api_functions.has_api_list_permission(caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 例外処理 L81: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L52: 呼び出し元がAPI一覧を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 例外処理 L81: Routerで捕捉した例外によりAPI一覧取得が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC004
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L52: `not await api_functions.has_api_list_permission(caller)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 例外処理 L81: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L52: 呼び出し元がAPI一覧を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 例外処理 L81: Routerで捕捉した例外によりAPI一覧取得が失敗した。 | 発生する | router error response |

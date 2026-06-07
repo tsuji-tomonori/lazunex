@@ -9,7 +9,7 @@
 
 ### F01 条件分岐
 
-- 対象: 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)`
+- 対象: 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。
 - AST: `not await api_functions.is_pending_access_request(access_request)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -19,7 +19,7 @@
 
 ### F02 条件分岐
 
-- 対象: 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)`
+- 対象: 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。
 - AST: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -29,7 +29,7 @@
 
 ### F03 条件分岐
 
-- 対象: 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)`
+- 対象: 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。
 - AST: `not await api_functions.is_available_project_api_stage(access_request)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -39,7 +39,7 @@
 
 ### F04 条件分岐
 
-- 対象: 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)`
+- 対象: 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。
 - AST: `await api_functions.has_active_subscription(access_request, session)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -49,7 +49,7 @@
 
 ### F05 条件分岐
 
-- 対象: 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)`
+- 対象: 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。
 - AST: `has_existing_idempotency_result(idempotency_record)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -59,7 +59,7 @@
 
 ### F06 例外処理
 
-- 対象: 例外処理 L342: `IntegrityError`
+- 対象: 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。
 - AST: `IntegrityError`
 
 | 要素ID | 要素 | 期待観点 |
@@ -69,7 +69,7 @@
 
 ### F07 例外処理
 
-- 対象: 例外処理 L381: `SQLAlchemyError`
+- 対象: 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。
 - AST: `SQLAlchemyError`
 
 | 要素ID | 要素 | 期待観点 |
@@ -79,7 +79,7 @@
 
 ### F08 例外処理
 
-- 対象: 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS`
+- 対象: 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。
 - AST: `ROUTER_HANDLED_EXCEPTIONS`
 
 | 要素ID | 要素 | 期待観点 |
@@ -354,3326 +354,3326 @@
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC002
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC003
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC004
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC005
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC006
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC007
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC008
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC009
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC010
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC011
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC012
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC013
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC014
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC015
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC016
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC017
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC018
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC019
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC020
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC021
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC022
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC023
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC024
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC025
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC026
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC027
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC028
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC029
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC030
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC031
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC032
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC033
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC034
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC035
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC036
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC037
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC038
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC039
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC040
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC041
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC042
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC043
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC044
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC045
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC046
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC047
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC048
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC049
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC050
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC051
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC052
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC053
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC054
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC055
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC056
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC057
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC058
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC059
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC060
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC061
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC062
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC063
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC064
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC065
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC066
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC067
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC068
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC069
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC070
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC071
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC072
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC073
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC074
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC075
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC076
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC077
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC078
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC079
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC080
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC081
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC082
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC083
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC084
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC085
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC086
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC087
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC088
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC089
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC090
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC091
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC092
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC093
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC094
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC095
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC096
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC097
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC098
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC099
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC100
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC101
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC102
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC103
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC104
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC105
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC106
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC107
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC108
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC109
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC110
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC111
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC112
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC113
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC114
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC115
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC116
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC117
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC118
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC119
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC120
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC121
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC122
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC123
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC124
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC125
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC126
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC127
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC128
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 成立 | HTTP 409 error response: access request is not pending |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC129
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC130
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC131
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC132
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC133
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC134
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC135
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC136
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC137
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC138
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC139
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC140
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC141
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC142
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC143
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC144
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC145
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC146
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC147
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC148
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC149
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC150
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC151
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC152
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC153
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC154
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC155
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC156
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC157
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC158
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC159
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC160
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC161
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC162
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC163
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC164
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC165
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC166
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC167
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC168
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC169
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC170
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC171
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC172
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC173
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC174
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC175
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC176
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC177
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC178
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC179
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC180
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC181
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC182
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC183
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC184
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC185
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC186
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC187
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC188
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC189
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC190
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC191
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC192
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 成立 | HTTP 403 error response: caller is not an api reviewer |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC193
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC194
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC195
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC196
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC197
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC198
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC199
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC200
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC201
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC202
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC203
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC204
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC205
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC206
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC207
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC208
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC209
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC210
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC211
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC212
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC213
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC214
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC215
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC216
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC217
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC218
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC219
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC220
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC221
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC222
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC223
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC224
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 成立 | HTTP 409 error response: project api stage is not available |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC225
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC226
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC227
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC228
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC229
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC230
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC231
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC232
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC233
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC234
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC235
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC236
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC237
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC238
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC239
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC240
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 成立 | HTTP 409 error response: active subscription already exists |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC241
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC242
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC243
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC244
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC245
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC246
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC247
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC248
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC249
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC250
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC251
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC252
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC253
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC254
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
 
 ### TC255
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC256
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: `not await api_functions.is_pending_access_request(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: `not await api_functions.is_available_project_api_stage(access_request)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: `await api_functions.has_active_subscription(access_request, session)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: `has_existing_idempotency_result(idempotency_record)` | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: `IntegrityError` | 発生する | HTTP 500 error response: database integrity error |
-| `F07` 例外処理 L381: `SQLAlchemyError` | 発生する | HTTP 503 error response: database commit failed |
-| `F08` 例外処理 L424: `ROUTER_HANDLED_EXCEPTIONS` | 発生する | router error response |
+| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生する | router error response |
