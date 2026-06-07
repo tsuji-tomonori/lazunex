@@ -316,7 +316,7 @@ erDiagram
     char_36 client_url_id PK
     char_36 project_cognito_client_id FK
     varchar_20 url_type
-    text url
+    varchar_500 url
     datetime_6 created_at
     varchar_256 created_by
     datetime_6 updated_at

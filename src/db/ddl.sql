@@ -406,7 +406,7 @@ CREATE TABLE project_cognito_client_urls (
     client_url_id CHAR(36) PRIMARY KEY,
     project_cognito_client_id CHAR(36) NOT NULL REFERENCES project_cognito_clients (project_cognito_client_id),
     url_type VARCHAR(20) NOT NULL,
-    url TEXT NOT NULL,
+    url VARCHAR(500) NOT NULL,
     created_at DATETIME(6) NOT NULL,
     created_by VARCHAR(256) NOT NULL,
     updated_at DATETIME(6) NOT NULL,
