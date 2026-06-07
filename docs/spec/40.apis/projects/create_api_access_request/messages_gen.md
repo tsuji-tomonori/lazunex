@@ -9,7 +9,7 @@
 | domain | `projects` |
 | api | `create_api_access_request` |
 | routes | POST /projects/{projectId}/api-access-requests (createApiAccessRequest) |
-| router | `src/app/apis/projects/create_api_access_request/router.py:65` |
+| router | `src/app/apis/projects/create_api_access_request/router.py` |
 | messages | 10 |
 | logger wrapper calls | 10 |
 | levels | WARNING:7, ERROR:3 |
@@ -52,7 +52,7 @@
 | 説明 | 呼び出し元が対象Projectのownerではない場合。 |
 | 対応すべきこと | actorPrincipalId、projectId、Project member roleを確認する。 |
 | runbook | RUNBOOK-authorization-forbidden |
-| 実装参照 | src/app/apis/projects/create_api_access_request/router.py:96<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:96 (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/create_api_access_request/router.py<br>wrapper: src/app/apis/projects/create_api_access_request/router.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -85,7 +85,7 @@
 | 説明 | 指定されたAPI/stageが公開済みAPI catalogに存在しない場合。 |
 | 対応すべきこと | apiId、apiStageId、公開登録状態を確認する。 |
 | runbook | RUNBOOK-api-client-error |
-| 実装参照 | src/app/apis/projects/create_api_access_request/router.py:133<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:133 (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/create_api_access_request/router.py<br>wrapper: src/app/apis/projects/create_api_access_request/router.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -118,7 +118,7 @@
 | 説明 | Projectに要求認証方式へ対応するclientが設定されていない場合。 |
 | 対応すべきこと | Projectのpublic/confidential client設定とrequestedAuthModeを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/projects/create_api_access_request/router.py:209<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:209 (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/create_api_access_request/router.py<br>wrapper: src/app/apis/projects/create_api_access_request/router.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -151,7 +151,7 @@
 | 説明 | 同一Project/API stageのactive subscriptionが既に存在する場合。 |
 | 対応すべきこと | 既存subscription、projectId、apiId、apiStageIdを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/projects/create_api_access_request/router.py:251<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:251 (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/create_api_access_request/router.py<br>wrapper: src/app/apis/projects/create_api_access_request/router.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -184,7 +184,7 @@
 | 説明 | 同一Project/API stageのpending利用申請が既に存在する場合。 |
 | 対応すべきこと | 既存access_request、projectId、apiId、apiStageIdを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/projects/create_api_access_request/router.py:292<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:292 (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/create_api_access_request/router.py<br>wrapper: src/app/apis/projects/create_api_access_request/router.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -217,7 +217,7 @@
 | 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
 | 対応すべきこと | 同一routeの5xx率、直近deploy、DB状態を確認する。 |
 | runbook | RUNBOOK-unexpected-api-failure |
-| 実装参照 | src/app/apis/projects/create_api_access_request/router.py:471<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:471 (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/create_api_access_request/router.py<br>wrapper: src/app/apis/projects/create_api_access_request/router.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -251,7 +251,7 @@
 | 説明 | API利用申請作成のDB transaction commitでIntegrityErrorを捕捉した場合。 |
 | 対応すべきこと | project/access_request/idempotency、制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。 |
 | runbook | RUNBOOK-db-data-repair |
-| 実装参照 | src/app/apis/projects/create_api_access_request/router.py:386<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:386 (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/create_api_access_request/router.py<br>wrapper: src/app/apis/projects/create_api_access_request/router.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -285,7 +285,7 @@
 | 説明 | API利用申請作成のDB transaction commitでSQLAlchemyErrorを捕捉した場合。 |
 | 対応すべきこと | DB接続状態、transaction rollback、idempotency状態を確認し、必要に応じて利用者へ再実行を案内する。 |
 | runbook | RUNBOOK-db-commit-retry |
-| 実装参照 | src/app/apis/projects/create_api_access_request/router.py:428<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:428 (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/create_api_access_request/router.py<br>wrapper: src/app/apis/projects/create_api_access_request/router.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -319,7 +319,7 @@
 | 説明 | 対象API stageのreviewer情報が空の場合。 |
 | 対応すべきこと | apiId、apiStageId、reviewer設定を確認する。 |
 | runbook | RUNBOOK-api-client-error |
-| 実装参照 | src/app/apis/projects/create_api_access_request/router.py:171<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:171 (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/create_api_access_request/router.py<br>wrapper: src/app/apis/projects/create_api_access_request/router.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -352,7 +352,7 @@
 | 説明 | Idempotency-Keyに対応する処理結果が既に存在する場合。 |
 | 対応すべきこと | Idempotency-Key、operationId、既存responsePayloadを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/projects/create_api_access_request/router.py:328<br>wrapper: src/app/apis/projects/create_api_access_request/router.py:328 (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/create_api_access_request/router.py<br>wrapper: src/app/apis/projects/create_api_access_request/router.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -372,20 +372,6 @@
 | `request.sourceIp` | `string \| null` | 呼び出し元IPアドレスです。 |
 | `request.userAgent` | `string \| null` | 呼び出し元User-Agentです。 |
 
-## loggerラッパー呼び出し一覧
-
-| source | function | wrapper | catalog_id | message_id | level_hint | context keys |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `src/app/apis/projects/create_api_access_request/router.py:96` | create_api_access_request | `ops_logger.warning` | `M001` | `createApiAccessRequest.caller_is_not_a_project_owner` | `WARNING` | actorPrincipalId, api.statusCode, error.code, error.message, request.actorType, request.sourceIp, request.userAgent, resource.apiId, resource.apiStageId, resource.idempotencyKey, resource.projectId, traceId |
-| `src/app/apis/projects/create_api_access_request/router.py:133` | create_api_access_request | `ops_logger.warning` | `M002` | `createApiAccessRequest.api_is_not_published` | `WARNING` | actorPrincipalId, api.statusCode, error.code, error.message, request.actorType, request.sourceIp, request.userAgent, resource.apiId, resource.apiStageId, resource.idempotencyKey, resource.projectId, traceId |
-| `src/app/apis/projects/create_api_access_request/router.py:171` | create_api_access_request | `ops_logger.warning` | `M009` | `createApiAccessRequest.api_reviewer_is_not_configured` | `WARNING` | actorPrincipalId, api.statusCode, error.code, error.message, request.actorType, request.sourceIp, request.userAgent, resource.apiId, resource.apiStageId, resource.idempotencyKey, resource.projectId, traceId |
-| `src/app/apis/projects/create_api_access_request/router.py:209` | create_api_access_request | `ops_logger.warning` | `M003` | `createApiAccessRequest.requested_auth_mode_client_is_not_configured` | `WARNING` | actorPrincipalId, api.statusCode, error.code, error.message, request.actorType, request.sourceIp, request.userAgent, resource.apiId, resource.apiStageId, resource.idempotencyKey, resource.projectId, traceId |
-| `src/app/apis/projects/create_api_access_request/router.py:251` | create_api_access_request | `ops_logger.warning` | `M004` | `createApiAccessRequest.active_subscription_already_exists` | `WARNING` | actorPrincipalId, api.statusCode, error.code, error.message, request.actorType, request.sourceIp, request.userAgent, resource.apiId, resource.apiStageId, resource.idempotencyKey, resource.projectId, traceId |
-| `src/app/apis/projects/create_api_access_request/router.py:292` | create_api_access_request | `ops_logger.warning` | `M005` | `createApiAccessRequest.pending_access_request_already_exists` | `WARNING` | actorPrincipalId, api.statusCode, error.code, error.message, request.actorType, request.sourceIp, request.userAgent, resource.apiId, resource.apiStageId, resource.idempotencyKey, resource.projectId, traceId |
-| `src/app/apis/projects/create_api_access_request/router.py:328` | create_api_access_request | `ops_logger.warning` | `M010` | `createApiAccessRequest.idempotency_key_already_used` | `WARNING` | actorPrincipalId, api.statusCode, error.code, error.message, request.actorType, request.sourceIp, request.userAgent, resource.apiId, resource.apiStageId, resource.idempotencyKey, resource.projectId, traceId |
-| `src/app/apis/projects/create_api_access_request/router.py:386` | create_api_access_request | `ops_logger.error` | `M007` | `createApiAccessRequest.db_integrity_error` | `ERROR` | actorPrincipalId, api.statusCode, error.code, error.exceptionType, error.message, request.actorType, request.sourceIp, request.userAgent, resource.apiId, resource.apiStageId, resource.idempotencyKey, resource.projectId, traceId |
-| `src/app/apis/projects/create_api_access_request/router.py:428` | create_api_access_request | `ops_logger.error` | `M008` | `createApiAccessRequest.db_commit_failed` | `ERROR` | actorPrincipalId, api.statusCode, error.code, error.exceptionType, error.message, request.actorType, request.sourceIp, request.userAgent, resource.apiId, resource.apiStageId, resource.idempotencyKey, resource.projectId, traceId |
-| `src/app/apis/projects/create_api_access_request/router.py:471` | create_api_access_request | `ops_logger.error` | `M006` | `createApiAccessRequest.router_api_function_error` | `ERROR` | actorPrincipalId, api.statusCode, error.code, error.exceptionType, error.message, request.actorType, request.sourceIp, request.userAgent, resource.apiId, resource.apiStageId, resource.idempotencyKey, resource.projectId, traceId |
 
 ## strict検証で要求する項目
 

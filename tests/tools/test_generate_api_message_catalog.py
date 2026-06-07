@@ -107,6 +107,8 @@ MESSAGE_CATALOG = [
     assert "### `M001` `listProjects.request_succeeded`" in rendered
     assert "| level | `INFO` |" in rendered
     assert "| wrapper calls | 1 |" in rendered
+    assert "## loggerラッパー呼び出し一覧" not in rendered
+    assert "router.py:" not in rendered
     assert "| 出力項目 |" not in rendered.split("#### 出力項目", maxsplit=1)[0]
     assert "#### 出力項目" in rendered
     assert (
@@ -253,7 +255,6 @@ async def has_project_list_permission(caller) -> bool:
         "| `resource.keyword` | `string \\| null` | "
         "一覧復帰時に同じ絞り込みを再現するための検索キーワードです。 |" in rendered
     )
-    assert "resource.derivedState, resource.keyword" in rendered
 
     index = render_index(catalogs, tmp_path / "docs/spec/40.apis", "messages_gen.md", tmp_path)
     assert "`M001` | `listProjects.caller_cannot_list_projects` | `WARNING` | 403" in index

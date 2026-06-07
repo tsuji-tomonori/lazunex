@@ -321,6 +321,10 @@ def repo_relative(path: Path, root: Path) -> str:
         return path.as_posix()
 
 
+def without_line_number(source: str) -> str:
+    return re.sub(r"(?P<path>\.py):\d+\b", r"\g<path>", source)
+
+
 def escape_markdown(value: Any) -> str:
     text = "" if value is None else str(value)
     text = text.replace("\n", "<br>")
@@ -1790,7 +1794,7 @@ def render_catalog(catalog: ApiCatalog, root: Path) -> str:
         f"| domain | `{escape_markdown(meta.domain)}` |",
         f"| api | `{escape_markdown(meta.api)}` |",
         f"| routes | {escape_markdown(route_summary)} |",
-        f"| router | `{escape_markdown(meta.router_source)}` |",
+        f"| router | `{escape_markdown(without_line_number(meta.router_source))}` |",
         f"| messages | {len(catalog.messages)} |",
         f"| logger wrapper calls | {len(catalog.wrapper_calls)} |",
         f"| levels | {escape_markdown(', '.join(f'{level}:{counter[level]}' for level in sorted(counter, key=lambda item: LEVEL_ORDER.get(item, 999))))} |",
@@ -1839,9 +1843,11 @@ def render_catalog(catalog: ApiCatalog, root: Path) -> str:
         )
         source_parts: list[str] = []
         if message.source:
-            source_parts.append(message.source)
+            source_parts.append(without_line_number(message.source))
         if message.emitted_from:
-            source_parts.append("wrapper: " + ", ".join(message.emitted_from))
+            source_parts.append(
+                "wrapper: " + ", ".join(without_line_number(item) for item in message.emitted_from)
+            )
         if message.inferred:
             source_parts.append("inferred")
         detail_rows = [
@@ -1871,34 +1877,6 @@ def render_catalog(catalog: ApiCatalog, root: Path) -> str:
                 ),
             ]
         )
-
-    lines.extend(
-        [
-            "## loggerラッパー呼び出し一覧",
-            "",
-            "| source | function | wrapper | catalog_id | message_id | level_hint | context keys |",
-            "| :--- | :--- | :--- | :--- | :--- | :--- | :--- |",
-        ]
-    )
-    if catalog.wrapper_calls:
-        for call in catalog.wrapper_calls:
-            lines.append(
-                "| "
-                + " | ".join(
-                    [
-                        f"`{escape_markdown(call.source)}`",
-                        escape_markdown(call.function_name or ""),
-                        f"`{escape_markdown(call.wrapper)}`",
-                        f"`{escape_markdown(call.catalog_id or '')}`",
-                        f"`{escape_markdown(call.message_id or '<missing>')}`",
-                        f"`{escape_markdown(call.level_hint or '')}`",
-                        escape_markdown(", ".join(call.context_keys)),
-                    ]
-                )
-                + " |"
-            )
-    else:
-        lines.append("| - | - | - | - | - | - | - |")
 
     lines.extend(
         [

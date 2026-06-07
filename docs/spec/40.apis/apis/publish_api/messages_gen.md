@@ -9,7 +9,7 @@
 | domain | `apis` |
 | api | `publish_api` |
 | routes | POST /apis (publishApi) |
-| router | `src/app/apis/apis/publish_api/router.py:65` |
+| router | `src/app/apis/apis/publish_api/router.py` |
 | messages | 7 |
 | logger wrapper calls | 7 |
 | levels | WARNING:3, ERROR:4 |
@@ -49,7 +49,7 @@
 | 説明 | 呼び出し元がAPI公開登録権限を持たない場合。 |
 | 対応すべきこと | actorPrincipalIdとAPI公開登録権限を確認する。 |
 | runbook | RUNBOOK-authorization-forbidden |
-| 実装参照 | src/app/apis/apis/publish_api/router.py:83<br>wrapper: src/app/apis/apis/publish_api/router.py:83 (ops_logger.warning) |
+| 実装参照 | src/app/apis/apis/publish_api/router.py<br>wrapper: src/app/apis/apis/publish_api/router.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -81,7 +81,7 @@
 | 説明 | API Gateway stage登録の検証に失敗した場合。 |
 | 対応すべきこと | API Gateway REST API ID、stage名、権限、リージョンを確認する。 |
 | runbook | RUNBOOK-dependency-provisioning-failure |
-| 実装参照 | src/app/apis/apis/publish_api/router.py:152<br>wrapper: src/app/apis/apis/publish_api/router.py:152 (ops_logger.error) |
+| 実装参照 | src/app/apis/apis/publish_api/router.py<br>wrapper: src/app/apis/apis/publish_api/router.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -113,7 +113,7 @@
 | 説明 | 同一API Gateway stageが既にAPI catalogに登録されている場合。 |
 | 対応すべきこと | 既存API metadataとIdempotency-Keyを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/apis/publish_api/router.py:188<br>wrapper: src/app/apis/apis/publish_api/router.py:188 (ops_logger.warning) |
+| 実装参照 | src/app/apis/apis/publish_api/router.py<br>wrapper: src/app/apis/apis/publish_api/router.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -145,7 +145,7 @@
 | 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
 | 対応すべきこと | 同一routeの5xx率、直近deploy、Cognito/API Gateway/DB状態を確認する。 |
 | runbook | RUNBOOK-unexpected-api-failure |
-| 実装参照 | src/app/apis/apis/publish_api/router.py:346<br>wrapper: src/app/apis/apis/publish_api/router.py:346 (ops_logger.error) |
+| 実装参照 | src/app/apis/apis/publish_api/router.py<br>wrapper: src/app/apis/apis/publish_api/router.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -178,7 +178,7 @@
 | 説明 | API公開登録のDB transaction commitでIntegrityErrorを捕捉した場合。 |
 | 対応すべきこと | API catalog/provisioning/idempotency、Cognito/API Gateway、制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。 |
 | runbook | RUNBOOK-db-data-repair |
-| 実装参照 | src/app/apis/apis/publish_api/router.py:260<br>wrapper: src/app/apis/apis/publish_api/router.py:260 (ops_logger.error) |
+| 実装参照 | src/app/apis/apis/publish_api/router.py<br>wrapper: src/app/apis/apis/publish_api/router.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -211,7 +211,7 @@
 | 説明 | API公開登録のDB transaction commitでSQLAlchemyErrorを捕捉した場合。 |
 | 対応すべきこと | DB接続状態、transaction rollback、idempotency状態を確認し、必要に応じて利用者へ再実行を案内する。 |
 | runbook | RUNBOOK-db-commit-retry |
-| 実装参照 | src/app/apis/apis/publish_api/router.py:301<br>wrapper: src/app/apis/apis/publish_api/router.py:301 (ops_logger.error) |
+| 実装参照 | src/app/apis/apis/publish_api/router.py<br>wrapper: src/app/apis/apis/publish_api/router.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -244,7 +244,7 @@
 | 説明 | Idempotency-Keyに対応する処理結果が既に存在する場合。 |
 | 対応すべきこと | Idempotency-Key、operationId、既存responsePayloadを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/apis/publish_api/router.py:115<br>wrapper: src/app/apis/apis/publish_api/router.py:115 (ops_logger.warning) |
+| 実装参照 | src/app/apis/apis/publish_api/router.py<br>wrapper: src/app/apis/apis/publish_api/router.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -263,17 +263,6 @@
 | `resource.idempotencyKey` | `string \| null` | 同じAPI公開登録リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 | `resource.ownerPrincipalId` | `string \| null` | 公開登録対象APIの所有者確認、権限確認、問い合わせに使用する認証主体IDです。 |
 
-## loggerラッパー呼び出し一覧
-
-| source | function | wrapper | catalog_id | message_id | level_hint | context keys |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `src/app/apis/apis/publish_api/router.py:83` | publish_api | `ops_logger.warning` | `M001` | `publishApi.caller_cannot_publish_api` | `WARNING` | actorPrincipalId, api.statusCode, error.code, error.message, request.actorType, request.sourceIp, request.userAgent, resource.apiCode, resource.idempotencyKey, resource.ownerPrincipalId, traceId |
-| `src/app/apis/apis/publish_api/router.py:115` | publish_api | `ops_logger.warning` | `M007` | `publishApi.idempotency_key_already_used` | `WARNING` | actorPrincipalId, api.statusCode, error.code, error.message, request.actorType, request.sourceIp, request.userAgent, resource.apiCode, resource.idempotencyKey, resource.ownerPrincipalId, traceId |
-| `src/app/apis/apis/publish_api/router.py:152` | publish_api | `ops_logger.error` | `M002` | `publishApi.api_gateway_stage_registration_is_not_valid` | `ERROR` | actorPrincipalId, api.statusCode, error.code, error.message, request.actorType, request.sourceIp, request.userAgent, resource.apiCode, resource.idempotencyKey, resource.ownerPrincipalId, traceId |
-| `src/app/apis/apis/publish_api/router.py:188` | publish_api | `ops_logger.warning` | `M003` | `publishApi.api_is_already_registered` | `WARNING` | actorPrincipalId, api.statusCode, error.code, error.message, request.actorType, request.sourceIp, request.userAgent, resource.apiCode, resource.idempotencyKey, resource.ownerPrincipalId, traceId |
-| `src/app/apis/apis/publish_api/router.py:260` | publish_api | `ops_logger.error` | `M005` | `publishApi.db_integrity_error` | `ERROR` | actorPrincipalId, api.statusCode, error.code, error.exceptionType, error.message, request.actorType, request.sourceIp, request.userAgent, resource.apiCode, resource.idempotencyKey, resource.ownerPrincipalId, traceId |
-| `src/app/apis/apis/publish_api/router.py:301` | publish_api | `ops_logger.error` | `M006` | `publishApi.db_commit_failed` | `ERROR` | actorPrincipalId, api.statusCode, error.code, error.exceptionType, error.message, request.actorType, request.sourceIp, request.userAgent, resource.apiCode, resource.idempotencyKey, resource.ownerPrincipalId, traceId |
-| `src/app/apis/apis/publish_api/router.py:346` | publish_api | `ops_logger.error` | `M004` | `publishApi.router_api_function_error` | `ERROR` | actorPrincipalId, api.statusCode, error.code, error.exceptionType, error.message, request.actorType, request.sourceIp, request.userAgent, resource.apiCode, resource.idempotencyKey, resource.ownerPrincipalId, traceId |
 
 ## strict検証で要求する項目
 

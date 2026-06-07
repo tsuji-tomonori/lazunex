@@ -9,7 +9,7 @@
 | domain | `api_access_requests` |
 | api | `reject_api_access_request` |
 | routes | POST /api-access-requests/{accessRequestId}/reject (rejectApiAccessRequest) |
-| router | `src/app/apis/api_access_requests/reject_api_access_request/router.py:64` |
+| router | `src/app/apis/api_access_requests/reject_api_access_request/router.py` |
 | messages | 6 |
 | logger wrapper calls | 6 |
 | levels | WARNING:3, ERROR:3 |
@@ -48,7 +48,7 @@
 | 説明 | 対象API利用申請がpending状態ではない場合。 |
 | 対応すべきこと | accessRequestId、現在state、既存reviewを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py:94<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py:94 (ops_logger.warning) |
+| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -79,7 +79,7 @@
 | 説明 | 呼び出し元が対象APIのreviewerではない場合。 |
 | 対応すべきこと | actorPrincipalId、apiId、reviewer設定を確認する。 |
 | runbook | RUNBOOK-authorization-forbidden |
-| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py:125<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py:125 (ops_logger.warning) |
+| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -110,7 +110,7 @@
 | 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
 | 対応すべきこと | 同一routeの5xx率、直近deploy、DB状態を確認する。 |
 | runbook | RUNBOOK-unexpected-api-failure |
-| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py:308<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py:308 (ops_logger.error) |
+| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -142,7 +142,7 @@
 | 説明 | API利用申請却下のDB transaction commitでIntegrityErrorを捕捉した場合。 |
 | 対応すべきこと | access_request/review/idempotency、制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。 |
 | runbook | RUNBOOK-db-data-repair |
-| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py:227<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py:227 (ops_logger.error) |
+| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -174,7 +174,7 @@
 | 説明 | API利用申請却下のDB transaction commitでSQLAlchemyErrorを捕捉した場合。 |
 | 対応すべきこと | DB接続状態、transaction rollback、idempotency状態を確認し、必要に応じて利用者へ再実行を案内する。 |
 | runbook | RUNBOOK-db-commit-retry |
-| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py:267<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py:267 (ops_logger.error) |
+| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -206,7 +206,7 @@
 | 説明 | Idempotency-Keyに対応する処理結果が既に存在する場合。 |
 | 対応すべきこと | Idempotency-Key、operationId、既存responsePayloadを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py:158<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py:158 (ops_logger.warning) |
+| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -224,16 +224,6 @@
 | `request.sourceIp` | `string \| null` | 呼び出し元IPアドレスです。 |
 | `request.userAgent` | `string \| null` | 呼び出し元User-Agentです。 |
 
-## loggerラッパー呼び出し一覧
-
-| source | function | wrapper | catalog_id | message_id | level_hint | context keys |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `src/app/apis/api_access_requests/reject_api_access_request/router.py:94` | reject_api_access_request | `ops_logger.warning` | `M001` | `rejectApiAccessRequest.access_request_is_not_pending` | `WARNING` | actorPrincipalId, api.statusCode, error.code, error.message, request.actorType, request.sourceIp, request.userAgent, resource.accessRequestId, resource.idempotencyKey, traceId |
-| `src/app/apis/api_access_requests/reject_api_access_request/router.py:125` | reject_api_access_request | `ops_logger.warning` | `M002` | `rejectApiAccessRequest.caller_is_not_an_api_reviewer` | `WARNING` | actorPrincipalId, api.statusCode, error.code, error.message, request.actorType, request.sourceIp, request.userAgent, resource.accessRequestId, resource.idempotencyKey, traceId |
-| `src/app/apis/api_access_requests/reject_api_access_request/router.py:158` | reject_api_access_request | `ops_logger.warning` | `M006` | `rejectApiAccessRequest.idempotency_key_already_used` | `WARNING` | actorPrincipalId, api.statusCode, error.code, error.message, request.actorType, request.sourceIp, request.userAgent, resource.accessRequestId, resource.idempotencyKey, traceId |
-| `src/app/apis/api_access_requests/reject_api_access_request/router.py:227` | reject_api_access_request | `ops_logger.error` | `M004` | `rejectApiAccessRequest.db_integrity_error` | `ERROR` | actorPrincipalId, api.statusCode, error.code, error.exceptionType, error.message, request.actorType, request.sourceIp, request.userAgent, resource.accessRequestId, resource.idempotencyKey, traceId |
-| `src/app/apis/api_access_requests/reject_api_access_request/router.py:267` | reject_api_access_request | `ops_logger.error` | `M005` | `rejectApiAccessRequest.db_commit_failed` | `ERROR` | actorPrincipalId, api.statusCode, error.code, error.exceptionType, error.message, request.actorType, request.sourceIp, request.userAgent, resource.accessRequestId, resource.idempotencyKey, traceId |
-| `src/app/apis/api_access_requests/reject_api_access_request/router.py:308` | reject_api_access_request | `ops_logger.error` | `M003` | `rejectApiAccessRequest.router_api_function_error` | `ERROR` | actorPrincipalId, api.statusCode, error.code, error.exceptionType, error.message, request.actorType, request.sourceIp, request.userAgent, resource.accessRequestId, resource.idempotencyKey, traceId |
 
 ## strict検証で要求する項目
 

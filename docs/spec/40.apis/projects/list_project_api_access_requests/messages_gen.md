@@ -9,7 +9,7 @@
 | domain | `projects` |
 | api | `list_project_api_access_requests` |
 | routes | GET /projects/{projectId}/api-access-requests (listProjectApiAccessRequests) |
-| router | `src/app/apis/projects/list_project_api_access_requests/router.py:56` |
+| router | `src/app/apis/projects/list_project_api_access_requests/router.py` |
 | messages | 2 |
 | logger wrapper calls | 2 |
 | levels | WARNING:1, ERROR:1 |
@@ -44,7 +44,7 @@
 | 説明 | 呼び出し元が対象ProjectのAPI利用申請一覧を参照できない場合。 |
 | 対応すべきこと | actorPrincipalId、projectId、Project権限を確認する。 |
 | runbook | RUNBOOK-authorization-forbidden |
-| 実装参照 | src/app/apis/projects/list_project_api_access_requests/router.py:77<br>wrapper: src/app/apis/projects/list_project_api_access_requests/router.py:77 (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/list_project_api_access_requests/router.py<br>wrapper: src/app/apis/projects/list_project_api_access_requests/router.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -71,7 +71,7 @@
 | 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
 | 対応すべきこと | 同一routeの5xx率、直近deploy、DB状態を確認する。 |
 | runbook | RUNBOOK-unexpected-api-failure |
-| 実装参照 | src/app/apis/projects/list_project_api_access_requests/router.py:114<br>wrapper: src/app/apis/projects/list_project_api_access_requests/router.py:114 (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/list_project_api_access_requests/router.py<br>wrapper: src/app/apis/projects/list_project_api_access_requests/router.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -86,12 +86,6 @@
 | `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
 | `error.exceptionType` | `string \| null` | 捕捉された例外の型名です。 |
 
-## loggerラッパー呼び出し一覧
-
-| source | function | wrapper | catalog_id | message_id | level_hint | context keys |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `src/app/apis/projects/list_project_api_access_requests/router.py:77` | list_project_api_access_requests | `ops_logger.warning` | `M001` | `listProjectApiAccessRequests.caller_cannot_list_project_access_requests` | `WARNING` | actorPrincipalId, api.statusCode, error.code, error.message, resource.projectId |
-| `src/app/apis/projects/list_project_api_access_requests/router.py:114` | list_project_api_access_requests | `ops_logger.error` | `M002` | `listProjectApiAccessRequests.router_api_function_error` | `ERROR` | actorPrincipalId, api.statusCode, error.code, error.exceptionType, error.message, resource.projectId |
 
 ## strict検証で要求する項目
 
