@@ -3,6 +3,7 @@ from uuid import UUID
 
 from app.apis.api_access_requests.common import AccessRequestDerivedState
 from app.apis.api_access_requests.reject_api_access_request.schemas import (
+    ErrorResource,
     RejectApiAccessRequestRequest,
     RejectApiAccessRequestResponse,
 )
@@ -27,6 +28,7 @@ REJECT_API_ACCESS_REQUEST_STATUS_SAMPLES = status_samples(
     ),
     success_status=200,
     success_response=REJECT_API_ACCESS_REQUEST_RESPONSE_SAMPLE,
+    error_resource_model=ErrorResource,
     errors={
         400: "却下理由が空文字など業務ルールに合わない場合。",
         401: "認証情報が未指定、期限切れ、または検証できない場合。",

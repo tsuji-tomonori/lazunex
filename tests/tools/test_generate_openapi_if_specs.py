@@ -21,6 +21,7 @@ from tools.generate_openapi_if_specs import (
     module_sample,
     module_status_samples,
     object_field_rows,
+    operation_components,
     operation_output_path,
     parameter_default,
     parameter_rows,
@@ -123,7 +124,36 @@ OPENAPI: dict[str, Any] = {
                 "type": "object",
                 "required": ["error"],
                 "properties": {
-                    "error": {"type": "string", "description": "エラー内容。"},
+                    "error": {"$ref": "#/components/schemas/ErrorBody"},
+                },
+            },
+            "ErrorBody": {
+                "type": "object",
+                "required": ["code", "message", "details", "traceId"],
+                "properties": {
+                    "code": {"type": "string", "description": "エラーコード。"},
+                    "message": {"type": "string", "description": "エラーメッセージ。"},
+                    "details": {
+                        "type": "array",
+                        "items": {"$ref": "#/components/schemas/ErrorDetail"},
+                        "description": "詳細一覧。",
+                    },
+                    "traceId": {"type": "string", "description": "追跡ID。"},
+                },
+            },
+            "ErrorDetail": {
+                "type": "object",
+                "properties": {
+                    "reason": {"type": "string", "description": "理由。"},
+                    "resource": {
+                        "type": "object",
+                        "description": "対象リソース。",
+                    },
+                },
+            },
+            "StringMap": {
+                "type": "object",
+                "properties": {
                     "details": {
                         "type": "object",
                         "additionalProperties": {"type": "string"},
@@ -359,11 +389,25 @@ def test_response_summary_and_render_markdown() -> None:
         OperationSamples(
             request={"reason": "退職に伴う削除", "notify": True},
             response={"userId": "user-1", "email": "user@example.com"},
+            error_resource_schema={
+                "type": "object",
+                "properties": {
+                    "projectId": {
+                        "type": "string",
+                        "description": "再送対象のProject ID。",
+                    },
+                    "idempotencyKey": {
+                        "type": "string",
+                        "description": "再送に使うIdempotency-Key。",
+                    },
+                },
+            },
         ),
     )
 
+    assert [row[0] for row in summary_rows] == ["200", "204", "401"]
     assert summary_rows[0] == ["200", "成功。", "application/json", "10 field(s)"]
-    assert summary_rows[2] == ["204", "bodyなし。", "-", "-"]
+    assert summary_rows[1] == ["204", "bodyなし。", "-", "-"]
     assert "# DELETE /admin/users/{userId}" in rendered
     assert "## Headers" in rendered
     assert "## Path Parameters" in rendered
@@ -382,7 +426,54 @@ def test_response_summary_and_render_markdown() -> None:
     )
     assert "| `profile.displayName` | `string` | yes | 画面に表示するユーザー名。 | - |" in rendered
     assert "| `addresses[].postalCode` | `string` | yes | 郵便番号。 | - |" in rendered
+    assert (
+        "| `error.details[].resource` | `ErrorResource \\| null` | no | "
+        "再送、状態確認、問い合わせ時に確認する対象リソースです。 | - |" in rendered
+    )
+    assert (
+        "| `error.details[].resource.projectId` | `string` | no | "
+        "再送対象のProject ID。 | - |" in rendered
+    )
+    assert (
+        "| `error.details[].resource.idempotencyKey` | `string` | no | "
+        "再送に使うIdempotency-Key。 | - |" in rendered
+    )
+    assert rendered.index("##### `200`") < rendered.index("##### `401`")
     assert "##### `401` 認証が必要です。" in rendered
+
+
+def test_operation_components_uses_api_specific_error_resource_schema() -> None:
+    schemas = components()
+    operation_schemas = operation_components(
+        schemas,
+        OperationSamples(
+            request=None,
+            response=None,
+            error_resource_schema={
+                "$defs": {
+                    "ProjectDerivedState": {
+                        "type": "string",
+                        "enum": ["ACTIVE", "SUSPENDED"],
+                    }
+                },
+                "type": "object",
+                "properties": {
+                    "derivedState": {"$ref": "#/components/schemas/ProjectDerivedState"},
+                },
+            },
+        ),
+    )
+
+    assert operation_schemas is not schemas
+    assert operation_schemas["ProjectDerivedState"]["enum"] == ["ACTIVE", "SUSPENDED"]
+    assert operation_schemas["ErrorResource"]["properties"]["derivedState"] == {
+        "$ref": "#/components/schemas/ProjectDerivedState"
+    }
+    assert operation_schemas["ErrorDetail"]["properties"]["resource"]["anyOf"] == [
+        {"$ref": "#/components/schemas/ErrorResource"},
+        {"type": "null"},
+    ]
+    assert "ErrorResource" not in schemas
 
 
 def test_response_description_prefers_status_sample_error_reason() -> None:
@@ -422,7 +513,7 @@ def test_response_description_prefers_status_sample_error_reason() -> None:
     assert response_description("401", {"description": "共通説明。"}, samples) == (
         "認証情報が未指定、期限切れ、または検証できない場合。"
     )
-    assert rows[1][1] == "認証情報が未指定、期限切れ、または検証できない場合。"
+    assert rows[2][1] == "認証情報が未指定、期限切れ、または検証できない場合。"
     assert "認証情報が未指定、期限切れ、または検証できない場合。" in rendered
 
 
@@ -567,6 +658,9 @@ def test_operation_samples_are_loaded_from_samples_module() -> None:
     assert sample.request["requestedReason"] == "決済画面から請求情報を参照するため"
     assert sample.response["derivedState"] == "PENDING"
     assert sample.status_samples[201]["response"]["derivedState"] == "PENDING"
+    assert sample.error_resource_schema is not None
+    assert "projectId" in sample.error_resource_schema["properties"]
+    assert "apiStageId" in sample.error_resource_schema["properties"]
     assert (
         implementation_operation_samples({"createApiAccessRequest": api_path})[
             "createApiAccessRequest"

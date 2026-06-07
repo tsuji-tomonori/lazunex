@@ -31,6 +31,23 @@ class ListProjectsQuery(PageQuery):
     )
 
 
+class ErrorResource(ApiBaseModel):
+    """Project一覧取得のエラー復帰に使用する検索条件です。"""
+
+    derived_state: ProjectDerivedState | None = Field(
+        default=None,
+        description="一覧復帰時に同じ絞り込みを再現するためのProject状態条件です。",
+    )
+    keyword: SearchKeyword | None = Field(
+        default=None,
+        description="一覧復帰時に同じ絞り込みを再現するための検索キーワードです。",
+    )
+    owner_principal_id: PrincipalId | None = Field(
+        default=None,
+        description="一覧復帰時に同じ絞り込みを再現するためのProject所有者IDです。",
+    )
+
+
 class ProjectListItemResponse(ApiBaseModel):
     """プロジェクト一覧の1件分の概要情報です。"""
 

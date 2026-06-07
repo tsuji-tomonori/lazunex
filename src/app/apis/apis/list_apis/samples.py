@@ -7,6 +7,7 @@ from app.apis.apis.common import (
 from app.apis.apis.list_apis.schemas import (
     ApiListItemResponse,
     ApiListStageResponse,
+    ErrorResource,
     ListApisResponse,
 )
 from app.apis.sample_cases import request_sample, status_samples
@@ -38,6 +39,7 @@ LIST_APIS_STATUS_SAMPLES = status_samples(
     ),
     success_status=200,
     success_response=LIST_APIS_RESPONSE_SAMPLE,
+    error_resource_model=ErrorResource,
     errors={
         401: "認証情報が未指定、期限切れ、または検証できない場合。",
         403: "呼び出し元にAPI一覧を参照する権限がない場合。",

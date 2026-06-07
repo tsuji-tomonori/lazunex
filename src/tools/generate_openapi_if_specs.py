@@ -1,5 +1,6 @@
 import argparse
 import ast
+import copy
 import importlib
 import json
 import re
@@ -62,6 +63,7 @@ class OperationSamples:
     request: JsonObject | None
     response: JsonObject | None
     status_samples: dict[int, JsonObject] | None = None
+    error_resource_schema: JsonObject | None = None
 
 
 def snake_case(value: str) -> str:
@@ -102,6 +104,36 @@ def schema_components(openapi: JsonObject) -> JsonObject:
     return as_object(schemas)
 
 
+def operation_components(
+    components: JsonObject,
+    samples: OperationSamples | None,
+) -> JsonObject:
+    if samples is None or samples.error_resource_schema is None:
+        return components
+
+    operation_specific_components = copy.deepcopy(components)
+    error_resource_schema = copy.deepcopy(samples.error_resource_schema)
+    for name, schema in as_object(error_resource_schema.pop("$defs", {})).items():
+        operation_specific_components[str(name)] = schema
+    operation_specific_components["ErrorResource"] = error_resource_schema
+
+    error_detail = cast(
+        JsonObject,
+        copy.deepcopy(operation_specific_components.get("ErrorDetail", {})),
+    )
+    properties = copy.deepcopy(as_object(error_detail.get("properties")))
+    properties["resource"] = {
+        "anyOf": [
+            {"$ref": "#/components/schemas/ErrorResource"},
+            {"type": "null"},
+        ],
+        "description": "再送、状態確認、問い合わせ時に確認する対象リソースです。",
+    }
+    error_detail["properties"] = properties
+    operation_specific_components["ErrorDetail"] = error_detail
+    return operation_specific_components
+
+
 def ref_name(ref: str) -> str:
     return ref.rsplit("/", 1)[-1]
 
@@ -127,6 +159,22 @@ def unwrap_nullable(schema: JsonObject, components: JsonObject) -> tuple[JsonObj
         if len(non_null) == 1 and len(non_null) != len(variants):
             return non_null[0], True
     return schema, False
+
+
+def nullable_ref_name(schema: JsonObject) -> str | None:
+    for key in ("anyOf", "oneOf"):
+        variants = as_list(schema.get(key))
+        if not variants:
+            continue
+        refs = [
+            str(as_object(variant).get("$ref"))
+            for variant in variants
+            if "$ref" in as_object(variant)
+        ]
+        has_null = any(as_object(variant).get("type") == "null" for variant in variants)
+        if len(refs) == 1 and has_null:
+            return ref_name(refs[0])
+    return None
 
 
 def enum_values(schema: JsonObject) -> list[str]:
@@ -188,6 +236,8 @@ def schema_type(schema: JsonObject, components: JsonObject) -> str:
         if enum_values(resolved):
             return enum_type(resolved)
         return ref_name(str(schema["$ref"]))
+    if nullable_ref := nullable_ref_name(schema):
+        return f"{nullable_ref} | null"
     schema, nullable = unwrap_nullable(schema, components)
     if enum_values(schema):
         type_name = enum_type(schema)
@@ -236,7 +286,7 @@ def schema_description(schema: JsonObject, fallback: str = "") -> str:
 
 
 def nested_object_schema(schema: JsonObject, components: JsonObject) -> JsonObject:
-    schema = resolve_schema(schema, components)
+    schema, _nullable = unwrap_nullable(schema, components)
     if schema.get("type") == "object" and as_object(schema.get("properties")):
         return schema
     if schema.get("type") == "array":
@@ -389,6 +439,22 @@ def response_description(
     )
 
 
+def response_sort_key(status_code: str) -> tuple[int, int | str]:
+    try:
+        return (0, int(status_code))
+    except ValueError:
+        return (1, status_code)
+
+
+def sorted_response_items(responses: JsonObject) -> list[tuple[str, JsonObject]]:
+    items: list[tuple[str, JsonObject]] = []
+    for status_code, response in responses.items():
+        if not isinstance(response, dict):
+            continue
+        items.append((str(status_code), cast(JsonObject, response)))
+    return sorted(items, key=lambda item: response_sort_key(item[0]))
+
+
 def response_summary_rows(
     operation: JsonObject,
     components: JsonObject,
@@ -398,10 +464,7 @@ def response_summary_rows(
     responses = as_object(operation.get("responses", {}))
     if not responses:
         return rows
-    for status_code, response in responses.items():
-        if not isinstance(response, dict):
-            continue
-        response_object = cast(JsonObject, response)
+    for status_code, response_object in sorted_response_items(responses):
         media_type, schema = response_media(response_object)
         body_rows = object_field_rows(schema, components)
         body = f"{len(body_rows)} field(s)" if body_rows else "-"
@@ -464,10 +527,7 @@ def render_response_details(
     responses = as_object(operation.get("responses", {}))
     if not responses:
         return lines
-    for status_code, response in responses.items():
-        if not isinstance(response, dict):
-            continue
-        response_object = cast(JsonObject, response)
+    for status_code, response_object in sorted_response_items(responses):
         media_type, schema = response_media(response_object)
         body_rows = object_field_rows(schema, components)
         if not body_rows:
@@ -586,6 +646,7 @@ def render_operation_markdown(
     components: JsonObject,
     samples: OperationSamples | None = None,
 ) -> str:
+    components = operation_components(components, samples)
     summary = str(operation.get("summary") or "")
     description = str(operation.get("description") or "")
     lines = [
@@ -677,6 +738,10 @@ def sample_module_name(api_path: Path) -> str:
     return ".".join(("app", "apis", *api_path.parts, "samples"))
 
 
+def schema_module_name(api_path: Path) -> str:
+    return ".".join(("app", "apis", *api_path.parts, "schemas"))
+
+
 def module_sample(module: Any, suffix: str) -> JsonObject | None:
     for name in sorted(dir(module)):
         if name.endswith(suffix):
@@ -700,6 +765,17 @@ def module_status_samples(module: Any) -> dict[int, JsonObject] | None:
     return None
 
 
+def module_error_resource_schema(api_path: Path) -> JsonObject | None:
+    try:
+        module = importlib.import_module(schema_module_name(api_path))
+    except ModuleNotFoundError:
+        return None
+    model = getattr(module, "ErrorResource", None)
+    if model is None or not hasattr(model, "model_json_schema"):
+        return None
+    return as_object(model.model_json_schema(ref_template="#/components/schemas/{model}"))
+
+
 def load_operation_sample(api_path: Path) -> OperationSamples | None:
     try:
         module = importlib.import_module(sample_module_name(api_path))
@@ -709,6 +785,7 @@ def load_operation_sample(api_path: Path) -> OperationSamples | None:
         request=module_sample(module, "_REQUEST_SAMPLE"),
         response=module_sample(module, "_RESPONSE_SAMPLE"),
         status_samples=module_status_samples(module),
+        error_resource_schema=module_error_resource_schema(api_path),
     )
 
 

@@ -24,6 +24,15 @@ from app.apis.types import (
 )
 
 
+class ErrorResource(ApiBaseModel):
+    """API詳細取得のエラー復帰に使用する対象リソースです。"""
+
+    api_id: ResourceId | None = Field(
+        default=None,
+        description="取得対象APIの存在確認、公開状態確認、問い合わせに使用するAPI IDです。",
+    )
+
+
 class ApiDetailStageResponse(ApiBaseModel):
     """API詳細で返却するAPI Gateway stageの接続情報です。"""
 

@@ -34,6 +34,23 @@ class ListApisQuery(PageQuery):
     )
 
 
+class ErrorResource(ApiBaseModel):
+    """API一覧取得のエラー復帰に使用する検索条件です。"""
+
+    derived_state: ApiDerivedState | None = Field(
+        default=None,
+        description="一覧復帰時に同じ絞り込みを再現するためのAPI状態条件です。",
+    )
+    keyword: SearchKeyword | None = Field(
+        default=None,
+        description="一覧復帰時に同じ絞り込みを再現するための検索キーワードです。",
+    )
+    provider_name: DisplayName | None = Field(
+        default=None,
+        description="一覧復帰時に同じ絞り込みを再現するためのAPI提供者名です。",
+    )
+
+
 class ApiListStageResponse(ApiBaseModel):
     """API一覧で表示する代表stageの接続情報です。"""
 

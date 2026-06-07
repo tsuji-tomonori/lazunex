@@ -41,9 +41,9 @@ class ErrorDetail(ApiBaseModel):
         default=None,
         description="問い合わせ時に伝える追跡IDまたは相関IDです。",
     )
-    resource: dict[str, str] | None = Field(
+    resource: dict[str, Any] | None = Field(
         default=None,
-        description="確認対象のリソースIDやIdempotency-Keyなどです。",
+        description="再送、状態確認、問い合わせ時に確認する対象リソースです。",
     )
 
 

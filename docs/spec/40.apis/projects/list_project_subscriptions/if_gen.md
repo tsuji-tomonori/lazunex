@@ -35,11 +35,11 @@ _なし_
 | Status | 説明 | Media type | Body |
 | --- | --- | --- | --- |
 | `200` | Successful Response | `application/json` | 13 field(s) |
-| `403` | 呼び出し元に対象Projectの利用権一覧を参照する権限がない場合。 | `application/json` | 11 field(s) |
-| `401` | 認証情報が未指定、期限切れ、または検証できない場合。 | `application/json` | 11 field(s) |
-| `422` | pathまたはqueryがOpenAPIスキーマの型や制約に一致しない場合。 | `application/json` | 11 field(s) |
-| `429` | 呼び出し頻度が許可された上限を超えた場合。 | `application/json` | 11 field(s) |
-| `500` | Lazunex内部で想定外のエラーが発生した場合。 | `application/json` | 11 field(s) |
+| `401` | 認証情報が未指定、期限切れ、または検証できない場合。 | `application/json` | 12 field(s) |
+| `403` | 呼び出し元に対象Projectの利用権一覧を参照する権限がない場合。 | `application/json` | 12 field(s) |
+| `422` | pathまたはqueryがOpenAPIスキーマの型や制約に一致しない場合。 | `application/json` | 12 field(s) |
+| `429` | 呼び出し頻度が許可された上限を超えた場合。 | `application/json` | 12 field(s) |
+| `500` | Lazunex内部で想定外のエラーが発生した場合。 | `application/json` | 12 field(s) |
 
 ##### `200` Successful Response
 
@@ -61,24 +61,6 @@ Media type: `application/json`
 | `items[].approvedAt` | `string` | yes | API利用権が承認された日時です。 | - |
 | `nextToken` | `string \| null` | no | 次ページを取得するために前回レスポンスから受け取る継続tokenです。 | minLength=1 |
 
-##### `403` 呼び出し元に対象Projectの利用権一覧を参照する権限がない場合。
-
-Media type: `application/json`
-
-| 項目 | 型 | 必須 | 説明 | 制約 |
-| --- | --- | --- | --- | --- |
-| `error` | `ErrorBody` | yes | エラーコード、メッセージ、追跡IDを含む共通エラー本文です。 | - |
-| `error.code` | `string` | yes | エラー種別を機械的に判定するためのコードです。 | minLength=1, maxLength=100 |
-| `error.message` | `string` | yes | 利用者が次に確認・修正・再試行・問い合わせすべき内容を示すメッセージです。 | minLength=1 |
-| `error.details` | `array<ErrorDetail>` | no | リトライ可否、問い合わせ時に伝える追跡ID、確認対象リソースなどの詳細一覧です。 | - |
-| `error.details[].field` | `string \| null` | no | 入力検証エラーが発生したリクエスト項目です。 | minLength=1, maxLength=256 |
-| `error.details[].reason` | `string \| null` | no | 入力検証エラー、再試行判断、または問い合わせ時に確認する具体的な理由です。 | minLength=1 |
-| `error.details[].statusCode` | `integer \| null` | no | 返却されたHTTPステータスコードです。 | minimum=400.0, maximum=599.0 |
-| `error.details[].retryable` | `boolean \| null` | no | 同じリクエストを再実行して解消する可能性があるかどうかです。 | - |
-| `error.details[].reference` | `string \| null` | no | 問い合わせ時に伝える追跡IDまたは相関IDです。 | minLength=1, maxLength=128 |
-| `error.details[].resource` | `object<string, string> \| null` | no | 確認対象のリソースIDやIdempotency-Keyなどです。 | - |
-| `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
-
 ##### `401` 認証情報が未指定、期限切れ、または検証できない場合。
 
 Media type: `application/json`
@@ -94,7 +76,27 @@ Media type: `application/json`
 | `error.details[].statusCode` | `integer \| null` | no | 返却されたHTTPステータスコードです。 | minimum=400.0, maximum=599.0 |
 | `error.details[].retryable` | `boolean \| null` | no | 同じリクエストを再実行して解消する可能性があるかどうかです。 | - |
 | `error.details[].reference` | `string \| null` | no | 問い合わせ時に伝える追跡IDまたは相関IDです。 | minLength=1, maxLength=128 |
-| `error.details[].resource` | `object<string, string> \| null` | no | 確認対象のリソースIDやIdempotency-Keyなどです。 | - |
+| `error.details[].resource` | `ErrorResource \| null` | no | 再送、状態確認、問い合わせ時に確認する対象リソースです。 | - |
+| `error.details[].resource.projectId` | `string \| null` | no | 一覧取得対象Projectの存在確認、権限確認、再取得に使用するProject IDです。 | - |
+| `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
+
+##### `403` 呼び出し元に対象Projectの利用権一覧を参照する権限がない場合。
+
+Media type: `application/json`
+
+| 項目 | 型 | 必須 | 説明 | 制約 |
+| --- | --- | --- | --- | --- |
+| `error` | `ErrorBody` | yes | エラーコード、メッセージ、追跡IDを含む共通エラー本文です。 | - |
+| `error.code` | `string` | yes | エラー種別を機械的に判定するためのコードです。 | minLength=1, maxLength=100 |
+| `error.message` | `string` | yes | 利用者が次に確認・修正・再試行・問い合わせすべき内容を示すメッセージです。 | minLength=1 |
+| `error.details` | `array<ErrorDetail>` | no | リトライ可否、問い合わせ時に伝える追跡ID、確認対象リソースなどの詳細一覧です。 | - |
+| `error.details[].field` | `string \| null` | no | 入力検証エラーが発生したリクエスト項目です。 | minLength=1, maxLength=256 |
+| `error.details[].reason` | `string \| null` | no | 入力検証エラー、再試行判断、または問い合わせ時に確認する具体的な理由です。 | minLength=1 |
+| `error.details[].statusCode` | `integer \| null` | no | 返却されたHTTPステータスコードです。 | minimum=400.0, maximum=599.0 |
+| `error.details[].retryable` | `boolean \| null` | no | 同じリクエストを再実行して解消する可能性があるかどうかです。 | - |
+| `error.details[].reference` | `string \| null` | no | 問い合わせ時に伝える追跡IDまたは相関IDです。 | minLength=1, maxLength=128 |
+| `error.details[].resource` | `ErrorResource \| null` | no | 再送、状態確認、問い合わせ時に確認する対象リソースです。 | - |
+| `error.details[].resource.projectId` | `string \| null` | no | 一覧取得対象Projectの存在確認、権限確認、再取得に使用するProject IDです。 | - |
 | `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
 
 ##### `422` pathまたはqueryがOpenAPIスキーマの型や制約に一致しない場合。
@@ -112,7 +114,8 @@ Media type: `application/json`
 | `error.details[].statusCode` | `integer \| null` | no | 返却されたHTTPステータスコードです。 | minimum=400.0, maximum=599.0 |
 | `error.details[].retryable` | `boolean \| null` | no | 同じリクエストを再実行して解消する可能性があるかどうかです。 | - |
 | `error.details[].reference` | `string \| null` | no | 問い合わせ時に伝える追跡IDまたは相関IDです。 | minLength=1, maxLength=128 |
-| `error.details[].resource` | `object<string, string> \| null` | no | 確認対象のリソースIDやIdempotency-Keyなどです。 | - |
+| `error.details[].resource` | `ErrorResource \| null` | no | 再送、状態確認、問い合わせ時に確認する対象リソースです。 | - |
+| `error.details[].resource.projectId` | `string \| null` | no | 一覧取得対象Projectの存在確認、権限確認、再取得に使用するProject IDです。 | - |
 | `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
 
 ##### `429` 呼び出し頻度が許可された上限を超えた場合。
@@ -130,7 +133,8 @@ Media type: `application/json`
 | `error.details[].statusCode` | `integer \| null` | no | 返却されたHTTPステータスコードです。 | minimum=400.0, maximum=599.0 |
 | `error.details[].retryable` | `boolean \| null` | no | 同じリクエストを再実行して解消する可能性があるかどうかです。 | - |
 | `error.details[].reference` | `string \| null` | no | 問い合わせ時に伝える追跡IDまたは相関IDです。 | minLength=1, maxLength=128 |
-| `error.details[].resource` | `object<string, string> \| null` | no | 確認対象のリソースIDやIdempotency-Keyなどです。 | - |
+| `error.details[].resource` | `ErrorResource \| null` | no | 再送、状態確認、問い合わせ時に確認する対象リソースです。 | - |
+| `error.details[].resource.projectId` | `string \| null` | no | 一覧取得対象Projectの存在確認、権限確認、再取得に使用するProject IDです。 | - |
 | `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
 
 ##### `500` Lazunex内部で想定外のエラーが発生した場合。
@@ -148,7 +152,8 @@ Media type: `application/json`
 | `error.details[].statusCode` | `integer \| null` | no | 返却されたHTTPステータスコードです。 | minimum=400.0, maximum=599.0 |
 | `error.details[].retryable` | `boolean \| null` | no | 同じリクエストを再実行して解消する可能性があるかどうかです。 | - |
 | `error.details[].reference` | `string \| null` | no | 問い合わせ時に伝える追跡IDまたは相関IDです。 | minLength=1, maxLength=128 |
-| `error.details[].resource` | `object<string, string> \| null` | no | 確認対象のリソースIDやIdempotency-Keyなどです。 | - |
+| `error.details[].resource` | `ErrorResource \| null` | no | 再送、状態確認、問い合わせ時に確認する対象リソースです。 | - |
+| `error.details[].resource.projectId` | `string \| null` | no | 一覧取得対象Projectの存在確認、権限確認、再取得に使用するProject IDです。 | - |
 | `error.traceId` | `string` | yes | 障害調査でログとレスポンスを対応付ける追跡IDです。 | minLength=1, maxLength=128 |
 
 ## Samples
@@ -221,12 +226,13 @@ Media type: `application/json`
     "message": "認証情報を確認し、有効な認証情報で再送してください。",
     "details": [
       {
-        "field": null,
         "reason": "認証情報が未指定、期限切れ、または検証できない場合。",
         "statusCode": 401,
         "retryable": false,
         "reference": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S",
-        "resource": null
+        "resource": {
+          "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+        }
       }
     ],
     "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
@@ -261,12 +267,13 @@ Media type: `application/json`
     "message": "操作権限を確認し、必要な権限を持つ利用者で再送してください。",
     "details": [
       {
-        "field": null,
         "reason": "呼び出し元に対象Projectの利用権一覧を参照する権限がない場合。",
         "statusCode": 403,
         "retryable": false,
         "reference": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S",
-        "resource": null
+        "resource": {
+          "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+        }
       }
     ],
     "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
@@ -301,12 +308,13 @@ Media type: `application/json`
     "message": "リクエストの型、必須項目、制約をOpenAPI仕様に合わせて修正してください。",
     "details": [
       {
-        "field": null,
         "reason": "pathまたはqueryがOpenAPIスキーマの型や制約に一致しない場合。",
         "statusCode": 422,
         "retryable": false,
         "reference": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S",
-        "resource": null
+        "resource": {
+          "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+        }
       }
     ],
     "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
@@ -341,12 +349,13 @@ Media type: `application/json`
     "message": "呼び出し頻度を下げ、時間をおいてから再送してください。",
     "details": [
       {
-        "field": null,
         "reason": "呼び出し頻度が許可された上限を超えた場合。",
         "statusCode": 429,
         "retryable": true,
         "reference": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S",
-        "resource": null
+        "resource": {
+          "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+        }
       }
     ],
     "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
@@ -381,12 +390,13 @@ Media type: `application/json`
     "message": "想定外のエラーが発生しました。追跡IDを添えて問い合わせてください。",
     "details": [
       {
-        "field": null,
         "reason": "Lazunex内部で想定外のエラーが発生した場合。",
         "statusCode": 500,
         "retryable": false,
         "reference": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S",
-        "resource": null
+        "resource": {
+          "projectId": "cb62b5f6-0000-0000-0000-000000000001"
+        }
       }
     ],
     "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"

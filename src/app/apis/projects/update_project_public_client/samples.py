@@ -2,6 +2,7 @@ from uuid import UUID
 
 from app.apis.projects.common import TokenValidityUnit
 from app.apis.projects.update_project_public_client.schemas import (
+    ErrorResource,
     UpdatedPublicClientResponse,
     UpdateProjectPublicClientRequest,
     UpdateProjectPublicClientResponse,
@@ -53,6 +54,7 @@ UPDATE_PROJECT_PUBLIC_CLIENT_STATUS_SAMPLES = status_samples(
     ),
     success_status=200,
     success_response=UPDATE_PROJECT_PUBLIC_CLIENT_RESPONSE_SAMPLE,
+    error_resource_model=ErrorResource,
     errors={
         400: "public app client更新リクエストが業務ルールに合わない場合。",
         401: "認証情報が未指定、期限切れ、または検証できない場合。",

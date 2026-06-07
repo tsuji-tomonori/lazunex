@@ -8,6 +8,7 @@ from app.apis.apis.common import (
 )
 from app.apis.apis.publish_api.schemas import (
     ApiScopeResponse,
+    ErrorResource,
     OpenApiDocumentRequest,
     PublishApiGatewayRequest,
     PublishApiRequest,
@@ -65,6 +66,7 @@ PUBLISH_API_STATUS_SAMPLES = status_samples(
     ),
     success_status=201,
     success_response=PUBLISH_API_RESPONSE_SAMPLE,
+    error_resource_model=ErrorResource,
     errors={
         400: "公開登録リクエストが業務ルールに合わない場合。",
         401: "認証情報が未指定、期限切れ、または検証できない場合。",

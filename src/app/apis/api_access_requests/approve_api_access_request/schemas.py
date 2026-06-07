@@ -20,6 +20,21 @@ class ApproveApiAccessRequestRequest(ApiBaseModel):
     )
 
 
+class ErrorResource(ApiBaseModel):
+    """API利用申請承認のエラー復帰に使用する対象リソースです。"""
+
+    access_request_id: ResourceId | None = Field(
+        default=None,
+        description="承認対象の存在確認、審査状態確認、重複承認確認に使用するAPI利用申請IDです。",
+    )
+    idempotency_key: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=256,
+        description="同じAPI利用申請承認リクエストの結果確認と再送に使用するIdempotency-Keyです。",
+    )
+
+
 class ApproveApiAccessRequestResponse(ApiBaseModel):
     """API利用申請の承認結果と作成された利用権情報です。"""
 

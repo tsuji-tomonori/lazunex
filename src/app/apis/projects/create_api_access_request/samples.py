@@ -7,6 +7,7 @@ from app.apis.api_access_requests.common import (
 from app.apis.projects.create_api_access_request.schemas import (
     CreateApiAccessRequestRequest,
     CreateApiAccessRequestResponse,
+    ErrorResource,
 )
 from app.apis.sample_cases import request_sample, status_samples
 
@@ -35,6 +36,7 @@ CREATE_API_ACCESS_REQUEST_STATUS_SAMPLES = status_samples(
     ),
     success_status=201,
     success_response=CREATE_API_ACCESS_REQUEST_RESPONSE_SAMPLE,
+    error_resource_model=ErrorResource,
     errors={
         400: "申請理由や希望認証方式が業務ルールに合わない場合。",
         401: "認証情報が未指定、期限切れ、または検証できない場合。",

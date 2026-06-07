@@ -3,6 +3,7 @@ from uuid import UUID
 from app.apis.api_access_requests.approve_api_access_request.schemas import (
     ApproveApiAccessRequestRequest,
     ApproveApiAccessRequestResponse,
+    ErrorResource,
 )
 from app.apis.api_access_requests.common import (
     AccessRequestDerivedState,
@@ -34,6 +35,7 @@ APPROVE_API_ACCESS_REQUEST_STATUS_SAMPLES = status_samples(
     ),
     success_status=200,
     success_response=APPROVE_API_ACCESS_REQUEST_RESPONSE_SAMPLE,
+    error_resource_model=ErrorResource,
     errors={
         401: "認証情報が未指定、期限切れ、または検証できない場合。",
         403: "呼び出し元が対象APIの審査者ではない場合。",

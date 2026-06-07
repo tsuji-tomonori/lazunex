@@ -15,6 +15,7 @@ from app.apis.projects.create_project.schemas import (
     CreateProjectRequest,
     CreateProjectResponse,
     CreateProjectUsagePlanRequest,
+    ErrorResource,
     PublicClientSettingsRequest,
 )
 from app.apis.sample_cases import request_sample, status_samples
@@ -75,6 +76,7 @@ CREATE_PROJECT_STATUS_SAMPLES = status_samples(
     ),
     success_status=201,
     success_response=CREATE_PROJECT_RESPONSE_SAMPLE,
+    error_resource_model=ErrorResource,
     errors={
         400: "Project作成リクエストが業務ルールに合わない場合。",
         401: "認証情報が未指定、期限切れ、または検証できない場合。",

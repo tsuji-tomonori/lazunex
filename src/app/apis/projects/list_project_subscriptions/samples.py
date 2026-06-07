@@ -4,6 +4,7 @@ from uuid import UUID
 from app.apis.api_access_requests.common import AuthMode
 from app.apis.projects.common import SubscriptionDerivedState
 from app.apis.projects.list_project_subscriptions.schemas import (
+    ErrorResource,
     ListProjectSubscriptionsResponse,
     ProjectSubscriptionItemResponse,
 )
@@ -35,6 +36,7 @@ LIST_PROJECT_SUBSCRIPTIONS_STATUS_SAMPLES = status_samples(
     ),
     success_status=200,
     success_response=LIST_PROJECT_SUBSCRIPTIONS_RESPONSE_SAMPLE,
+    error_resource_model=ErrorResource,
     errors={
         401: "認証情報が未指定、期限切れ、または検証できない場合。",
         403: "呼び出し元に対象Projectの利用権一覧を参照する権限がない場合。",

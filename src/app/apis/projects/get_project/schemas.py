@@ -21,6 +21,15 @@ from app.apis.types import (
 )
 
 
+class ErrorResource(ApiBaseModel):
+    """Project詳細取得のエラー復帰に使用する対象リソースです。"""
+
+    project_id: ResourceId | None = Field(
+        default=None,
+        description="取得対象Projectの存在確認、権限確認、問い合わせに使用するProject IDです。",
+    )
+
+
 class ProjectApiKeyResponse(ApiBaseModel):
     """プロジェクト詳細で返却するAPI keyの管理情報です。"""
 

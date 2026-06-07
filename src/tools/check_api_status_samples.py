@@ -67,6 +67,22 @@ def _status_samples_by_operation(api_root: Path) -> dict[str, dict[int, ApiStatu
     return samples_by_operation
 
 
+def _error_resource_models_by_operation(api_root: Path) -> dict[str, type[BaseModel]]:
+    models_by_operation: dict[str, type[BaseModel]] = {}
+    for router_path in sorted(api_root.glob("*/*/router.py")):
+        operation_id = _route_operation_id(router_path)
+        if operation_id is None:
+            continue
+        schemas_path = router_path.with_name("schemas.py")
+        if not schemas_path.exists():
+            continue
+        module = importlib.import_module(_module_name(schemas_path))
+        model = getattr(module, "ErrorResource", None)
+        if isinstance(model, type) and issubclass(model, BaseModel):
+            models_by_operation[operation_id] = model
+    return models_by_operation
+
+
 def _routes_by_operation() -> dict[str, APIRoute]:
     routes: dict[str, APIRoute] = {}
     for route in create_app().routes:
@@ -89,6 +105,7 @@ def _openapi_operations() -> dict[str, dict[str, Any]]:
 def check_api_status_samples(api_root: Path = Path("src/app/apis")) -> list[ApiStatusSampleIssue]:
     issues: list[ApiStatusSampleIssue] = []
     samples_by_operation = _status_samples_by_operation(api_root)
+    error_resource_models = _error_resource_models_by_operation(api_root)
     routes_by_operation = _routes_by_operation()
     operations = _openapi_operations()
 
@@ -156,6 +173,14 @@ def check_api_status_samples(api_root: Path = Path("src/app/apis")) -> list[ApiS
                 status_code,
                 sample["response"],
                 success_model,
+            )
+            _check_error_resource_schema(
+                issues,
+                operation_id,
+                status_name,
+                status_code,
+                sample["response"],
+                error_resource_models.get(operation_id),
             )
             _check_openapi_example(issues, operation_id, status_name, operation, sample["response"])
 
@@ -249,6 +274,70 @@ def _check_response_schema(
                 operation_id,
                 status_name,
                 f"response sample does not match schema: {error.errors()[0]['msg']}",
+            )
+        )
+
+
+def _check_error_resource_schema(
+    issues: list[ApiStatusSampleIssue],
+    operation_id: str,
+    status_name: str,
+    status_code: int,
+    response_sample: dict[str, Any],
+    model: type[BaseModel] | None,
+) -> None:
+    if status_code < 400:
+        return
+    if model is None:
+        issues.append(ApiStatusSampleIssue(operation_id, status_name, "ErrorResource is missing"))
+        return
+
+    raw_error_body: object = response_sample.get("error", {})
+    if not isinstance(raw_error_body, dict):
+        issues.append(ApiStatusSampleIssue(operation_id, status_name, "error body must be object"))
+        return
+    error_body = cast(dict[str, Any], raw_error_body)
+    raw_details: object = error_body.get("details", [])
+    if not isinstance(raw_details, list) or not raw_details:
+        issues.append(
+            ApiStatusSampleIssue(operation_id, status_name, "error details sample is missing")
+        )
+        return
+    details = cast(list[object], raw_details)
+    detail = details[0]
+    if not isinstance(detail, dict):
+        issues.append(
+            ApiStatusSampleIssue(operation_id, status_name, "error detail must be object")
+        )
+        return
+    detail_dict = cast(dict[str, Any], detail)
+    resource = detail_dict.get("resource")
+    if not isinstance(resource, dict) or not resource:
+        issues.append(
+            ApiStatusSampleIssue(operation_id, status_name, "error resource sample is missing")
+        )
+        return
+    resource_dict = cast(dict[str, Any], resource)
+
+    allowed_keys = set(model.model_json_schema().get("properties", {}))
+    extra_keys = set(resource_dict) - allowed_keys
+    if extra_keys:
+        issues.append(
+            ApiStatusSampleIssue(
+                operation_id,
+                status_name,
+                f"error resource has undefined keys: {', '.join(sorted(extra_keys))}",
+            )
+        )
+        return
+    try:
+        model.model_validate(resource_dict)
+    except ValidationError as error:
+        issues.append(
+            ApiStatusSampleIssue(
+                operation_id,
+                status_name,
+                f"error resource sample does not match schema: {error.errors()[0]['msg']}",
             )
         )
 

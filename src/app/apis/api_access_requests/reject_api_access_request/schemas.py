@@ -17,6 +17,21 @@ class RejectApiAccessRequestRequest(ApiBaseModel):
     )
 
 
+class ErrorResource(ApiBaseModel):
+    """API利用申請却下のエラー復帰に使用する対象リソースです。"""
+
+    access_request_id: ResourceId | None = Field(
+        default=None,
+        description="却下対象の存在確認、審査状態確認、重複却下確認に使用するAPI利用申請IDです。",
+    )
+    idempotency_key: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=256,
+        description="同じAPI利用申請却下リクエストの結果確認と再送に使用するIdempotency-Keyです。",
+    )
+
+
 class RejectApiAccessRequestResponse(ApiBaseModel):
     """API利用申請の却下結果と審査日時です。"""
 

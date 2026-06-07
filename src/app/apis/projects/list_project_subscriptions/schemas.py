@@ -22,6 +22,15 @@ class ListProjectSubscriptionsQuery(PageQuery):
     pass
 
 
+class ErrorResource(ApiBaseModel):
+    """Project配下API利用権一覧取得のエラー復帰に使用する対象リソースです。"""
+
+    project_id: ResourceId | None = Field(
+        default=None,
+        description="一覧取得対象Projectの存在確認、権限確認、再取得に使用するProject IDです。",
+    )
+
+
 class ProjectSubscriptionItemResponse(ApiBaseModel):
     """プロジェクト配下のAPI利用権一覧の1件分です。"""
 

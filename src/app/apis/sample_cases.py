@@ -5,6 +5,22 @@ from pydantic import BaseModel
 from app.apis.base import ApiStatusSample, sample_value
 from app.apis.responses import ErrorBody, ErrorDetail, ErrorResponse
 
+RESOURCE_KEY_MAP = {
+    "projectId": "projectId",
+    "apiId": "apiId",
+    "apiStageId": "apiStageId",
+    "accessRequestId": "accessRequestId",
+    "subscriptionId": "subscriptionId",
+    "operationId": "operationId",
+    "apiCode": "apiCode",
+    "projectCode": "projectCode",
+    "ownerPrincipalId": "ownerPrincipalId",
+    "derivedState": "derivedState",
+    "keyword": "keyword",
+    "providerName": "providerName",
+    "expectedRowVersion": "expectedRowVersion",
+}
+
 
 def request_sample(
     *,
@@ -25,25 +41,45 @@ def request_sample(
     return sample
 
 
-def error_response_sample(status_code: int, message: str) -> dict[str, Any]:
+def error_resource_sample(request: dict[str, Any]) -> dict[str, Any] | None:
+    resource: dict[str, Any] = {}
+    for location in ("path", "query", "body"):
+        values = request.get(location)
+        if not isinstance(values, dict):
+            continue
+        for source_key, target_key in RESOURCE_KEY_MAP.items():
+            if source_key in values and target_key not in resource:
+                resource[target_key] = values[source_key]
+    headers = request.get("headers")
+    if isinstance(headers, dict) and "Idempotency-Key" in headers:
+        resource["idempotencyKey"] = headers["Idempotency-Key"]
+    return resource or None
+
+
+def error_response_sample(
+    status_code: int,
+    message: str,
+    *,
+    resource: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     trace_id = "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S"
-    return sample_value(
-        ErrorResponse(
-            error=ErrorBody(
-                code=_error_code(status_code),
-                message=_client_action_message(status_code, message),
-                details=[
-                    ErrorDetail(
-                        reason=message,
-                        status_code=status_code,
-                        retryable=_is_retryable_status(status_code),
-                        reference=trace_id,
-                    )
-                ],
-                trace_id=trace_id,
-            )
+    sample = ErrorResponse(
+        error=ErrorBody(
+            code=_error_code(status_code),
+            message=_client_action_message(status_code, message),
+            details=[
+                ErrorDetail(
+                    reason=message,
+                    status_code=status_code,
+                    retryable=_is_retryable_status(status_code),
+                    reference=trace_id,
+                    resource=resource,
+                )
+            ],
+            trace_id=trace_id,
         )
     )
+    return sample.model_dump(by_alias=True, mode="json", exclude_none=True)
 
 
 def status_samples(
@@ -52,14 +88,23 @@ def status_samples(
     success_status: int,
     success_response: BaseModel,
     errors: dict[int, str],
+    error_resource_model: type[BaseModel] | None = None,
 ) -> dict[int, ApiStatusSample]:
     samples: dict[int, ApiStatusSample] = {
         success_status: {"request": request, "response": sample_value(success_response)}
     }
+    raw_resource = error_resource_sample(request)
+    resource = (
+        error_resource_model.model_validate(raw_resource).model_dump(
+            by_alias=True, mode="json", exclude_none=True
+        )
+        if error_resource_model is not None and raw_resource is not None
+        else raw_resource
+    )
     for status_code, message in errors.items():
         samples[status_code] = {
             "request": request,
-            "response": error_response_sample(status_code, message),
+            "response": error_response_sample(status_code, message, resource=resource),
         }
     return samples
 

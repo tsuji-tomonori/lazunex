@@ -22,6 +22,31 @@ class CreateApiAccessRequestRequest(ApiBaseModel):
     requested_reason: DescriptionText = Field(description="申請者がAPI利用を希望する理由です。")
 
 
+class ErrorResource(ApiBaseModel):
+    """API利用申請作成のエラー復帰に使用する対象リソースです。"""
+
+    project_id: ResourceId | None = Field(
+        default=None,
+        description="申請元Projectの存在確認、権限確認、状態確認に使用するProject IDです。",
+    )
+    api_id: ResourceId | None = Field(
+        default=None,
+        description="申請対象APIの存在確認、公開状態確認、重複申請確認に使用するAPI IDです。",
+    )
+    api_stage_id: ResourceId | None = Field(
+        default=None,
+        description=(
+            "申請対象stageの存在確認、公開状態確認、重複申請確認に使用するAPI stage IDです。"
+        ),
+    )
+    idempotency_key: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=256,
+        description="同じAPI利用申請作成リクエストの結果確認と再送に使用するIdempotency-Keyです。",
+    )
+
+
 class CreateApiAccessRequestResponse(ApiBaseModel):
     """作成されたAPI利用申請の識別情報と現在状態です。"""
 

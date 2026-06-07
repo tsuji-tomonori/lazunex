@@ -1,7 +1,11 @@
 from uuid import UUID
 
 from app.apis.projects.common import ProjectDerivedState
-from app.apis.projects.list_projects.schemas import ListProjectsResponse, ProjectListItemResponse
+from app.apis.projects.list_projects.schemas import (
+    ErrorResource,
+    ListProjectsResponse,
+    ProjectListItemResponse,
+)
 from app.apis.sample_cases import request_sample, status_samples
 
 LIST_PROJECTS_RESPONSE_SAMPLE = ListProjectsResponse(
@@ -26,6 +30,7 @@ LIST_PROJECTS_STATUS_SAMPLES = status_samples(
     ),
     success_status=200,
     success_response=LIST_PROJECTS_RESPONSE_SAMPLE,
+    error_resource_model=ErrorResource,
     errors={
         401: "認証情報が未指定、期限切れ、または検証できない場合。",
         403: "呼び出し元にProject一覧を参照する権限がない場合。",

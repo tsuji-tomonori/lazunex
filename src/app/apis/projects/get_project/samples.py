@@ -6,6 +6,7 @@ from app.apis.projects.common import (
     TokenValidityUnit,
 )
 from app.apis.projects.get_project.schemas import (
+    ErrorResource,
     GetProjectResponse,
     ProjectApiKeyResponse,
     ProjectCognitoClientsResponse,
@@ -54,6 +55,7 @@ GET_PROJECT_STATUS_SAMPLES = status_samples(
     ),
     success_status=200,
     success_response=GET_PROJECT_RESPONSE_SAMPLE,
+    error_resource_model=ErrorResource,
     errors={
         401: "認証情報が未指定、期限切れ、または検証できない場合。",
         403: "呼び出し元に対象Projectを参照する権限がない場合。",

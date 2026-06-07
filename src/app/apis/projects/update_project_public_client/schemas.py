@@ -46,6 +46,27 @@ class UpdateProjectPublicClientRequest(ApiBaseModel):
     )
 
 
+class ErrorResource(ApiBaseModel):
+    """Project public client更新のエラー復帰に使用する対象リソースです。"""
+
+    project_id: ResourceId | None = Field(
+        default=None,
+        description="更新対象Projectの存在確認、権限確認、状態確認に使用するProject IDです。",
+    )
+    expected_row_version: RowVersion | None = Field(
+        default=None,
+        description="楽観ロック競合時に現在値との差分確認と再送判断に使用する期待行versionです。",
+    )
+    idempotency_key: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=256,
+        description=(
+            "同じpublic client更新リクエストの結果確認と再送に使用するIdempotency-Keyです。"
+        ),
+    )
+
+
 class UpdatedPublicClientResponse(ApiBaseModel):
     """更新後のpublic app client設定です。"""
 

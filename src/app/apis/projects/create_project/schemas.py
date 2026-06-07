@@ -102,6 +102,25 @@ class CreateProjectRequest(ApiBaseModel):
     )
 
 
+class ErrorResource(ApiBaseModel):
+    """Project作成のエラー復帰に使用する対象リソースです。"""
+
+    project_code: ProjectCode | None = Field(
+        default=None,
+        description="作成対象Projectの重複確認、状態確認、再送に使用するProject codeです。",
+    )
+    owner_principal_id: PrincipalId | None = Field(
+        default=None,
+        description="作成対象Projectの所有者確認、権限確認、問い合わせに使用する認証主体IDです。",
+    )
+    idempotency_key: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=256,
+        description="同じProject作成リクエストの結果確認と再送に使用するIdempotency-Keyです。",
+    )
+
+
 class CreatedApiKeyResponse(ApiBaseModel):
     """プロジェクト作成時に払い出されたAPI key情報です。"""
 

@@ -90,6 +90,25 @@ class PublishApiRequest(ApiBaseModel):
     )
 
 
+class ErrorResource(ApiBaseModel):
+    """API公開登録のエラー復帰に使用する対象リソースです。"""
+
+    api_code: ApiCode | None = Field(
+        default=None,
+        description="公開登録対象APIの重複確認、状態確認、再送に使用するAPI codeです。",
+    )
+    owner_principal_id: PrincipalId | None = Field(
+        default=None,
+        description="公開登録対象APIの所有者確認、権限確認、問い合わせに使用する認証主体IDです。",
+    )
+    idempotency_key: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=256,
+        description="同じAPI公開登録リクエストの結果確認と再送に使用するIdempotency-Keyです。",
+    )
+
+
 class ApiScopeResponse(ApiBaseModel):
     """API呼び出し認可に利用するCognito custom scope情報です。"""
 

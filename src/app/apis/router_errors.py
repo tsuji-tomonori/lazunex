@@ -45,7 +45,7 @@ def api_error_response(
     detail: str,
     *,
     trace_id: str = "unavailable",
-    resource: dict[str, str] | None = None,
+    resource: dict[str, Any] | None = None,
 ) -> JSONResponse:
     """共通 error schema を HTTP response として返す。"""
     body = ErrorResponse(
