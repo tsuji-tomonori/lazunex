@@ -83,13 +83,14 @@ def test_api_unit_test_factors_from_router_ast(tmp_path: Path) -> None:
     )
     assert doc.factors[2].source == "SQLAlchemyError"
     assert doc.factors[2].title.endswith("DB commit が一時的に失敗した場合。")
-    assert doc.factors[3].elements[1].name == (
-        "発生する: ApiFunctionError<br>"
-        "発生する: ExternalApiError<br>"
-        "発生する: HTTPException"
-    )
+    assert [element.name for element in doc.factors[3].elements] == [
+        "発生しない",
+        "ApiFunctionError",
+        "ExternalApiError",
+        "HTTPException",
+    ]
     assert doc.factors[3].elements[1].expected == "router error response"
-    assert len(product_cases(doc.factors)) == 5
+    assert len(product_cases(doc.factors)) == 7
     assert product_cases(doc.factors)[0][0] == doc.factors[0].elements[0]
     assert product_cases(doc.factors)[0][1:] == (None, None, None)
 
@@ -135,8 +136,10 @@ def test_render_unit_test_markdown_uses_three_sections(tmp_path: Path) -> None:
     assert "## 1. 要因ごとの要素" in content
     assert "## 2. 直積したテストケース一覧" in content
     assert "## 3. テスト詳細" in content
-    assert "| `TC005` |" in content
-    assert "| `TC006` |" not in content
+    assert "| `TC007` |" in content
+    assert "| `TC008` |" not in content
     assert "| `TC001` | `成立` | - | - | - |" in content
-    assert "発生する: ApiFunctionError<br>発生する: ExternalApiError" in content
+    assert "| `F04-raised-apifunctionerror` | ApiFunctionError |" in content
+    assert "| `F04-raised-externalapierror` | ExternalApiError |" in content
+    assert "| `F04-raised-httpexception` | HTTPException |" in content
     assert "`F01` 条件分岐 L" in content

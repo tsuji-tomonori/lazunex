@@ -4,6 +4,7 @@ import json
 from typing import Any
 
 import pytest
+from fastapi import HTTPException
 
 from app.apis.api_access_requests.reject_api_access_request.samples import (
     REJECT_API_ACCESS_REQUEST_REQUEST_SAMPLE,
@@ -13,6 +14,11 @@ from app.apis.api_access_requests.reject_api_access_request.samples import (
 from app.apis.base import sample_value
 from app.apis.exceptions import ApiFunctionError
 from app.core.logging import get_operation_logger
+from app.integrations.common_errors import ExternalApiError
+
+
+def ignore_operational_log_context_model(**kwargs: object) -> None:
+    _ = kwargs
 
 
 @pytest.mark.anyio
@@ -112,7 +118,7 @@ async def test_tc001_reject_api_access_request_router_matches_unit_test_gen(
     )
     monkeypatch.setattr(
         "app.apis.api_access_requests.reject_api_access_request.router.operational_log_context_model",
-        lambda **kwargs: None,
+        ignore_operational_log_context_model,
     )
 
     with capture_router_logs(capsys) as find_log_event:
@@ -157,7 +163,7 @@ async def test_tc002_reject_api_access_request_router_matches_unit_test_gen(
     )
     monkeypatch.setattr(
         "app.apis.api_access_requests.reject_api_access_request.router.operational_log_context_model",
-        lambda **kwargs: None,
+        ignore_operational_log_context_model,
     )
 
     with capture_router_logs(capsys) as find_log_event:
@@ -202,7 +208,7 @@ async def test_tc003_reject_api_access_request_router_matches_unit_test_gen(
     )
     monkeypatch.setattr(
         "app.apis.api_access_requests.reject_api_access_request.router.operational_log_context_model",
-        lambda **kwargs: None,
+        ignore_operational_log_context_model,
     )
 
     with capture_router_logs(capsys) as find_log_event:
@@ -263,7 +269,7 @@ async def test_tc005_reject_api_access_request_router_matches_unit_test_gen(
     )
     monkeypatch.setattr(
         "app.apis.api_access_requests.reject_api_access_request.router.operational_log_context_model",
-        lambda **kwargs: None,
+        ignore_operational_log_context_model,
     )
 
     with capture_router_logs(capsys) as find_log_event:
@@ -294,6 +300,90 @@ async def test_tc006_reject_api_access_request_router_matches_unit_test_gen(
         get_operation_logger(
             "app.apis.api_access_requests.reject_api_access_request.router"
         ).warning(
+            "rejectApiAccessRequest.router_error",
+            summary="Routerで捕捉した例外によりAPI利用申請却下が失敗した。",
+        )
+        raise ExternalApiError("forced external api error")
+
+    monkeypatch.setattr(
+        "app.apis.api_access_requests.reject_api_access_request.functions.get_access_request",
+        raise_expected_error,
+    )
+    monkeypatch.setattr(
+        "app.apis.api_access_requests.reject_api_access_request.router.operational_log_context_model",
+        ignore_operational_log_context_model,
+    )
+
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.post(
+            "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/reject",
+            json=sample_value(REJECT_API_ACCESS_REQUEST_REQUEST_SAMPLE),
+            headers=router_auth_headers("tc006-post"),
+        )
+
+    assert response.status_code == 502, response.text
+    assert response.json()["error"]["details"][0]["reason"] == "external service request failed"
+
+    actual_log_event = find_log_event("rejectApiAccessRequest.router_error")
+    assert actual_log_event["messageId"] == "rejectApiAccessRequest.router_error"
+    assert actual_log_event["summary"] == "Routerで捕捉した例外によりAPI利用申請却下が失敗した。"
+
+
+@pytest.mark.anyio
+async def test_tc007_reject_api_access_request_router_matches_unit_test_gen(
+    router_db_harness: Any,
+    router_auth_headers: Any,
+    monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
+) -> None:
+    async def raise_expected_error(*args: object, **kwargs: object) -> None:
+        _ = args, kwargs
+        get_operation_logger(
+            "app.apis.api_access_requests.reject_api_access_request.router"
+        ).warning(
+            "rejectApiAccessRequest.router_error",
+            summary="Routerで捕捉した例外によりAPI利用申請却下が失敗した。",
+        )
+        raise HTTPException(status_code=400, detail="forced http exception")
+
+    monkeypatch.setattr(
+        "app.apis.api_access_requests.reject_api_access_request.functions.get_access_request",
+        raise_expected_error,
+    )
+    monkeypatch.setattr(
+        "app.apis.api_access_requests.reject_api_access_request.router.operational_log_context_model",
+        ignore_operational_log_context_model,
+    )
+
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.post(
+            "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/reject",
+            json=sample_value(REJECT_API_ACCESS_REQUEST_REQUEST_SAMPLE),
+            headers=router_auth_headers("tc007-post"),
+        )
+
+    assert response.status_code == 400, response.text
+    assert response.json()["error"]["details"][0]["reason"] == "forced http exception"
+
+    actual_log_event = find_log_event("rejectApiAccessRequest.router_error")
+    assert actual_log_event["messageId"] == "rejectApiAccessRequest.router_error"
+    assert actual_log_event["summary"] == "Routerで捕捉した例外によりAPI利用申請却下が失敗した。"
+
+
+@pytest.mark.anyio
+async def test_tc008_reject_api_access_request_router_matches_unit_test_gen(
+    router_db_harness: Any,
+    router_auth_headers: Any,
+    monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
+) -> None:
+    async def raise_expected_error(*args: object, **kwargs: object) -> None:
+        _ = args, kwargs
+        get_operation_logger(
+            "app.apis.api_access_requests.reject_api_access_request.router"
+        ).warning(
             "rejectApiAccessRequest.db_commit_failed",
             summary="DB commit失敗によりAPI利用申請却下を確定できなかった。",
         )
@@ -305,14 +395,14 @@ async def test_tc006_reject_api_access_request_router_matches_unit_test_gen(
     )
     monkeypatch.setattr(
         "app.apis.api_access_requests.reject_api_access_request.router.operational_log_context_model",
-        lambda **kwargs: None,
+        ignore_operational_log_context_model,
     )
 
     with capture_router_logs(capsys) as find_log_event:
         response = await router_db_harness.client.post(
             "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/reject",
             json=sample_value(REJECT_API_ACCESS_REQUEST_REQUEST_SAMPLE),
-            headers=router_auth_headers("tc006-post"),
+            headers=router_auth_headers("tc008-post"),
         )
 
     assert response.status_code == 503, response.text
@@ -324,7 +414,7 @@ async def test_tc006_reject_api_access_request_router_matches_unit_test_gen(
 
 
 @pytest.mark.anyio
-async def test_tc007_reject_api_access_request_router_matches_unit_test_gen(
+async def test_tc009_reject_api_access_request_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
@@ -347,14 +437,14 @@ async def test_tc007_reject_api_access_request_router_matches_unit_test_gen(
     )
     monkeypatch.setattr(
         "app.apis.api_access_requests.reject_api_access_request.router.operational_log_context_model",
-        lambda **kwargs: None,
+        ignore_operational_log_context_model,
     )
 
     with capture_router_logs(capsys) as find_log_event:
         response = await router_db_harness.client.post(
             "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/reject",
             json=sample_value(REJECT_API_ACCESS_REQUEST_REQUEST_SAMPLE),
-            headers=router_auth_headers("tc007-post"),
+            headers=router_auth_headers("tc009-post"),
         )
 
     assert response.status_code == 500, response.text

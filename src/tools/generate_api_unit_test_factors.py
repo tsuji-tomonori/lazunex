@@ -84,8 +84,11 @@ def exception_type_texts(
     return (exception_type_text(node),)
 
 
-def raised_exception_element_name(exception_types: tuple[str, ...]) -> str:
-    return "<br>".join(f"発生する: {exception_type}" for exception_type in exception_types)
+def exception_element_key(exception_type: str) -> str:
+    normalized = "".join(
+        character.lower() if character.isalnum() else "-" for character in exception_type
+    ).strip("-")
+    return f"raised-{normalized or 'exception'}"
 
 
 def exception_aliases(api_root: Path) -> dict[str, tuple[str, ...]]:
@@ -344,11 +347,14 @@ def except_factor(
                 name="発生しない",
                 expected="try bodyを継続し、このexcept handlerへ遷移しない。",
             ),
-            FactorElement(
-                key="raised",
-                name=raised_exception_element_name(exception_types),
-                expected=branch_expected(handler.body, "例外を捕捉してエラー処理を実行する。"),
-                terminal=branch_is_terminal(handler.body),
+            *(
+                FactorElement(
+                    key=exception_element_key(exception_type),
+                    name=exception_type,
+                    expected=branch_expected(handler.body, "例外を捕捉してエラー処理を実行する。"),
+                    terminal=branch_is_terminal(handler.body),
+                )
+                for exception_type in exception_types
             ),
         ),
     )

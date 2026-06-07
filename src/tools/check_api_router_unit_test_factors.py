@@ -25,6 +25,7 @@ class UnitTestCaseExpectation:
     expected_log_message_id: str | None = None
     expected_log_summary: str | None = None
     router_error: bool = False
+    expected_exception_type: str | None = None
     expected_outcome: str | None = None
 
 
@@ -57,6 +58,7 @@ def parse_unit_test_cases(
         if current_case_id is None:
             return
         text = "\n".join(current_lines)
+        expected_exception_type = router_error_exception_type(text)
         log_match = LOG_EXPECTATION_PATTERN.search(text)
         expected_log_message_id = (
             log_match.group("message_id").strip().strip("`") if log_match is not None else None
@@ -74,14 +76,18 @@ def parse_unit_test_cases(
                 )
             )
         elif "router error response" in text:
+            expected_status, expected_detail = router_error_expected_response(
+                expected_exception_type
+            )
             cases.append(
                 UnitTestCaseExpectation(
                     case_id=current_case_id,
-                    expected_status=500,
-                    expected_detail=None,
+                    expected_status=expected_status,
+                    expected_detail=expected_detail,
                     expected_log_message_id=expected_log_message_id,
                     expected_log_summary=expected_log_summary,
                     router_error=True,
+                    expected_exception_type=expected_exception_type,
                 )
             )
         else:
@@ -110,6 +116,21 @@ def parse_unit_test_cases(
             current_lines.append(line)
     flush()
     return cases
+
+
+def router_error_exception_type(text: str) -> str | None:
+    for exception_type in ("ApiFunctionError", "ExternalApiError", "HTTPException"):
+        if f"| {exception_type} | router error response" in text:
+            return exception_type
+    return None
+
+
+def router_error_expected_response(exception_type: str | None) -> tuple[int, str]:
+    if exception_type == "ExternalApiError":
+        return 502, "external service request failed"
+    if exception_type == "HTTPException":
+        return 400, "forced http exception"
+    return 500, "forced router error"
 
 
 def expected_test_path(spec_path: Path, spec_root: Path, test_root: Path) -> Path:
@@ -218,6 +239,10 @@ def has_forbidden_expected_log_variable(node: ast.AST) -> bool:
     return False
 
 
+def references_name(node: ast.AST, expected: str) -> bool:
+    return any(isinstance(child, ast.Name) and child.id == expected for child in ast.walk(node))
+
+
 def _is_actual_log_event_field(node: ast.AST, field: str) -> bool:
     return (
         isinstance(node, ast.Subscript)
@@ -268,11 +293,12 @@ def validate_case_function(
             messages.append(
                 f"{expected.case_id} must assert expected detail {expected.expected_detail!r}"
             )
-    if expected.router_error:
-        if "forced router error" not in literals:
-            messages.append(f"{expected.case_id} must include forced router error detail")
-        if 500 not in literals:
-            messages.append(f"{expected.case_id} must include router error status 500")
+    if (
+        expected.router_error
+        and expected.expected_exception_type is not None
+        and not references_name(node, expected.expected_exception_type)
+    ):
+        messages.append(f"{expected.case_id} must raise {expected.expected_exception_type}")
     if expected.expected_log_message_id is not None:
         if has_forbidden_expected_log_variable(node):
             messages.append(f"{expected.case_id} must compare log expectations directly")

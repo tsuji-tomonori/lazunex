@@ -136,7 +136,7 @@ def test_parse_unit_test_cases_extracts_expected_outcomes(tmp_path: Path) -> Non
             "拒否した。",
         ),
         UnitTestCaseExpectation("TC002", 201, None, expected_outcome="success"),
-        UnitTestCaseExpectation("TC003", 500, None, router_error=True),
+        UnitTestCaseExpectation("TC003", 500, "forced router error", router_error=True),
     ]
 
 

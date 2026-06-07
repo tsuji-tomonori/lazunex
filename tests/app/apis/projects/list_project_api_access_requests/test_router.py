@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+from fastapi import HTTPException
 
 from app.apis.base import sample_value
 from app.apis.exceptions import ApiFunctionError
@@ -11,6 +12,11 @@ from app.apis.projects.list_project_api_access_requests.samples import (
     LIST_PROJECT_API_ACCESS_REQUESTS_STATUS_SAMPLES,
 )
 from app.core.logging import get_operation_logger
+from app.integrations.common_errors import ExternalApiError
+
+
+def ignore_operational_log_context_model(**kwargs: object) -> None:
+    _ = kwargs
 
 
 @pytest.mark.anyio
@@ -89,7 +95,7 @@ async def test_tc001_list_project_api_access_requests_router_matches_unit_test_g
     )
     monkeypatch.setattr(
         "app.apis.projects.list_project_api_access_requests.router.operational_log_context_model",
-        lambda **kwargs: None,
+        ignore_operational_log_context_model,
     )
 
     with capture_router_logs(capsys) as find_log_event:
@@ -154,7 +160,7 @@ async def test_tc003_list_project_api_access_requests_router_matches_unit_test_g
     )
     monkeypatch.setattr(
         "app.apis.projects.list_project_api_access_requests.router.operational_log_context_model",
-        lambda **kwargs: None,
+        ignore_operational_log_context_model,
     )
 
     with capture_router_logs(capsys) as find_log_event:
@@ -165,6 +171,90 @@ async def test_tc003_list_project_api_access_requests_router_matches_unit_test_g
 
     assert response.status_code == 500, response.text
     assert response.json()["error"]["details"][0]["reason"] == "forced router error"
+
+    actual_log_event = find_log_event("listProjectApiAccessRequests.router_error")
+    assert actual_log_event["messageId"] == "listProjectApiAccessRequests.router_error"
+    assert (
+        actual_log_event["summary"]
+        == "Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。"
+    )
+
+
+@pytest.mark.anyio
+async def test_tc004_list_project_api_access_requests_router_matches_unit_test_gen(
+    router_db_harness: Any,
+    router_auth_headers: Any,
+    monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
+) -> None:
+    async def raise_expected_error(*args: object, **kwargs: object) -> None:
+        _ = args, kwargs
+        get_operation_logger("app.apis.projects.list_project_api_access_requests.router").warning(
+            "listProjectApiAccessRequests.router_error",
+            summary="Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。",
+        )
+        raise ExternalApiError("forced external api error")
+
+    monkeypatch.setattr(
+        "app.apis.projects.list_project_api_access_requests.functions.get_project",
+        raise_expected_error,
+    )
+    monkeypatch.setattr(
+        "app.apis.projects.list_project_api_access_requests.router.operational_log_context_model",
+        ignore_operational_log_context_model,
+    )
+
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.get(
+            "/projects/cb62b5f6-0000-0000-0000-000000000001/api-access-requests",
+            headers=router_auth_headers("tc003-get"),
+        )
+
+    assert response.status_code == 502, response.text
+    assert response.json()["error"]["details"][0]["reason"] == "external service request failed"
+
+    actual_log_event = find_log_event("listProjectApiAccessRequests.router_error")
+    assert actual_log_event["messageId"] == "listProjectApiAccessRequests.router_error"
+    assert (
+        actual_log_event["summary"]
+        == "Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。"
+    )
+
+
+@pytest.mark.anyio
+async def test_tc005_list_project_api_access_requests_router_matches_unit_test_gen(
+    router_db_harness: Any,
+    router_auth_headers: Any,
+    monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
+) -> None:
+    async def raise_expected_error(*args: object, **kwargs: object) -> None:
+        _ = args, kwargs
+        get_operation_logger("app.apis.projects.list_project_api_access_requests.router").warning(
+            "listProjectApiAccessRequests.router_error",
+            summary="Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。",
+        )
+        raise HTTPException(status_code=400, detail="forced http exception")
+
+    monkeypatch.setattr(
+        "app.apis.projects.list_project_api_access_requests.functions.get_project",
+        raise_expected_error,
+    )
+    monkeypatch.setattr(
+        "app.apis.projects.list_project_api_access_requests.router.operational_log_context_model",
+        ignore_operational_log_context_model,
+    )
+
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.get(
+            "/projects/cb62b5f6-0000-0000-0000-000000000001/api-access-requests",
+            headers=router_auth_headers("tc003-get"),
+        )
+
+    assert response.status_code == 400, response.text
+    assert response.json()["error"]["details"][0]["reason"] == "forced http exception"
 
     actual_log_event = find_log_event("listProjectApiAccessRequests.router_error")
     assert actual_log_event["messageId"] == "listProjectApiAccessRequests.router_error"
