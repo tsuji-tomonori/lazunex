@@ -9,7 +9,7 @@
 
 ### F01 条件分岐
 
-- 対象: 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。
+- 対象: 条件分岐 L102: API利用申請が審査待ちではないため、承認リクエストを拒否した。
 - AST: `not await api_functions.is_pending_access_request(access_request)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -19,7 +19,7 @@
 
 ### F02 条件分岐
 
-- 対象: 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。
+- 対象: 条件分岐 L130: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。
 - AST: `not await api_functions.has_api_reviewer_permission(access_request, caller, session)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -29,7 +29,7 @@
 
 ### F03 条件分岐
 
-- 対象: 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。
+- 対象: 条件分岐 L158: Project/API stageが利用可能ではないため、承認リクエストを拒否した。
 - AST: `not await api_functions.is_available_project_api_stage(access_request)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -39,7 +39,7 @@
 
 ### F04 条件分岐
 
-- 対象: 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。
+- 対象: 条件分岐 L188: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。
 - AST: `await api_functions.has_active_subscription(access_request, session)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -49,7 +49,7 @@
 
 ### F05 条件分岐
 
-- 対象: 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。
+- 対象: 条件分岐 L219: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。
 - AST: `has_existing_idempotency_result(idempotency_record)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -59,7 +59,7 @@
 
 ### F06 例外処理
 
-- 対象: 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。
+- 対象: 例外処理 L344: DB整合性違反によりAPI利用申請承認のcommitが失敗した。
 - AST: `IntegrityError`
 
 | 要素ID | 要素 | 期待観点 |
@@ -69,7 +69,7 @@
 
 ### F07 例外処理
 
-- 対象: 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。
+- 対象: 例外処理 L383: DB commit失敗によりAPI利用申請承認を確定できなかった。
 - AST: `SQLAlchemyError`
 
 | 要素ID | 要素 | 期待観点 |
@@ -79,15 +79,15 @@
 
 ### F08 例外処理
 
-- 対象: 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。
+- 対象: 例外処理 L426: Routerで捕捉した例外によりAPI利用申請承認が失敗した。
 - AST: `ROUTER_HANDLED_EXCEPTIONS`
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F08-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08-raised-apifunctionerror` | ApiFunctionError | router error response<br>log message_id: approveApiAccessRequest.router_error<br>log summary: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 |
-| `F08-raised-externalapierror` | ExternalApiError | router error response<br>log message_id: approveApiAccessRequest.router_error<br>log summary: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 |
-| `F08-raised-httpexception` | HTTPException | router error response<br>log message_id: approveApiAccessRequest.router_error<br>log summary: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 |
+| `F08-raised-apifunctionerror` | ApiFunctionError | HTTP 500 error response: forced router error<br>log message_id: approveApiAccessRequest.router_api_function_error<br>log summary: Routerで捕捉したApiFunctionErrorによりAPI利用申請承認が失敗した。 |
+| `F08-raised-externalapierror` | ExternalApiError | HTTP 502 error response: external service request failed<br>log message_id: approveApiAccessRequest.router_external_api_error<br>log summary: Routerで捕捉したExternalApiErrorによりAPI利用申請承認が失敗した。 |
+| `F08-raised-httpexception` | HTTPException | HTTP 400 error response: forced http exception<br>log message_id: approveApiAccessRequest.router_http_exception<br>log summary: Routerで捕捉したHTTPExceptionによりAPI利用申請承認が失敗した。 |
 
 ## 2. 直積したテストケース一覧
 
@@ -111,114 +111,114 @@
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending<br>log message_id: approveApiAccessRequest.access_request_is_not_pending<br>log summary: API利用申請が審査待ちではないため、承認リクエストを拒否した。 |
+| `F01` 条件分岐 L102: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending<br>log message_id: approveApiAccessRequest.access_request_is_not_pending<br>log summary: API利用申請が審査待ちではないため、承認リクエストを拒否した。 |
 
 ### TC002
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer<br>log message_id: approveApiAccessRequest.caller_is_not_an_api_reviewer<br>log summary: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 |
+| `F01` 条件分岐 L102: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L130: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer<br>log message_id: approveApiAccessRequest.caller_is_not_an_api_reviewer<br>log summary: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 |
 
 ### TC003
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available<br>log message_id: approveApiAccessRequest.project_api_stage_is_not_available<br>log summary: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 |
+| `F01` 条件分岐 L102: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L130: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L158: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: project api stage is not available<br>log message_id: approveApiAccessRequest.project_api_stage_is_not_available<br>log summary: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 |
 
 ### TC004
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists<br>log message_id: approveApiAccessRequest.active_subscription_already_exists<br>log summary: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 |
+| `F01` 条件分岐 L102: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L130: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L158: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L188: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists<br>log message_id: approveApiAccessRequest.active_subscription_already_exists<br>log summary: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 |
 
 ### TC005
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used<br>log message_id: approveApiAccessRequest.idempotency_key_already_used<br>log summary: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
+| `F01` 条件分岐 L102: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L130: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L158: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L188: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L219: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used<br>log message_id: approveApiAccessRequest.idempotency_key_already_used<br>log summary: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
 
 ### TC006
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L102: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L130: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L158: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L188: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L219: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L344: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L383: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L426: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 | API正常応答 | 正常 | HTTP 200 success response |
 
 ### TC007
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | ApiFunctionError | router error response<br>log message_id: approveApiAccessRequest.router_error<br>log summary: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 |
+| `F01` 条件分岐 L102: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L130: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L158: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L188: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L219: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L344: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L383: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L426: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | ApiFunctionError | HTTP 500 error response: forced router error<br>log message_id: approveApiAccessRequest.router_api_function_error<br>log summary: Routerで捕捉したApiFunctionErrorによりAPI利用申請承認が失敗した。 |
 
 ### TC008
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | ExternalApiError | router error response<br>log message_id: approveApiAccessRequest.router_error<br>log summary: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 |
+| `F01` 条件分岐 L102: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L130: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L158: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L188: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L219: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L344: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L383: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L426: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | ExternalApiError | HTTP 502 error response: external service request failed<br>log message_id: approveApiAccessRequest.router_external_api_error<br>log summary: Routerで捕捉したExternalApiErrorによりAPI利用申請承認が失敗した。 |
 
 ### TC009
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F08` 例外処理 L424: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | HTTPException | router error response<br>log message_id: approveApiAccessRequest.router_error<br>log summary: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 |
+| `F01` 条件分岐 L102: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L130: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L158: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L188: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L219: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L344: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L383: DB commit失敗によりAPI利用申請承認を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F08` 例外処理 L426: Routerで捕捉した例外によりAPI利用申請承認が失敗した。 | HTTPException | HTTP 400 error response: forced http exception<br>log message_id: approveApiAccessRequest.router_http_exception<br>log summary: Routerで捕捉したHTTPExceptionによりAPI利用申請承認が失敗した。 |
 
 ### TC010
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L381: DB commit失敗によりAPI利用申請承認を確定できなかった。 | SQLAlchemyError | HTTP 503 error response: database commit failed<br>log message_id: approveApiAccessRequest.db_commit_failed<br>log summary: DB commit失敗によりAPI利用申請承認を確定できなかった。 |
+| `F01` 条件分岐 L102: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L130: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L158: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L188: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L219: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L344: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F07` 例外処理 L383: DB commit失敗によりAPI利用申請承認を確定できなかった。 | SQLAlchemyError | HTTP 503 error response: database commit failed<br>log message_id: approveApiAccessRequest.db_commit_failed<br>log summary: DB commit失敗によりAPI利用申請承認を確定できなかった。 |
 
 ### TC011
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L100: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L128: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L156: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L186: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐 L217: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 例外処理 L342: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | IntegrityError | HTTP 500 error response: database integrity error<br>log message_id: approveApiAccessRequest.db_integrity_error<br>log summary: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 |
+| `F01` 条件分岐 L102: API利用申請が審査待ちではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L130: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐 L158: Project/API stageが利用可能ではないため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐 L188: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐 L219: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 例外処理 L344: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 | IntegrityError | HTTP 500 error response: database integrity error<br>log message_id: approveApiAccessRequest.db_integrity_error<br>log summary: DB整合性違反によりAPI利用申請承認のcommitが失敗した。 |

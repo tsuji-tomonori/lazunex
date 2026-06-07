@@ -498,13 +498,15 @@ def default_log_context_schema() -> dict[str, str]:
 def normalize_log_context_schema(value: Any) -> dict[str, str]:
     if not isinstance(value, Mapping):
         return {}
+    context_schema = cast("Mapping[Any, Any]", value)
     schema: dict[str, str] = {}
-    for raw_name, raw_definition in value.items():
+    for raw_name, raw_definition in context_schema.items():
         name = str(raw_name).strip()
         if not name:
             continue
         if isinstance(raw_definition, Mapping):
-            description = as_display(raw_definition.get("description"))
+            definition = cast("Mapping[str, Any]", raw_definition)
+            description = as_display(definition.get("description"))
         else:
             description = as_display(raw_definition)
         if description.strip():
@@ -800,6 +802,14 @@ def message_id_from_call(call: ast.Call) -> str | None:
         if isinstance(value, str) and value.strip():
             return normalize_message_id(value)
     for arg in call.args[:2]:
+        if (
+            isinstance(arg, ast.Call)
+            and dotted_name(arg.func) == "router_error_message_id"
+            and arg.args
+        ):
+            operation_id = literal_value(arg.args[0])
+            if isinstance(operation_id, str) and operation_id.strip():
+                return normalize_message_id(f"{operation_id}.router_api_function_error")
         value = literal_value(arg)
         if (
             isinstance(value, str)
@@ -866,8 +876,23 @@ def catalog_fields_from_call(call: ast.Call) -> dict[str, Any]:
             "escalation",
             "tags",
         }:
-            fields[key] = literal_value(keyword.value)
+            if key == "summary" and isinstance(keyword.value, ast.Call):
+                fields[key] = router_error_api_function_summary(keyword.value)
+            else:
+                fields[key] = literal_value(keyword.value)
     return fields
+
+
+def router_error_api_function_summary(call: ast.Call) -> str | None:
+    if dotted_name(call.func) != "router_error_summary" or not call.args:
+        return None
+    summary = literal_value(call.args[0])
+    if not isinstance(summary, str):
+        return None
+    return summary.replace(
+        "Routerで捕捉した例外により",
+        "Routerで捕捉したApiFunctionErrorにより",
+    )
 
 
 def is_dotted_call(node: ast.Call, modules: set[str], names: set[str]) -> bool:
@@ -1236,7 +1261,7 @@ def router_error_messages_from_returns(
 
 def message_suffix_for_error_return(error_return: ErrorReturnStep) -> str:
     if error_return.status_code >= 500:
-        return "router_error"
+        return "router_api_function_error"
     slug = re.sub(r"[^A-Za-z0-9]+", "_", error_return.detail).strip("_").lower()
     if not slug:
         slug = HTTP_STATUS_REASON_PHRASES.get(error_return.status_code, "client_error").lower()
@@ -1819,7 +1844,7 @@ def validate_catalogs(
                     "に対応するrouter logger emit metadataがありません"
                 )
         if catalog.has_router_error_handler_return:
-            expected_router_error_id = f"{catalog.meta.operation_id}.router_error"
+            expected_router_error_id = f"{catalog.meta.operation_id}.router_api_function_error"
             router_error_message = definitions_by_id.get(expected_router_error_id)
             if router_error_message is None:
                 errors.append(

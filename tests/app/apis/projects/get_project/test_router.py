@@ -71,7 +71,7 @@ async def test_get_project_sample_request_emits_router_error_log_to_stdio(
         status_samples=GET_PROJECT_STATUS_SAMPLES,
         success_status=200,
         patch_target="app.apis.projects.get_project.functions.get_project_detail",
-        message_id="getProject.router_error",
+        message_id="getProject.router_api_function_error",
         catalog_id="M002",
     )
 
@@ -143,10 +143,6 @@ async def test_tc003_get_project_router_matches_unit_test_gen(
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
-        get_operation_logger("app.apis.projects.get_project.router").warning(
-            "getProject.router_error",
-            summary="Routerで捕捉した例外によりProject詳細取得が失敗した。",
-        )
         raise ApiFunctionError(500, "forced router error", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -166,9 +162,12 @@ async def test_tc003_get_project_router_matches_unit_test_gen(
     assert response.status_code == 500, response.text
     assert response.json()["error"]["details"][0]["reason"] == "forced router error"
 
-    actual_log_event = find_log_event("getProject.router_error")
-    assert actual_log_event["messageId"] == "getProject.router_error"
-    assert actual_log_event["summary"] == "Routerで捕捉した例外によりProject詳細取得が失敗した。"
+    actual_log_event = find_log_event("getProject.router_api_function_error")
+    assert actual_log_event["messageId"] == "getProject.router_api_function_error"
+    assert (
+        actual_log_event["summary"]
+        == "Routerで捕捉したApiFunctionErrorによりProject詳細取得が失敗した。"
+    )
 
 
 @pytest.mark.anyio
@@ -181,10 +180,6 @@ async def test_tc004_get_project_router_matches_unit_test_gen(
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
-        get_operation_logger("app.apis.projects.get_project.router").warning(
-            "getProject.router_error",
-            summary="Routerで捕捉した例外によりProject詳細取得が失敗した。",
-        )
         raise ExternalApiError("forced external api error")
 
     monkeypatch.setattr(
@@ -204,9 +199,12 @@ async def test_tc004_get_project_router_matches_unit_test_gen(
     assert response.status_code == 502, response.text
     assert response.json()["error"]["details"][0]["reason"] == "external service request failed"
 
-    actual_log_event = find_log_event("getProject.router_error")
-    assert actual_log_event["messageId"] == "getProject.router_error"
-    assert actual_log_event["summary"] == "Routerで捕捉した例外によりProject詳細取得が失敗した。"
+    actual_log_event = find_log_event("getProject.router_external_api_error")
+    assert actual_log_event["messageId"] == "getProject.router_external_api_error"
+    assert (
+        actual_log_event["summary"]
+        == "Routerで捕捉したExternalApiErrorによりProject詳細取得が失敗した。"
+    )
 
 
 @pytest.mark.anyio
@@ -219,10 +217,6 @@ async def test_tc005_get_project_router_matches_unit_test_gen(
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
-        get_operation_logger("app.apis.projects.get_project.router").warning(
-            "getProject.router_error",
-            summary="Routerで捕捉した例外によりProject詳細取得が失敗した。",
-        )
         raise HTTPException(status_code=400, detail="forced http exception")
 
     monkeypatch.setattr(
@@ -242,6 +236,9 @@ async def test_tc005_get_project_router_matches_unit_test_gen(
     assert response.status_code == 400, response.text
     assert response.json()["error"]["details"][0]["reason"] == "forced http exception"
 
-    actual_log_event = find_log_event("getProject.router_error")
-    assert actual_log_event["messageId"] == "getProject.router_error"
-    assert actual_log_event["summary"] == "Routerで捕捉した例外によりProject詳細取得が失敗した。"
+    actual_log_event = find_log_event("getProject.router_http_exception")
+    assert actual_log_event["messageId"] == "getProject.router_http_exception"
+    assert (
+        actual_log_event["summary"]
+        == "Routerで捕捉したHTTPExceptionによりProject詳細取得が失敗した。"
+    )

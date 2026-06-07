@@ -213,7 +213,7 @@ async def test_approve_api_access_request_sample_request_emits_router_error_log_
         status_samples=APPROVE_API_ACCESS_REQUEST_STATUS_SAMPLES,
         success_status=200,
         patch_target="app.apis.api_access_requests.approve_api_access_request.functions.get_access_request",
-        message_id="approveApiAccessRequest.router_error",
+        message_id="approveApiAccessRequest.router_api_function_error",
         catalog_id="M005",
     )
 
@@ -480,12 +480,6 @@ async def test_tc007_approve_api_access_request_router_matches_unit_test_gen(
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
-        get_operation_logger(
-            "app.apis.api_access_requests.approve_api_access_request.router"
-        ).warning(
-            "approveApiAccessRequest.router_error",
-            summary="Routerで捕捉した例外によりAPI利用申請承認が失敗した。",
-        )
         raise ApiFunctionError(500, "forced router error", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -507,9 +501,12 @@ async def test_tc007_approve_api_access_request_router_matches_unit_test_gen(
     assert response.status_code == 500, response.text
     assert response.json()["error"]["details"][0]["reason"] == "forced router error"
 
-    actual_log_event = find_log_event("approveApiAccessRequest.router_error")
-    assert actual_log_event["messageId"] == "approveApiAccessRequest.router_error"
-    assert actual_log_event["summary"] == "Routerで捕捉した例外によりAPI利用申請承認が失敗した。"
+    actual_log_event = find_log_event("approveApiAccessRequest.router_api_function_error")
+    assert actual_log_event["messageId"] == "approveApiAccessRequest.router_api_function_error"
+    assert (
+        actual_log_event["summary"]
+        == "Routerで捕捉したApiFunctionErrorによりAPI利用申請承認が失敗した。"
+    )
 
 
 @pytest.mark.anyio
@@ -522,12 +519,6 @@ async def test_tc008_approve_api_access_request_router_matches_unit_test_gen(
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
-        get_operation_logger(
-            "app.apis.api_access_requests.approve_api_access_request.router"
-        ).warning(
-            "approveApiAccessRequest.router_error",
-            summary="Routerで捕捉した例外によりAPI利用申請承認が失敗した。",
-        )
         raise ExternalApiError("forced external api error")
 
     monkeypatch.setattr(
@@ -549,9 +540,12 @@ async def test_tc008_approve_api_access_request_router_matches_unit_test_gen(
     assert response.status_code == 502, response.text
     assert response.json()["error"]["details"][0]["reason"] == "external service request failed"
 
-    actual_log_event = find_log_event("approveApiAccessRequest.router_error")
-    assert actual_log_event["messageId"] == "approveApiAccessRequest.router_error"
-    assert actual_log_event["summary"] == "Routerで捕捉した例外によりAPI利用申請承認が失敗した。"
+    actual_log_event = find_log_event("approveApiAccessRequest.router_external_api_error")
+    assert actual_log_event["messageId"] == "approveApiAccessRequest.router_external_api_error"
+    assert (
+        actual_log_event["summary"]
+        == "Routerで捕捉したExternalApiErrorによりAPI利用申請承認が失敗した。"
+    )
 
 
 @pytest.mark.anyio
@@ -564,12 +558,6 @@ async def test_tc009_approve_api_access_request_router_matches_unit_test_gen(
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
-        get_operation_logger(
-            "app.apis.api_access_requests.approve_api_access_request.router"
-        ).warning(
-            "approveApiAccessRequest.router_error",
-            summary="Routerで捕捉した例外によりAPI利用申請承認が失敗した。",
-        )
         raise HTTPException(status_code=400, detail="forced http exception")
 
     monkeypatch.setattr(
@@ -591,9 +579,12 @@ async def test_tc009_approve_api_access_request_router_matches_unit_test_gen(
     assert response.status_code == 400, response.text
     assert response.json()["error"]["details"][0]["reason"] == "forced http exception"
 
-    actual_log_event = find_log_event("approveApiAccessRequest.router_error")
-    assert actual_log_event["messageId"] == "approveApiAccessRequest.router_error"
-    assert actual_log_event["summary"] == "Routerで捕捉した例外によりAPI利用申請承認が失敗した。"
+    actual_log_event = find_log_event("approveApiAccessRequest.router_http_exception")
+    assert actual_log_event["messageId"] == "approveApiAccessRequest.router_http_exception"
+    assert (
+        actual_log_event["summary"]
+        == "Routerで捕捉したHTTPExceptionによりAPI利用申請承認が失敗した。"
+    )
 
 
 @pytest.mark.anyio

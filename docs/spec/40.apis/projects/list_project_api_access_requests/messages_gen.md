@@ -9,7 +9,7 @@
 | domain | `projects` |
 | api | `list_project_api_access_requests` |
 | routes | GET /projects/{projectId}/api-access-requests (listProjectApiAccessRequests) |
-| router | `src/app/apis/projects/list_project_api_access_requests/router.py:54` |
+| router | `src/app/apis/projects/list_project_api_access_requests/router.py:56` |
 | messages | 2 |
 | logger wrapper calls | 2 |
 | levels | WARNING:1, ERROR:1 |
@@ -27,7 +27,7 @@
 | id | message_id | ログ概要 |
 | :--- | :--- | :--- |
 | `M001` | `listProjectApiAccessRequests.caller_cannot_list_project_access_requests` | 呼び出し元がProjectのAPI利用申請一覧を参照できないため、リクエストを拒否した。 |
-| `M002` | `listProjectApiAccessRequests.router_error` | Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。 |
+| `M002` | `listProjectApiAccessRequests.router_api_function_error` | Routerで捕捉したApiFunctionErrorによりProjectのAPI利用申請一覧取得が失敗した。 |
 
 ## ログ詳細
 
@@ -44,7 +44,7 @@
 | 説明 | 呼び出し元が対象ProjectのAPI利用申請一覧を参照できない場合。 |
 | 対応すべきこと | actorPrincipalId、projectId、Project権限を確認する。 |
 | runbook | RUNBOOK-authorization-forbidden |
-| 実装参照 | src/app/apis/projects/list_project_api_access_requests/router.py:75<br>wrapper: src/app/apis/projects/list_project_api_access_requests/router.py:75 (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/list_project_api_access_requests/router.py:77<br>wrapper: src/app/apis/projects/list_project_api_access_requests/router.py:77 (ops_logger.warning) |
 
 #### 出力項目
 
@@ -57,20 +57,20 @@
 | `error.code` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | エラー内容を運用者が理解するための説明です。 |
 
-### `M002` `listProjectApiAccessRequests.router_error`
+### `M002` `listProjectApiAccessRequests.router_api_function_error`
 
 | 項目 | 内容 |
 | :--- | :--- |
 | id | `M002` |
-| message_id | `listProjectApiAccessRequests.router_error` |
+| message_id | `listProjectApiAccessRequests.router_api_function_error` |
 | level | `ERROR` |
 | status |  |
 | wrapper calls | 1 |
-| ログ概要 | Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。 |
+| ログ概要 | Routerで捕捉したApiFunctionErrorによりProjectのAPI利用申請一覧取得が失敗した。 |
 | 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
 | 対応すべきこと | 同一routeの5xx率、直近deploy、DB状態を確認する。 |
 | runbook | RUNBOOK-unexpected-api-failure |
-| 実装参照 | src/app/apis/projects/list_project_api_access_requests/router.py:112<br>wrapper: src/app/apis/projects/list_project_api_access_requests/router.py:112 (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/list_project_api_access_requests/router.py:114<br>wrapper: src/app/apis/projects/list_project_api_access_requests/router.py:114 (ops_logger.error) |
 
 #### 出力項目
 
@@ -88,8 +88,8 @@
 
 | source | function | wrapper | catalog_id | message_id | level_hint | context keys |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `src/app/apis/projects/list_project_api_access_requests/router.py:75` | list_project_api_access_requests | `ops_logger.warning` | `M001` | `listProjectApiAccessRequests.caller_cannot_list_project_access_requests` | `WARNING` |  |
-| `src/app/apis/projects/list_project_api_access_requests/router.py:112` | list_project_api_access_requests | `ops_logger.error` | `M002` | `listProjectApiAccessRequests.router_error` | `ERROR` |  |
+| `src/app/apis/projects/list_project_api_access_requests/router.py:77` | list_project_api_access_requests | `ops_logger.warning` | `M001` | `listProjectApiAccessRequests.caller_cannot_list_project_access_requests` | `WARNING` |  |
+| `src/app/apis/projects/list_project_api_access_requests/router.py:114` | list_project_api_access_requests | `ops_logger.error` | `M002` | `listProjectApiAccessRequests.router_api_function_error` | `ERROR` |  |
 
 ## strict検証で要求する項目
 

@@ -65,7 +65,7 @@ async def test_list_project_api_access_requests_sample_request_emits_router_erro
         status_samples=LIST_PROJECT_API_ACCESS_REQUESTS_STATUS_SAMPLES,
         success_status=200,
         patch_target="app.apis.projects.list_project_api_access_requests.functions.get_project",
-        message_id="listProjectApiAccessRequests.router_error",
+        message_id="listProjectApiAccessRequests.router_api_function_error",
         catalog_id="M002",
     )
 
@@ -148,10 +148,6 @@ async def test_tc003_list_project_api_access_requests_router_matches_unit_test_g
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
-        get_operation_logger("app.apis.projects.list_project_api_access_requests.router").warning(
-            "listProjectApiAccessRequests.router_error",
-            summary="Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。",
-        )
         raise ApiFunctionError(500, "forced router error", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -172,11 +168,11 @@ async def test_tc003_list_project_api_access_requests_router_matches_unit_test_g
     assert response.status_code == 500, response.text
     assert response.json()["error"]["details"][0]["reason"] == "forced router error"
 
-    actual_log_event = find_log_event("listProjectApiAccessRequests.router_error")
-    assert actual_log_event["messageId"] == "listProjectApiAccessRequests.router_error"
+    actual_log_event = find_log_event("listProjectApiAccessRequests.router_api_function_error")
+    assert actual_log_event["messageId"] == "listProjectApiAccessRequests.router_api_function_error"
     assert (
         actual_log_event["summary"]
-        == "Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。"
+        == "Routerで捕捉したApiFunctionErrorによりProjectのAPI利用申請一覧取得が失敗した。"
     )
 
 
@@ -190,10 +186,6 @@ async def test_tc004_list_project_api_access_requests_router_matches_unit_test_g
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
-        get_operation_logger("app.apis.projects.list_project_api_access_requests.router").warning(
-            "listProjectApiAccessRequests.router_error",
-            summary="Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。",
-        )
         raise ExternalApiError("forced external api error")
 
     monkeypatch.setattr(
@@ -214,11 +206,11 @@ async def test_tc004_list_project_api_access_requests_router_matches_unit_test_g
     assert response.status_code == 502, response.text
     assert response.json()["error"]["details"][0]["reason"] == "external service request failed"
 
-    actual_log_event = find_log_event("listProjectApiAccessRequests.router_error")
-    assert actual_log_event["messageId"] == "listProjectApiAccessRequests.router_error"
+    actual_log_event = find_log_event("listProjectApiAccessRequests.router_external_api_error")
+    assert actual_log_event["messageId"] == "listProjectApiAccessRequests.router_external_api_error"
     assert (
         actual_log_event["summary"]
-        == "Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。"
+        == "Routerで捕捉したExternalApiErrorによりProjectのAPI利用申請一覧取得が失敗した。"
     )
 
 
@@ -232,10 +224,6 @@ async def test_tc005_list_project_api_access_requests_router_matches_unit_test_g
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
-        get_operation_logger("app.apis.projects.list_project_api_access_requests.router").warning(
-            "listProjectApiAccessRequests.router_error",
-            summary="Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。",
-        )
         raise HTTPException(status_code=400, detail="forced http exception")
 
     monkeypatch.setattr(
@@ -256,9 +244,9 @@ async def test_tc005_list_project_api_access_requests_router_matches_unit_test_g
     assert response.status_code == 400, response.text
     assert response.json()["error"]["details"][0]["reason"] == "forced http exception"
 
-    actual_log_event = find_log_event("listProjectApiAccessRequests.router_error")
-    assert actual_log_event["messageId"] == "listProjectApiAccessRequests.router_error"
+    actual_log_event = find_log_event("listProjectApiAccessRequests.router_http_exception")
+    assert actual_log_event["messageId"] == "listProjectApiAccessRequests.router_http_exception"
     assert (
         actual_log_event["summary"]
-        == "Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。"
+        == "Routerで捕捉したHTTPExceptionによりProjectのAPI利用申請一覧取得が失敗した。"
     )

@@ -21,6 +21,8 @@ from app.apis.router_errors import (
     api_error_response,
     error_code_for_status,
     error_response_for_router_error,
+    router_error_message_id,
+    router_error_summary,
     router_log_context,
     status_code_for_router_error,
 )
@@ -80,7 +82,7 @@ async def get_project(
                     trace_id=None,
                     actor_principal_id=caller.principal_id,
                     api_status_code=status.HTTP_403_FORBIDDEN,
-                    resource_project_id=project_id,
+                    resource_project_id=str(project_id),
                     error_code=error_code_for_status(status.HTTP_403_FORBIDDEN),
                     error_message="caller cannot view project",
                 ),
@@ -97,9 +99,12 @@ async def get_project(
         return await api_functions.build_project_detail_response(project)
     except ROUTER_HANDLED_EXCEPTIONS as error:
         ops_logger.error(
-            "getProject.router_error",
+            router_error_message_id("getProject", error),
             catalog_id="M002",
-            summary="Routerで捕捉した例外によりProject詳細取得が失敗した。",
+            summary=router_error_summary(
+                "Routerで捕捉した例外によりProject詳細取得が失敗した。",
+                error,
+            ),
             when="ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。",
             check_procedure="traceId/requestIdでログを検索し、"
             "routerで捕捉された例外種別とprojectIdを確認する。",
@@ -108,7 +113,7 @@ async def get_project(
                 trace_id=None,
                 actor_principal_id=caller.principal_id,
                 api_status_code=status_code_for_router_error(error),
-                resource_project_id=project_id,
+                resource_project_id=str(project_id),
                 error_code=error_code_for_status(status_code_for_router_error(error)),
                 error_message=str(error),
                 error_exception_type=type(error).__name__,

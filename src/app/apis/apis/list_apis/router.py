@@ -17,6 +17,8 @@ from app.apis.router_errors import (
     api_error_response,
     error_code_for_status,
     error_response_for_router_error,
+    router_error_message_id,
+    router_error_summary,
     router_log_context,
     status_code_for_router_error,
 )
@@ -80,9 +82,12 @@ async def list_apis(
         return await api_functions.build_api_list_response(page)
     except ROUTER_HANDLED_EXCEPTIONS as error:
         ops_logger.error(
-            "listApis.router_error",
+            router_error_message_id("listApis", error),
             catalog_id="M002",
-            summary="Routerで捕捉した例外によりAPI一覧取得が失敗した。",
+            summary=router_error_summary(
+                "Routerで捕捉した例外によりAPI一覧取得が失敗した。",
+                error,
+            ),
             when="ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。",
             check_procedure="traceId/requestIdでログを検索し、"
             "routerで捕捉された例外種別と直前の処理を確認する。",

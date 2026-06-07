@@ -9,7 +9,7 @@
 | domain | `api_access_requests` |
 | api | `approve_api_access_request` |
 | routes | POST /api-access-requests/{accessRequestId}/approve (approveApiAccessRequest) |
-| router | `src/app/apis/api_access_requests/approve_api_access_request/router.py:66` |
+| router | `src/app/apis/api_access_requests/approve_api_access_request/router.py:68` |
 | messages | 8 |
 | logger wrapper calls | 8 |
 | levels | WARNING:5, ERROR:3 |
@@ -30,7 +30,7 @@
 | `M002` | `approveApiAccessRequest.caller_is_not_an_api_reviewer` | 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。 |
 | `M003` | `approveApiAccessRequest.project_api_stage_is_not_available` | Project/API stageが利用可能ではないため、承認リクエストを拒否した。 |
 | `M004` | `approveApiAccessRequest.active_subscription_already_exists` | 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。 |
-| `M005` | `approveApiAccessRequest.router_error` | Routerで捕捉した例外によりAPI利用申請承認が失敗した。 |
+| `M005` | `approveApiAccessRequest.router_api_function_error` | Routerで捕捉したApiFunctionErrorによりAPI利用申請承認が失敗した。 |
 | `M006` | `approveApiAccessRequest.db_integrity_error` | DB整合性違反によりAPI利用申請承認のcommitが失敗した。 |
 | `M007` | `approveApiAccessRequest.db_commit_failed` | DB commit失敗によりAPI利用申請承認を確定できなかった。 |
 | `M008` | `approveApiAccessRequest.idempotency_key_already_used` | Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
@@ -50,7 +50,7 @@
 | 説明 | 対象API利用申請がpending状態ではない場合。 |
 | 対応すべきこと | accessRequestId、現在state、既存reviewを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/api_access_requests/approve_api_access_request/router.py:101<br>wrapper: src/app/apis/api_access_requests/approve_api_access_request/router.py:101 (ops_logger.warning) |
+| 実装参照 | src/app/apis/api_access_requests/approve_api_access_request/router.py:103<br>wrapper: src/app/apis/api_access_requests/approve_api_access_request/router.py:103 (ops_logger.warning) |
 
 #### 出力項目
 
@@ -76,7 +76,7 @@
 | 説明 | 呼び出し元が対象APIのreviewerではない場合。 |
 | 対応すべきこと | actorPrincipalId、apiId、reviewer設定を確認する。 |
 | runbook | RUNBOOK-authorization-forbidden |
-| 実装参照 | src/app/apis/api_access_requests/approve_api_access_request/router.py:129<br>wrapper: src/app/apis/api_access_requests/approve_api_access_request/router.py:129 (ops_logger.warning) |
+| 実装参照 | src/app/apis/api_access_requests/approve_api_access_request/router.py:131<br>wrapper: src/app/apis/api_access_requests/approve_api_access_request/router.py:131 (ops_logger.warning) |
 
 #### 出力項目
 
@@ -102,7 +102,7 @@
 | 説明 | 対象Project/API stageが承認可能な状態ではない場合。 |
 | 対応すべきこと | projectId、apiId、apiStageId、Project/API状態を確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/api_access_requests/approve_api_access_request/router.py:157<br>wrapper: src/app/apis/api_access_requests/approve_api_access_request/router.py:157 (ops_logger.warning) |
+| 実装参照 | src/app/apis/api_access_requests/approve_api_access_request/router.py:159<br>wrapper: src/app/apis/api_access_requests/approve_api_access_request/router.py:159 (ops_logger.warning) |
 
 #### 出力項目
 
@@ -128,7 +128,7 @@
 | 説明 | 同一Project/API stageのactive subscriptionが既に存在する場合。 |
 | 対応すべきこと | 既存subscription、projectId、apiId、apiStageIdを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/api_access_requests/approve_api_access_request/router.py:187<br>wrapper: src/app/apis/api_access_requests/approve_api_access_request/router.py:187 (ops_logger.warning) |
+| 実装参照 | src/app/apis/api_access_requests/approve_api_access_request/router.py:189<br>wrapper: src/app/apis/api_access_requests/approve_api_access_request/router.py:189 (ops_logger.warning) |
 
 #### 出力項目
 
@@ -141,20 +141,20 @@
 | `error.code` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | エラー内容を運用者が理解するための説明です。 |
 
-### `M005` `approveApiAccessRequest.router_error`
+### `M005` `approveApiAccessRequest.router_api_function_error`
 
 | 項目 | 内容 |
 | :--- | :--- |
 | id | `M005` |
-| message_id | `approveApiAccessRequest.router_error` |
+| message_id | `approveApiAccessRequest.router_api_function_error` |
 | level | `ERROR` |
 | status |  |
 | wrapper calls | 1 |
-| ログ概要 | Routerで捕捉した例外によりAPI利用申請承認が失敗した。 |
+| ログ概要 | Routerで捕捉したApiFunctionErrorによりAPI利用申請承認が失敗した。 |
 | 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
 | 対応すべきこと | 同一routeの5xx率、直近deploy、Cognito/API Gateway/DB状態を確認する。 |
 | runbook | RUNBOOK-unexpected-api-failure |
-| 実装参照 | src/app/apis/api_access_requests/approve_api_access_request/router.py:425<br>wrapper: src/app/apis/api_access_requests/approve_api_access_request/router.py:425 (ops_logger.error) |
+| 実装参照 | src/app/apis/api_access_requests/approve_api_access_request/router.py:427<br>wrapper: src/app/apis/api_access_requests/approve_api_access_request/router.py:427 (ops_logger.error) |
 
 #### 出力項目
 
@@ -181,7 +181,7 @@
 | 説明 | API利用申請承認のDB transaction commitでIntegrityErrorを捕捉した場合。 |
 | 対応すべきこと | access_request/subscription/provisioning/idempotency、Cognito/API Gateway、制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。 |
 | runbook | RUNBOOK-db-data-repair |
-| 実装参照 | src/app/apis/api_access_requests/approve_api_access_request/router.py:343<br>wrapper: src/app/apis/api_access_requests/approve_api_access_request/router.py:343 (ops_logger.error) |
+| 実装参照 | src/app/apis/api_access_requests/approve_api_access_request/router.py:345<br>wrapper: src/app/apis/api_access_requests/approve_api_access_request/router.py:345 (ops_logger.error) |
 
 #### 出力項目
 
@@ -208,7 +208,7 @@
 | 説明 | API利用申請承認のDB transaction commitでSQLAlchemyErrorを捕捉した場合。 |
 | 対応すべきこと | DB接続状態、transaction rollback、idempotency状態を確認し、必要に応じて利用者へ再実行を案内する。 |
 | runbook | RUNBOOK-db-commit-retry |
-| 実装参照 | src/app/apis/api_access_requests/approve_api_access_request/router.py:382<br>wrapper: src/app/apis/api_access_requests/approve_api_access_request/router.py:382 (ops_logger.error) |
+| 実装参照 | src/app/apis/api_access_requests/approve_api_access_request/router.py:384<br>wrapper: src/app/apis/api_access_requests/approve_api_access_request/router.py:384 (ops_logger.error) |
 
 #### 出力項目
 
@@ -235,7 +235,7 @@
 | 説明 | Idempotency-Keyに対応する処理結果が既に存在する場合。 |
 | 対応すべきこと | Idempotency-Key、operationId、既存responsePayloadを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/api_access_requests/approve_api_access_request/router.py:218<br>wrapper: src/app/apis/api_access_requests/approve_api_access_request/router.py:218 (ops_logger.warning) |
+| 実装参照 | src/app/apis/api_access_requests/approve_api_access_request/router.py:220<br>wrapper: src/app/apis/api_access_requests/approve_api_access_request/router.py:220 (ops_logger.warning) |
 
 #### 出力項目
 
@@ -252,14 +252,14 @@
 
 | source | function | wrapper | catalog_id | message_id | level_hint | context keys |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `src/app/apis/api_access_requests/approve_api_access_request/router.py:101` | approve_api_access_request | `ops_logger.warning` | `M001` | `approveApiAccessRequest.access_request_is_not_pending` | `WARNING` |  |
-| `src/app/apis/api_access_requests/approve_api_access_request/router.py:129` | approve_api_access_request | `ops_logger.warning` | `M002` | `approveApiAccessRequest.caller_is_not_an_api_reviewer` | `WARNING` |  |
-| `src/app/apis/api_access_requests/approve_api_access_request/router.py:157` | approve_api_access_request | `ops_logger.warning` | `M003` | `approveApiAccessRequest.project_api_stage_is_not_available` | `WARNING` |  |
-| `src/app/apis/api_access_requests/approve_api_access_request/router.py:187` | approve_api_access_request | `ops_logger.warning` | `M004` | `approveApiAccessRequest.active_subscription_already_exists` | `WARNING` |  |
-| `src/app/apis/api_access_requests/approve_api_access_request/router.py:218` | approve_api_access_request | `ops_logger.warning` | `M008` | `approveApiAccessRequest.idempotency_key_already_used` | `WARNING` |  |
-| `src/app/apis/api_access_requests/approve_api_access_request/router.py:343` | approve_api_access_request | `ops_logger.error` | `M006` | `approveApiAccessRequest.db_integrity_error` | `ERROR` |  |
-| `src/app/apis/api_access_requests/approve_api_access_request/router.py:382` | approve_api_access_request | `ops_logger.error` | `M007` | `approveApiAccessRequest.db_commit_failed` | `ERROR` |  |
-| `src/app/apis/api_access_requests/approve_api_access_request/router.py:425` | approve_api_access_request | `ops_logger.error` | `M005` | `approveApiAccessRequest.router_error` | `ERROR` |  |
+| `src/app/apis/api_access_requests/approve_api_access_request/router.py:103` | approve_api_access_request | `ops_logger.warning` | `M001` | `approveApiAccessRequest.access_request_is_not_pending` | `WARNING` |  |
+| `src/app/apis/api_access_requests/approve_api_access_request/router.py:131` | approve_api_access_request | `ops_logger.warning` | `M002` | `approveApiAccessRequest.caller_is_not_an_api_reviewer` | `WARNING` |  |
+| `src/app/apis/api_access_requests/approve_api_access_request/router.py:159` | approve_api_access_request | `ops_logger.warning` | `M003` | `approveApiAccessRequest.project_api_stage_is_not_available` | `WARNING` |  |
+| `src/app/apis/api_access_requests/approve_api_access_request/router.py:189` | approve_api_access_request | `ops_logger.warning` | `M004` | `approveApiAccessRequest.active_subscription_already_exists` | `WARNING` |  |
+| `src/app/apis/api_access_requests/approve_api_access_request/router.py:220` | approve_api_access_request | `ops_logger.warning` | `M008` | `approveApiAccessRequest.idempotency_key_already_used` | `WARNING` |  |
+| `src/app/apis/api_access_requests/approve_api_access_request/router.py:345` | approve_api_access_request | `ops_logger.error` | `M006` | `approveApiAccessRequest.db_integrity_error` | `ERROR` |  |
+| `src/app/apis/api_access_requests/approve_api_access_request/router.py:384` | approve_api_access_request | `ops_logger.error` | `M007` | `approveApiAccessRequest.db_commit_failed` | `ERROR` |  |
+| `src/app/apis/api_access_requests/approve_api_access_request/router.py:427` | approve_api_access_request | `ops_logger.error` | `M005` | `approveApiAccessRequest.router_api_function_error` | `ERROR` |  |
 
 ## strict検証で要求する項目
 

@@ -9,7 +9,7 @@
 | domain | `projects` |
 | api | `get_project` |
 | routes | GET /projects/{projectId} (getProject) |
-| router | `src/app/apis/projects/get_project/router.py:54` |
+| router | `src/app/apis/projects/get_project/router.py:56` |
 | messages | 2 |
 | logger wrapper calls | 2 |
 | levels | WARNING:1, ERROR:1 |
@@ -27,7 +27,7 @@
 | id | message_id | ログ概要 |
 | :--- | :--- | :--- |
 | `M001` | `getProject.caller_cannot_view_project` | 呼び出し元がProject詳細を参照できないため、リクエストを拒否した。 |
-| `M002` | `getProject.router_error` | Routerで捕捉した例外によりProject詳細取得が失敗した。 |
+| `M002` | `getProject.router_api_function_error` | Routerで捕捉したApiFunctionErrorによりProject詳細取得が失敗した。 |
 
 ## ログ詳細
 
@@ -44,7 +44,7 @@
 | 説明 | 呼び出し元が対象Projectを参照できない場合。 |
 | 対応すべきこと | actorPrincipalId、projectId、Project権限を確認する。 |
 | runbook | RUNBOOK-authorization-forbidden |
-| 実装参照 | src/app/apis/projects/get_project/router.py:71<br>wrapper: src/app/apis/projects/get_project/router.py:71 (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/get_project/router.py:73<br>wrapper: src/app/apis/projects/get_project/router.py:73 (ops_logger.warning) |
 
 #### 出力項目
 
@@ -57,20 +57,20 @@
 | `error.code` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | エラー内容を運用者が理解するための説明です。 |
 
-### `M002` `getProject.router_error`
+### `M002` `getProject.router_api_function_error`
 
 | 項目 | 内容 |
 | :--- | :--- |
 | id | `M002` |
-| message_id | `getProject.router_error` |
+| message_id | `getProject.router_api_function_error` |
 | level | `ERROR` |
 | status |  |
 | wrapper calls | 1 |
-| ログ概要 | Routerで捕捉した例外によりProject詳細取得が失敗した。 |
+| ログ概要 | Routerで捕捉したApiFunctionErrorによりProject詳細取得が失敗した。 |
 | 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
 | 対応すべきこと | 同一routeの5xx率、直近deploy、DB状態を確認する。 |
 | runbook | RUNBOOK-unexpected-api-failure |
-| 実装参照 | src/app/apis/projects/get_project/router.py:99<br>wrapper: src/app/apis/projects/get_project/router.py:99 (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/get_project/router.py:101<br>wrapper: src/app/apis/projects/get_project/router.py:101 (ops_logger.error) |
 
 #### 出力項目
 
@@ -88,8 +88,8 @@
 
 | source | function | wrapper | catalog_id | message_id | level_hint | context keys |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `src/app/apis/projects/get_project/router.py:71` | get_project | `ops_logger.warning` | `M001` | `getProject.caller_cannot_view_project` | `WARNING` |  |
-| `src/app/apis/projects/get_project/router.py:99` | get_project | `ops_logger.error` | `M002` | `getProject.router_error` | `ERROR` |  |
+| `src/app/apis/projects/get_project/router.py:73` | get_project | `ops_logger.warning` | `M001` | `getProject.caller_cannot_view_project` | `WARNING` |  |
+| `src/app/apis/projects/get_project/router.py:101` | get_project | `ops_logger.error` | `M002` | `getProject.router_api_function_error` | `ERROR` |  |
 
 ## strict検証で要求する項目
 

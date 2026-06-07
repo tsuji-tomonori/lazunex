@@ -89,7 +89,7 @@ def test_api_unit_test_factors_from_router_ast(tmp_path: Path) -> None:
         "ExternalApiError",
         "HTTPException",
     ]
-    assert doc.factors[3].elements[1].expected == "router error response"
+    assert doc.factors[3].elements[1].expected == ("HTTP 500 error response: forced router error")
     assert len(product_cases(doc.factors)) == 7
     assert product_cases(doc.factors)[0][0] == doc.factors[0].elements[0]
     assert product_cases(doc.factors)[0][1:] == (None, None, None)

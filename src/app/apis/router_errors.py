@@ -19,6 +19,27 @@ from app.integrations.common_errors import (
 ROUTER_HANDLED_EXCEPTIONS = (ApiFunctionError, ExternalApiError, HTTPException)
 
 
+def router_error_message_id(operation_id: str, error: BaseException) -> str:
+    """Routerで捕捉した例外型ごとの運用ログmessageIdを返す。"""
+    if isinstance(error, HTTPException):
+        suffix = "router_http_exception"
+    elif isinstance(error, ApiFunctionError):
+        suffix = "router_api_function_error"
+    elif isinstance(error, ExternalApiError):
+        suffix = "router_external_api_error"
+    else:
+        suffix = "router_error"
+    return f"{operation_id}.{suffix}"
+
+
+def router_error_summary(base_summary: str, error: BaseException) -> str:
+    """Routerで捕捉した例外型が分かる運用ログ概要を返す。"""
+    exception_type = type(error).__name__
+    return base_summary.replace(
+        "Routerで捕捉した例外により", f"Routerで捕捉した{exception_type}により"
+    )
+
+
 def api_error_response(
     status_code: int,
     detail: str,
@@ -173,13 +194,18 @@ def _client_action_message(status_code: int, detail: str) -> str:
     if status_code == status.HTTP_404_NOT_FOUND:
         return "指定したリソースIDが正しいか確認してから再送してください。"
     if status_code == status.HTTP_409_CONFLICT:
-        return f"リソースの最新状態またはIdempotency-Keyを確認してから再送してください。理由: {detail}"
+        return (
+            f"リソースの最新状態またはIdempotency-Keyを確認してから再送してください。理由: {detail}"
+        )
     if status_code == status.HTTP_422_UNPROCESSABLE_CONTENT:
         return "リクエストの型、必須項目、制約をOpenAPI仕様に合わせて修正してください。"
     if status_code == status.HTTP_429_TOO_MANY_REQUESTS:
         return "呼び出し頻度を下げ、時間をおいてから再送してください。"
     if status_code == status.HTTP_502_BAD_GATEWAY:
-        return "外部サービス連携で失敗しました。時間をおいて再送し、解消しない場合は追跡IDを添えて問い合わせてください。"
+        return (
+            "外部サービス連携で失敗しました。時間をおいて再送し、"
+            "解消しない場合は追跡IDを添えて問い合わせてください。"
+        )
     if status_code == status.HTTP_503_SERVICE_UNAVAILABLE:
         return "一時的に処理できません。時間をおいて同じリクエストを再送してください。"
     return "想定外のエラーが発生しました。追跡IDを添えて問い合わせてください。"

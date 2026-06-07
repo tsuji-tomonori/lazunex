@@ -73,6 +73,8 @@ def parse_unit_test_cases(
                     expected_detail=http_match.group("detail").strip(),
                     expected_log_message_id=expected_log_message_id,
                     expected_log_summary=expected_log_summary,
+                    router_error=expected_exception_type is not None,
+                    expected_exception_type=expected_exception_type,
                 )
             )
         elif "router error response" in text:
@@ -120,7 +122,7 @@ def parse_unit_test_cases(
 
 def router_error_exception_type(text: str) -> str | None:
     for exception_type in ("ApiFunctionError", "ExternalApiError", "HTTPException"):
-        if f"| {exception_type} | router error response" in text:
+        if f"| {exception_type} |" in text:
             return exception_type
     return None
 

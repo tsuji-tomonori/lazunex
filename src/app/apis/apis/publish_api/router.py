@@ -24,6 +24,8 @@ from app.apis.router_errors import (
     error_code_for_status,
     error_response_for_router_error,
     has_existing_idempotency_result,
+    router_error_message_id,
+    router_error_summary,
     router_log_context,
     status_code_for_router_error,
 )
@@ -312,9 +314,12 @@ async def publish_api(
         )
     except ROUTER_HANDLED_EXCEPTIONS as error:
         ops_logger.error(
-            "publishApi.router_error",
+            router_error_message_id("publishApi", error),
             catalog_id="M004",
-            summary="Routerで捕捉した例外によりAPI公開登録が失敗した。",
+            summary=router_error_summary(
+                "Routerで捕捉した例外によりAPI公開登録が失敗した。",
+                error,
+            ),
             when="ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。",
             check_procedure="traceId/requestIdでログを検索し、"
             "routerで捕捉された例外種別とidempotency keyを確認する。",

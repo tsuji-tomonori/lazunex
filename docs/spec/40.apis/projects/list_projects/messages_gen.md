@@ -9,7 +9,7 @@
 | domain | `projects` |
 | api | `list_projects` |
 | routes | GET /projects (listProjects) |
-| router | `src/app/apis/projects/list_projects/router.py:49` |
+| router | `src/app/apis/projects/list_projects/router.py:51` |
 | messages | 2 |
 | logger wrapper calls | 2 |
 | levels | WARNING:1, ERROR:1 |
@@ -27,7 +27,7 @@
 | id | message_id | ログ概要 |
 | :--- | :--- | :--- |
 | `M001` | `listProjects.caller_cannot_list_projects` | 呼び出し元がProject一覧を参照できないため、リクエストを拒否した。 |
-| `M002` | `listProjects.router_error` | Routerで捕捉した例外によりProject一覧取得が失敗した。 |
+| `M002` | `listProjects.router_api_function_error` | Routerで捕捉したApiFunctionErrorによりProject一覧取得が失敗した。 |
 
 ## ログ詳細
 
@@ -44,7 +44,7 @@
 | 説明 | 呼び出し元がProject一覧を参照できない場合。 |
 | 対応すべきこと | actorPrincipalIdと認可条件を確認し、Project一覧参照権限の不足を切り分ける。 |
 | runbook | RUNBOOK-authorization-forbidden |
-| 実装参照 | src/app/apis/projects/list_projects/router.py:56<br>wrapper: src/app/apis/projects/list_projects/router.py:56 (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/list_projects/router.py:58<br>wrapper: src/app/apis/projects/list_projects/router.py:58 (ops_logger.warning) |
 
 #### 出力項目
 
@@ -56,20 +56,20 @@
 | `error.code` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | エラー内容を運用者が理解するための説明です。 |
 
-### `M002` `listProjects.router_error`
+### `M002` `listProjects.router_api_function_error`
 
 | 項目 | 内容 |
 | :--- | :--- |
 | id | `M002` |
-| message_id | `listProjects.router_error` |
+| message_id | `listProjects.router_api_function_error` |
 | level | `ERROR` |
 | status |  |
 | wrapper calls | 1 |
-| ログ概要 | Routerで捕捉した例外によりProject一覧取得が失敗した。 |
+| ログ概要 | Routerで捕捉したApiFunctionErrorによりProject一覧取得が失敗した。 |
 | 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
 | 対応すべきこと | 同一routeの5xx率、直近deploy、DB状態を確認する。 |
 | runbook | RUNBOOK-unexpected-api-failure |
-| 実装参照 | src/app/apis/projects/list_projects/router.py:85<br>wrapper: src/app/apis/projects/list_projects/router.py:85 (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/list_projects/router.py:87<br>wrapper: src/app/apis/projects/list_projects/router.py:87 (ops_logger.error) |
 
 #### 出力項目
 
@@ -86,8 +86,8 @@
 
 | source | function | wrapper | catalog_id | message_id | level_hint | context keys |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `src/app/apis/projects/list_projects/router.py:56` | list_projects | `ops_logger.warning` | `M001` | `listProjects.caller_cannot_list_projects` | `WARNING` |  |
-| `src/app/apis/projects/list_projects/router.py:85` | list_projects | `ops_logger.error` | `M002` | `listProjects.router_error` | `ERROR` |  |
+| `src/app/apis/projects/list_projects/router.py:58` | list_projects | `ops_logger.warning` | `M001` | `listProjects.caller_cannot_list_projects` | `WARNING` |  |
+| `src/app/apis/projects/list_projects/router.py:87` | list_projects | `ops_logger.error` | `M002` | `listProjects.router_api_function_error` | `ERROR` |  |
 
 ## strict検証で要求する項目
 

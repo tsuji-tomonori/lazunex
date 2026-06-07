@@ -70,7 +70,7 @@ async def test_list_project_subscriptions_sample_request_emits_router_error_log_
         status_samples=LIST_PROJECT_SUBSCRIPTIONS_STATUS_SAMPLES,
         success_status=200,
         patch_target="app.apis.projects.list_project_subscriptions.functions.get_project",
-        message_id="listProjectSubscriptions.router_error",
+        message_id="listProjectSubscriptions.router_api_function_error",
         catalog_id="M002",
     )
 
@@ -152,10 +152,6 @@ async def test_tc003_list_project_subscriptions_router_matches_unit_test_gen(
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
-        get_operation_logger("app.apis.projects.list_project_subscriptions.router").warning(
-            "listProjectSubscriptions.router_error",
-            summary="Routerで捕捉した例外によりProject subscription一覧取得が失敗した。",
-        )
         raise ApiFunctionError(500, "forced router error", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -175,11 +171,11 @@ async def test_tc003_list_project_subscriptions_router_matches_unit_test_gen(
     assert response.status_code == 500, response.text
     assert response.json()["error"]["details"][0]["reason"] == "forced router error"
 
-    actual_log_event = find_log_event("listProjectSubscriptions.router_error")
-    assert actual_log_event["messageId"] == "listProjectSubscriptions.router_error"
+    actual_log_event = find_log_event("listProjectSubscriptions.router_api_function_error")
+    assert actual_log_event["messageId"] == "listProjectSubscriptions.router_api_function_error"
     assert (
         actual_log_event["summary"]
-        == "Routerで捕捉した例外によりProject subscription一覧取得が失敗した。"
+        == "Routerで捕捉したApiFunctionErrorによりProject subscription一覧取得が失敗した。"
     )
 
 
@@ -193,10 +189,6 @@ async def test_tc004_list_project_subscriptions_router_matches_unit_test_gen(
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
-        get_operation_logger("app.apis.projects.list_project_subscriptions.router").warning(
-            "listProjectSubscriptions.router_error",
-            summary="Routerで捕捉した例外によりProject subscription一覧取得が失敗した。",
-        )
         raise ExternalApiError("forced external api error")
 
     monkeypatch.setattr(
@@ -216,11 +208,11 @@ async def test_tc004_list_project_subscriptions_router_matches_unit_test_gen(
     assert response.status_code == 502, response.text
     assert response.json()["error"]["details"][0]["reason"] == "external service request failed"
 
-    actual_log_event = find_log_event("listProjectSubscriptions.router_error")
-    assert actual_log_event["messageId"] == "listProjectSubscriptions.router_error"
+    actual_log_event = find_log_event("listProjectSubscriptions.router_external_api_error")
+    assert actual_log_event["messageId"] == "listProjectSubscriptions.router_external_api_error"
     assert (
         actual_log_event["summary"]
-        == "Routerで捕捉した例外によりProject subscription一覧取得が失敗した。"
+        == "Routerで捕捉したExternalApiErrorによりProject subscription一覧取得が失敗した。"
     )
 
 
@@ -234,10 +226,6 @@ async def test_tc005_list_project_subscriptions_router_matches_unit_test_gen(
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
-        get_operation_logger("app.apis.projects.list_project_subscriptions.router").warning(
-            "listProjectSubscriptions.router_error",
-            summary="Routerで捕捉した例外によりProject subscription一覧取得が失敗した。",
-        )
         raise HTTPException(status_code=400, detail="forced http exception")
 
     monkeypatch.setattr(
@@ -257,9 +245,9 @@ async def test_tc005_list_project_subscriptions_router_matches_unit_test_gen(
     assert response.status_code == 400, response.text
     assert response.json()["error"]["details"][0]["reason"] == "forced http exception"
 
-    actual_log_event = find_log_event("listProjectSubscriptions.router_error")
-    assert actual_log_event["messageId"] == "listProjectSubscriptions.router_error"
+    actual_log_event = find_log_event("listProjectSubscriptions.router_http_exception")
+    assert actual_log_event["messageId"] == "listProjectSubscriptions.router_http_exception"
     assert (
         actual_log_event["summary"]
-        == "Routerで捕捉した例外によりProject subscription一覧取得が失敗した。"
+        == "Routerで捕捉したHTTPExceptionによりProject subscription一覧取得が失敗した。"
     )

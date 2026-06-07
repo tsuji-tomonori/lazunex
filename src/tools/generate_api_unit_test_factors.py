@@ -115,6 +115,48 @@ def exception_aliases(api_root: Path) -> dict[str, tuple[str, ...]]:
     return aliases
 
 
+def router_error_response_expectation(
+    *,
+    operation_id: str,
+    exception_type: str,
+    base_summary: str | None,
+) -> str | None:
+    expectations = {
+        "ApiFunctionError": (500, "forced router error", "router_api_function_error"),
+        "ExternalApiError": (502, "external service request failed", "router_external_api_error"),
+        "HTTPException": (400, "forced http exception", "router_http_exception"),
+    }
+    if exception_type not in expectations:
+        return None
+    status_code, detail, message_suffix = expectations[exception_type]
+    expected = f"HTTP {status_code} error response: {detail}"
+    if base_summary is None:
+        return expected
+    summary = base_summary.replace(
+        "Routerで捕捉した例外により",
+        f"Routerで捕捉した{exception_type}により",
+    )
+    return (
+        f"{expected}<br>log message_id: {operation_id}.{message_suffix}<br>log summary: {summary}"
+    )
+
+
+def router_error_base_summary_from_body(nodes: Iterable[ast.stmt]) -> str | None:
+    for node in nodes:
+        for child in ast.walk(node):
+            if not isinstance(child, ast.Call):
+                continue
+            function = child.func
+            if not isinstance(function, ast.Name) or function.id != "router_error_summary":
+                continue
+            if not child.args:
+                continue
+            summary = literal_string(child.args[0])
+            if summary:
+                return summary
+    return None
+
+
 def clean_comment(value: str) -> str:
     return value.removeprefix("#").strip()
 
@@ -326,14 +368,17 @@ def if_factor(
 def except_factor(
     handler: ast.ExceptHandler,
     index: int,
+    operation_id: str,
     source_lines: list[str],
     exception_aliases: dict[str, tuple[str, ...]],
 ) -> TestFactor:
     exception_type = exception_type_text(handler.type)
     exception_types = exception_type_texts(handler.type, exception_aliases)
+    router_error_base_summary = router_error_base_summary_from_body(handler.body)
     description = (
         comment_for_line(source_lines, handler.lineno)
         or literal_summary_from_body(handler.body)
+        or router_error_base_summary
         or exception_type
     )
     return TestFactor(
@@ -351,7 +396,14 @@ def except_factor(
                 FactorElement(
                     key=exception_element_key(exception_type),
                     name=exception_type,
-                    expected=branch_expected(handler.body, "例外を捕捉してエラー処理を実行する。"),
+                    expected=(
+                        router_error_response_expectation(
+                            operation_id=operation_id,
+                            exception_type=exception_type,
+                            base_summary=router_error_base_summary,
+                        )
+                        or branch_expected(handler.body, "例外を捕捉してエラー処理を実行する。")
+                    ),
                     terminal=branch_is_terminal(handler.body),
                 )
                 for exception_type in exception_types
@@ -378,7 +430,13 @@ def endpoint_factors(
                 self.visit(child)
             for handler in node.handlers:
                 factors.append(
-                    except_factor(handler, len(factors) + 1, source_lines, exception_aliases)
+                    except_factor(
+                        handler,
+                        len(factors) + 1,
+                        endpoint_operation_id(function),
+                        source_lines,
+                        exception_aliases,
+                    )
                 )
                 for child in handler.body:
                     self.visit(child)

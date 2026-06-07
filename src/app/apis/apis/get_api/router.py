@@ -18,6 +18,8 @@ from app.apis.router_errors import (
     api_error_response,
     error_code_for_status,
     error_response_for_router_error,
+    router_error_message_id,
+    router_error_summary,
     router_log_context,
     status_code_for_router_error,
 )
@@ -73,7 +75,7 @@ async def get_api(
                     trace_id=None,
                     actor_principal_id=caller.principal_id,
                     api_status_code=status.HTTP_403_FORBIDDEN,
-                    resource_api_id=api_id,
+                    resource_api_id=str(api_id),
                     error_code=error_code_for_status(status.HTTP_403_FORBIDDEN),
                     error_message="caller cannot view api",
                 ),
@@ -90,9 +92,12 @@ async def get_api(
         return await api_functions.build_api_detail_response(api)
     except ROUTER_HANDLED_EXCEPTIONS as error:
         ops_logger.error(
-            "getApi.router_error",
+            router_error_message_id("getApi", error),
             catalog_id="M002",
-            summary="Routerで捕捉した例外によりAPI詳細取得が失敗した。",
+            summary=router_error_summary(
+                "Routerで捕捉した例外によりAPI詳細取得が失敗した。",
+                error,
+            ),
             when="ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。",
             check_procedure="traceId/requestIdでログを検索し、"
             "routerで捕捉された例外種別とapiIdを確認する。",
@@ -101,7 +106,7 @@ async def get_api(
                 trace_id=None,
                 actor_principal_id=caller.principal_id,
                 api_status_code=status_code_for_router_error(error),
-                resource_api_id=api_id,
+                resource_api_id=str(api_id),
                 error_code=error_code_for_status(status_code_for_router_error(error)),
                 error_message=str(error),
                 error_exception_type=type(error).__name__,

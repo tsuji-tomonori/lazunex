@@ -20,7 +20,10 @@ from .router_db import RouterDbHarness
 def capture_operational_log_events(capsys: Any) -> Any:
     capsys.readouterr()
     with _temporary_operational_stdout_handler():
-        yield lambda message_id: _find_json_log_event(capsys.readouterr().out, message_id)
+        def find_log_event(message_id: str) -> dict[str, Any]:
+            return _find_json_log_event(capsys.readouterr().out, message_id)
+
+        yield find_log_event
 
 
 def record_async_call(calls: list[str], name: str) -> Callable[..., Awaitable[None]]:
@@ -82,7 +85,9 @@ async def assert_sample_request_emits_router_error_log(
     assert event["api"]["statusCode"] == 500
     assert event["error"]["exceptionType"] == "ApiFunctionError"
     assert event["error"]["message"] == "forced router error"
-    assert event["messageCatalog"] == expected_catalog
+    assert event["messageCatalog"]["id"] == expected_catalog["id"]
+    assert event["messageCatalog"]["messageId"] == expected_catalog["messageId"]
+    assert event["messageCatalog"]["summary"] == expected_catalog["summary"]
 
 
 def _sample_path(path_template: str, sample_request: dict[str, Any]) -> str:

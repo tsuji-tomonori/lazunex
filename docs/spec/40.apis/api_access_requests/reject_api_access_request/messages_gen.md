@@ -9,7 +9,7 @@
 | domain | `api_access_requests` |
 | api | `reject_api_access_request` |
 | routes | POST /api-access-requests/{accessRequestId}/reject (rejectApiAccessRequest) |
-| router | `src/app/apis/api_access_requests/reject_api_access_request/router.py:62` |
+| router | `src/app/apis/api_access_requests/reject_api_access_request/router.py:64` |
 | messages | 6 |
 | logger wrapper calls | 6 |
 | levels | WARNING:3, ERROR:3 |
@@ -28,7 +28,7 @@
 | :--- | :--- | :--- |
 | `M001` | `rejectApiAccessRequest.access_request_is_not_pending` | API利用申請が審査待ちではないため、却下リクエストを拒否した。 |
 | `M002` | `rejectApiAccessRequest.caller_is_not_an_api_reviewer` | 呼び出し元がAPI reviewerではないため、却下リクエストを拒否した。 |
-| `M003` | `rejectApiAccessRequest.router_error` | Routerで捕捉した例外によりAPI利用申請却下が失敗した。 |
+| `M003` | `rejectApiAccessRequest.router_api_function_error` | Routerで捕捉したApiFunctionErrorによりAPI利用申請却下が失敗した。 |
 | `M004` | `rejectApiAccessRequest.db_integrity_error` | DB整合性違反によりAPI利用申請却下のcommitが失敗した。 |
 | `M005` | `rejectApiAccessRequest.db_commit_failed` | DB commit失敗によりAPI利用申請却下を確定できなかった。 |
 | `M006` | `rejectApiAccessRequest.idempotency_key_already_used` | Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
@@ -48,7 +48,7 @@
 | 説明 | 対象API利用申請がpending状態ではない場合。 |
 | 対応すべきこと | accessRequestId、現在state、既存reviewを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py:92<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py:92 (ops_logger.warning) |
+| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py:94<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py:94 (ops_logger.warning) |
 
 #### 出力項目
 
@@ -74,7 +74,7 @@
 | 説明 | 呼び出し元が対象APIのreviewerではない場合。 |
 | 対応すべきこと | actorPrincipalId、apiId、reviewer設定を確認する。 |
 | runbook | RUNBOOK-authorization-forbidden |
-| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py:120<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py:120 (ops_logger.warning) |
+| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py:122<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py:122 (ops_logger.warning) |
 
 #### 出力項目
 
@@ -87,20 +87,20 @@
 | `error.code` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | エラー内容を運用者が理解するための説明です。 |
 
-### `M003` `rejectApiAccessRequest.router_error`
+### `M003` `rejectApiAccessRequest.router_api_function_error`
 
 | 項目 | 内容 |
 | :--- | :--- |
 | id | `M003` |
-| message_id | `rejectApiAccessRequest.router_error` |
+| message_id | `rejectApiAccessRequest.router_api_function_error` |
 | level | `ERROR` |
 | status |  |
 | wrapper calls | 1 |
-| ログ概要 | Routerで捕捉した例外によりAPI利用申請却下が失敗した。 |
+| ログ概要 | Routerで捕捉したApiFunctionErrorによりAPI利用申請却下が失敗した。 |
 | 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
 | 対応すべきこと | 同一routeの5xx率、直近deploy、DB状態を確認する。 |
 | runbook | RUNBOOK-unexpected-api-failure |
-| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py:291<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py:291 (ops_logger.error) |
+| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py:293<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py:293 (ops_logger.error) |
 
 #### 出力項目
 
@@ -127,7 +127,7 @@
 | 説明 | API利用申請却下のDB transaction commitでIntegrityErrorを捕捉した場合。 |
 | 対応すべきこと | access_request/review/idempotency、制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。 |
 | runbook | RUNBOOK-db-data-repair |
-| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py:216<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py:216 (ops_logger.error) |
+| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py:218<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py:218 (ops_logger.error) |
 
 #### 出力項目
 
@@ -154,7 +154,7 @@
 | 説明 | API利用申請却下のDB transaction commitでSQLAlchemyErrorを捕捉した場合。 |
 | 対応すべきこと | DB接続状態、transaction rollback、idempotency状態を確認し、必要に応じて利用者へ再実行を案内する。 |
 | runbook | RUNBOOK-db-commit-retry |
-| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py:253<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py:253 (ops_logger.error) |
+| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py:255<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py:255 (ops_logger.error) |
 
 #### 出力項目
 
@@ -181,7 +181,7 @@
 | 説明 | Idempotency-Keyに対応する処理結果が既に存在する場合。 |
 | 対応すべきこと | Idempotency-Key、operationId、既存responsePayloadを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py:150<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py:150 (ops_logger.warning) |
+| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py:152<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py:152 (ops_logger.warning) |
 
 #### 出力項目
 
@@ -198,12 +198,12 @@
 
 | source | function | wrapper | catalog_id | message_id | level_hint | context keys |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `src/app/apis/api_access_requests/reject_api_access_request/router.py:92` | reject_api_access_request | `ops_logger.warning` | `M001` | `rejectApiAccessRequest.access_request_is_not_pending` | `WARNING` |  |
-| `src/app/apis/api_access_requests/reject_api_access_request/router.py:120` | reject_api_access_request | `ops_logger.warning` | `M002` | `rejectApiAccessRequest.caller_is_not_an_api_reviewer` | `WARNING` |  |
-| `src/app/apis/api_access_requests/reject_api_access_request/router.py:150` | reject_api_access_request | `ops_logger.warning` | `M006` | `rejectApiAccessRequest.idempotency_key_already_used` | `WARNING` |  |
-| `src/app/apis/api_access_requests/reject_api_access_request/router.py:216` | reject_api_access_request | `ops_logger.error` | `M004` | `rejectApiAccessRequest.db_integrity_error` | `ERROR` |  |
-| `src/app/apis/api_access_requests/reject_api_access_request/router.py:253` | reject_api_access_request | `ops_logger.error` | `M005` | `rejectApiAccessRequest.db_commit_failed` | `ERROR` |  |
-| `src/app/apis/api_access_requests/reject_api_access_request/router.py:291` | reject_api_access_request | `ops_logger.error` | `M003` | `rejectApiAccessRequest.router_error` | `ERROR` |  |
+| `src/app/apis/api_access_requests/reject_api_access_request/router.py:94` | reject_api_access_request | `ops_logger.warning` | `M001` | `rejectApiAccessRequest.access_request_is_not_pending` | `WARNING` |  |
+| `src/app/apis/api_access_requests/reject_api_access_request/router.py:122` | reject_api_access_request | `ops_logger.warning` | `M002` | `rejectApiAccessRequest.caller_is_not_an_api_reviewer` | `WARNING` |  |
+| `src/app/apis/api_access_requests/reject_api_access_request/router.py:152` | reject_api_access_request | `ops_logger.warning` | `M006` | `rejectApiAccessRequest.idempotency_key_already_used` | `WARNING` |  |
+| `src/app/apis/api_access_requests/reject_api_access_request/router.py:218` | reject_api_access_request | `ops_logger.error` | `M004` | `rejectApiAccessRequest.db_integrity_error` | `ERROR` |  |
+| `src/app/apis/api_access_requests/reject_api_access_request/router.py:255` | reject_api_access_request | `ops_logger.error` | `M005` | `rejectApiAccessRequest.db_commit_failed` | `ERROR` |  |
+| `src/app/apis/api_access_requests/reject_api_access_request/router.py:293` | reject_api_access_request | `ops_logger.error` | `M003` | `rejectApiAccessRequest.router_api_function_error` | `ERROR` |  |
 
 ## strict検証で要求する項目
 

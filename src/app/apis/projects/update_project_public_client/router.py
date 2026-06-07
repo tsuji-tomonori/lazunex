@@ -27,6 +27,8 @@ from app.apis.router_errors import (
     error_code_for_status,
     error_response_for_router_error,
     has_existing_idempotency_result,
+    router_error_message_id,
+    router_error_summary,
     router_log_context,
     status_code_for_router_error,
 )
@@ -106,7 +108,7 @@ async def update_project_public_client(
                     trace_id=request_context.correlation_id,
                     actor_principal_id=caller.principal_id,
                     api_status_code=status.HTTP_403_FORBIDDEN,
-                    resource_project_id=project_id,
+                    resource_project_id=str(project_id),
                     error_code=error_code_for_status(status.HTTP_403_FORBIDDEN),
                     error_message="caller is not a project owner",
                 ),
@@ -136,7 +138,7 @@ async def update_project_public_client(
                     trace_id=request_context.correlation_id,
                     actor_principal_id=caller.principal_id,
                     api_status_code=status.HTTP_409_CONFLICT,
-                    resource_project_id=project_id,
+                    resource_project_id=str(project_id),
                     error_code=error_code_for_status(status.HTTP_409_CONFLICT),
                     error_message="idempotency key is already used",
                 ),
@@ -218,7 +220,7 @@ async def update_project_public_client(
                     trace_id=request_context.correlation_id,
                     actor_principal_id=caller.principal_id,
                     api_status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    resource_project_id=project_id,
+                    resource_project_id=str(project_id),
                     error_code=error_code_for_status(status.HTTP_500_INTERNAL_SERVER_ERROR),
                     error_message="database integrity error",
                     error_exception_type=type(error).__name__,
@@ -256,7 +258,7 @@ async def update_project_public_client(
                     trace_id=request_context.correlation_id,
                     actor_principal_id=caller.principal_id,
                     api_status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    resource_project_id=project_id,
+                    resource_project_id=str(project_id),
                     error_code=error_code_for_status(status.HTTP_503_SERVICE_UNAVAILABLE),
                     error_message="database commit failed",
                     error_exception_type=type(error).__name__,
@@ -284,9 +286,12 @@ async def update_project_public_client(
         )
     except ROUTER_HANDLED_EXCEPTIONS as error:
         ops_logger.error(
-            "updateProjectPublicClient.router_error",
+            router_error_message_id("updateProjectPublicClient", error),
             catalog_id="M002",
-            summary="Routerで捕捉した例外によりpublic app client更新が失敗した。",
+            summary=router_error_summary(
+                "Routerで捕捉した例外によりpublic app client更新が失敗した。",
+                error,
+            ),
             when="ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。",
             check_procedure="traceId/requestIdでログを検索し、"
             "routerで捕捉された例外種別とprojectIdを確認する。",
@@ -295,7 +300,7 @@ async def update_project_public_client(
                 trace_id=request_context.correlation_id,
                 actor_principal_id=caller.principal_id,
                 api_status_code=status_code_for_router_error(error),
-                resource_project_id=project_id,
+                resource_project_id=str(project_id),
                 error_code=error_code_for_status(status_code_for_router_error(error)),
                 error_message=str(error),
                 error_exception_type=type(error).__name__,

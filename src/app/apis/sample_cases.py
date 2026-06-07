@@ -96,13 +96,19 @@ def _client_action_message(status_code: int, message: str) -> str:
     if status_code == 404:
         return "指定したリソースIDが正しいか確認してから再送してください。"
     if status_code == 409:
-        return f"リソースの最新状態またはIdempotency-Keyを確認してから再送してください。理由: {message}"
+        return (
+            "リソースの最新状態またはIdempotency-Keyを確認してから再送してください。"
+            f"理由: {message}"
+        )
     if status_code == 422:
         return "リクエストの型、必須項目、制約をOpenAPI仕様に合わせて修正してください。"
     if status_code == 429:
         return "呼び出し頻度を下げ、時間をおいてから再送してください。"
     if status_code == 502:
-        return "外部サービス連携で失敗しました。時間をおいて再送し、解消しない場合は追跡IDを添えて問い合わせてください。"
+        return (
+            "外部サービス連携で失敗しました。時間をおいて再送し、"
+            "解消しない場合は追跡IDを添えて問い合わせてください。"
+        )
     if status_code == 503:
         return "一時的に処理できません。時間をおいて同じリクエストを再送してください。"
     return "想定外のエラーが発生しました。追跡IDを添えて問い合わせてください。"
