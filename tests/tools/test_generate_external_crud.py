@@ -73,6 +73,22 @@ async def execute(api_gateway_control, identity_admin):
     }
 
 
+def test_file_operations_ignores_unmapped_service_methods(tmp_path: Path) -> None:
+    functions_path = tmp_path / "functions.py"
+    functions_path.write_text(
+        """
+async def execute(api_gateway_control):
+    await api_gateway_control.create_api_key()
+    await api_gateway_control.unmapped_operation()
+        """,
+        encoding="utf-8",
+    )
+
+    operations = file_operations(functions_path, SERVICE_CONFIGS["api_gateway"])
+
+    assert operations == {"api_key": {"C"}}
+
+
 def test_collect_service_crud_outputs_api_rows_with_external_operations(tmp_path: Path) -> None:
     api_root = tmp_path / "apis"
     create_project = api_root / "projects" / "create_project"
@@ -100,6 +116,33 @@ async def execute(api_gateway_control):
     assert matrix.apis == {"create_project", "publish_api"}
     assert matrix.cells["create_project"]["api_key"] == {"C"}
     assert matrix.cells["publish_api"]["method"] == {"R", "U"}
+
+
+def test_collect_service_crud_skips_apis_without_service_operations(tmp_path: Path) -> None:
+    api_root = tmp_path / "apis"
+    empty_api = api_root / "projects" / "list_projects"
+    active_api = api_root / "projects" / "create_project"
+    empty_api.mkdir(parents=True)
+    active_api.mkdir(parents=True)
+    (empty_api / "functions.py").write_text(
+        """
+async def execute():
+    return None
+        """,
+        encoding="utf-8",
+    )
+    (active_api / "functions.py").write_text(
+        """
+async def execute(api_gateway_control):
+    await api_gateway_control.create_usage_plan()
+        """,
+        encoding="utf-8",
+    )
+
+    matrix = collect_service_crud(api_root, SERVICE_CONFIGS["api_gateway"])
+
+    assert matrix.apis == {"create_project"}
+    assert "list_projects" not in matrix.cells
 
 
 def test_generate_writes_requested_external_crud_csvs(tmp_path: Path) -> None:
