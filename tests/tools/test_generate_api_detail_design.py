@@ -72,6 +72,7 @@ class InsertWidgetsParams(BaseModel):
     widget_id: str
     project_id: str
     name: str
+    aggregate_id: str
     actor_principal_id: str
 
 async def insert_widgets(session, params: InsertWidgetsParams) -> None:
@@ -87,12 +88,18 @@ INSERT INTO widgets (
     widget_id,
     project_id,
     name,
+    event_seq,
     created_by,
     row_version
 ) VALUES (
     @widget_id,
     @project_id,
     @name,
+    COALESCE((
+        SELECT MAX(event_seq) + 1
+        FROM widgets
+        WHERE aggregate_id = @aggregate_id
+    ), 1),
     @actor_principal_id,
     1
 );
@@ -115,6 +122,7 @@ async def save_widget(project_id, request, caller, session):
             widget_id=widget_id,
             project_id=project_id,
             name=request.name,
+            aggregate_id=project_id,
             actor_principal_id=caller.principal_id,
         ),
     )
@@ -148,6 +156,8 @@ CREATE TABLE widgets (
     widget_id TEXT NOT NULL,
     project_id TEXT NOT NULL,
     name TEXT NOT NULL,
+    aggregate_id TEXT NOT NULL,
+    event_seq INTEGER NOT NULL,
     created_by TEXT NOT NULL,
     row_version INTEGER NOT NULL
 );
@@ -155,6 +165,7 @@ CREATE TABLE widgets (
 -- COMMENT ON COLUMN widgets.widget_id IS 'Widget ID。';
 -- COMMENT ON COLUMN widgets.project_id IS 'Project ID。';
 -- COMMENT ON COLUMN widgets.name IS 'Widget名。';
+-- COMMENT ON COLUMN widgets.event_seq IS 'Widgetごとのイベント連番。';
 -- COMMENT ON COLUMN widgets.created_by IS '作成者。';
 -- COMMENT ON COLUMN widgets.row_version IS '行バージョン。';
 """,
@@ -177,6 +188,14 @@ CREATE TABLE widgets (
         "| `created_by` | 作成者。 | `actor_principal_id` | "
         "認証主体: caller.principalId |"
     ) in generated_content
+    assert (
+        "| `event_seq` | Widgetごとのイベント連番。 | `※1` | "
+        "※1 SQL式: 取得元 DB: widgets.aggregate_id |"
+    ) in generated_content
+    assert "取得元 DB: widgets.event_seq" not in generated_content
+    assert "SELECT MAX(event_seq) + 1 FROM widgets WHERE aggregate_id = $aggregate_id" in (
+        generated_content
+    )
     assert "| `row_version` | 行バージョン。 | `1` | SQL式: 1 |" in generated_content
     assert "### 外部リソース `CreateWidgetInput`" in content
     assert "| `widgetId` | widget.widget_id |" in generated_content

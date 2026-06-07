@@ -322,7 +322,11 @@ def expression_parameters(expression: Expression) -> list[str]:
     return names
 
 
-def expression_column_sources(expression: Expression) -> tuple[str, ...]:
+def expression_column_sources(
+    expression: Expression,
+    *,
+    output_column: str | None = None,
+) -> tuple[str, ...]:
     aliases: dict[str, str] = {}
     for table in expression.find_all(exp.Table):
         if table.name:
@@ -331,6 +335,8 @@ def expression_column_sources(expression: Expression) -> tuple[str, ...]:
     tables = tuple(dict.fromkeys(aliases.values()))
     sources: list[str] = []
     for column in expression.find_all(exp.Column):
+        if output_column is not None and column.name == output_column:
+            continue
         table = aliases.get(column.table or "")
         if table is None and len(tables) == 1:
             table = tables[0]
@@ -340,7 +346,11 @@ def expression_column_sources(expression: Expression) -> tuple[str, ...]:
     return tuple(sources)
 
 
-def sql_expression_source(expression: Expression) -> SqlSourceValue:
+def sql_expression_source(
+    expression: Expression,
+    *,
+    output_column: str | None = None,
+) -> SqlSourceValue:
     direct_parameter = parameter_name(expression)
     if direct_parameter is not None:
         return SqlSourceValue(parameter=direct_parameter, source=direct_parameter)
@@ -350,7 +360,7 @@ def sql_expression_source(expression: Expression) -> SqlSourceValue:
     sql = " ".join(expression.sql(dialect="postgres").split())
     if len(sql) <= 60 and not list(expression.find_all(exp.Select)):
         return SqlSourceValue(parameter=sql, source=f"SQL式: {sql}")
-    column_sources = expression_column_sources(expression)
+    column_sources = expression_column_sources(expression, output_column=output_column)
     source = "SQL式"
     if column_sources:
         source = "SQL式: 取得元 " + ", ".join(
@@ -384,7 +394,7 @@ def sql_action_spec(path: Path) -> SqlSpec | None:
                 values = list(first_tuple.expressions)
         column_params: list[tuple[str, SqlSourceValue]] = []
         for column, value in zip(columns, values, strict=False):
-            column_params.append((column, sql_expression_source(value)))
+            column_params.append((column, sql_expression_source(value, output_column=column)))
         return SqlSpec(path.name, "作成", table_name(statement.this), tuple(column_params))
     if isinstance(statement, exp.Update):
         column_params: list[tuple[str, SqlSourceValue]] = []
@@ -392,7 +402,13 @@ def sql_action_spec(path: Path) -> SqlSpec | None:
             if not isinstance(assignment, exp.EQ) or not isinstance(assignment.this, exp.Column):
                 continue
             column_params.append(
-                (assignment.this.name, sql_expression_source(assignment.expression))
+                (
+                    assignment.this.name,
+                    sql_expression_source(
+                        assignment.expression,
+                        output_column=assignment.this.name,
+                    ),
+                )
             )
         target = table_name(statement.this) if statement.this is not None else "-"
         return SqlSpec(path.name, "更新", target, tuple(column_params))

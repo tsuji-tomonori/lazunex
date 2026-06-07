@@ -96,7 +96,7 @@
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | 自動生成: uuid4() |
 | `aggregate_id` | イベント対象のProject App Client ID。 | `project_cognito_client_id` | DB: project_cognito_clients.projectCognitoClientId |
-| `event_seq` | Project App Clientごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: project_cognito_client_events.event_seq, DB: project_cognito_client_events.aggregate_id |
+| `event_seq` | Project App Clientごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: project_cognito_client_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | 固定値: 'PROJECT_PUBLIC_CLIENT_UPDATED' |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | 認証主体: caller.principalId |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | HTTP request context.actorType |
@@ -206,7 +206,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM project_cognito_client_events WHERE agg
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | 自動生成: uuid4() |
 | `aggregate_id` | イベント対象のAWS反映operation ID。 | `operation_id` | operation.operation_id |
-| `event_seq` | AWS反映operationごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: provisioning_operation_events.event_seq, DB: provisioning_operation_events.aggregate_id |
+| `event_seq` | AWS反映operationごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: provisioning_operation_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | 固定値: 'PROVISIONING_OPERATION_SUCCEEDED' |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | 認証主体: caller.principalId |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | HTTP request context.actorType |
@@ -233,7 +233,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM provisioning_operation_events WHERE agg
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | InsertProvisioningStepEventsParams.event_id |
 | `aggregate_id` | イベント対象のAWS反映step ID。 | `operation_step_id` | InsertProvisioningStepEventsParams.operation_step_id |
-| `event_seq` | AWS反映stepごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: provisioning_step_events.event_seq, DB: provisioning_step_events.aggregate_id |
+| `event_seq` | AWS反映stepごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: provisioning_step_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | InsertProvisioningStepEventsParams.event_name |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | InsertProvisioningStepEventsParams.actor_principal_id |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | InsertProvisioningStepEventsParams.actor_type |

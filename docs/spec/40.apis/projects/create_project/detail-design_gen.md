@@ -79,7 +79,7 @@
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | 自動生成: uuid4() |
 | `aggregate_id` | イベント対象のProject ID。 | `project_id` | resources.project_id |
-| `event_seq` | Projectごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: project_events.event_seq, DB: project_events.aggregate_id |
+| `event_seq` | Projectごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: project_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | 固定値: 'PROJECT_CREATED' |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | 認証主体: caller.principalId |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | HTTP request context.actorType |
@@ -361,7 +361,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM project_events WHERE aggregate_id = $pr
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | 自動生成: uuid4() |
 | `aggregate_id` | イベント対象のProject member ID。 | `project_member_id` | resources.project_member_id |
-| `event_seq` | Project memberごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: project_member_events.event_seq, DB: project_member_events.aggregate_id |
+| `event_seq` | Project memberごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: project_member_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | 固定値: 'PROJECT_MEMBER_CREATED' |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | 認証主体: caller.principalId |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | HTTP request context.actorType |
@@ -388,7 +388,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM project_member_events WHERE aggregate_i
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | 自動生成: uuid4() |
 | `aggregate_id` | イベント対象のProject API key ID。 | `project_api_key_id` | resources.project_api_key_id |
-| `event_seq` | Project API keyごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: project_api_key_events.event_seq, DB: project_api_key_events.aggregate_id |
+| `event_seq` | Project API keyごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: project_api_key_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | 固定値: 'PROJECT_API_KEY_CREATED' |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | 認証主体: caller.principalId |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | HTTP request context.actorType |
@@ -415,7 +415,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM project_api_key_events WHERE aggregate_
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | 自動生成: uuid4() |
 | `aggregate_id` | イベント対象のProject Usage Plan ID。 | `project_usage_plan_id` | resources.project_usage_plan_id |
-| `event_seq` | Project Usage Planごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: project_usage_plan_events.event_seq, DB: project_usage_plan_events.aggregate_id |
+| `event_seq` | Project Usage Planごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: project_usage_plan_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | 固定値: 'PROJECT_USAGE_PLAN_CREATED' |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | 認証主体: caller.principalId |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | HTTP request context.actorType |
@@ -442,7 +442,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM project_usage_plan_events WHERE aggrega
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | 自動生成: uuid4() |
 | `aggregate_id` | イベント対象のUsage Plan Key ID。 | `project_usage_plan_key_id` | resources.project_usage_plan_key_id |
-| `event_seq` | Usage Plan Keyごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: project_usage_plan_key_events.event_seq, DB: project_usage_plan_key_events.aggregate_id |
+| `event_seq` | Usage Plan Keyごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: project_usage_plan_key_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | 固定値: 'PROJECT_USAGE_PLAN_KEY_CREATED' |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | 認証主体: caller.principalId |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | HTTP request context.actorType |
@@ -469,7 +469,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM project_usage_plan_key_events WHERE agg
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | 自動生成: uuid4() |
 | `aggregate_id` | イベント対象のAWS反映operation ID。 | `operation_id` | operation.operation_id |
-| `event_seq` | AWS反映operationごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: provisioning_operation_events.event_seq, DB: provisioning_operation_events.aggregate_id |
+| `event_seq` | AWS反映operationごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: provisioning_operation_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | 固定値: 'PROVISIONING_OPERATION_SUCCEEDED' |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | 認証主体: caller.principalId |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | HTTP request context.actorType |
@@ -496,7 +496,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM provisioning_operation_events WHERE agg
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | InsertProvisioningStepEventsParams.event_id |
 | `aggregate_id` | イベント対象のAWS反映step ID。 | `operation_step_id` | InsertProvisioningStepEventsParams.operation_step_id |
-| `event_seq` | AWS反映stepごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: provisioning_step_events.event_seq, DB: provisioning_step_events.aggregate_id |
+| `event_seq` | AWS反映stepごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: provisioning_step_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | InsertProvisioningStepEventsParams.event_name |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | InsertProvisioningStepEventsParams.actor_principal_id |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | InsertProvisioningStepEventsParams.actor_type |
@@ -541,7 +541,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM provisioning_step_events WHERE aggregat
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | 自動生成: uuid4() |
 | `aggregate_id` | イベント対象のProject App Client ID。 | `project_cognito_client_id` | resources.public_project_cognito_client_id / resources.confidential_project_cognito_client_id |
-| `event_seq` | Project App Clientごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: project_cognito_client_events.event_seq, DB: project_cognito_client_events.aggregate_id |
+| `event_seq` | Project App Clientごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: project_cognito_client_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | 固定値: 'PROJECT_COGNITO_CLIENT_CREATED' |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | 認証主体: caller.principalId |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | HTTP request context.actorType |

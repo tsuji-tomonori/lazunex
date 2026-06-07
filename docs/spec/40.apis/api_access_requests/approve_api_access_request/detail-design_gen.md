@@ -42,7 +42,7 @@
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | 自動生成: uuid4() |
 | `aggregate_id` | イベント対象の利用申請ID。 | `access_request_id` | DB: api_access_requests.accessRequestId |
-| `event_seq` | 利用申請ごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: access_request_events.event_seq, DB: access_request_events.aggregate_id |
+| `event_seq` | 利用申請ごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: access_request_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | 固定値: 'ACCESS_REQUEST_APPROVING' |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | 認証主体: caller.principalId |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | HTTP request context.actorType |
@@ -69,7 +69,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM access_request_events WHERE aggregate_i
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | 自動生成: uuid4() |
 | `aggregate_id` | イベント対象の利用申請ID。 | `access_request_id` | DB: api_access_requests.accessRequestId |
-| `event_seq` | 利用申請ごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: access_request_events.event_seq, DB: access_request_events.aggregate_id |
+| `event_seq` | 利用申請ごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: access_request_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | 固定値: 'ACCESS_REQUEST_APPROVED' |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | 認証主体: caller.principalId |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | HTTP request context.actorType |
@@ -199,7 +199,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM access_request_events WHERE aggregate_i
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | 自動生成: uuid4() |
 | `aggregate_id` | イベント対象の利用権ID。 | `subscription_id` | resources.subscription_id |
-| `event_seq` | 利用権ごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: subscription_events.event_seq, DB: subscription_events.aggregate_id |
+| `event_seq` | 利用権ごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: subscription_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | 固定値: 'SUBSCRIPTION_PROVISIONED' |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | 認証主体: caller.principalId |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | HTTP request context.actorType |
@@ -288,7 +288,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM subscription_events WHERE aggregate_id 
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | 自動生成: uuid4() |
 | `aggregate_id` | イベント対象のUsage Plan stage紐づけID。 | `usage_plan_api_stage_id` | usage_plan_stage.usage_plan_api_stage_id |
-| `event_seq` | Usage Plan stage紐づけごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: usage_plan_stage_events.event_seq, DB: usage_plan_stage_events.aggregate_id |
+| `event_seq` | Usage Plan stage紐づけごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: usage_plan_stage_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | 固定値: 'USAGE_PLAN_STAGE_ADDED' |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | 認証主体: caller.principalId |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | HTTP request context.actorType |
@@ -315,7 +315,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM usage_plan_stage_events WHERE aggregate
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | 自動生成: uuid4() |
 | `aggregate_id` | イベント対象のApp Client scope紐づけID。 | `project_cognito_client_scope_id` | resources.client_scope_ids の各要素 |
-| `event_seq` | App Client scope紐づけごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: client_scope_events.event_seq, DB: client_scope_events.aggregate_id |
+| `event_seq` | App Client scope紐づけごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: client_scope_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | 固定値: 'CLIENT_SCOPE_GRANTED' |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | 認証主体: caller.principalId |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | HTTP request context.actorType |
@@ -342,7 +342,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM client_scope_events WHERE aggregate_id 
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | 自動生成: uuid4() |
 | `aggregate_id` | イベント対象のAWS反映operation ID。 | `operation_id` | operation.operation_id |
-| `event_seq` | AWS反映operationごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: provisioning_operation_events.event_seq, DB: provisioning_operation_events.aggregate_id |
+| `event_seq` | AWS反映operationごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: provisioning_operation_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | 固定値: 'PROVISIONING_OPERATION_SUCCEEDED' |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | 認証主体: caller.principalId |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | HTTP request context.actorType |
@@ -369,7 +369,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM provisioning_operation_events WHERE agg
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | InsertProvisioningStepEventsParams.event_id |
 | `aggregate_id` | イベント対象のAWS反映step ID。 | `operation_step_id` | InsertProvisioningStepEventsParams.operation_step_id |
-| `event_seq` | AWS反映stepごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: provisioning_step_events.event_seq, DB: provisioning_step_events.aggregate_id |
+| `event_seq` | AWS反映stepごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: provisioning_step_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | InsertProvisioningStepEventsParams.event_name |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | InsertProvisioningStepEventsParams.actor_principal_id |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | InsertProvisioningStepEventsParams.actor_type |
