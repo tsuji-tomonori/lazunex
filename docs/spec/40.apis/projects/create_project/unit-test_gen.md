@@ -61,38 +61,12 @@
 
 | Case ID | F01 | F02 | F03 | F04 | F05 |
 | --- | --- | --- | --- | --- | --- |
-| `TC001` | `成立` | `成立` | `発生しない` | `発生しない` | `発生しない` |
-| `TC002` | `成立` | `成立` | `発生しない` | `発生しない` | `発生する` |
-| `TC003` | `成立` | `成立` | `発生しない` | `発生する` | `発生しない` |
-| `TC004` | `成立` | `成立` | `発生しない` | `発生する` | `発生する` |
-| `TC005` | `成立` | `成立` | `発生する` | `発生しない` | `発生しない` |
-| `TC006` | `成立` | `成立` | `発生する` | `発生しない` | `発生する` |
-| `TC007` | `成立` | `成立` | `発生する` | `発生する` | `発生しない` |
-| `TC008` | `成立` | `成立` | `発生する` | `発生する` | `発生する` |
-| `TC009` | `成立` | `不成立` | `発生しない` | `発生しない` | `発生しない` |
-| `TC010` | `成立` | `不成立` | `発生しない` | `発生しない` | `発生する` |
-| `TC011` | `成立` | `不成立` | `発生しない` | `発生する` | `発生しない` |
-| `TC012` | `成立` | `不成立` | `発生しない` | `発生する` | `発生する` |
-| `TC013` | `成立` | `不成立` | `発生する` | `発生しない` | `発生しない` |
-| `TC014` | `成立` | `不成立` | `発生する` | `発生しない` | `発生する` |
-| `TC015` | `成立` | `不成立` | `発生する` | `発生する` | `発生しない` |
-| `TC016` | `成立` | `不成立` | `発生する` | `発生する` | `発生する` |
-| `TC017` | `不成立` | `成立` | `発生しない` | `発生しない` | `発生しない` |
-| `TC018` | `不成立` | `成立` | `発生しない` | `発生しない` | `発生する` |
-| `TC019` | `不成立` | `成立` | `発生しない` | `発生する` | `発生しない` |
-| `TC020` | `不成立` | `成立` | `発生しない` | `発生する` | `発生する` |
-| `TC021` | `不成立` | `成立` | `発生する` | `発生しない` | `発生しない` |
-| `TC022` | `不成立` | `成立` | `発生する` | `発生しない` | `発生する` |
-| `TC023` | `不成立` | `成立` | `発生する` | `発生する` | `発生しない` |
-| `TC024` | `不成立` | `成立` | `発生する` | `発生する` | `発生する` |
-| `TC025` | `不成立` | `不成立` | `発生しない` | `発生しない` | `発生しない` |
-| `TC026` | `不成立` | `不成立` | `発生しない` | `発生しない` | `発生する` |
-| `TC027` | `不成立` | `不成立` | `発生しない` | `発生する` | `発生しない` |
-| `TC028` | `不成立` | `不成立` | `発生しない` | `発生する` | `発生する` |
-| `TC029` | `不成立` | `不成立` | `発生する` | `発生しない` | `発生しない` |
-| `TC030` | `不成立` | `不成立` | `発生する` | `発生しない` | `発生する` |
-| `TC031` | `不成立` | `不成立` | `発生する` | `発生する` | `発生しない` |
-| `TC032` | `不成立` | `不成立` | `発生する` | `発生する` | `発生する` |
+| `TC001` | `成立` | - | - | - | - |
+| `TC002` | `不成立` | `成立` | - | - | - |
+| `TC003` | `不成立` | `不成立` | `発生しない` | `発生しない` | `発生しない` |
+| `TC004` | `不成立` | `不成立` | `発生しない` | `発生しない` | `発生する` |
+| `TC005` | `不成立` | `不成立` | `発生しない` | `発生する` | - |
+| `TC006` | `不成立` | `不成立` | `発生する` | - | - |
 
 ## 3. テスト詳細
 
@@ -101,317 +75,47 @@
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot create project |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC002
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot create project |
+| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生する | router error response |
 
 ### TC003
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot create project |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 | `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 
 ### TC004
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot create project |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 | `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生する | router error response |
 
 ### TC005
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot create project |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
 
 ### TC006
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot create project |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生する | router error response |
-
-### TC007
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot create project |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-
-### TC008
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot create project |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生する | router error response |
-
-### TC009
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot create project |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-
-### TC010
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot create project |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生する | router error response |
-
-### TC011
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot create project |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-
-### TC012
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot create project |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生する | router error response |
-
-### TC013
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot create project |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-
-### TC014
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot create project |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生する | router error response |
-
-### TC015
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot create project |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-
-### TC016
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot create project |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生する | router error response |
-
-### TC017
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-
-### TC018
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生する | router error response |
-
-### TC019
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-
-### TC020
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生する | router error response |
-
-### TC021
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-
-### TC022
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生する | router error response |
-
-### TC023
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-
-### TC024
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生する | router error response |
-
-### TC025
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-
-### TC026
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生する | router error response |
-
-### TC027
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-
-### TC028
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生する | router error response |
-
-### TC029
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
 | `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-
-### TC030
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生する | router error response |
-
-### TC031
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-
-### TC032
-
-| 要因 | 要素 | 期待観点 |
-| --- | --- | --- |
-| `F01` 条件分岐 L85: 呼び出し元がProjectを作成できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L112: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 例外処理 L213: DB整合性違反によりProject作成のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
-| `F04` 例外処理 L248: DB commit失敗によりProject作成を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
-| `F05` 例外処理 L289: Routerで捕捉した例外によりProject作成が失敗した。 | 発生する | router error response |

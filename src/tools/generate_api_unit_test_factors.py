@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import ast
-import itertools
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -31,6 +30,7 @@ class FactorElement:
     key: str
     name: str
     expected: str
+    terminal: bool = False
 
 
 @dataclass(frozen=True)
@@ -50,6 +50,9 @@ class ApiUnitTestFactors:
     method: str
     path: str
     factors: tuple[TestFactor, ...]
+
+
+type TestCase = tuple[FactorElement | None, ...]
 
 
 def markdown_escape(value: str) -> str:
@@ -201,6 +204,10 @@ def branch_expected(nodes: list[ast.stmt], fallback: str) -> str:
     return first_response_summary(nodes) or fallback
 
 
+def branch_is_terminal(nodes: list[ast.stmt]) -> bool:
+    return first_response_summary(nodes) is not None
+
+
 def if_factor(
     node: ast.If,
     index: int,
@@ -226,11 +233,13 @@ def if_factor(
                 key="true",
                 name="成立",
                 expected=branch_expected(node.body, "条件成立側の処理を実行する。"),
+                terminal=branch_is_terminal(node.body),
             ),
             FactorElement(
                 key="false",
                 name="不成立",
                 expected=branch_expected(node.orelse, "条件不成立側または後続処理を継続する。"),
+                terminal=branch_is_terminal(node.orelse),
             ),
         ),
     )
@@ -262,6 +271,7 @@ def except_factor(
                 key="raised",
                 name="発生する",
                 expected=branch_expected(handler.body, "例外を捕捉してエラー処理を実行する。"),
+                terminal=branch_is_terminal(handler.body),
             ),
         ),
     )
@@ -312,10 +322,25 @@ def api_unit_test_factors_from_dir(api_dir: Path, api_root: Path) -> ApiUnitTest
     )
 
 
-def product_cases(factors: tuple[TestFactor, ...]) -> list[tuple[FactorElement, ...]]:
+def product_cases(factors: tuple[TestFactor, ...]) -> list[TestCase]:
     if not factors:
         return []
-    return list(itertools.product(*(factor.elements for factor in factors)))
+    cases: list[TestCase] = []
+
+    def append_cases(index: int, selected: list[FactorElement | None]) -> None:
+        if index >= len(factors):
+            cases.append(tuple(selected))
+            return
+        factor = factors[index]
+        for element in factor.elements:
+            next_selected = [*selected, element]
+            if element.terminal:
+                cases.append(tuple([*next_selected, *([None] * (len(factors) - index - 1))]))
+                continue
+            append_cases(index + 1, next_selected)
+
+    append_cases(0, [])
+    return cases
 
 
 def render_factor_elements_section(factors: tuple[TestFactor, ...]) -> list[str]:
@@ -357,7 +382,7 @@ def render_product_cases_section(factors: tuple[TestFactor, ...]) -> list[str]:
     for index, case in enumerate(cases, start=1):
         cells = [f"| `TC{index:03d}` |"]
         for element in case:
-            cells.append(f" `{markdown_escape(element.name)}` |")
+            cells.append(f" `{markdown_escape(element.name)}` |" if element else " - |")
         lines.append("".join(cells))
     lines.append("")
     return lines
@@ -379,6 +404,8 @@ def render_test_details_section(factors: tuple[TestFactor, ...]) -> list[str]:
             ]
         )
         for factor, element in zip(factors, case, strict=True):
+            if element is None:
+                continue
             lines.append(
                 f"| `{factor.factor_id}` {markdown_escape(factor.title)} | "
                 f"{markdown_escape(element.name)} | {markdown_escape(element.expected)} |"
