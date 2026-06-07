@@ -16,6 +16,7 @@ from tools.generate_api_sequences import (
     endpoint_route_path,
     error_response_for_router_error_call,
     http_status_code,
+    keyword_value,
     literal_string,
 )
 
@@ -49,6 +50,7 @@ class ApiUnitTestFactors:
     operation_id: str
     method: str
     path: str
+    success_status: int
     factors: tuple[TestFactor, ...]
 
 
@@ -158,7 +160,7 @@ def condition_description_from_docstring(
 
 def factor_description(
     *,
-    node: ast.AST,
+    node: ast.stmt,
     condition_node: ast.AST | None = None,
     source_lines: list[str],
     body: Iterable[ast.stmt],
@@ -190,6 +192,35 @@ def response_summary_from_return(node: ast.stmt) -> str | None:
     return None
 
 
+def log_expectation_from_body(nodes: Iterable[ast.stmt]) -> tuple[str, str] | None:
+    for node in nodes:
+        for child in ast.walk(node):
+            if not isinstance(child, ast.Call):
+                continue
+            function = child.func
+            if not isinstance(function, ast.Attribute):
+                continue
+            if function.attr not in {"warning", "error"}:
+                continue
+            if not isinstance(function.value, ast.Name) or function.value.id != "ops_logger":
+                continue
+            if not child.args:
+                continue
+            message_id = literal_string(child.args[0])
+            summary = literal_string(keyword_value(child, "summary"))
+            if message_id and summary:
+                return message_id, summary
+    return None
+
+
+def append_log_expectation(summary: str, nodes: Iterable[ast.stmt]) -> str:
+    log_expectation = log_expectation_from_body(nodes)
+    if log_expectation is None:
+        return summary
+    message_id, log_summary = log_expectation
+    return f"{summary}; log message_id: {message_id}; log summary: {log_summary}"
+
+
 def first_response_summary(nodes: Iterable[ast.stmt]) -> str | None:
     for node in nodes:
         if summary := response_summary_from_return(node):
@@ -201,7 +232,10 @@ def first_response_summary(nodes: Iterable[ast.stmt]) -> str | None:
 
 
 def branch_expected(nodes: list[ast.stmt], fallback: str) -> str:
-    return first_response_summary(nodes) or fallback
+    response_summary = first_response_summary(nodes)
+    if response_summary is None:
+        return fallback
+    return append_log_expectation(response_summary, nodes)
 
 
 def branch_is_terminal(nodes: list[ast.stmt]) -> bool:
@@ -318,8 +352,18 @@ def api_unit_test_factors_from_dir(api_dir: Path, api_root: Path) -> ApiUnitTest
         operation_id=endpoint_operation_id(function),
         method=endpoint_route_method(function),
         path=endpoint_route_path(function),
+        success_status=endpoint_success_status(function),
         factors=endpoint_factors(function, source.splitlines(), descriptions),
     )
+
+
+def endpoint_success_status(function: ast.AsyncFunctionDef | ast.FunctionDef) -> int:
+    for decorator in function.decorator_list:
+        if not isinstance(decorator, ast.Call):
+            continue
+        if status_code := http_status_code(keyword_value(decorator, "status_code")):
+            return status_code
+    return 200
 
 
 def product_cases(factors: tuple[TestFactor, ...]) -> list[TestCase]:
@@ -388,7 +432,11 @@ def render_product_cases_section(factors: tuple[TestFactor, ...]) -> list[str]:
     return lines
 
 
-def render_test_details_section(factors: tuple[TestFactor, ...]) -> list[str]:
+def render_test_details_section(
+    factors: tuple[TestFactor, ...],
+    *,
+    success_status: int,
+) -> list[str]:
     lines = ["## 3. テスト詳細", ""]
     cases = product_cases(factors)
     if not cases:
@@ -410,6 +458,8 @@ def render_test_details_section(factors: tuple[TestFactor, ...]) -> list[str]:
                 f"| `{factor.factor_id}` {markdown_escape(factor.title)} | "
                 f"{markdown_escape(element.name)} | {markdown_escape(element.expected)} |"
             )
+        if not any(element is not None and element.terminal for element in case):
+            lines.append(f"| API正常応答 | 正常 | HTTP {success_status} success response |")
         lines.append("")
     return lines
 
@@ -425,7 +475,7 @@ def render_unit_test_markdown(doc: ApiUnitTestFactors) -> str:
         "",
         *render_factor_elements_section(doc.factors),
         *render_product_cases_section(doc.factors),
-        *render_test_details_section(doc.factors),
+        *render_test_details_section(doc.factors, success_status=doc.success_status),
     ]
     return "\n".join(lines).rstrip() + "\n"
 

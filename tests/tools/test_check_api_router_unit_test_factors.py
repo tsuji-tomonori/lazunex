@@ -29,18 +29,23 @@ def write_router_test(root: Path, body: str) -> Path:
     return path
 
 
-SPEC = """
+SPEC = (
+    """
 ### TC001
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 | 成立 | HTTP 403 error response: caller cannot create project |
+| `F01` 条件分岐 | 成立 | """
+    "HTTP 403 error response: caller cannot create project; "
+    "log message_id: createProject.caller_cannot_create_project; "
+    "log summary: 拒否した。 |\n"
+    """
 
 ### TC002
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| API正常応答 | 正常 | HTTP 201 success response |
 
 ### TC003
 
@@ -48,6 +53,7 @@ SPEC = """
 | --- | --- | --- |
 | `F02` 例外処理 | 発生する | router error response |
 """
+)
 
 
 ROUTER_TEST = """
@@ -75,6 +81,9 @@ async def test_tc001_create_project_router_matches_unit_test_gen(
 
     assert response.status_code == 403, response.text
     assert response.json()["error"]["details"][0]["reason"] == "caller cannot create project"
+    actual_log_event = find_log_event("createProject.caller_cannot_create_project")
+    assert actual_log_event["messageId"] == "createProject.caller_cannot_create_project"
+    assert actual_log_event["summary"] == "拒否した。"
 
 
 @pytest.mark.anyio
@@ -119,7 +128,13 @@ def test_parse_unit_test_cases_extracts_expected_outcomes(tmp_path: Path) -> Non
     spec = write_spec(tmp_path, SPEC)
 
     assert parse_unit_test_cases(spec, success_status=201) == [
-        UnitTestCaseExpectation("TC001", 403, "caller cannot create project"),
+        UnitTestCaseExpectation(
+            "TC001",
+            403,
+            "caller cannot create project",
+            "createProject.caller_cannot_create_project",
+            "拒否した。",
+        ),
         UnitTestCaseExpectation("TC002", 201, None, expected_outcome="success"),
         UnitTestCaseExpectation("TC003", 500, None, router_error=True),
     ]
@@ -165,6 +180,11 @@ async def test_tc001_create_project_router_matches_unit_test_gen(router_db_harne
     assert "TC001 must include expected detail 'caller cannot create project'" in rendered
     assert "TC001 must assert expected detail 'caller cannot create project'" in rendered
     assert (
+        "TC001 must include expected log message_id 'createProject.caller_cannot_create_project'"
+    ) in rendered
+    assert "TC001 must read actual log event from stdout" in rendered
+    assert ("TC001 must assert actual log summary '拒否した。'") in rendered
+    assert (
         "TC002 function 'test_tc002_create_project_router_matches_unit_test_gen' is missing"
         in rendered
     )
@@ -195,6 +215,41 @@ async def test_tc001_create_project_router_matches_unit_test_gen(router_helper) 
 
     assert "TC001 must call router_db_harness.client API directly" in rendered
     assert "TC001 must assert status_code == 403" in rendered
+
+
+def test_check_api_router_unit_test_factors_rejects_log_expectation_variables(
+    tmp_path: Path,
+) -> None:
+    spec_root = tmp_path / "spec"
+    test_root = tmp_path / "tests"
+    write_spec(spec_root, SPEC)
+    write_router_test(
+        test_root,
+        """
+import pytest
+
+
+@pytest.mark.anyio
+async def test_tc001_create_project_router_matches_unit_test_gen(router_db_harness) -> None:
+    response = await router_db_harness.client.post("/projects")
+    assert response.status_code == 403
+    assert response.json()["error"]["details"][0]["reason"] == "caller cannot create project"
+    expected_log_message_id = "createProject.caller_cannot_create_project"
+    expected_log_summary = "拒否した。"
+    actual_log_event = find_log_event(expected_log_message_id)
+    assert actual_log_event["messageId"] == expected_log_message_id
+    assert actual_log_event["summary"] == expected_log_summary
+""",
+    )
+
+    rendered = render_issues(check_api_router_unit_test_factors(spec_root, test_root))
+
+    assert "TC001 must compare log expectations directly" in rendered
+    assert "TC001 must read actual log event from stdout" in rendered
+    assert (
+        "TC001 must assert actual log message_id 'createProject.caller_cannot_create_project'"
+    ) in rendered
+    assert "TC001 must assert actual log summary '拒否した。'" in rendered
 
 
 def test_arg_parser_defaults_and_main(

@@ -9,7 +9,11 @@ from pathlib import Path
 
 CASE_ID_PATTERN = re.compile(r"^### (?P<case_id>TC[0-9]+)$")
 HTTP_EXPECTATION_PATTERN = re.compile(
-    r"HTTP (?P<status>[0-9]{3}) error response: (?P<detail>[^|]+)"
+    r"HTTP (?P<status>[0-9]{3}) error response: (?P<detail>[^|;]+)"
+)
+SUCCESS_EXPECTATION_PATTERN = re.compile(r"HTTP (?P<status>[0-9]{3}) success response")
+LOG_EXPECTATION_PATTERN = re.compile(
+    r"log message_id: (?P<message_id>[^;|]+); log summary: (?P<summary>[^|]+)"
 )
 
 
@@ -18,6 +22,8 @@ class UnitTestCaseExpectation:
     case_id: str
     expected_status: int | None
     expected_detail: str | None
+    expected_log_message_id: str | None = None
+    expected_log_summary: str | None = None
     router_error: bool = False
     expected_outcome: str | None = None
 
@@ -51,6 +57,11 @@ def parse_unit_test_cases(
         if current_case_id is None:
             return
         text = "\n".join(current_lines)
+        log_match = LOG_EXPECTATION_PATTERN.search(text)
+        expected_log_message_id = (
+            log_match.group("message_id").strip().strip("`") if log_match is not None else None
+        )
+        expected_log_summary = log_match.group("summary").strip() if log_match is not None else None
         http_match = HTTP_EXPECTATION_PATTERN.search(text)
         if http_match is not None:
             cases.append(
@@ -58,6 +69,8 @@ def parse_unit_test_cases(
                     case_id=current_case_id,
                     expected_status=int(http_match.group("status")),
                     expected_detail=http_match.group("detail").strip(),
+                    expected_log_message_id=expected_log_message_id,
+                    expected_log_summary=expected_log_summary,
                 )
             )
         elif "router error response" in text:
@@ -66,14 +79,20 @@ def parse_unit_test_cases(
                     case_id=current_case_id,
                     expected_status=500,
                     expected_detail=None,
+                    expected_log_message_id=expected_log_message_id,
+                    expected_log_summary=expected_log_summary,
                     router_error=True,
                 )
             )
         else:
+            success_match = SUCCESS_EXPECTATION_PATTERN.search(text)
+            parsed_success_status = (
+                int(success_match.group("status")) if success_match is not None else success_status
+            )
             cases.append(
                 UnitTestCaseExpectation(
                     case_id=current_case_id,
-                    expected_status=success_status,
+                    expected_status=parsed_success_status,
                     expected_detail=None,
                     expected_outcome="success",
                 )
@@ -163,6 +182,52 @@ def assert_expected_detail(node: ast.AST, expected_detail: str) -> bool:
     return False
 
 
+def finds_log_event_from_literal(node: ast.AST, expected: str) -> bool:
+    for child in ast.walk(node):
+        if not isinstance(child, ast.Call):
+            continue
+        if not isinstance(child.func, ast.Name) or child.func.id != "find_log_event":
+            continue
+        if len(child.args) != 1:
+            continue
+        arg = child.args[0]
+        if isinstance(arg, ast.Constant) and arg.value == expected:
+            return True
+    return False
+
+
+def assert_log_event_field_literal(node: ast.AST, field: str, expected: str) -> bool:
+    for assertion in _assert_nodes(node):
+        if not isinstance(assertion.test, ast.Compare):
+            continue
+        if not _is_actual_log_event_field(assertion.test.left, field):
+            continue
+        for comparator in assertion.test.comparators:
+            if isinstance(comparator, ast.Constant) and comparator.value == expected:
+                return True
+    return False
+
+
+def has_forbidden_expected_log_variable(node: ast.AST) -> bool:
+    for child in ast.walk(node):
+        if isinstance(child, ast.Name) and child.id in {
+            "expected_log_message_id",
+            "expected_log_summary",
+        }:
+            return True
+    return False
+
+
+def _is_actual_log_event_field(node: ast.AST, field: str) -> bool:
+    return (
+        isinstance(node, ast.Subscript)
+        and isinstance(node.value, ast.Name)
+        and node.value.id == "actual_log_event"
+        and isinstance(node.slice, ast.Constant)
+        and node.slice.value == field
+    )
+
+
 def _assert_nodes(node: ast.AST) -> Iterable[ast.Assert]:
     for child in ast.walk(node):
         if isinstance(child, ast.Assert):
@@ -208,6 +273,32 @@ def validate_case_function(
             messages.append(f"{expected.case_id} must include forced router error detail")
         if 500 not in literals:
             messages.append(f"{expected.case_id} must include router error status 500")
+    if expected.expected_log_message_id is not None:
+        if has_forbidden_expected_log_variable(node):
+            messages.append(f"{expected.case_id} must compare log expectations directly")
+        if expected.expected_log_message_id not in literals:
+            messages.append(
+                f"{expected.case_id} must include expected log message_id "
+                f"{expected.expected_log_message_id!r}"
+            )
+        if not finds_log_event_from_literal(node, expected.expected_log_message_id):
+            messages.append(f"{expected.case_id} must read actual log event from stdout")
+        if not assert_log_event_field_literal(node, "messageId", expected.expected_log_message_id):
+            messages.append(
+                f"{expected.case_id} must assert actual log message_id "
+                f"{expected.expected_log_message_id!r}"
+            )
+    if expected.expected_log_summary is not None:
+        if expected.expected_log_summary not in literals:
+            messages.append(
+                f"{expected.case_id} must include expected log summary "
+                f"{expected.expected_log_summary!r}"
+            )
+        if not assert_log_event_field_literal(node, "summary", expected.expected_log_summary):
+            messages.append(
+                f"{expected.case_id} must assert actual log summary "
+                f"{expected.expected_log_summary!r}"
+            )
     if expected.expected_outcome == "success" and expected.expected_status is None:
         messages.append(f"{expected.case_id} success status cannot be inferred")
     if node.name != expected_function_name(api, expected.case_id):

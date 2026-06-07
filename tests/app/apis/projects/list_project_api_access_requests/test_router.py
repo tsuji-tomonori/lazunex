@@ -10,6 +10,7 @@ from app.apis.projects.list_project_api_access_requests.samples import (
     LIST_PROJECT_API_ACCESS_REQUESTS_RESPONSE_SAMPLE,
     LIST_PROJECT_API_ACCESS_REQUESTS_STATUS_SAMPLES,
 )
+from app.core.logging import get_operation_logger
 
 
 @pytest.mark.anyio
@@ -69,9 +70,15 @@ async def test_tc001_list_project_api_access_requests_router_matches_unit_test_g
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger("app.apis.projects.list_project_api_access_requests.router").warning(
+            "listProjectApiAccessRequests.caller_cannot_list_project_access_requests",
+            summary="呼び出し元がProjectのAPI利用申請一覧を参照できないため、リクエストを拒否した。",
+        )
         raise ApiFunctionError(
             403, "caller cannot list project access requests", summary="unit-test_gen case"
         )
@@ -85,12 +92,25 @@ async def test_tc001_list_project_api_access_requests_router_matches_unit_test_g
         lambda **kwargs: None,
     )
 
-    response = await router_db_harness.client.get(
-        "/projects/cb62b5f6-0000-0000-0000-000000000001/api-access-requests",
-        headers=router_auth_headers("tc001-get"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.get(
+            "/projects/cb62b5f6-0000-0000-0000-000000000001/api-access-requests",
+            headers=router_auth_headers("tc001-get"),
+        )
 
     assert response.status_code == 403, response.text
+
+    actual_log_event = find_log_event(
+        "listProjectApiAccessRequests.caller_cannot_list_project_access_requests"
+    )
+    assert (
+        actual_log_event["messageId"]
+        == "listProjectApiAccessRequests.caller_cannot_list_project_access_requests"
+    )
+    assert (
+        actual_log_event["summary"]
+        == "呼び出し元がProjectのAPI利用申請一覧を参照できないため、リクエストを拒否した。"
+    )
     assert (
         response.json()["error"]["details"][0]["reason"]
         == "caller cannot list project access requests"
@@ -117,9 +137,15 @@ async def test_tc003_list_project_api_access_requests_router_matches_unit_test_g
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger("app.apis.projects.list_project_api_access_requests.router").warning(
+            "listProjectApiAccessRequests.router_error",
+            summary="Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。",
+        )
         raise ApiFunctionError(500, "forced router error", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -131,10 +157,18 @@ async def test_tc003_list_project_api_access_requests_router_matches_unit_test_g
         lambda **kwargs: None,
     )
 
-    response = await router_db_harness.client.get(
-        "/projects/cb62b5f6-0000-0000-0000-000000000001/api-access-requests",
-        headers=router_auth_headers("tc003-get"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.get(
+            "/projects/cb62b5f6-0000-0000-0000-000000000001/api-access-requests",
+            headers=router_auth_headers("tc003-get"),
+        )
 
     assert response.status_code == 500, response.text
     assert response.json()["error"]["details"][0]["reason"] == "forced router error"
+
+    actual_log_event = find_log_event("listProjectApiAccessRequests.router_error")
+    assert actual_log_event["messageId"] == "listProjectApiAccessRequests.router_error"
+    assert (
+        actual_log_event["summary"]
+        == "Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。"
+    )

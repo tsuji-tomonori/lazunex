@@ -14,7 +14,7 @@
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01-true` | 成立 | HTTP 409 error response: access request is not pending |
+| `F01-true` | 成立 | HTTP 409 error response: access request is not pending; log message_id: rejectApiAccessRequest.access_request_is_not_pending; log summary: API利用申請が審査待ちではないため、却下リクエストを拒否した。 |
 | `F01-false` | 不成立 | 条件不成立側または後続処理を継続する。 |
 
 ### F02 条件分岐
@@ -24,7 +24,7 @@
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F02-true` | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F02-true` | 成立 | HTTP 403 error response: caller is not an api reviewer; log message_id: rejectApiAccessRequest.caller_is_not_an_api_reviewer; log summary: 呼び出し元がAPI reviewerではないため、却下リクエストを拒否した。 |
 | `F02-false` | 不成立 | 条件不成立側または後続処理を継続する。 |
 
 ### F03 条件分岐
@@ -34,7 +34,7 @@
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F03-true` | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03-true` | 成立 | HTTP 409 error response: idempotency key is already used; log message_id: rejectApiAccessRequest.idempotency_key_already_used; log summary: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
 | `F03-false` | 不成立 | 条件不成立側または後続処理を継続する。 |
 
 ### F04 例外処理
@@ -45,7 +45,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F04-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F04-raised` | 発生する | HTTP 500 error response: database integrity error |
+| `F04-raised` | 発生する | HTTP 500 error response: database integrity error; log message_id: rejectApiAccessRequest.db_integrity_error; log summary: DB整合性違反によりAPI利用申請却下のcommitが失敗した。 |
 
 ### F05 例外処理
 
@@ -55,7 +55,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F05-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05-raised` | 発生する | HTTP 503 error response: database commit failed |
+| `F05-raised` | 発生する | HTTP 503 error response: database commit failed; log message_id: rejectApiAccessRequest.db_commit_failed; log summary: DB commit失敗によりAPI利用申請却下を確定できなかった。 |
 
 ### F06 例外処理
 
@@ -65,7 +65,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F06-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06-raised` | 発生する | router error response |
+| `F06-raised` | 発生する | router error response; log message_id: rejectApiAccessRequest.router_error; log summary: Routerで捕捉した例外によりAPI利用申請却下が失敗した。 |
 
 ## 2. 直積したテストケース一覧
 
@@ -85,14 +85,14 @@
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L91: API利用申請が審査待ちではないため、却下リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending |
+| `F01` 条件分岐 L91: API利用申請が審査待ちではないため、却下リクエストを拒否した。 | 成立 | HTTP 409 error response: access request is not pending; log message_id: rejectApiAccessRequest.access_request_is_not_pending; log summary: API利用申請が審査待ちではないため、却下リクエストを拒否した。 |
 
 ### TC002
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F01` 条件分岐 L91: API利用申請が審査待ちではないため、却下リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L119: 呼び出し元がAPI reviewerではないため、却下リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer |
+| `F02` 条件分岐 L119: 呼び出し元がAPI reviewerではないため、却下リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not an api reviewer; log message_id: rejectApiAccessRequest.caller_is_not_an_api_reviewer; log summary: 呼び出し元がAPI reviewerではないため、却下リクエストを拒否した。 |
 
 ### TC003
 
@@ -100,7 +100,7 @@
 | --- | --- | --- |
 | `F01` 条件分岐 L91: API利用申請が審査待ちではないため、却下リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F02` 条件分岐 L119: 呼び出し元がAPI reviewerではないため、却下リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L149: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F03` 条件分岐 L149: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used; log message_id: rejectApiAccessRequest.idempotency_key_already_used; log summary: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
 
 ### TC004
 
@@ -112,6 +112,7 @@
 | `F04` 例外処理 L215: DB整合性違反によりAPI利用申請却下のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 | `F05` 例外処理 L252: DB commit失敗によりAPI利用申請却下を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 | `F06` 例外処理 L290: Routerで捕捉した例外によりAPI利用申請却下が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| API正常応答 | 正常 | HTTP 200 success response |
 
 ### TC005
 
@@ -122,7 +123,7 @@
 | `F03` 条件分岐 L149: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F04` 例外処理 L215: DB整合性違反によりAPI利用申請却下のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 | `F05` 例外処理 L252: DB commit失敗によりAPI利用申請却下を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L290: Routerで捕捉した例外によりAPI利用申請却下が失敗した。 | 発生する | router error response |
+| `F06` 例外処理 L290: Routerで捕捉した例外によりAPI利用申請却下が失敗した。 | 発生する | router error response; log message_id: rejectApiAccessRequest.router_error; log summary: Routerで捕捉した例外によりAPI利用申請却下が失敗した。 |
 
 ### TC006
 
@@ -132,7 +133,7 @@
 | `F02` 条件分岐 L119: 呼び出し元がAPI reviewerではないため、却下リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F03` 条件分岐 L149: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F04` 例外処理 L215: DB整合性違反によりAPI利用申請却下のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05` 例外処理 L252: DB commit失敗によりAPI利用申請却下を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F05` 例外処理 L252: DB commit失敗によりAPI利用申請却下を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed; log message_id: rejectApiAccessRequest.db_commit_failed; log summary: DB commit失敗によりAPI利用申請却下を確定できなかった。 |
 
 ### TC007
 
@@ -141,4 +142,4 @@
 | `F01` 条件分岐 L91: API利用申請が審査待ちではないため、却下リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F02` 条件分岐 L119: 呼び出し元がAPI reviewerではないため、却下リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F03` 条件分岐 L149: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 例外処理 L215: DB整合性違反によりAPI利用申請却下のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F04` 例外処理 L215: DB整合性違反によりAPI利用申請却下のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error; log message_id: rejectApiAccessRequest.db_integrity_error; log summary: DB整合性違反によりAPI利用申請却下のcommitが失敗した。 |

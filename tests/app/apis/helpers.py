@@ -16,6 +16,13 @@ from tools.generate_api_message_catalog import build_api_catalogs
 from .router_db import RouterDbHarness
 
 
+@contextmanager
+def capture_operational_log_events(capsys: Any) -> Any:
+    capsys.readouterr()
+    with _temporary_operational_stdout_handler():
+        yield lambda message_id: _find_json_log_event(capsys.readouterr().out, message_id)
+
+
 def record_async_call(calls: list[str], name: str) -> Callable[..., Awaitable[None]]:
     async def stub(*args: object) -> None:
         _ = args
@@ -127,9 +134,7 @@ def _expected_router_error_catalog(*, message_id: str, catalog_id: str) -> dict[
                     "operatorAction": message.operator_action,
                     "runbook": message.runbook,
                 }
-    raise AssertionError(
-        f"router error message catalog is not found: {message_id} ({catalog_id})"
-    )
+    raise AssertionError(f"router error message catalog is not found: {message_id} ({catalog_id})")
 
 
 @contextmanager

@@ -15,6 +15,7 @@ from app.apis.api_access_requests.approve_api_access_request.samples import (
 from app.apis.api_access_requests.common import AuthMode
 from app.apis.base import sample_value
 from app.apis.exceptions import ApiFunctionError
+from app.core.logging import get_operation_logger
 
 
 @pytest.mark.anyio
@@ -217,9 +218,17 @@ async def test_tc001_approve_api_access_request_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger(
+            "app.apis.api_access_requests.approve_api_access_request.router"
+        ).warning(
+            "approveApiAccessRequest.access_request_is_not_pending",
+            summary="API利用申請が審査待ちではないため、承認リクエストを拒否した。",
+        )
         raise ApiFunctionError(409, "access request is not pending", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -231,14 +240,22 @@ async def test_tc001_approve_api_access_request_router_matches_unit_test_gen(
         lambda **kwargs: None,
     )
 
-    response = await router_db_harness.client.post(
-        "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
-        json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
-        headers=router_auth_headers("tc001-post"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.post(
+            "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
+            json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
+            headers=router_auth_headers("tc001-post"),
+        )
 
     assert response.status_code == 409, response.text
     assert response.json()["error"]["details"][0]["reason"] == "access request is not pending"
+
+    actual_log_event = find_log_event("approveApiAccessRequest.access_request_is_not_pending")
+    assert actual_log_event["messageId"] == "approveApiAccessRequest.access_request_is_not_pending"
+    assert (
+        actual_log_event["summary"]
+        == "API利用申請が審査待ちではないため、承認リクエストを拒否した。"
+    )
 
 
 @pytest.mark.anyio
@@ -246,9 +263,17 @@ async def test_tc002_approve_api_access_request_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger(
+            "app.apis.api_access_requests.approve_api_access_request.router"
+        ).warning(
+            "approveApiAccessRequest.caller_is_not_an_api_reviewer",
+            summary="呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。",
+        )
         raise ApiFunctionError(403, "caller is not an api reviewer", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -260,14 +285,22 @@ async def test_tc002_approve_api_access_request_router_matches_unit_test_gen(
         lambda **kwargs: None,
     )
 
-    response = await router_db_harness.client.post(
-        "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
-        json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
-        headers=router_auth_headers("tc002-post"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.post(
+            "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
+            json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
+            headers=router_auth_headers("tc002-post"),
+        )
 
     assert response.status_code == 403, response.text
     assert response.json()["error"]["details"][0]["reason"] == "caller is not an api reviewer"
+
+    actual_log_event = find_log_event("approveApiAccessRequest.caller_is_not_an_api_reviewer")
+    assert actual_log_event["messageId"] == "approveApiAccessRequest.caller_is_not_an_api_reviewer"
+    assert (
+        actual_log_event["summary"]
+        == "呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。"
+    )
 
 
 @pytest.mark.anyio
@@ -275,9 +308,17 @@ async def test_tc003_approve_api_access_request_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger(
+            "app.apis.api_access_requests.approve_api_access_request.router"
+        ).warning(
+            "approveApiAccessRequest.project_api_stage_is_not_available",
+            summary="Project/API stageが利用可能ではないため、承認リクエストを拒否した。",
+        )
         raise ApiFunctionError(
             409, "project api stage is not available", summary="unit-test_gen case"
         )
@@ -291,14 +332,25 @@ async def test_tc003_approve_api_access_request_router_matches_unit_test_gen(
         lambda **kwargs: None,
     )
 
-    response = await router_db_harness.client.post(
-        "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
-        json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
-        headers=router_auth_headers("tc003-post"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.post(
+            "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
+            json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
+            headers=router_auth_headers("tc003-post"),
+        )
 
     assert response.status_code == 409, response.text
     assert response.json()["error"]["details"][0]["reason"] == "project api stage is not available"
+
+    actual_log_event = find_log_event("approveApiAccessRequest.project_api_stage_is_not_available")
+    assert (
+        actual_log_event["messageId"]
+        == "approveApiAccessRequest.project_api_stage_is_not_available"
+    )
+    assert (
+        actual_log_event["summary"]
+        == "Project/API stageが利用可能ではないため、承認リクエストを拒否した。"
+    )
 
 
 @pytest.mark.anyio
@@ -306,9 +358,17 @@ async def test_tc004_approve_api_access_request_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger(
+            "app.apis.api_access_requests.approve_api_access_request.router"
+        ).warning(
+            "approveApiAccessRequest.active_subscription_already_exists",
+            summary="有効なsubscriptionが既に存在するため、承認リクエストを拒否した。",
+        )
         raise ApiFunctionError(
             409, "active subscription already exists", summary="unit-test_gen case"
         )
@@ -322,14 +382,25 @@ async def test_tc004_approve_api_access_request_router_matches_unit_test_gen(
         lambda **kwargs: None,
     )
 
-    response = await router_db_harness.client.post(
-        "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
-        json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
-        headers=router_auth_headers("tc004-post"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.post(
+            "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
+            json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
+            headers=router_auth_headers("tc004-post"),
+        )
 
     assert response.status_code == 409, response.text
     assert response.json()["error"]["details"][0]["reason"] == "active subscription already exists"
+
+    actual_log_event = find_log_event("approveApiAccessRequest.active_subscription_already_exists")
+    assert (
+        actual_log_event["messageId"]
+        == "approveApiAccessRequest.active_subscription_already_exists"
+    )
+    assert (
+        actual_log_event["summary"]
+        == "有効なsubscriptionが既に存在するため、承認リクエストを拒否した。"
+    )
 
 
 @pytest.mark.anyio
@@ -337,9 +408,17 @@ async def test_tc005_approve_api_access_request_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger(
+            "app.apis.api_access_requests.approve_api_access_request.router"
+        ).warning(
+            "approveApiAccessRequest.idempotency_key_already_used",
+            summary="Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。",
+        )
         raise ApiFunctionError(409, "idempotency key is already used", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -351,14 +430,22 @@ async def test_tc005_approve_api_access_request_router_matches_unit_test_gen(
         lambda **kwargs: None,
     )
 
-    response = await router_db_harness.client.post(
-        "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
-        json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
-        headers=router_auth_headers("tc005-post"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.post(
+            "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
+            json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
+            headers=router_auth_headers("tc005-post"),
+        )
 
     assert response.status_code == 409, response.text
     assert response.json()["error"]["details"][0]["reason"] == "idempotency key is already used"
+
+    actual_log_event = find_log_event("approveApiAccessRequest.idempotency_key_already_used")
+    assert actual_log_event["messageId"] == "approveApiAccessRequest.idempotency_key_already_used"
+    assert (
+        actual_log_event["summary"]
+        == "Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。"
+    )
 
 
 @pytest.mark.anyio
@@ -382,9 +469,17 @@ async def test_tc007_approve_api_access_request_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger(
+            "app.apis.api_access_requests.approve_api_access_request.router"
+        ).warning(
+            "approveApiAccessRequest.router_error",
+            summary="Routerで捕捉した例外によりAPI利用申請承認が失敗した。",
+        )
         raise ApiFunctionError(500, "forced router error", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -396,14 +491,19 @@ async def test_tc007_approve_api_access_request_router_matches_unit_test_gen(
         lambda **kwargs: None,
     )
 
-    response = await router_db_harness.client.post(
-        "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
-        json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
-        headers=router_auth_headers("tc007-post"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.post(
+            "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
+            json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
+            headers=router_auth_headers("tc007-post"),
+        )
 
     assert response.status_code == 500, response.text
     assert response.json()["error"]["details"][0]["reason"] == "forced router error"
+
+    actual_log_event = find_log_event("approveApiAccessRequest.router_error")
+    assert actual_log_event["messageId"] == "approveApiAccessRequest.router_error"
+    assert actual_log_event["summary"] == "Routerで捕捉した例外によりAPI利用申請承認が失敗した。"
 
 
 @pytest.mark.anyio
@@ -411,9 +511,17 @@ async def test_tc008_approve_api_access_request_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger(
+            "app.apis.api_access_requests.approve_api_access_request.router"
+        ).warning(
+            "approveApiAccessRequest.db_commit_failed",
+            summary="DB commit失敗によりAPI利用申請承認を確定できなかった。",
+        )
         raise ApiFunctionError(503, "database commit failed", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -425,14 +533,19 @@ async def test_tc008_approve_api_access_request_router_matches_unit_test_gen(
         lambda **kwargs: None,
     )
 
-    response = await router_db_harness.client.post(
-        "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
-        json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
-        headers=router_auth_headers("tc008-post"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.post(
+            "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
+            json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
+            headers=router_auth_headers("tc008-post"),
+        )
 
     assert response.status_code == 503, response.text
     assert response.json()["error"]["details"][0]["reason"] == "database commit failed"
+
+    actual_log_event = find_log_event("approveApiAccessRequest.db_commit_failed")
+    assert actual_log_event["messageId"] == "approveApiAccessRequest.db_commit_failed"
+    assert actual_log_event["summary"] == "DB commit失敗によりAPI利用申請承認を確定できなかった。"
 
 
 @pytest.mark.anyio
@@ -440,9 +553,17 @@ async def test_tc009_approve_api_access_request_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger(
+            "app.apis.api_access_requests.approve_api_access_request.router"
+        ).warning(
+            "approveApiAccessRequest.db_integrity_error",
+            summary="DB整合性違反によりAPI利用申請承認のcommitが失敗した。",
+        )
         raise ApiFunctionError(500, "database integrity error", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -454,11 +575,16 @@ async def test_tc009_approve_api_access_request_router_matches_unit_test_gen(
         lambda **kwargs: None,
     )
 
-    response = await router_db_harness.client.post(
-        "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
-        json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
-        headers=router_auth_headers("tc009-post"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.post(
+            "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
+            json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
+            headers=router_auth_headers("tc009-post"),
+        )
 
     assert response.status_code == 500, response.text
     assert response.json()["error"]["details"][0]["reason"] == "database integrity error"
+
+    actual_log_event = find_log_event("approveApiAccessRequest.db_integrity_error")
+    assert actual_log_event["messageId"] == "approveApiAccessRequest.db_integrity_error"
+    assert actual_log_event["summary"] == "DB整合性違反によりAPI利用申請承認のcommitが失敗した。"

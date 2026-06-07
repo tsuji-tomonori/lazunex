@@ -14,7 +14,7 @@
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01-true` | 成立 | HTTP 403 error response: caller cannot view api |
+| `F01-true` | 成立 | HTTP 403 error response: caller cannot view api; log message_id: getApi.caller_cannot_view_api; log summary: 呼び出し元がAPI詳細を参照できないため、リクエストを拒否した。 |
 | `F01-false` | 不成立 | 条件不成立側または後続処理を継続する。 |
 
 ### F02 例外処理
@@ -25,7 +25,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F02-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F02-raised` | 発生する | router error response |
+| `F02-raised` | 発生する | router error response; log message_id: getApi.router_error; log summary: Routerで捕捉した例外によりAPI詳細取得が失敗した。 |
 
 ## 2. 直積したテストケース一覧
 
@@ -41,7 +41,7 @@
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L63: 呼び出し元がAPI詳細を参照できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot view api |
+| `F01` 条件分岐 L63: 呼び出し元がAPI詳細を参照できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot view api; log message_id: getApi.caller_cannot_view_api; log summary: 呼び出し元がAPI詳細を参照できないため、リクエストを拒否した。 |
 
 ### TC002
 
@@ -49,10 +49,11 @@
 | --- | --- | --- |
 | `F01` 条件分岐 L63: 呼び出し元がAPI詳細を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F02` 例外処理 L91: Routerで捕捉した例外によりAPI詳細取得が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| API正常応答 | 正常 | HTTP 200 success response |
 
 ### TC003
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F01` 条件分岐 L63: 呼び出し元がAPI詳細を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 例外処理 L91: Routerで捕捉した例外によりAPI詳細取得が失敗した。 | 発生する | router error response |
+| `F02` 例外処理 L91: Routerで捕捉した例外によりAPI詳細取得が失敗した。 | 発生する | router error response; log message_id: getApi.router_error; log summary: Routerで捕捉した例外によりAPI詳細取得が失敗した。 |

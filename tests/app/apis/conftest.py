@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from app.apis.common import IdentityGroup
 from app.apis.sequence_types import ApiAccessRequestRef, CallerIdentity, ProvisioningOperationRef
 
-from .helpers import assert_sample_request_emits_router_error_log
+from .helpers import assert_sample_request_emits_router_error_log, capture_operational_log_events
 from .router_db import (
     RouterDbHarness,
     auth_headers,
@@ -49,6 +49,11 @@ def router_count_rows() -> Callable[..., Any]:
 @pytest.fixture
 def assert_router_error_log() -> Callable[..., Any]:
     return assert_sample_request_emits_router_error_log
+
+
+@pytest.fixture
+def capture_router_logs() -> Callable[..., Any]:
+    return capture_operational_log_events
 
 
 @pytest.fixture

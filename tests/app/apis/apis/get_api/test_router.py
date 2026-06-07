@@ -10,6 +10,7 @@ from app.apis.apis.get_api.samples import (
 )
 from app.apis.base import sample_value
 from app.apis.exceptions import ApiFunctionError
+from app.core.logging import get_operation_logger
 
 
 @pytest.mark.anyio
@@ -68,9 +69,15 @@ async def test_tc001_get_api_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger("app.apis.apis.get_api.router").warning(
+            "getApi.caller_cannot_view_api",
+            summary="呼び出し元がAPI詳細を参照できないため、リクエストを拒否した。",
+        )
         raise ApiFunctionError(403, "caller cannot view api", summary="unit-test_gen case")
 
     monkeypatch.setattr("app.apis.apis.get_api.functions.get_api_detail", raise_expected_error)
@@ -78,13 +85,21 @@ async def test_tc001_get_api_router_matches_unit_test_gen(
         "app.apis.apis.get_api.router.operational_log_context_model", lambda **kwargs: None
     )
 
-    response = await router_db_harness.client.get(
-        "/apis/7b0d4a98-0000-0000-0000-000000000001",
-        headers=router_auth_headers("tc001-get"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.get(
+            "/apis/7b0d4a98-0000-0000-0000-000000000001",
+            headers=router_auth_headers("tc001-get"),
+        )
 
     assert response.status_code == 403, response.text
     assert response.json()["error"]["details"][0]["reason"] == "caller cannot view api"
+
+    actual_log_event = find_log_event("getApi.caller_cannot_view_api")
+    assert actual_log_event["messageId"] == "getApi.caller_cannot_view_api"
+    assert (
+        actual_log_event["summary"]
+        == "呼び出し元がAPI詳細を参照できないため、リクエストを拒否した。"
+    )
 
 
 @pytest.mark.anyio
@@ -107,9 +122,15 @@ async def test_tc003_get_api_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger("app.apis.apis.get_api.router").warning(
+            "getApi.router_error",
+            summary="Routerで捕捉した例外によりAPI詳細取得が失敗した。",
+        )
         raise ApiFunctionError(500, "forced router error", summary="unit-test_gen case")
 
     monkeypatch.setattr("app.apis.apis.get_api.functions.get_api_detail", raise_expected_error)
@@ -117,10 +138,15 @@ async def test_tc003_get_api_router_matches_unit_test_gen(
         "app.apis.apis.get_api.router.operational_log_context_model", lambda **kwargs: None
     )
 
-    response = await router_db_harness.client.get(
-        "/apis/7b0d4a98-0000-0000-0000-000000000001",
-        headers=router_auth_headers("tc003-get"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.get(
+            "/apis/7b0d4a98-0000-0000-0000-000000000001",
+            headers=router_auth_headers("tc003-get"),
+        )
 
     assert response.status_code == 500, response.text
     assert response.json()["error"]["details"][0]["reason"] == "forced router error"
+
+    actual_log_event = find_log_event("getApi.router_error")
+    assert actual_log_event["messageId"] == "getApi.router_error"
+    assert actual_log_event["summary"] == "Routerで捕捉した例外によりAPI詳細取得が失敗した。"

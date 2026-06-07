@@ -13,6 +13,7 @@ from app.apis.apis.publish_api.samples import (
 )
 from app.apis.base import sample_value
 from app.apis.exceptions import ApiFunctionError
+from app.core.logging import get_operation_logger
 
 
 @pytest.mark.anyio
@@ -128,9 +129,15 @@ async def test_tc001_publish_api_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger("app.apis.apis.publish_api.router").warning(
+            "publishApi.caller_cannot_publish_api",
+            summary="呼び出し元がAPIを公開登録できないため、リクエストを拒否した。",
+        )
         raise ApiFunctionError(403, "caller cannot publish api", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -140,14 +147,22 @@ async def test_tc001_publish_api_router_matches_unit_test_gen(
         "app.apis.apis.publish_api.router.operational_log_context_model", lambda **kwargs: None
     )
 
-    response = await router_db_harness.client.post(
-        "/apis",
-        json=sample_value(PUBLISH_API_REQUEST_SAMPLE),
-        headers=router_auth_headers("tc001-post"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.post(
+            "/apis",
+            json=sample_value(PUBLISH_API_REQUEST_SAMPLE),
+            headers=router_auth_headers("tc001-post"),
+        )
 
     assert response.status_code == 403, response.text
     assert response.json()["error"]["details"][0]["reason"] == "caller cannot publish api"
+
+    actual_log_event = find_log_event("publishApi.caller_cannot_publish_api")
+    assert actual_log_event["messageId"] == "publishApi.caller_cannot_publish_api"
+    assert (
+        actual_log_event["summary"]
+        == "呼び出し元がAPIを公開登録できないため、リクエストを拒否した。"
+    )
 
 
 @pytest.mark.anyio
@@ -155,9 +170,15 @@ async def test_tc002_publish_api_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger("app.apis.apis.publish_api.router").warning(
+            "publishApi.idempotency_key_already_used",
+            summary="Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。",
+        )
         raise ApiFunctionError(409, "idempotency key is already used", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -167,14 +188,22 @@ async def test_tc002_publish_api_router_matches_unit_test_gen(
         "app.apis.apis.publish_api.router.operational_log_context_model", lambda **kwargs: None
     )
 
-    response = await router_db_harness.client.post(
-        "/apis",
-        json=sample_value(PUBLISH_API_REQUEST_SAMPLE),
-        headers=router_auth_headers("tc002-post"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.post(
+            "/apis",
+            json=sample_value(PUBLISH_API_REQUEST_SAMPLE),
+            headers=router_auth_headers("tc002-post"),
+        )
 
     assert response.status_code == 409, response.text
     assert response.json()["error"]["details"][0]["reason"] == "idempotency key is already used"
+
+    actual_log_event = find_log_event("publishApi.idempotency_key_already_used")
+    assert actual_log_event["messageId"] == "publishApi.idempotency_key_already_used"
+    assert (
+        actual_log_event["summary"]
+        == "Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。"
+    )
 
 
 @pytest.mark.anyio
@@ -182,9 +211,15 @@ async def test_tc003_publish_api_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger("app.apis.apis.publish_api.router").warning(
+            "publishApi.api_gateway_stage_registration_is_not_valid",
+            summary="API Gateway stage登録を検証できないため、API公開登録を中断した。",
+        )
         raise ApiFunctionError(
             502, "API Gateway stage registration is not valid", summary="unit-test_gen case"
         )
@@ -196,13 +231,21 @@ async def test_tc003_publish_api_router_matches_unit_test_gen(
         "app.apis.apis.publish_api.router.operational_log_context_model", lambda **kwargs: None
     )
 
-    response = await router_db_harness.client.post(
-        "/apis",
-        json=sample_value(PUBLISH_API_REQUEST_SAMPLE),
-        headers=router_auth_headers("tc003-post"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.post(
+            "/apis",
+            json=sample_value(PUBLISH_API_REQUEST_SAMPLE),
+            headers=router_auth_headers("tc003-post"),
+        )
 
     assert response.status_code == 502, response.text
+
+    actual_log_event = find_log_event("publishApi.api_gateway_stage_registration_is_not_valid")
+    assert actual_log_event["messageId"] == "publishApi.api_gateway_stage_registration_is_not_valid"
+    assert (
+        actual_log_event["summary"]
+        == "API Gateway stage登録を検証できないため、API公開登録を中断した。"
+    )
     assert (
         response.json()["error"]["details"][0]["reason"]
         == "API Gateway stage registration is not valid"
@@ -214,9 +257,15 @@ async def test_tc004_publish_api_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger("app.apis.apis.publish_api.router").warning(
+            "publishApi.api_is_already_registered",
+            summary="APIが既に登録済みのため、リクエストを拒否した。",
+        )
         raise ApiFunctionError(409, "api is already registered", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -226,14 +275,19 @@ async def test_tc004_publish_api_router_matches_unit_test_gen(
         "app.apis.apis.publish_api.router.operational_log_context_model", lambda **kwargs: None
     )
 
-    response = await router_db_harness.client.post(
-        "/apis",
-        json=sample_value(PUBLISH_API_REQUEST_SAMPLE),
-        headers=router_auth_headers("tc004-post"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.post(
+            "/apis",
+            json=sample_value(PUBLISH_API_REQUEST_SAMPLE),
+            headers=router_auth_headers("tc004-post"),
+        )
 
     assert response.status_code == 409, response.text
     assert response.json()["error"]["details"][0]["reason"] == "api is already registered"
+
+    actual_log_event = find_log_event("publishApi.api_is_already_registered")
+    assert actual_log_event["messageId"] == "publishApi.api_is_already_registered"
+    assert actual_log_event["summary"] == "APIが既に登録済みのため、リクエストを拒否した。"
 
 
 @pytest.mark.anyio
@@ -255,9 +309,15 @@ async def test_tc006_publish_api_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger("app.apis.apis.publish_api.router").warning(
+            "publishApi.router_error",
+            summary="Routerで捕捉した例外によりAPI公開登録が失敗した。",
+        )
         raise ApiFunctionError(500, "forced router error", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -267,14 +327,19 @@ async def test_tc006_publish_api_router_matches_unit_test_gen(
         "app.apis.apis.publish_api.router.operational_log_context_model", lambda **kwargs: None
     )
 
-    response = await router_db_harness.client.post(
-        "/apis",
-        json=sample_value(PUBLISH_API_REQUEST_SAMPLE),
-        headers=router_auth_headers("tc006-post"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.post(
+            "/apis",
+            json=sample_value(PUBLISH_API_REQUEST_SAMPLE),
+            headers=router_auth_headers("tc006-post"),
+        )
 
     assert response.status_code == 500, response.text
     assert response.json()["error"]["details"][0]["reason"] == "forced router error"
+
+    actual_log_event = find_log_event("publishApi.router_error")
+    assert actual_log_event["messageId"] == "publishApi.router_error"
+    assert actual_log_event["summary"] == "Routerで捕捉した例外によりAPI公開登録が失敗した。"
 
 
 @pytest.mark.anyio
@@ -282,9 +347,15 @@ async def test_tc007_publish_api_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger("app.apis.apis.publish_api.router").warning(
+            "publishApi.db_commit_failed",
+            summary="DB commit失敗によりAPI公開登録を確定できなかった。",
+        )
         raise ApiFunctionError(503, "database commit failed", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -294,14 +365,19 @@ async def test_tc007_publish_api_router_matches_unit_test_gen(
         "app.apis.apis.publish_api.router.operational_log_context_model", lambda **kwargs: None
     )
 
-    response = await router_db_harness.client.post(
-        "/apis",
-        json=sample_value(PUBLISH_API_REQUEST_SAMPLE),
-        headers=router_auth_headers("tc007-post"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.post(
+            "/apis",
+            json=sample_value(PUBLISH_API_REQUEST_SAMPLE),
+            headers=router_auth_headers("tc007-post"),
+        )
 
     assert response.status_code == 503, response.text
     assert response.json()["error"]["details"][0]["reason"] == "database commit failed"
+
+    actual_log_event = find_log_event("publishApi.db_commit_failed")
+    assert actual_log_event["messageId"] == "publishApi.db_commit_failed"
+    assert actual_log_event["summary"] == "DB commit失敗によりAPI公開登録を確定できなかった。"
 
 
 @pytest.mark.anyio
@@ -309,9 +385,15 @@ async def test_tc008_publish_api_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger("app.apis.apis.publish_api.router").warning(
+            "publishApi.db_integrity_error",
+            summary="DB整合性違反によりAPI公開登録のcommitが失敗した。",
+        )
         raise ApiFunctionError(500, "database integrity error", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -321,11 +403,16 @@ async def test_tc008_publish_api_router_matches_unit_test_gen(
         "app.apis.apis.publish_api.router.operational_log_context_model", lambda **kwargs: None
     )
 
-    response = await router_db_harness.client.post(
-        "/apis",
-        json=sample_value(PUBLISH_API_REQUEST_SAMPLE),
-        headers=router_auth_headers("tc008-post"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.post(
+            "/apis",
+            json=sample_value(PUBLISH_API_REQUEST_SAMPLE),
+            headers=router_auth_headers("tc008-post"),
+        )
 
     assert response.status_code == 500, response.text
     assert response.json()["error"]["details"][0]["reason"] == "database integrity error"
+
+    actual_log_event = find_log_event("publishApi.db_integrity_error")
+    assert actual_log_event["messageId"] == "publishApi.db_integrity_error"
+    assert actual_log_event["summary"] == "DB整合性違反によりAPI公開登録のcommitが失敗した。"

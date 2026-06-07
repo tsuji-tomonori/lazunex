@@ -10,6 +10,7 @@ from app.apis.projects.list_projects.samples import (
     LIST_PROJECTS_RESPONSE_SAMPLE,
     LIST_PROJECTS_STATUS_SAMPLES,
 )
+from app.core.logging import get_operation_logger
 
 
 @pytest.mark.anyio
@@ -65,9 +66,15 @@ async def test_tc001_list_projects_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger("app.apis.projects.list_projects.router").warning(
+            "listProjects.caller_cannot_list_projects",
+            summary="呼び出し元がProject一覧を参照できないため、リクエストを拒否した。",
+        )
         raise ApiFunctionError(403, "caller cannot list projects", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -79,13 +86,21 @@ async def test_tc001_list_projects_router_matches_unit_test_gen(
         lambda **kwargs: None,
     )
 
-    response = await router_db_harness.client.get(
-        "/projects",
-        headers=router_auth_headers("tc001-get"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.get(
+            "/projects",
+            headers=router_auth_headers("tc001-get"),
+        )
 
     assert response.status_code == 403, response.text
     assert response.json()["error"]["details"][0]["reason"] == "caller cannot list projects"
+
+    actual_log_event = find_log_event("listProjects.caller_cannot_list_projects")
+    assert actual_log_event["messageId"] == "listProjects.caller_cannot_list_projects"
+    assert (
+        actual_log_event["summary"]
+        == "呼び出し元がProject一覧を参照できないため、リクエストを拒否した。"
+    )
 
 
 @pytest.mark.anyio
@@ -108,9 +123,15 @@ async def test_tc003_list_projects_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger("app.apis.projects.list_projects.router").warning(
+            "listProjects.router_error",
+            summary="Routerで捕捉した例外によりProject一覧取得が失敗した。",
+        )
         raise ApiFunctionError(500, "forced router error", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -122,10 +143,15 @@ async def test_tc003_list_projects_router_matches_unit_test_gen(
         lambda **kwargs: None,
     )
 
-    response = await router_db_harness.client.get(
-        "/projects",
-        headers=router_auth_headers("tc003-get"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.get(
+            "/projects",
+            headers=router_auth_headers("tc003-get"),
+        )
 
     assert response.status_code == 500, response.text
     assert response.json()["error"]["details"][0]["reason"] == "forced router error"
+
+    actual_log_event = find_log_event("listProjects.router_error")
+    assert actual_log_event["messageId"] == "listProjects.router_error"
+    assert actual_log_event["summary"] == "Routerで捕捉した例外によりProject一覧取得が失敗した。"

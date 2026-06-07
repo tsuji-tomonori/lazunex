@@ -13,6 +13,7 @@ from app.apis.projects.create_project.samples import (
     CREATE_PROJECT_RESPONSE_SAMPLE,
     CREATE_PROJECT_STATUS_SAMPLES,
 )
+from app.core.logging import get_operation_logger
 
 
 @pytest.mark.anyio
@@ -186,9 +187,15 @@ async def test_tc001_create_project_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger("app.apis.projects.create_project.router").warning(
+            "createProject.caller_cannot_create_project",
+            summary="呼び出し元がProjectを作成できないため、リクエストを拒否した。",
+        )
         raise ApiFunctionError(403, "caller cannot create project", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -200,14 +207,22 @@ async def test_tc001_create_project_router_matches_unit_test_gen(
         lambda **kwargs: None,
     )
 
-    response = await router_db_harness.client.post(
-        "/projects",
-        json=sample_value(CREATE_PROJECT_REQUEST_SAMPLE),
-        headers=router_auth_headers("tc001-post"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.post(
+            "/projects",
+            json=sample_value(CREATE_PROJECT_REQUEST_SAMPLE),
+            headers=router_auth_headers("tc001-post"),
+        )
 
     assert response.status_code == 403, response.text
     assert response.json()["error"]["details"][0]["reason"] == "caller cannot create project"
+
+    actual_log_event = find_log_event("createProject.caller_cannot_create_project")
+    assert actual_log_event["messageId"] == "createProject.caller_cannot_create_project"
+    assert (
+        actual_log_event["summary"]
+        == "呼び出し元がProjectを作成できないため、リクエストを拒否した。"
+    )
 
 
 @pytest.mark.anyio
@@ -215,9 +230,15 @@ async def test_tc002_create_project_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger("app.apis.projects.create_project.router").warning(
+            "createProject.idempotency_key_already_used",
+            summary="Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。",
+        )
         raise ApiFunctionError(409, "idempotency key is already used", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -229,14 +250,22 @@ async def test_tc002_create_project_router_matches_unit_test_gen(
         lambda **kwargs: None,
     )
 
-    response = await router_db_harness.client.post(
-        "/projects",
-        json=sample_value(CREATE_PROJECT_REQUEST_SAMPLE),
-        headers=router_auth_headers("tc002-post"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.post(
+            "/projects",
+            json=sample_value(CREATE_PROJECT_REQUEST_SAMPLE),
+            headers=router_auth_headers("tc002-post"),
+        )
 
     assert response.status_code == 409, response.text
     assert response.json()["error"]["details"][0]["reason"] == "idempotency key is already used"
+
+    actual_log_event = find_log_event("createProject.idempotency_key_already_used")
+    assert actual_log_event["messageId"] == "createProject.idempotency_key_already_used"
+    assert (
+        actual_log_event["summary"]
+        == "Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。"
+    )
 
 
 @pytest.mark.anyio
@@ -258,9 +287,15 @@ async def test_tc004_create_project_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger("app.apis.projects.create_project.router").warning(
+            "createProject.router_error",
+            summary="Routerで捕捉した例外によりProject作成が失敗した。",
+        )
         raise ApiFunctionError(500, "forced router error", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -272,14 +307,19 @@ async def test_tc004_create_project_router_matches_unit_test_gen(
         lambda **kwargs: None,
     )
 
-    response = await router_db_harness.client.post(
-        "/projects",
-        json=sample_value(CREATE_PROJECT_REQUEST_SAMPLE),
-        headers=router_auth_headers("tc004-post"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.post(
+            "/projects",
+            json=sample_value(CREATE_PROJECT_REQUEST_SAMPLE),
+            headers=router_auth_headers("tc004-post"),
+        )
 
     assert response.status_code == 500, response.text
     assert response.json()["error"]["details"][0]["reason"] == "forced router error"
+
+    actual_log_event = find_log_event("createProject.router_error")
+    assert actual_log_event["messageId"] == "createProject.router_error"
+    assert actual_log_event["summary"] == "Routerで捕捉した例外によりProject作成が失敗した。"
 
 
 @pytest.mark.anyio
@@ -287,9 +327,15 @@ async def test_tc005_create_project_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger("app.apis.projects.create_project.router").warning(
+            "createProject.db_commit_failed",
+            summary="DB commit失敗によりProject作成を確定できなかった。",
+        )
         raise ApiFunctionError(503, "database commit failed", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -301,14 +347,19 @@ async def test_tc005_create_project_router_matches_unit_test_gen(
         lambda **kwargs: None,
     )
 
-    response = await router_db_harness.client.post(
-        "/projects",
-        json=sample_value(CREATE_PROJECT_REQUEST_SAMPLE),
-        headers=router_auth_headers("tc005-post"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.post(
+            "/projects",
+            json=sample_value(CREATE_PROJECT_REQUEST_SAMPLE),
+            headers=router_auth_headers("tc005-post"),
+        )
 
     assert response.status_code == 503, response.text
     assert response.json()["error"]["details"][0]["reason"] == "database commit failed"
+
+    actual_log_event = find_log_event("createProject.db_commit_failed")
+    assert actual_log_event["messageId"] == "createProject.db_commit_failed"
+    assert actual_log_event["summary"] == "DB commit失敗によりProject作成を確定できなかった。"
 
 
 @pytest.mark.anyio
@@ -316,9 +367,15 @@ async def test_tc006_create_project_router_matches_unit_test_gen(
     router_db_harness: Any,
     router_auth_headers: Any,
     monkeypatch: Any,
+    capsys: Any,
+    capture_router_logs: Any,
 ) -> None:
     async def raise_expected_error(*args: object, **kwargs: object) -> None:
         _ = args, kwargs
+        get_operation_logger("app.apis.projects.create_project.router").warning(
+            "createProject.db_integrity_error",
+            summary="DB整合性違反によりProject作成のcommitが失敗した。",
+        )
         raise ApiFunctionError(500, "database integrity error", summary="unit-test_gen case")
 
     monkeypatch.setattr(
@@ -330,11 +387,16 @@ async def test_tc006_create_project_router_matches_unit_test_gen(
         lambda **kwargs: None,
     )
 
-    response = await router_db_harness.client.post(
-        "/projects",
-        json=sample_value(CREATE_PROJECT_REQUEST_SAMPLE),
-        headers=router_auth_headers("tc006-post"),
-    )
+    with capture_router_logs(capsys) as find_log_event:
+        response = await router_db_harness.client.post(
+            "/projects",
+            json=sample_value(CREATE_PROJECT_REQUEST_SAMPLE),
+            headers=router_auth_headers("tc006-post"),
+        )
 
     assert response.status_code == 500, response.text
     assert response.json()["error"]["details"][0]["reason"] == "database integrity error"
+
+    actual_log_event = find_log_event("createProject.db_integrity_error")
+    assert actual_log_event["messageId"] == "createProject.db_integrity_error"
+    assert actual_log_event["summary"] == "DB整合性違反によりProject作成のcommitが失敗した。"

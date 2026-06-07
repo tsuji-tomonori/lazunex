@@ -14,7 +14,7 @@
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01-true` | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F01-true` | 成立 | HTTP 403 error response: caller cannot publish api; log message_id: publishApi.caller_cannot_publish_api; log summary: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 |
 | `F01-false` | 不成立 | 条件不成立側または後続処理を継続する。 |
 
 ### F02 条件分岐
@@ -24,7 +24,7 @@
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F02-true` | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F02-true` | 成立 | HTTP 409 error response: idempotency key is already used; log message_id: publishApi.idempotency_key_already_used; log summary: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
 | `F02-false` | 不成立 | 条件不成立側または後続処理を継続する。 |
 
 ### F03 条件分岐
@@ -34,7 +34,7 @@
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F03-true` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F03-true` | 成立 | HTTP 502 error response: API Gateway stage registration is not valid; log message_id: publishApi.api_gateway_stage_registration_is_not_valid; log summary: API Gateway stage登録を検証できないため、API公開登録を中断した。 |
 | `F03-false` | 不成立 | 条件不成立側または後続処理を継続する。 |
 
 ### F04 条件分岐
@@ -44,7 +44,7 @@
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F04-true` | 成立 | HTTP 409 error response: api is already registered |
+| `F04-true` | 成立 | HTTP 409 error response: api is already registered; log message_id: publishApi.api_is_already_registered; log summary: APIが既に登録済みのため、リクエストを拒否した。 |
 | `F04-false` | 不成立 | 条件不成立側または後続処理を継続する。 |
 
 ### F05 例外処理
@@ -55,7 +55,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F05-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F05-raised` | 発生する | HTTP 500 error response: database integrity error |
+| `F05-raised` | 発生する | HTTP 500 error response: database integrity error; log message_id: publishApi.db_integrity_error; log summary: DB整合性違反によりAPI公開登録のcommitが失敗した。 |
 
 ### F06 例外処理
 
@@ -65,7 +65,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F06-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06-raised` | 発生する | HTTP 503 error response: database commit failed |
+| `F06-raised` | 発生する | HTTP 503 error response: database commit failed; log message_id: publishApi.db_commit_failed; log summary: DB commit失敗によりAPI公開登録を確定できなかった。 |
 
 ### F07 例外処理
 
@@ -75,7 +75,7 @@
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F07-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07-raised` | 発生する | router error response |
+| `F07-raised` | 発生する | router error response; log message_id: publishApi.router_error; log summary: Routerで捕捉した例外によりAPI公開登録が失敗した。 |
 
 ## 2. 直積したテストケース一覧
 
@@ -96,14 +96,14 @@
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api |
+| `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot publish api; log message_id: publishApi.caller_cannot_publish_api; log summary: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 |
 
 ### TC002
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used |
+| `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used; log message_id: publishApi.idempotency_key_already_used; log summary: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
 
 ### TC003
 
@@ -111,7 +111,7 @@
 | --- | --- | --- |
 | `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid |
+| `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 成立 | HTTP 502 error response: API Gateway stage registration is not valid; log message_id: publishApi.api_gateway_stage_registration_is_not_valid; log summary: API Gateway stage登録を検証できないため、API公開登録を中断した。 |
 
 ### TC004
 
@@ -120,7 +120,7 @@
 | `F01` 条件分岐 L80: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered |
+| `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api is already registered; log message_id: publishApi.api_is_already_registered; log summary: APIが既に登録済みのため、リクエストを拒否した。 |
 
 ### TC005
 
@@ -133,6 +133,7 @@
 | `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 | `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 | `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| API正常応答 | 正常 | HTTP 201 success response |
 
 ### TC006
 
@@ -144,7 +145,7 @@
 | `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 | `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response |
+| `F07` 例外処理 L313: Routerで捕捉した例外によりAPI公開登録が失敗した。 | 発生する | router error response; log message_id: publishApi.router_error; log summary: Routerで捕捉した例外によりAPI公開登録が失敗した。 |
 
 ### TC007
 
@@ -155,7 +156,7 @@
 | `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed |
+| `F06` 例外処理 L273: DB commit失敗によりAPI公開登録を確定できなかった。 | 発生する | HTTP 503 error response: database commit failed; log message_id: publishApi.db_commit_failed; log summary: DB commit失敗によりAPI公開登録を確定できなかった。 |
 
 ### TC008
 
@@ -165,4 +166,4 @@
 | `F02` 条件分岐 L107: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F03` 条件分岐 L136: API Gateway stage登録を検証できないため、API公開登録を中断した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
 | `F04` 条件分岐 L170: APIが既に登録済みのため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error |
+| `F05` 例外処理 L237: DB整合性違反によりAPI公開登録のcommitが失敗した。 | 発生する | HTTP 500 error response: database integrity error; log message_id: publishApi.db_integrity_error; log summary: DB整合性違反によりAPI公開登録のcommitが失敗した。 |
