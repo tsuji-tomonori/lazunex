@@ -109,8 +109,14 @@ MESSAGE_CATALOG = [
     assert "| wrapper calls | 1 |" in rendered
     assert "| 出力項目 |" not in rendered.split("#### 出力項目", maxsplit=1)[0]
     assert "#### 出力項目" in rendered
-    assert "| `api.statusCode` | `-` | テスト用のHTTP status code説明です。 |" in rendered
-    assert "| `error.code` | `-` | テスト用のerror code説明です。 |" in rendered
+    assert (
+        "| `api.statusCode` | `integer \\| null` | "
+        "テスト用のHTTP status code説明です。 |" in rendered
+    )
+    assert (
+        "| `error.code` | `string \\| null` | "
+        "テスト用のerror code説明です。 |" in rendered
+    )
 
 
 def test_generate_api_message_catalog_main_writes_and_checks_docs(tmp_path: Path) -> None:

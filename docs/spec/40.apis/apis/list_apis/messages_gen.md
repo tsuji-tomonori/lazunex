@@ -50,11 +50,11 @@
 
 | 出力項目 | 型 | 説明 |
 | :--- | :--- | :--- |
-| `traceId` | `-` | リクエストとログを横断して追跡する相関IDです。 |
-| `actorPrincipalId` | `-` | APIを呼び出した認証主体IDです。 |
-| `api.statusCode` | `-` | API responseとして返したHTTP status codeです。 |
-| `error.code` | `-` | エラー分類を表す機械処理向けコードです。 |
-| `error.message` | `-` | エラー内容を運用者が理解するための説明です。 |
+| `traceId` | `string \| null` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | `string \| null` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
+| `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.derivedState` | `ApiDerivedState \| null` | 一覧復帰時に同じ絞り込みを再現するためのAPI状態条件です。 |
 | `resource.keyword` | `string \| null` | 一覧復帰時に同じ絞り込みを再現するための検索キーワードです。 |
@@ -79,12 +79,12 @@
 
 | 出力項目 | 型 | 説明 |
 | :--- | :--- | :--- |
-| `traceId` | `-` | リクエストとログを横断して追跡する相関IDです。 |
-| `actorPrincipalId` | `-` | APIを呼び出した認証主体IDです。 |
-| `api.statusCode` | `-` | API responseとして返したHTTP status codeです。 |
-| `error.code` | `-` | エラー分類を表す機械処理向けコードです。 |
-| `error.message` | `-` | エラー内容を運用者が理解するための説明です。 |
-| `error.exceptionType` | `-` | 捕捉された例外の型名です。 |
+| `traceId` | `string \| null` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | `string \| null` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
+| `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
+| `error.exceptionType` | `string \| null` | 捕捉された例外の型名です。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.derivedState` | `ApiDerivedState \| null` | 一覧復帰時に同じ絞り込みを再現するためのAPI状態条件です。 |
 | `resource.keyword` | `string \| null` | 一覧復帰時に同じ絞り込みを再現するための検索キーワードです。 |

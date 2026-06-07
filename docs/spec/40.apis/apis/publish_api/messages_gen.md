@@ -55,14 +55,14 @@
 
 | 出力項目 | 型 | 説明 |
 | :--- | :--- | :--- |
-| `traceId` | `-` | リクエストとログを横断して追跡する相関IDです。 |
-| `actorPrincipalId` | `-` | APIを呼び出した認証主体IDです。 |
-| `api.statusCode` | `-` | API responseとして返したHTTP status codeです。 |
-| `error.code` | `-` | エラー分類を表す機械処理向けコードです。 |
-| `error.message` | `-` | エラー内容を運用者が理解するための説明です。 |
-| `request.actorType` | `-` | リクエスト実行主体の種別です。 |
-| `request.sourceIp` | `-` | 呼び出し元IPアドレスです。 |
-| `request.userAgent` | `-` | 呼び出し元User-Agentです。 |
+| `traceId` | `string \| null` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | `string \| null` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
+| `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
+| `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |
+| `request.sourceIp` | `string \| null` | 呼び出し元IPアドレスです。 |
+| `request.userAgent` | `string \| null` | 呼び出し元User-Agentです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.apiCode` | `string \| null` | 公開登録対象APIの重複確認、状態確認、再送に使用するAPI codeです。 |
 | `resource.idempotencyKey` | `string \| null` | 同じAPI公開登録リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
@@ -87,14 +87,14 @@
 
 | 出力項目 | 型 | 説明 |
 | :--- | :--- | :--- |
-| `traceId` | `-` | リクエストとログを横断して追跡する相関IDです。 |
-| `actorPrincipalId` | `-` | APIを呼び出した認証主体IDです。 |
-| `api.statusCode` | `-` | API responseとして返したHTTP status codeです。 |
-| `error.code` | `-` | エラー分類を表す機械処理向けコードです。 |
-| `error.message` | `-` | エラー内容を運用者が理解するための説明です。 |
-| `request.actorType` | `-` | リクエスト実行主体の種別です。 |
-| `request.sourceIp` | `-` | 呼び出し元IPアドレスです。 |
-| `request.userAgent` | `-` | 呼び出し元User-Agentです。 |
+| `traceId` | `string \| null` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | `string \| null` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
+| `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
+| `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |
+| `request.sourceIp` | `string \| null` | 呼び出し元IPアドレスです。 |
+| `request.userAgent` | `string \| null` | 呼び出し元User-Agentです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.apiCode` | `string \| null` | 公開登録対象APIの重複確認、状態確認、再送に使用するAPI codeです。 |
 | `resource.idempotencyKey` | `string \| null` | 同じAPI公開登録リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
@@ -119,14 +119,14 @@
 
 | 出力項目 | 型 | 説明 |
 | :--- | :--- | :--- |
-| `traceId` | `-` | リクエストとログを横断して追跡する相関IDです。 |
-| `actorPrincipalId` | `-` | APIを呼び出した認証主体IDです。 |
-| `api.statusCode` | `-` | API responseとして返したHTTP status codeです。 |
-| `error.code` | `-` | エラー分類を表す機械処理向けコードです。 |
-| `error.message` | `-` | エラー内容を運用者が理解するための説明です。 |
-| `request.actorType` | `-` | リクエスト実行主体の種別です。 |
-| `request.sourceIp` | `-` | 呼び出し元IPアドレスです。 |
-| `request.userAgent` | `-` | 呼び出し元User-Agentです。 |
+| `traceId` | `string \| null` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | `string \| null` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
+| `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
+| `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |
+| `request.sourceIp` | `string \| null` | 呼び出し元IPアドレスです。 |
+| `request.userAgent` | `string \| null` | 呼び出し元User-Agentです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.apiCode` | `string \| null` | 公開登録対象APIの重複確認、状態確認、再送に使用するAPI codeです。 |
 | `resource.idempotencyKey` | `string \| null` | 同じAPI公開登録リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
@@ -151,15 +151,15 @@
 
 | 出力項目 | 型 | 説明 |
 | :--- | :--- | :--- |
-| `traceId` | `-` | リクエストとログを横断して追跡する相関IDです。 |
-| `actorPrincipalId` | `-` | APIを呼び出した認証主体IDです。 |
-| `api.statusCode` | `-` | API responseとして返したHTTP status codeです。 |
-| `error.code` | `-` | エラー分類を表す機械処理向けコードです。 |
-| `error.message` | `-` | エラー内容を運用者が理解するための説明です。 |
-| `error.exceptionType` | `-` | 捕捉された例外の型名です。 |
-| `request.actorType` | `-` | リクエスト実行主体の種別です。 |
-| `request.sourceIp` | `-` | 呼び出し元IPアドレスです。 |
-| `request.userAgent` | `-` | 呼び出し元User-Agentです。 |
+| `traceId` | `string \| null` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | `string \| null` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
+| `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
+| `error.exceptionType` | `string \| null` | 捕捉された例外の型名です。 |
+| `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |
+| `request.sourceIp` | `string \| null` | 呼び出し元IPアドレスです。 |
+| `request.userAgent` | `string \| null` | 呼び出し元User-Agentです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.apiCode` | `string \| null` | 公開登録対象APIの重複確認、状態確認、再送に使用するAPI codeです。 |
 | `resource.idempotencyKey` | `string \| null` | 同じAPI公開登録リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
@@ -184,15 +184,15 @@
 
 | 出力項目 | 型 | 説明 |
 | :--- | :--- | :--- |
-| `traceId` | `-` | リクエストとログを横断して追跡する相関IDです。 |
-| `actorPrincipalId` | `-` | APIを呼び出した認証主体IDです。 |
-| `api.statusCode` | `-` | API responseとして返したHTTP status codeです。 |
-| `error.code` | `-` | エラー分類を表す機械処理向けコードです。 |
-| `error.message` | `-` | エラー内容を運用者が理解するための説明です。 |
-| `error.exceptionType` | `-` | 捕捉された例外の型名です。 |
-| `request.actorType` | `-` | リクエスト実行主体の種別です。 |
-| `request.sourceIp` | `-` | 呼び出し元IPアドレスです。 |
-| `request.userAgent` | `-` | 呼び出し元User-Agentです。 |
+| `traceId` | `string \| null` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | `string \| null` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
+| `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
+| `error.exceptionType` | `string \| null` | 捕捉された例外の型名です。 |
+| `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |
+| `request.sourceIp` | `string \| null` | 呼び出し元IPアドレスです。 |
+| `request.userAgent` | `string \| null` | 呼び出し元User-Agentです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.apiCode` | `string \| null` | 公開登録対象APIの重複確認、状態確認、再送に使用するAPI codeです。 |
 | `resource.idempotencyKey` | `string \| null` | 同じAPI公開登録リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
@@ -217,15 +217,15 @@
 
 | 出力項目 | 型 | 説明 |
 | :--- | :--- | :--- |
-| `traceId` | `-` | リクエストとログを横断して追跡する相関IDです。 |
-| `actorPrincipalId` | `-` | APIを呼び出した認証主体IDです。 |
-| `api.statusCode` | `-` | API responseとして返したHTTP status codeです。 |
-| `error.code` | `-` | エラー分類を表す機械処理向けコードです。 |
-| `error.message` | `-` | エラー内容を運用者が理解するための説明です。 |
-| `error.exceptionType` | `-` | 捕捉された例外の型名です。 |
-| `request.actorType` | `-` | リクエスト実行主体の種別です。 |
-| `request.sourceIp` | `-` | 呼び出し元IPアドレスです。 |
-| `request.userAgent` | `-` | 呼び出し元User-Agentです。 |
+| `traceId` | `string \| null` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | `string \| null` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
+| `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
+| `error.exceptionType` | `string \| null` | 捕捉された例外の型名です。 |
+| `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |
+| `request.sourceIp` | `string \| null` | 呼び出し元IPアドレスです。 |
+| `request.userAgent` | `string \| null` | 呼び出し元User-Agentです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.apiCode` | `string \| null` | 公開登録対象APIの重複確認、状態確認、再送に使用するAPI codeです。 |
 | `resource.idempotencyKey` | `string \| null` | 同じAPI公開登録リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
@@ -250,14 +250,14 @@
 
 | 出力項目 | 型 | 説明 |
 | :--- | :--- | :--- |
-| `traceId` | `-` | リクエストとログを横断して追跡する相関IDです。 |
-| `actorPrincipalId` | `-` | APIを呼び出した認証主体IDです。 |
-| `api.statusCode` | `-` | API responseとして返したHTTP status codeです。 |
-| `error.code` | `-` | エラー分類を表す機械処理向けコードです。 |
-| `error.message` | `-` | エラー内容を運用者が理解するための説明です。 |
-| `request.actorType` | `-` | リクエスト実行主体の種別です。 |
-| `request.sourceIp` | `-` | 呼び出し元IPアドレスです。 |
-| `request.userAgent` | `-` | 呼び出し元User-Agentです。 |
+| `traceId` | `string \| null` | リクエストとログを横断して追跡する相関IDです。 |
+| `actorPrincipalId` | `string \| null` | APIを呼び出した認証主体IDです。 |
+| `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
+| `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
+| `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
+| `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |
+| `request.sourceIp` | `string \| null` | 呼び出し元IPアドレスです。 |
+| `request.userAgent` | `string \| null` | 呼び出し元User-Agentです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.apiCode` | `string \| null` | 公開登録対象APIの重複確認、状態確認、再送に使用するAPI codeです。 |
 | `resource.idempotencyKey` | `string \| null` | 同じAPI公開登録リクエストの結果確認と再送に使用するIdempotency-Keyです。 |

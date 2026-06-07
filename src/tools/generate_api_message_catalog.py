@@ -454,7 +454,7 @@ def as_display(value: Any) -> str:
 
 
 def log_context_alias_from_field_name(field_name: str) -> str:
-    dotted_prefixes = {"api", "resource", "aws", "metrics", "error"}
+    dotted_prefixes = {"api", "request", "resource", "aws", "metrics", "error"}
     prefix, separator, rest = field_name.partition("_")
     if separator and prefix in dotted_prefixes:
         return f"{prefix}.{snake_to_lower_camel(rest)}"
@@ -580,12 +580,15 @@ def annotation_name(node: ast.AST) -> str:
         return ""
 
 
-def error_resource_field_type(annotation: ast.AST) -> str:
+def log_context_field_type(annotation: ast.AST) -> str:
     raw_type = annotation_name(annotation)
     replacements = {
+        "Any": "any",
         "str": "string",
         "int": "integer",
+        "float": "number",
         "bool": "boolean",
+        "Mapping": "object",
         "ResourceId": "string",
         "ProjectCode": "string",
         "ApiCode": "string",
@@ -598,6 +601,39 @@ def error_resource_field_type(annotation: ast.AST) -> str:
     for source, target in replacements.items():
         raw_type = re.sub(rf"\b{re.escape(source)}\b", target, raw_type)
     return raw_type or "-"
+
+
+def pydantic_log_context_types(module: ast.Module) -> dict[str, str]:
+    model_names: set[str] = set()
+    for node in ast.walk(module):
+        if not isinstance(node, (ast.Assign, ast.AnnAssign)):
+            continue
+        value_node = node.value
+        if not isinstance(value_node, ast.Name):
+            continue
+        target_names: set[str] = set()
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    target_names.add(target.id)
+        elif isinstance(node.target, ast.Name):
+            target_names.add(node.target.id)
+        if target_names.intersection(LOG_CONTEXT_SCHEMA_VARIABLE_NAMES):
+            model_names.add(value_node.id)
+
+    types: dict[str, str] = {}
+    for node in module.body:
+        if not isinstance(node, ast.ClassDef) or node.name not in model_names:
+            continue
+        for statement in node.body:
+            if not isinstance(statement, ast.AnnAssign):
+                continue
+            if not isinstance(statement.target, ast.Name):
+                continue
+            types[log_context_alias_from_field_name(statement.target.id)] = (
+                log_context_field_type(statement.annotation)
+            )
+    return types
 
 
 def api_error_resource_schema(api_dir: Path) -> dict[str, str]:
@@ -637,7 +673,7 @@ def api_error_resource_types(api_dir: Path) -> dict[str, str]:
             if not isinstance(statement.target, ast.Name):
                 continue
             types[f"resource.{snake_to_lower_camel(statement.target.id)}"] = (
-                error_resource_field_type(statement.annotation)
+                log_context_field_type(statement.annotation)
             )
     return types
 
@@ -667,21 +703,45 @@ def load_log_context_schema(root: Path) -> dict[str, str]:
     return {**default_log_context_schema(), **schema}
 
 
+def load_log_context_types(root: Path) -> dict[str, str]:
+    path = log_context_schema_path(root)
+    module = read_python_ast(path)
+    types: dict[str, str] = {}
+    if module is not None:
+        types.update(pydantic_log_context_types(module))
+    return types
+
+
 def context_model_items(context_model: str) -> tuple[str, ...]:
     return tuple(item.strip() for item in context_model.split(",") if item.strip())
 
 
 def context_model_items_with_resource_root(context_model: str) -> tuple[str, ...]:
-    items: list[str] = []
-    has_resource_root = False
+    non_resource_items: list[str] = []
+    resource_items: list[str] = []
+    resource_insert_index: int | None = None
     for item in context_model_items(context_model):
         if item == "resource":
-            has_resource_root = True
-        if item.startswith("resource.") and not has_resource_root and "resource" not in items:
-            items.append("resource")
-            has_resource_root = True
-        items.append(item)
-    return tuple(items)
+            if resource_insert_index is None:
+                resource_insert_index = len(non_resource_items)
+            continue
+        if item.startswith("resource."):
+            if resource_insert_index is None:
+                resource_insert_index = len(non_resource_items)
+            if item not in resource_items:
+                resource_items.append(item)
+            continue
+        non_resource_items.append(item)
+    if resource_insert_index is None:
+        return tuple(non_resource_items)
+    return tuple(
+        [
+            *non_resource_items[:resource_insert_index],
+            "resource",
+            *resource_items,
+            *non_resource_items[resource_insert_index:],
+        ]
+    )
 
 
 def context_field_description(name: str, schema: Mapping[str, str]) -> str:
@@ -1707,7 +1767,8 @@ def render_catalog(catalog: ApiCatalog, root: Path) -> str:
     api_dir = root / DEFAULT_API_ROOT / meta.domain / meta.api
     log_context_schema = load_log_context_schema(root)
     log_context_schema.update(api_error_resource_schema(api_dir))
-    log_context_types = api_error_resource_types(api_dir)
+    log_context_types = load_log_context_types(root)
+    log_context_types.update(api_error_resource_types(api_dir))
     route_summary = (
         api_routes_summary(api_dir, root)
         if api_dir.exists()
