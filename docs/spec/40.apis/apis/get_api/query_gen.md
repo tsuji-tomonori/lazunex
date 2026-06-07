@@ -23,13 +23,13 @@ API詳細レスポンスを組み立てるため、API catalog情報を取得す
 
 | DDLテーブル | DDL項目 | SQL項目 | 日本語名 | 型 | nullable |
 | --- | --- | --- | --- | --- | --- |
-| <code>apis</code> | <code>api_id</code> | <code>api_id</code> | Lazunex内API ID。 | <code>UUID</code> | no |
+| <code>apis</code> | <code>api_id</code> | <code>api_id</code> | Lazunex内API ID。 | <code>CHAR(36)</code> | no |
 
 ### 戻り値
 
 | DDLテーブル | DDL項目 | SQL項目 | 日本語名 | 型 | nullable |
 | --- | --- | --- | --- | --- | --- |
-| <code>apis</code> | <code>api_id</code> | <code>api_id</code> | Lazunex内API ID。 | <code>UUID</code> | no |
+| <code>apis</code> | <code>api_id</code> | <code>api_id</code> | Lazunex内API ID。 | <code>CHAR(36)</code> | no |
 | <code>apis</code> | <code>api_code</code> | <code>api_code</code> | 人が読めるAPIコード。例: billing-api-v1。 | <code>VARCHAR(100)</code> | no |
 | <code>apis</code> | <code>name</code> | <code>name</code> | API表示名。 | <code>VARCHAR(200)</code> | no |
 | <code>apis</code> | <code>description</code> | <code>description</code> | APIの説明。 | <code>TEXT</code> | no |
@@ -37,7 +37,7 @@ API詳細レスポンスを組み立てるため、API catalog情報を取得す
 | <code>apis</code> | <code>provider_contact</code> | <code>provider_contact</code> | API提供者の問い合わせ先。 | <code>VARCHAR(320)</code> | no |
 | <code>apis</code> | <code>owner_principal_id</code> | <code>owner_principal_id</code> | APIオーナーのprincipal。 | <code>VARCHAR(256)</code> | no |
 | <code>apis</code> | <code>visibility</code> | <code>visibility</code> | 公開範囲。INTERNALまたはRESTRICTED。 | <code>VARCHAR(20)</code> | no |
-| <code>api_gateway_stages</code> | <code>api_stage_id</code> | <code>api_stage_id</code> | API stage ID。 | <code>UUID</code> | no |
+| <code>api_gateway_stages</code> | <code>api_stage_id</code> | <code>api_stage_id</code> | API stage ID。 | <code>CHAR(36)</code> | no |
 | <code>api_gateway_stages</code> | <code>aws_account_id</code> | <code>aws_account_id</code> | API Gatewayが存在するAWSアカウントID。 | <code>VARCHAR(12)</code> | no |
 | <code>api_gateway_stages</code> | <code>aws_region</code> | <code>aws_region</code> | API Gatewayが存在するAWSリージョン。例: ap-northeast-1。 | <code>VARCHAR(32)</code> | no |
 | <code>api_gateway_stages</code> | <code>apigw_rest_api_id</code> | <code>apigw_rest_api_id</code> | API Gateway REST API ID。 | <code>VARCHAR(128)</code> | no |
