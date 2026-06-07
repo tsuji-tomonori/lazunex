@@ -9,6 +9,7 @@ from app.apis.apis.list_apis.samples import (
     LIST_APIS_STATUS_SAMPLES,
 )
 from app.apis.base import sample_value
+from app.apis.exceptions import ApiFunctionError
 
 
 @pytest.mark.anyio
@@ -58,3 +59,71 @@ async def test_list_apis_sample_request_emits_router_error_log_to_stdio(
         message_id="listApis.router_error",
         catalog_id="M002",
     )
+
+
+# unit-test_gen.md executable cases
+@pytest.mark.anyio
+async def test_tc001_list_apis_router_matches_unit_test_gen(
+    router_db_harness: Any,
+    router_auth_headers: Any,
+    monkeypatch: Any,
+) -> None:
+    async def raise_expected_error(*args: object, **kwargs: object) -> None:
+        _ = args, kwargs
+        raise ApiFunctionError(403, "caller cannot list apis", summary="unit-test_gen case")
+
+    monkeypatch.setattr(
+        "app.apis.apis.list_apis.functions.has_api_list_permission", raise_expected_error
+    )
+    monkeypatch.setattr(
+        "app.apis.apis.list_apis.router.operational_log_context_model", lambda **kwargs: None
+    )
+
+    response = await router_db_harness.client.get(
+        "/apis",
+        headers=router_auth_headers("tc001-get"),
+    )
+
+    assert response.status_code == 403, response.text
+    assert response.json()["error"]["details"][0]["reason"] == "caller cannot list apis"
+
+
+@pytest.mark.anyio
+async def test_tc002_list_apis_router_matches_unit_test_gen(
+    router_db_harness: Any,
+    router_auth_headers: Any,
+    router_seed_published_api: Any,
+) -> None:
+    await router_seed_published_api(router_db_harness)
+    response = await router_db_harness.client.get(
+        "/apis",
+        headers=router_auth_headers("tc002-list-apis"),
+    )
+
+    assert response.status_code == 200, response.text
+
+
+@pytest.mark.anyio
+async def test_tc003_list_apis_router_matches_unit_test_gen(
+    router_db_harness: Any,
+    router_auth_headers: Any,
+    monkeypatch: Any,
+) -> None:
+    async def raise_expected_error(*args: object, **kwargs: object) -> None:
+        _ = args, kwargs
+        raise ApiFunctionError(500, "forced router error", summary="unit-test_gen case")
+
+    monkeypatch.setattr(
+        "app.apis.apis.list_apis.functions.has_api_list_permission", raise_expected_error
+    )
+    monkeypatch.setattr(
+        "app.apis.apis.list_apis.router.operational_log_context_model", lambda **kwargs: None
+    )
+
+    response = await router_db_harness.client.get(
+        "/apis",
+        headers=router_auth_headers("tc003-get"),
+    )
+
+    assert response.status_code == 500, response.text
+    assert response.json()["error"]["details"][0]["reason"] == "forced router error"

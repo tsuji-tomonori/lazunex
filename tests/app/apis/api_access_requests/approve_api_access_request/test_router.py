@@ -14,6 +14,7 @@ from app.apis.api_access_requests.approve_api_access_request.samples import (
 )
 from app.apis.api_access_requests.common import AuthMode
 from app.apis.base import sample_value
+from app.apis.exceptions import ApiFunctionError
 
 
 @pytest.mark.anyio
@@ -208,3 +209,256 @@ async def test_approve_api_access_request_sample_request_emits_router_error_log_
         message_id="approveApiAccessRequest.router_error",
         catalog_id="M005",
     )
+
+
+# unit-test_gen.md executable cases
+@pytest.mark.anyio
+async def test_tc001_approve_api_access_request_router_matches_unit_test_gen(
+    router_db_harness: Any,
+    router_auth_headers: Any,
+    monkeypatch: Any,
+) -> None:
+    async def raise_expected_error(*args: object, **kwargs: object) -> None:
+        _ = args, kwargs
+        raise ApiFunctionError(409, "access request is not pending", summary="unit-test_gen case")
+
+    monkeypatch.setattr(
+        "app.apis.api_access_requests.approve_api_access_request.functions.get_access_request",
+        raise_expected_error,
+    )
+    monkeypatch.setattr(
+        "app.apis.api_access_requests.approve_api_access_request.router.operational_log_context_model",
+        lambda **kwargs: None,
+    )
+
+    response = await router_db_harness.client.post(
+        "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
+        json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
+        headers=router_auth_headers("tc001-post"),
+    )
+
+    assert response.status_code == 409, response.text
+    assert response.json()["error"]["details"][0]["reason"] == "access request is not pending"
+
+
+@pytest.mark.anyio
+async def test_tc002_approve_api_access_request_router_matches_unit_test_gen(
+    router_db_harness: Any,
+    router_auth_headers: Any,
+    monkeypatch: Any,
+) -> None:
+    async def raise_expected_error(*args: object, **kwargs: object) -> None:
+        _ = args, kwargs
+        raise ApiFunctionError(403, "caller is not an api reviewer", summary="unit-test_gen case")
+
+    monkeypatch.setattr(
+        "app.apis.api_access_requests.approve_api_access_request.functions.get_access_request",
+        raise_expected_error,
+    )
+    monkeypatch.setattr(
+        "app.apis.api_access_requests.approve_api_access_request.router.operational_log_context_model",
+        lambda **kwargs: None,
+    )
+
+    response = await router_db_harness.client.post(
+        "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
+        json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
+        headers=router_auth_headers("tc002-post"),
+    )
+
+    assert response.status_code == 403, response.text
+    assert response.json()["error"]["details"][0]["reason"] == "caller is not an api reviewer"
+
+
+@pytest.mark.anyio
+async def test_tc003_approve_api_access_request_router_matches_unit_test_gen(
+    router_db_harness: Any,
+    router_auth_headers: Any,
+    monkeypatch: Any,
+) -> None:
+    async def raise_expected_error(*args: object, **kwargs: object) -> None:
+        _ = args, kwargs
+        raise ApiFunctionError(
+            409, "project api stage is not available", summary="unit-test_gen case"
+        )
+
+    monkeypatch.setattr(
+        "app.apis.api_access_requests.approve_api_access_request.functions.get_access_request",
+        raise_expected_error,
+    )
+    monkeypatch.setattr(
+        "app.apis.api_access_requests.approve_api_access_request.router.operational_log_context_model",
+        lambda **kwargs: None,
+    )
+
+    response = await router_db_harness.client.post(
+        "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
+        json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
+        headers=router_auth_headers("tc003-post"),
+    )
+
+    assert response.status_code == 409, response.text
+    assert response.json()["error"]["details"][0]["reason"] == "project api stage is not available"
+
+
+@pytest.mark.anyio
+async def test_tc004_approve_api_access_request_router_matches_unit_test_gen(
+    router_db_harness: Any,
+    router_auth_headers: Any,
+    monkeypatch: Any,
+) -> None:
+    async def raise_expected_error(*args: object, **kwargs: object) -> None:
+        _ = args, kwargs
+        raise ApiFunctionError(
+            409, "active subscription already exists", summary="unit-test_gen case"
+        )
+
+    monkeypatch.setattr(
+        "app.apis.api_access_requests.approve_api_access_request.functions.get_access_request",
+        raise_expected_error,
+    )
+    monkeypatch.setattr(
+        "app.apis.api_access_requests.approve_api_access_request.router.operational_log_context_model",
+        lambda **kwargs: None,
+    )
+
+    response = await router_db_harness.client.post(
+        "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
+        json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
+        headers=router_auth_headers("tc004-post"),
+    )
+
+    assert response.status_code == 409, response.text
+    assert response.json()["error"]["details"][0]["reason"] == "active subscription already exists"
+
+
+@pytest.mark.anyio
+async def test_tc005_approve_api_access_request_router_matches_unit_test_gen(
+    router_db_harness: Any,
+    router_auth_headers: Any,
+    monkeypatch: Any,
+) -> None:
+    async def raise_expected_error(*args: object, **kwargs: object) -> None:
+        _ = args, kwargs
+        raise ApiFunctionError(409, "idempotency key is already used", summary="unit-test_gen case")
+
+    monkeypatch.setattr(
+        "app.apis.api_access_requests.approve_api_access_request.functions.get_access_request",
+        raise_expected_error,
+    )
+    monkeypatch.setattr(
+        "app.apis.api_access_requests.approve_api_access_request.router.operational_log_context_model",
+        lambda **kwargs: None,
+    )
+
+    response = await router_db_harness.client.post(
+        "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
+        json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
+        headers=router_auth_headers("tc005-post"),
+    )
+
+    assert response.status_code == 409, response.text
+    assert response.json()["error"]["details"][0]["reason"] == "idempotency key is already used"
+
+
+@pytest.mark.anyio
+async def test_tc006_approve_api_access_request_router_matches_unit_test_gen(
+    router_db_harness: Any,
+    router_auth_headers: Any,
+    router_seed_access_request: Any,
+) -> None:
+    seeded = await router_seed_access_request(router_db_harness)
+    response = await router_db_harness.client.post(
+        f"/api-access-requests/{seeded['accessRequestId']}/approve",
+        json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
+        headers=router_auth_headers("tc006-approve-access-request"),
+    )
+
+    assert response.status_code == 200, response.text
+
+
+@pytest.mark.anyio
+async def test_tc007_approve_api_access_request_router_matches_unit_test_gen(
+    router_db_harness: Any,
+    router_auth_headers: Any,
+    monkeypatch: Any,
+) -> None:
+    async def raise_expected_error(*args: object, **kwargs: object) -> None:
+        _ = args, kwargs
+        raise ApiFunctionError(500, "forced router error", summary="unit-test_gen case")
+
+    monkeypatch.setattr(
+        "app.apis.api_access_requests.approve_api_access_request.functions.get_access_request",
+        raise_expected_error,
+    )
+    monkeypatch.setattr(
+        "app.apis.api_access_requests.approve_api_access_request.router.operational_log_context_model",
+        lambda **kwargs: None,
+    )
+
+    response = await router_db_harness.client.post(
+        "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
+        json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
+        headers=router_auth_headers("tc007-post"),
+    )
+
+    assert response.status_code == 500, response.text
+    assert response.json()["error"]["details"][0]["reason"] == "forced router error"
+
+
+@pytest.mark.anyio
+async def test_tc008_approve_api_access_request_router_matches_unit_test_gen(
+    router_db_harness: Any,
+    router_auth_headers: Any,
+    monkeypatch: Any,
+) -> None:
+    async def raise_expected_error(*args: object, **kwargs: object) -> None:
+        _ = args, kwargs
+        raise ApiFunctionError(503, "database commit failed", summary="unit-test_gen case")
+
+    monkeypatch.setattr(
+        "app.apis.api_access_requests.approve_api_access_request.functions.get_access_request",
+        raise_expected_error,
+    )
+    monkeypatch.setattr(
+        "app.apis.api_access_requests.approve_api_access_request.router.operational_log_context_model",
+        lambda **kwargs: None,
+    )
+
+    response = await router_db_harness.client.post(
+        "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
+        json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
+        headers=router_auth_headers("tc008-post"),
+    )
+
+    assert response.status_code == 503, response.text
+    assert response.json()["error"]["details"][0]["reason"] == "database commit failed"
+
+
+@pytest.mark.anyio
+async def test_tc009_approve_api_access_request_router_matches_unit_test_gen(
+    router_db_harness: Any,
+    router_auth_headers: Any,
+    monkeypatch: Any,
+) -> None:
+    async def raise_expected_error(*args: object, **kwargs: object) -> None:
+        _ = args, kwargs
+        raise ApiFunctionError(500, "database integrity error", summary="unit-test_gen case")
+
+    monkeypatch.setattr(
+        "app.apis.api_access_requests.approve_api_access_request.functions.get_access_request",
+        raise_expected_error,
+    )
+    monkeypatch.setattr(
+        "app.apis.api_access_requests.approve_api_access_request.router.operational_log_context_model",
+        lambda **kwargs: None,
+    )
+
+    response = await router_db_harness.client.post(
+        "/api-access-requests/e540d3e8-0000-0000-0000-000000000001/approve",
+        json=sample_value(APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE),
+        headers=router_auth_headers("tc009-post"),
+    )
+
+    assert response.status_code == 500, response.text
+    assert response.json()["error"]["details"][0]["reason"] == "database integrity error"

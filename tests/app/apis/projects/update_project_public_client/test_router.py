@@ -5,6 +5,7 @@ from typing import Any
 import pytest
 
 from app.apis.base import sample_value
+from app.apis.exceptions import ApiFunctionError
 from app.apis.projects.update_project_public_client.samples import (
     UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE,
     UPDATE_PROJECT_PUBLIC_CLIENT_RESPONSE_SAMPLE,
@@ -119,3 +120,172 @@ async def test_update_project_public_client_sample_request_emits_router_error_lo
         message_id="updateProjectPublicClient.router_error",
         catalog_id="M002",
     )
+
+
+# unit-test_gen.md executable cases
+@pytest.mark.anyio
+async def test_tc001_update_project_public_client_router_matches_unit_test_gen(
+    router_db_harness: Any,
+    router_auth_headers: Any,
+    monkeypatch: Any,
+) -> None:
+    async def raise_expected_error(*args: object, **kwargs: object) -> None:
+        _ = args, kwargs
+        raise ApiFunctionError(403, "caller is not a project owner", summary="unit-test_gen case")
+
+    monkeypatch.setattr(
+        "app.apis.projects.update_project_public_client.functions.validate_public_client_update_request",
+        raise_expected_error,
+    )
+    monkeypatch.setattr(
+        "app.apis.projects.update_project_public_client.router.operational_log_context_model",
+        lambda **kwargs: None,
+    )
+
+    response = await router_db_harness.client.patch(
+        "/projects/cb62b5f6-0000-0000-0000-000000000001/public-client",
+        json=sample_value(UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE),
+        headers=router_auth_headers("tc001-patch"),
+    )
+
+    assert response.status_code == 403, response.text
+    assert response.json()["error"]["details"][0]["reason"] == "caller is not a project owner"
+
+
+@pytest.mark.anyio
+async def test_tc002_update_project_public_client_router_matches_unit_test_gen(
+    router_db_harness: Any,
+    router_auth_headers: Any,
+    monkeypatch: Any,
+) -> None:
+    async def raise_expected_error(*args: object, **kwargs: object) -> None:
+        _ = args, kwargs
+        raise ApiFunctionError(409, "idempotency key is already used", summary="unit-test_gen case")
+
+    monkeypatch.setattr(
+        "app.apis.projects.update_project_public_client.functions.validate_public_client_update_request",
+        raise_expected_error,
+    )
+    monkeypatch.setattr(
+        "app.apis.projects.update_project_public_client.router.operational_log_context_model",
+        lambda **kwargs: None,
+    )
+
+    response = await router_db_harness.client.patch(
+        "/projects/cb62b5f6-0000-0000-0000-000000000001/public-client",
+        json=sample_value(UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE),
+        headers=router_auth_headers("tc002-patch"),
+    )
+
+    assert response.status_code == 409, response.text
+    assert response.json()["error"]["details"][0]["reason"] == "idempotency key is already used"
+
+
+@pytest.mark.anyio
+async def test_tc003_update_project_public_client_router_matches_unit_test_gen(
+    router_db_harness: Any,
+    router_auth_headers: Any,
+    router_seed_project: Any,
+    monkeypatch: Any,
+) -> None:
+    monkeypatch.setattr(
+        "app.apis.projects.update_project_public_client.router.operational_log_context_model",
+        lambda **kwargs: None,
+    )
+    seeded = await router_seed_project(router_db_harness)
+    payload = sample_value(UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE)
+    payload["expectedRowVersion"] = 1
+    response = await router_db_harness.client.patch(
+        f"/projects/{seeded['projectId']}/public-client",
+        json=payload,
+        headers=router_auth_headers("tc003-update-public-client"),
+    )
+
+    assert response.status_code == 200, response.text
+
+
+@pytest.mark.anyio
+async def test_tc004_update_project_public_client_router_matches_unit_test_gen(
+    router_db_harness: Any,
+    router_auth_headers: Any,
+    monkeypatch: Any,
+) -> None:
+    async def raise_expected_error(*args: object, **kwargs: object) -> None:
+        _ = args, kwargs
+        raise ApiFunctionError(500, "forced router error", summary="unit-test_gen case")
+
+    monkeypatch.setattr(
+        "app.apis.projects.update_project_public_client.functions.validate_public_client_update_request",
+        raise_expected_error,
+    )
+    monkeypatch.setattr(
+        "app.apis.projects.update_project_public_client.router.operational_log_context_model",
+        lambda **kwargs: None,
+    )
+
+    response = await router_db_harness.client.patch(
+        "/projects/cb62b5f6-0000-0000-0000-000000000001/public-client",
+        json=sample_value(UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE),
+        headers=router_auth_headers("tc004-patch"),
+    )
+
+    assert response.status_code == 500, response.text
+    assert response.json()["error"]["details"][0]["reason"] == "forced router error"
+
+
+@pytest.mark.anyio
+async def test_tc005_update_project_public_client_router_matches_unit_test_gen(
+    router_db_harness: Any,
+    router_auth_headers: Any,
+    monkeypatch: Any,
+) -> None:
+    async def raise_expected_error(*args: object, **kwargs: object) -> None:
+        _ = args, kwargs
+        raise ApiFunctionError(503, "database commit failed", summary="unit-test_gen case")
+
+    monkeypatch.setattr(
+        "app.apis.projects.update_project_public_client.functions.validate_public_client_update_request",
+        raise_expected_error,
+    )
+    monkeypatch.setattr(
+        "app.apis.projects.update_project_public_client.router.operational_log_context_model",
+        lambda **kwargs: None,
+    )
+
+    response = await router_db_harness.client.patch(
+        "/projects/cb62b5f6-0000-0000-0000-000000000001/public-client",
+        json=sample_value(UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE),
+        headers=router_auth_headers("tc005-patch"),
+    )
+
+    assert response.status_code == 503, response.text
+    assert response.json()["error"]["details"][0]["reason"] == "database commit failed"
+
+
+@pytest.mark.anyio
+async def test_tc006_update_project_public_client_router_matches_unit_test_gen(
+    router_db_harness: Any,
+    router_auth_headers: Any,
+    monkeypatch: Any,
+) -> None:
+    async def raise_expected_error(*args: object, **kwargs: object) -> None:
+        _ = args, kwargs
+        raise ApiFunctionError(500, "database integrity error", summary="unit-test_gen case")
+
+    monkeypatch.setattr(
+        "app.apis.projects.update_project_public_client.functions.validate_public_client_update_request",
+        raise_expected_error,
+    )
+    monkeypatch.setattr(
+        "app.apis.projects.update_project_public_client.router.operational_log_context_model",
+        lambda **kwargs: None,
+    )
+
+    response = await router_db_harness.client.patch(
+        "/projects/cb62b5f6-0000-0000-0000-000000000001/public-client",
+        json=sample_value(UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE),
+        headers=router_auth_headers("tc006-patch"),
+    )
+
+    assert response.status_code == 500, response.text
+    assert response.json()["error"]["details"][0]["reason"] == "database integrity error"
