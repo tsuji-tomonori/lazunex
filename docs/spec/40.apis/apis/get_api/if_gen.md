@@ -10,9 +10,8 @@ Summary: API詳細を取得する
 
 | 項目 | 型 | 必須 | 説明 | 制約 |
 | --- | --- | --- | --- | --- |
-| `X-Principal-Id` | `string \| null` | no | - | - |
-| `X-Groups` | `string \| null` | no | - | - |
-| `X-Scopes` | `string \| null` | no | - | - |
+| `X-Principal-Id` | `string` | yes | 呼び出し元の認証主体IDです。未指定または空文字の場合は401を返します。 | - |
+| `X-Groups` | `string \| null` | no | 呼び出し元が所属する認可グループをカンマ区切りで指定します。Hub管理者判定などの権限判定に使用します。 | - |
 
 ## Path Parameters
 

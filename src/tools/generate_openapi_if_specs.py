@@ -23,10 +23,26 @@ GENERATED_COMMENT = (
     "Do not edit manually. -->"
 )
 PARAMETER_DESCRIPTION_OVERRIDES = {
+    ("header", "X-Principal-Id"): (
+        "呼び出し元の認証主体IDです。未指定または空文字の場合は401を返します。"
+    ),
+    ("header", "X-Groups"): (
+        "呼び出し元が所属する認可グループをカンマ区切りで指定します。"
+        "Hub管理者判定などの権限判定に使用します。"
+    ),
     ("header", "Idempotency-Key"): (
         "同じ更新系リクエストの重複処理を防ぐためにクライアントが指定する一意なキーです。"
         "同じキーで再送された場合、サーバーは同一リクエストとして扱います。"
     ),
+}
+PARAMETER_REQUIRED_OVERRIDES = {
+    ("header", "X-Principal-Id"): True,
+}
+PARAMETER_TYPE_OVERRIDES = {
+    ("header", "X-Principal-Id"): "string",
+}
+EXCLUDED_PARAMETERS = {
+    ("header", "X-Scopes"),
 }
 DEFAULT_API_COMMON_PATH = Path(__file__).resolve().parents[1] / "app/apis"
 DEFAULT_API_ROOT = Path("src/app/apis")
@@ -286,14 +302,21 @@ def parameter_rows(operation: JsonObject, location: str, components: JsonObject)
             continue
         schema = as_object(parameter_object.get("schema", {}))
         name = str(parameter_object.get("name", ""))
+        parameter_key = (location, name)
+        if parameter_key in EXCLUDED_PARAMETERS:
+            continue
         rows.append(
             FieldRow(
                 name=name,
-                type_name=schema_type(schema, components),
-                required=bool(parameter_object.get("required")),
+                type_name=PARAMETER_TYPE_OVERRIDES.get(parameter_key)
+                or schema_type(schema, components),
+                required=PARAMETER_REQUIRED_OVERRIDES.get(
+                    parameter_key,
+                    bool(parameter_object.get("required")),
+                ),
                 description=str(
-                    parameter_object.get("description")
-                    or PARAMETER_DESCRIPTION_OVERRIDES.get((location, name))
+                    PARAMETER_DESCRIPTION_OVERRIDES.get(parameter_key)
+                    or parameter_object.get("description")
                     or schema_description(schema)
                 ),
                 constraints=schema_constraints(schema, components),
@@ -361,7 +384,9 @@ def response_description(
     response: JsonObject,
     samples: OperationSamples | None,
 ) -> str:
-    return status_sample_description(status_code, samples) or str(response.get("description") or "-")
+    return status_sample_description(status_code, samples) or str(
+        response.get("description") or "-"
+    )
 
 
 def response_summary_rows(

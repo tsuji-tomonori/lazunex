@@ -307,6 +307,45 @@ def test_parameter_and_request_body_rows() -> None:
     ]
 
 
+def test_auth_header_rows_use_runtime_meaning() -> None:
+    operation = {
+        "parameters": [
+            {
+                "name": "X-Principal-Id",
+                "in": "header",
+                "required": False,
+                "schema": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+            },
+            {
+                "name": "X-Groups",
+                "in": "header",
+                "required": False,
+                "schema": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+            },
+            {
+                "name": "X-Scopes",
+                "in": "header",
+                "required": False,
+                "schema": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+            },
+        ]
+    }
+
+    headers = parameter_rows(operation, "header", components())
+
+    assert [(row.name, row.type_name, row.required) for row in headers] == [
+        ("X-Principal-Id", "string", True),
+        ("X-Groups", "string | null", False),
+    ]
+    assert headers[0].description == (
+        "呼び出し元の認証主体IDです。未指定または空文字の場合は401を返します。"
+    )
+    assert headers[1].description == (
+        "呼び出し元が所属する認可グループをカンマ区切りで指定します。"
+        "Hub管理者判定などの権限判定に使用します。"
+    )
+
+
 def test_response_summary_and_render_markdown() -> None:
     operation = delete_operation()
     schemas = components()
