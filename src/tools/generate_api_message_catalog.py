@@ -477,6 +477,9 @@ def default_log_context_schema() -> dict[str, str]:
         "traceId": "リクエストとログを横断して追跡する相関IDです。",
         "requestId": "実行基盤またはアプリケーションが付与するリクエストIDです。",
         "actorPrincipalId": "APIを呼び出した認証主体IDです。",
+        "request.sourceIp": "呼び出し元IPアドレスです。",
+        "request.userAgent": "呼び出し元User-Agentです。",
+        "request.actorType": "リクエスト実行主体の種別です。",
         "api.method": "呼び出されたAPIのHTTP methodです。",
         "api.route": "呼び出されたAPI routeです。",
         "api.statusCode": "API responseとして返したHTTP status codeです。",
@@ -556,6 +559,27 @@ def pydantic_log_context_schema(module: ast.Module) -> dict[str, str]:
             description = field_description_from_call(statement.value)
             if description:
                 schema[log_context_alias_from_field_name(statement.target.id)] = description
+    return schema
+
+
+def api_error_resource_schema(api_dir: Path) -> dict[str, str]:
+    module = read_python_ast(api_dir / "schemas.py")
+    if module is None:
+        return {}
+    schema: dict[str, str] = {}
+    for node in module.body:
+        if not isinstance(node, ast.ClassDef) or node.name != "ErrorResource":
+            continue
+        for statement in node.body:
+            if not isinstance(statement, ast.AnnAssign):
+                continue
+            if not isinstance(statement.target, ast.Name):
+                continue
+            if not isinstance(statement.value, ast.Call):
+                continue
+            description = field_description_from_call(statement.value)
+            if description:
+                schema[f"resource.{snake_to_lower_camel(statement.target.id)}"] = description
     return schema
 
 
@@ -844,11 +868,34 @@ def level_hint_from_wrapper_method(method_name: str, call: ast.Call) -> str | No
 
 def literal_context_keys(call: ast.Call) -> tuple[str, ...]:
     context_node = get_keyword(call, ("context", "extra", "payload"))
+    if (
+        isinstance(context_node, ast.Call)
+        and dotted_name(context_node.func) == "router_log_context"
+    ):
+        return router_log_context_keys(context_node)
     value = literal_value(context_node)
     if isinstance(value, Mapping):
         mapping = cast("Mapping[Any, Any]", value)  # type: ignore[redundant-cast]
         return tuple(sorted(str(key) for key in mapping))
     return ()
+
+
+def router_log_context_keys(call: ast.Call) -> tuple[str, ...]:
+    keys = {"api.statusCode", "error.code", "error.message"}
+    if get_keyword(call, ("caller",)) is not None:
+        keys.add("actorPrincipalId")
+    if get_keyword(call, ("request_context",)) is not None:
+        keys.update(("traceId", "request.sourceIp", "request.userAgent", "request.actorType"))
+    if get_keyword(call, ("error",)) is not None:
+        keys.add("error.exceptionType")
+
+    resource_node = get_keyword(call, ("resource",))
+    if isinstance(resource_node, ast.Dict):
+        for key_node in resource_node.keys:
+            key_value = literal_value(key_node)
+            if isinstance(key_value, str) and key_value:
+                keys.add(f"resource.{key_value}")
+    return tuple(sorted(keys))
 
 
 def catalog_fields_from_call(call: ast.Call) -> dict[str, Any]:
@@ -1431,6 +1478,17 @@ def inferred_from_wrapper_call(meta: ApiMeta, call: WrapperCall) -> MessageDefin
     return definition
 
 
+def merge_context_model(context_model: str, calls: Sequence[WrapperCall]) -> str:
+    items = list(context_model_items(context_model))
+    seen = set(items)
+    for call in calls:
+        for key in call.context_keys:
+            if key not in seen:
+                items.append(key)
+                seen.add(key)
+    return ", ".join(items)
+
+
 def collect_api_dirs(api_root: Path) -> list[Path]:
     if not api_root.exists():
         return []
@@ -1470,6 +1528,13 @@ def build_api_catalogs(
         for message_id, calls in calls_by_id.items():
             if message_id not in definitions_by_id:
                 definitions_by_id[message_id] = inferred_from_wrapper_call(meta, calls[0])
+            definitions_by_id[message_id] = replace(
+                definitions_by_id[message_id],
+                context_model=merge_context_model(
+                    definitions_by_id[message_id].context_model,
+                    calls,
+                ),
+            )
             definitions_by_id[message_id] = definitions_by_id[message_id].with_emitted_from(
                 f"{call.source} ({call.wrapper})" for call in calls
             )
@@ -1560,6 +1625,7 @@ def render_catalog(catalog: ApiCatalog, root: Path) -> str:
     meta = catalog.meta
     api_dir = root / DEFAULT_API_ROOT / meta.domain / meta.api
     log_context_schema = load_log_context_schema(root)
+    log_context_schema.update(api_error_resource_schema(api_dir))
     route_summary = (
         api_routes_summary(api_dir, root)
         if api_dir.exists()

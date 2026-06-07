@@ -107,6 +107,11 @@ async def create_project(
                     detail="caller cannot create project",
                     caller=caller,
                     request_context=request_context,
+                    resource={
+                        "projectCode": request.project_code,
+                        "ownerPrincipalId": request.owner_principal_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                 ),
             )
             return api_error_response(status.HTTP_403_FORBIDDEN, "caller cannot create project")
@@ -134,6 +139,11 @@ async def create_project(
                     detail="idempotency key is already used",
                     caller=caller,
                     request_context=request_context,
+                    resource={
+                        "projectCode": request.project_code,
+                        "ownerPrincipalId": request.owner_principal_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                 ),
             )
             return api_error_response(
@@ -240,6 +250,11 @@ async def create_project(
                     detail="database integrity error",
                     caller=caller,
                     request_context=request_context,
+                    resource={
+                        "projectCode": request.project_code,
+                        "ownerPrincipalId": request.owner_principal_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                     error=error,
                 ),
             )
@@ -275,6 +290,11 @@ async def create_project(
                     detail="database commit failed",
                     caller=caller,
                     request_context=request_context,
+                    resource={
+                        "projectCode": request.project_code,
+                        "ownerPrincipalId": request.owner_principal_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                     error=error,
                 ),
             )
@@ -316,6 +336,11 @@ async def create_project(
                 detail=str(error),
                 caller=caller,
                 request_context=request_context,
+                resource={
+                    "projectCode": request.project_code,
+                    "ownerPrincipalId": request.owner_principal_id,
+                    "idempotencyKey": idempotency_key,
+                },
                 error=error,
             ),
         )

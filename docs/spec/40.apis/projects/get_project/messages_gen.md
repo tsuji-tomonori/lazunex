@@ -53,7 +53,7 @@
 | `traceId` | リクエストとログを横断して追跡する相関IDです。 |
 | `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
 | `api.statusCode` | API responseとして返したHTTP status codeです。 |
-| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `resource.projectId` | 取得対象Projectの存在確認、権限確認、問い合わせに使用するProject IDです。 |
 | `error.code` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | エラー内容を運用者が理解するための説明です。 |
 
@@ -79,7 +79,7 @@
 | `traceId` | リクエストとログを横断して追跡する相関IDです。 |
 | `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
 | `api.statusCode` | API responseとして返したHTTP status codeです。 |
-| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `resource.projectId` | 取得対象Projectの存在確認、権限確認、問い合わせに使用するProject IDです。 |
 | `error.code` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | エラー内容を運用者が理解するための説明です。 |
 | `error.exceptionType` | 捕捉された例外の型名です。 |
@@ -88,8 +88,8 @@
 
 | source | function | wrapper | catalog_id | message_id | level_hint | context keys |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `src/app/apis/projects/get_project/router.py:73` | get_project | `ops_logger.warning` | `M001` | `getProject.caller_cannot_view_project` | `WARNING` |  |
-| `src/app/apis/projects/get_project/router.py:101` | get_project | `ops_logger.error` | `M002` | `getProject.router_api_function_error` | `ERROR` |  |
+| `src/app/apis/projects/get_project/router.py:73` | get_project | `ops_logger.warning` | `M001` | `getProject.caller_cannot_view_project` | `WARNING` | actorPrincipalId, api.statusCode, error.code, error.message, resource.projectId |
+| `src/app/apis/projects/get_project/router.py:101` | get_project | `ops_logger.error` | `M002` | `getProject.router_api_function_error` | `ERROR` | actorPrincipalId, api.statusCode, error.code, error.exceptionType, error.message, resource.projectId |
 
 ## strict検証で要求する項目
 

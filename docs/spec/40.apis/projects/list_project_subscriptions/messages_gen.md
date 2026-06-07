@@ -53,7 +53,7 @@
 | `traceId` | リクエストとログを横断して追跡する相関IDです。 |
 | `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
 | `api.statusCode` | API responseとして返したHTTP status codeです。 |
-| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `resource.projectId` | 一覧取得対象Projectの存在確認、権限確認、再取得に使用するProject IDです。 |
 | `error.code` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | エラー内容を運用者が理解するための説明です。 |
 
@@ -79,7 +79,7 @@
 | `traceId` | リクエストとログを横断して追跡する相関IDです。 |
 | `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
 | `api.statusCode` | API responseとして返したHTTP status codeです。 |
-| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `resource.projectId` | 一覧取得対象Projectの存在確認、権限確認、再取得に使用するProject IDです。 |
 | `error.code` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | エラー内容を運用者が理解するための説明です。 |
 | `error.exceptionType` | 捕捉された例外の型名です。 |
@@ -88,8 +88,8 @@
 
 | source | function | wrapper | catalog_id | message_id | level_hint | context keys |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `src/app/apis/projects/list_project_subscriptions/router.py:77` | list_project_subscriptions | `ops_logger.warning` | `M001` | `listProjectSubscriptions.caller_cannot_list_project_subscriptions` | `WARNING` |  |
-| `src/app/apis/projects/list_project_subscriptions/router.py:114` | list_project_subscriptions | `ops_logger.error` | `M002` | `listProjectSubscriptions.router_api_function_error` | `ERROR` |  |
+| `src/app/apis/projects/list_project_subscriptions/router.py:77` | list_project_subscriptions | `ops_logger.warning` | `M001` | `listProjectSubscriptions.caller_cannot_list_project_subscriptions` | `WARNING` | actorPrincipalId, api.statusCode, error.code, error.message, resource.projectId |
+| `src/app/apis/projects/list_project_subscriptions/router.py:114` | list_project_subscriptions | `ops_logger.error` | `M002` | `listProjectSubscriptions.router_api_function_error` | `ERROR` | actorPrincipalId, api.statusCode, error.code, error.exceptionType, error.message, resource.projectId |
 
 ## strict検証で要求する項目
 

@@ -55,6 +55,9 @@
 | `api.statusCode` | API responseとして返したHTTP status codeです。 |
 | `error.code` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | エラー内容を運用者が理解するための説明です。 |
+| `resource.derivedState` | 一覧復帰時に同じ絞り込みを再現するためのAPI状態条件です。 |
+| `resource.keyword` | 一覧復帰時に同じ絞り込みを再現するための検索キーワードです。 |
+| `resource.providerName` | 一覧復帰時に同じ絞り込みを再現するためのAPI提供者名です。 |
 
 ### `M002` `listApis.router_api_function_error`
 
@@ -69,7 +72,7 @@
 | 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
 | 対応すべきこと | 同一routeの5xx率、直近deploy、DB状態を確認する。 |
 | runbook | RUNBOOK-unexpected-api-failure |
-| 実装参照 | src/app/apis/apis/list_apis/router.py:84<br>wrapper: src/app/apis/apis/list_apis/router.py:84 (ops_logger.error) |
+| 実装参照 | src/app/apis/apis/list_apis/router.py:89<br>wrapper: src/app/apis/apis/list_apis/router.py:89 (ops_logger.error) |
 
 #### 出力項目
 
@@ -81,13 +84,16 @@
 | `error.code` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | エラー内容を運用者が理解するための説明です。 |
 | `error.exceptionType` | 捕捉された例外の型名です。 |
+| `resource.derivedState` | 一覧復帰時に同じ絞り込みを再現するためのAPI状態条件です。 |
+| `resource.keyword` | 一覧復帰時に同じ絞り込みを再現するための検索キーワードです。 |
+| `resource.providerName` | 一覧復帰時に同じ絞り込みを再現するためのAPI提供者名です。 |
 
 ## loggerラッパー呼び出し一覧
 
 | source | function | wrapper | catalog_id | message_id | level_hint | context keys |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `src/app/apis/apis/list_apis/router.py:55` | list_apis | `ops_logger.warning` | `M001` | `listApis.caller_cannot_list_apis` | `WARNING` |  |
-| `src/app/apis/apis/list_apis/router.py:84` | list_apis | `ops_logger.error` | `M002` | `listApis.router_api_function_error` | `ERROR` |  |
+| `src/app/apis/apis/list_apis/router.py:55` | list_apis | `ops_logger.warning` | `M001` | `listApis.caller_cannot_list_apis` | `WARNING` | actorPrincipalId, api.statusCode, error.code, error.message, resource.derivedState, resource.keyword, resource.providerName |
+| `src/app/apis/apis/list_apis/router.py:89` | list_apis | `ops_logger.error` | `M002` | `listApis.router_api_function_error` | `ERROR` | actorPrincipalId, api.statusCode, error.code, error.exceptionType, error.message, resource.derivedState, resource.keyword, resource.providerName |
 
 ## strict検証で要求する項目
 

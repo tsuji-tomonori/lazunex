@@ -102,6 +102,11 @@ async def publish_api(
                     detail="caller cannot publish api",
                     caller=caller,
                     request_context=request_context,
+                    resource={
+                        "apiCode": request.api_code,
+                        "ownerPrincipalId": request.owner_principal_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                 ),
             )
             return api_error_response(status.HTTP_403_FORBIDDEN, "caller cannot publish api")
@@ -129,6 +134,11 @@ async def publish_api(
                     detail="idempotency key is already used",
                     caller=caller,
                     request_context=request_context,
+                    resource={
+                        "apiCode": request.api_code,
+                        "ownerPrincipalId": request.owner_principal_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                 ),
             )
             return api_error_response(
@@ -164,6 +174,11 @@ async def publish_api(
                     detail="API Gateway stage registration is not valid",
                     caller=caller,
                     request_context=request_context,
+                    resource={
+                        "apiCode": request.api_code,
+                        "ownerPrincipalId": request.owner_principal_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                 ),
             )
             return api_error_response(
@@ -192,6 +207,11 @@ async def publish_api(
                     detail="api is already registered",
                     caller=caller,
                     request_context=request_context,
+                    resource={
+                        "apiCode": request.api_code,
+                        "ownerPrincipalId": request.owner_principal_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                 ),
             )
             return api_error_response(status.HTTP_409_CONFLICT, "api is already registered")
@@ -265,6 +285,11 @@ async def publish_api(
                     detail="database integrity error",
                     caller=caller,
                     request_context=request_context,
+                    resource={
+                        "apiCode": request.api_code,
+                        "ownerPrincipalId": request.owner_principal_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                     error=error,
                 ),
             )
@@ -300,6 +325,11 @@ async def publish_api(
                     detail="database commit failed",
                     caller=caller,
                     request_context=request_context,
+                    resource={
+                        "apiCode": request.api_code,
+                        "ownerPrincipalId": request.owner_principal_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                     error=error,
                 ),
             )
@@ -340,6 +370,11 @@ async def publish_api(
                 detail=str(error),
                 caller=caller,
                 request_context=request_context,
+                resource={
+                    "apiCode": request.api_code,
+                    "ownerPrincipalId": request.owner_principal_id,
+                    "idempotencyKey": idempotency_key,
+                },
                 error=error,
             ),
         )

@@ -114,7 +114,10 @@ async def reject_api_access_request(
                     detail="access request is not pending",
                     caller=caller,
                     request_context=request_context,
-                    resource={"accessRequestId": access_request_id},
+                    resource={
+                        "accessRequestId": access_request_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                 ),
             )
             return api_error_response(status.HTTP_409_CONFLICT, "access request is not pending")
@@ -142,7 +145,10 @@ async def reject_api_access_request(
                     detail="caller is not an api reviewer",
                     caller=caller,
                     request_context=request_context,
-                    resource={"accessRequestId": access_request_id},
+                    resource={
+                        "accessRequestId": access_request_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                 ),
             )
             return api_error_response(status.HTTP_403_FORBIDDEN, "caller is not an api reviewer")
@@ -172,7 +178,10 @@ async def reject_api_access_request(
                     detail="idempotency key is already used",
                     caller=caller,
                     request_context=request_context,
-                    resource={"accessRequestId": access_request_id},
+                    resource={
+                        "accessRequestId": access_request_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                 ),
             )
             return api_error_response(
@@ -243,7 +252,10 @@ async def reject_api_access_request(
                     detail="database integrity error",
                     caller=caller,
                     request_context=request_context,
-                    resource={"accessRequestId": access_request_id},
+                    resource={
+                        "accessRequestId": access_request_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                     error=error,
                 ),
             )
@@ -280,7 +292,10 @@ async def reject_api_access_request(
                     detail="database commit failed",
                     caller=caller,
                     request_context=request_context,
-                    resource={"accessRequestId": access_request_id},
+                    resource={
+                        "accessRequestId": access_request_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                     error=error,
                 ),
             )
@@ -318,7 +333,10 @@ async def reject_api_access_request(
                 detail=str(error),
                 caller=caller,
                 request_context=request_context,
-                resource={"accessRequestId": access_request_id},
+                resource={
+                    "accessRequestId": access_request_id,
+                    "idempotencyKey": idempotency_key,
+                },
                 error=error,
             ),
         )

@@ -119,7 +119,11 @@ async def update_project_public_client(
                     detail="caller is not a project owner",
                     caller=caller,
                     request_context=request_context,
-                    resource={"projectId": project_id},
+                    resource={
+                        "projectId": project_id,
+                        "expectedRowVersion": request.expected_row_version,
+                        "idempotencyKey": idempotency_key,
+                    },
                 ),
             )
             return api_error_response(status.HTTP_403_FORBIDDEN, "caller is not a project owner")
@@ -149,7 +153,11 @@ async def update_project_public_client(
                     detail="idempotency key is already used",
                     caller=caller,
                     request_context=request_context,
-                    resource={"projectId": project_id},
+                    resource={
+                        "projectId": project_id,
+                        "expectedRowVersion": request.expected_row_version,
+                        "idempotencyKey": idempotency_key,
+                    },
                 ),
             )
             return api_error_response(
@@ -233,7 +241,11 @@ async def update_project_public_client(
                     detail="database integrity error",
                     caller=caller,
                     request_context=request_context,
-                    resource={"projectId": project_id},
+                    resource={
+                        "projectId": project_id,
+                        "expectedRowVersion": request.expected_row_version,
+                        "idempotencyKey": idempotency_key,
+                    },
                     error=error,
                 ),
             )
@@ -271,7 +283,11 @@ async def update_project_public_client(
                     detail="database commit failed",
                     caller=caller,
                     request_context=request_context,
-                    resource={"projectId": project_id},
+                    resource={
+                        "projectId": project_id,
+                        "expectedRowVersion": request.expected_row_version,
+                        "idempotencyKey": idempotency_key,
+                    },
                     error=error,
                 ),
             )
@@ -312,7 +328,11 @@ async def update_project_public_client(
                 detail=str(error),
                 caller=caller,
                 request_context=request_context,
-                resource={"projectId": project_id},
+                resource={
+                    "projectId": project_id,
+                    "expectedRowVersion": request.expected_row_version,
+                    "idempotencyKey": idempotency_key,
+                },
                 error=error,
             ),
         )

@@ -116,7 +116,12 @@ async def create_api_access_request(
                     detail="caller is not a project owner",
                     caller=caller,
                     request_context=request_context,
-                    resource={"projectId": project_id},
+                    resource={
+                        "projectId": project_id,
+                        "apiId": request.api_id,
+                        "apiStageId": request.api_stage_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                 ),
             )
             return api_error_response(status.HTTP_403_FORBIDDEN, "caller is not a project owner")
@@ -148,7 +153,12 @@ async def create_api_access_request(
                     detail="api is not published",
                     caller=caller,
                     request_context=request_context,
-                    resource={"projectId": project_id},
+                    resource={
+                        "projectId": project_id,
+                        "apiId": request.api_id,
+                        "apiStageId": request.api_stage_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                 ),
             )
             return api_error_response(status.HTTP_404_NOT_FOUND, "api is not published")
@@ -181,7 +191,12 @@ async def create_api_access_request(
                     detail="api reviewer is not configured",
                     caller=caller,
                     request_context=request_context,
-                    resource={"projectId": project_id},
+                    resource={
+                        "projectId": project_id,
+                        "apiId": request.api_id,
+                        "apiStageId": request.api_stage_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                 ),
             )
             return api_error_response(status.HTTP_409_CONFLICT, "api reviewer is not configured")
@@ -215,7 +230,12 @@ async def create_api_access_request(
                     detail="requested auth mode client is not configured",
                     caller=caller,
                     request_context=request_context,
-                    resource={"projectId": project_id},
+                    resource={
+                        "projectId": project_id,
+                        "apiId": request.api_id,
+                        "apiStageId": request.api_stage_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                 ),
             )
             return api_error_response(
@@ -251,7 +271,12 @@ async def create_api_access_request(
                     detail="active subscription already exists",
                     caller=caller,
                     request_context=request_context,
-                    resource={"projectId": project_id},
+                    resource={
+                        "projectId": project_id,
+                        "apiId": request.api_id,
+                        "apiStageId": request.api_stage_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                 ),
             )
             return api_error_response(
@@ -287,7 +312,12 @@ async def create_api_access_request(
                     detail="pending access request already exists",
                     caller=caller,
                     request_context=request_context,
-                    resource={"projectId": project_id},
+                    resource={
+                        "projectId": project_id,
+                        "apiId": request.api_id,
+                        "apiStageId": request.api_stage_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                 ),
             )
             return api_error_response(
@@ -318,7 +348,12 @@ async def create_api_access_request(
                     detail="idempotency key is already used",
                     caller=caller,
                     request_context=request_context,
-                    resource={"projectId": project_id},
+                    resource={
+                        "projectId": project_id,
+                        "apiId": request.api_id,
+                        "apiStageId": request.api_stage_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                 ),
             )
             return api_error_response(
@@ -376,7 +411,12 @@ async def create_api_access_request(
                     detail="database integrity error",
                     caller=caller,
                     request_context=request_context,
-                    resource={"projectId": project_id},
+                    resource={
+                        "projectId": project_id,
+                        "apiId": request.api_id,
+                        "apiStageId": request.api_stage_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                     error=error,
                 ),
             )
@@ -413,7 +453,12 @@ async def create_api_access_request(
                     detail="database commit failed",
                     caller=caller,
                     request_context=request_context,
-                    resource={"projectId": project_id},
+                    resource={
+                        "projectId": project_id,
+                        "apiId": request.api_id,
+                        "apiStageId": request.api_stage_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                     error=error,
                 ),
             )
@@ -451,7 +496,12 @@ async def create_api_access_request(
                 detail=str(error),
                 caller=caller,
                 request_context=request_context,
-                resource={"projectId": project_id},
+                resource={
+                    "projectId": project_id,
+                    "apiId": request.api_id,
+                    "apiStageId": request.api_stage_id,
+                    "idempotencyKey": idempotency_key,
+                },
                 error=error,
             ),
         )

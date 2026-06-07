@@ -172,10 +172,37 @@ async def route() -> object:
             ),
             operator_action="actorPrincipalIdと認可条件を確認する。",
             runbook="RUNBOOK-authorization-forbidden",
-            context={"api": {"statusCode": status.HTTP_403_FORBIDDEN}},
+            context=router_log_context(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="caller cannot list projects",
+                caller=caller,
+                resource={
+                    "derivedState": query.derived_state,
+                    "keyword": query.keyword,
+                },
+            ),
         )
         return api_error_response(status.HTTP_403_FORBIDDEN, "caller cannot list projects")
     return {}
+""",
+    )
+    write_file(
+        tmp_path,
+        "src/app/apis/projects/list_projects/schemas.py",
+        """
+from pydantic import Field
+from app.apis.base import ApiBaseModel
+
+
+class ErrorResource(ApiBaseModel):
+    derived_state: str | None = Field(
+        default=None,
+        description="一覧復帰時に同じ絞り込みを再現するためのProject状態条件です。",
+    )
+    keyword: str | None = Field(
+        default=None,
+        description="一覧復帰時に同じ絞り込みを再現するための検索キーワードです。",
+    )
 """,
     )
     write_file(
@@ -208,6 +235,15 @@ async def has_project_list_permission(caller) -> bool:
     rendered = render_catalog(catalogs[0], tmp_path)
     assert "呼び出し元が Project 一覧を参照できない場合。" in rendered
     assert "RUNBOOK-authorization-forbidden" in rendered
+    assert (
+        "| `resource.derivedState` | "
+        "一覧復帰時に同じ絞り込みを再現するためのProject状態条件です。 |" in rendered
+    )
+    assert (
+        "| `resource.keyword` | "
+        "一覧復帰時に同じ絞り込みを再現するための検索キーワードです。 |" in rendered
+    )
+    assert "resource.derivedState, resource.keyword" in rendered
 
     index = render_index(catalogs, tmp_path / "docs/spec/40.apis", "messages_gen.md", tmp_path)
     assert "`M001` | `listProjects.caller_cannot_list_projects` | `WARNING` | 403" in index

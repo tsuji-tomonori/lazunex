@@ -56,9 +56,14 @@
 | `traceId` | リクエストとログを横断して追跡する相関IDです。 |
 | `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
 | `api.statusCode` | API responseとして返したHTTP status codeです。 |
-| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `resource.projectId` | 更新対象Projectの存在確認、権限確認、状態確認に使用するProject IDです。 |
 | `error.code` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | エラー内容を運用者が理解するための説明です。 |
+| `request.actorType` | リクエスト実行主体の種別です。 |
+| `request.sourceIp` | 呼び出し元IPアドレスです。 |
+| `request.userAgent` | 呼び出し元User-Agentです。 |
+| `resource.expectedRowVersion` | 楽観ロック競合時に現在値との差分確認と再送判断に使用する期待行versionです。 |
+| `resource.idempotencyKey` | 同じpublic client更新リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 
 ### `M002` `updateProjectPublicClient.router_api_function_error`
 
@@ -73,7 +78,7 @@
 | 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
 | 対応すべきこと | 同一routeの5xx率、直近deploy、Cognito/DB状態を確認する。 |
 | runbook | RUNBOOK-unexpected-api-failure |
-| 実装参照 | src/app/apis/projects/update_project_public_client/router.py:288<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:288 (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/update_project_public_client/router.py:304<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:304 (ops_logger.error) |
 
 #### 出力項目
 
@@ -82,10 +87,15 @@
 | `traceId` | リクエストとログを横断して追跡する相関IDです。 |
 | `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
 | `api.statusCode` | API responseとして返したHTTP status codeです。 |
-| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `resource.projectId` | 更新対象Projectの存在確認、権限確認、状態確認に使用するProject IDです。 |
 | `error.code` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | エラー内容を運用者が理解するための説明です。 |
 | `error.exceptionType` | 捕捉された例外の型名です。 |
+| `request.actorType` | リクエスト実行主体の種別です。 |
+| `request.sourceIp` | 呼び出し元IPアドレスです。 |
+| `request.userAgent` | 呼び出し元User-Agentです。 |
+| `resource.expectedRowVersion` | 楽観ロック競合時に現在値との差分確認と再送判断に使用する期待行versionです。 |
+| `resource.idempotencyKey` | 同じpublic client更新リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 
 ### `M003` `updateProjectPublicClient.db_integrity_error`
 
@@ -100,7 +110,7 @@
 | 説明 | public app client更新のDB transaction commitでIntegrityErrorを捕捉した場合。 |
 | 対応すべきこと | project/public_client/provisioning/idempotency、Cognito、制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。 |
 | runbook | RUNBOOK-db-data-repair |
-| 実装参照 | src/app/apis/projects/update_project_public_client/router.py:208<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:208 (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/update_project_public_client/router.py:216<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:216 (ops_logger.error) |
 
 #### 出力項目
 
@@ -109,10 +119,15 @@
 | `traceId` | リクエストとログを横断して追跡する相関IDです。 |
 | `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
 | `api.statusCode` | API responseとして返したHTTP status codeです。 |
-| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `resource.projectId` | 更新対象Projectの存在確認、権限確認、状態確認に使用するProject IDです。 |
 | `error.code` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | エラー内容を運用者が理解するための説明です。 |
 | `error.exceptionType` | 捕捉された例外の型名です。 |
+| `request.actorType` | リクエスト実行主体の種別です。 |
+| `request.sourceIp` | 呼び出し元IPアドレスです。 |
+| `request.userAgent` | 呼び出し元User-Agentです。 |
+| `resource.expectedRowVersion` | 楽観ロック競合時に現在値との差分確認と再送判断に使用する期待行versionです。 |
+| `resource.idempotencyKey` | 同じpublic client更新リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 
 ### `M004` `updateProjectPublicClient.db_commit_failed`
 
@@ -127,7 +142,7 @@
 | 説明 | public app client更新のDB transaction commitでSQLAlchemyErrorを捕捉した場合。 |
 | 対応すべきこと | DB接続状態、transaction rollback、idempotency状態を確認し、必要に応じて利用者へ再実行を案内する。 |
 | runbook | RUNBOOK-db-commit-retry |
-| 実装参照 | src/app/apis/projects/update_project_public_client/router.py:245<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:245 (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/update_project_public_client/router.py:257<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:257 (ops_logger.error) |
 
 #### 出力項目
 
@@ -136,10 +151,15 @@
 | `traceId` | リクエストとログを横断して追跡する相関IDです。 |
 | `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
 | `api.statusCode` | API responseとして返したHTTP status codeです。 |
-| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `resource.projectId` | 更新対象Projectの存在確認、権限確認、状態確認に使用するProject IDです。 |
 | `error.code` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | エラー内容を運用者が理解するための説明です。 |
 | `error.exceptionType` | 捕捉された例外の型名です。 |
+| `request.actorType` | リクエスト実行主体の種別です。 |
+| `request.sourceIp` | 呼び出し元IPアドレスです。 |
+| `request.userAgent` | 呼び出し元User-Agentです。 |
+| `resource.expectedRowVersion` | 楽観ロック競合時に現在値との差分確認と再送判断に使用する期待行versionです。 |
+| `resource.idempotencyKey` | 同じpublic client更新リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 
 ### `M005` `updateProjectPublicClient.idempotency_key_already_used`
 
@@ -154,7 +174,7 @@
 | 説明 | Idempotency-Keyに対応する処理結果が既に存在する場合。 |
 | 対応すべきこと | Idempotency-Key、operationId、既存responsePayloadを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/projects/update_project_public_client/router.py:129<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:129 (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/update_project_public_client/router.py:133<br>wrapper: src/app/apis/projects/update_project_public_client/router.py:133 (ops_logger.warning) |
 
 #### 出力項目
 
@@ -163,19 +183,24 @@
 | `traceId` | リクエストとログを横断して追跡する相関IDです。 |
 | `actorPrincipalId` | APIを呼び出した認証主体IDです。 |
 | `api.statusCode` | API responseとして返したHTTP status codeです。 |
-| `resource.projectId` | 操作対象Projectを一意に識別するIDです。 |
+| `resource.projectId` | 更新対象Projectの存在確認、権限確認、状態確認に使用するProject IDです。 |
 | `error.code` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | エラー内容を運用者が理解するための説明です。 |
+| `request.actorType` | リクエスト実行主体の種別です。 |
+| `request.sourceIp` | 呼び出し元IPアドレスです。 |
+| `request.userAgent` | 呼び出し元User-Agentです。 |
+| `resource.expectedRowVersion` | 楽観ロック競合時に現在値との差分確認と再送判断に使用する期待行versionです。 |
+| `resource.idempotencyKey` | 同じpublic client更新リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 
 ## loggerラッパー呼び出し一覧
 
 | source | function | wrapper | catalog_id | message_id | level_hint | context keys |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `src/app/apis/projects/update_project_public_client/router.py:99` | update_project_public_client | `ops_logger.warning` | `M001` | `updateProjectPublicClient.caller_is_not_a_project_owner` | `WARNING` |  |
-| `src/app/apis/projects/update_project_public_client/router.py:129` | update_project_public_client | `ops_logger.warning` | `M005` | `updateProjectPublicClient.idempotency_key_already_used` | `WARNING` |  |
-| `src/app/apis/projects/update_project_public_client/router.py:208` | update_project_public_client | `ops_logger.error` | `M003` | `updateProjectPublicClient.db_integrity_error` | `ERROR` |  |
-| `src/app/apis/projects/update_project_public_client/router.py:245` | update_project_public_client | `ops_logger.error` | `M004` | `updateProjectPublicClient.db_commit_failed` | `ERROR` |  |
-| `src/app/apis/projects/update_project_public_client/router.py:288` | update_project_public_client | `ops_logger.error` | `M002` | `updateProjectPublicClient.router_api_function_error` | `ERROR` |  |
+| `src/app/apis/projects/update_project_public_client/router.py:99` | update_project_public_client | `ops_logger.warning` | `M001` | `updateProjectPublicClient.caller_is_not_a_project_owner` | `WARNING` | actorPrincipalId, api.statusCode, error.code, error.message, request.actorType, request.sourceIp, request.userAgent, resource.expectedRowVersion, resource.idempotencyKey, resource.projectId, traceId |
+| `src/app/apis/projects/update_project_public_client/router.py:133` | update_project_public_client | `ops_logger.warning` | `M005` | `updateProjectPublicClient.idempotency_key_already_used` | `WARNING` | actorPrincipalId, api.statusCode, error.code, error.message, request.actorType, request.sourceIp, request.userAgent, resource.expectedRowVersion, resource.idempotencyKey, resource.projectId, traceId |
+| `src/app/apis/projects/update_project_public_client/router.py:216` | update_project_public_client | `ops_logger.error` | `M003` | `updateProjectPublicClient.db_integrity_error` | `ERROR` | actorPrincipalId, api.statusCode, error.code, error.exceptionType, error.message, request.actorType, request.sourceIp, request.userAgent, resource.expectedRowVersion, resource.idempotencyKey, resource.projectId, traceId |
+| `src/app/apis/projects/update_project_public_client/router.py:257` | update_project_public_client | `ops_logger.error` | `M004` | `updateProjectPublicClient.db_commit_failed` | `ERROR` | actorPrincipalId, api.statusCode, error.code, error.exceptionType, error.message, request.actorType, request.sourceIp, request.userAgent, resource.expectedRowVersion, resource.idempotencyKey, resource.projectId, traceId |
+| `src/app/apis/projects/update_project_public_client/router.py:304` | update_project_public_client | `ops_logger.error` | `M002` | `updateProjectPublicClient.router_api_function_error` | `ERROR` | actorPrincipalId, api.statusCode, error.code, error.exceptionType, error.message, request.actorType, request.sourceIp, request.userAgent, resource.expectedRowVersion, resource.idempotencyKey, resource.projectId, traceId |
 
 ## strict検証で要求する項目
 

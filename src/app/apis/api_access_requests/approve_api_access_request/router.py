@@ -123,7 +123,10 @@ async def approve_api_access_request(
                     detail="access request is not pending",
                     caller=caller,
                     request_context=request_context,
-                    resource={"accessRequestId": access_request_id},
+                    resource={
+                        "accessRequestId": access_request_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                 ),
             )
             return api_error_response(status.HTTP_409_CONFLICT, "access request is not pending")
@@ -151,7 +154,10 @@ async def approve_api_access_request(
                     detail="caller is not an api reviewer",
                     caller=caller,
                     request_context=request_context,
-                    resource={"accessRequestId": access_request_id},
+                    resource={
+                        "accessRequestId": access_request_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                 ),
             )
             return api_error_response(status.HTTP_403_FORBIDDEN, "caller is not an api reviewer")
@@ -179,7 +185,10 @@ async def approve_api_access_request(
                     detail="project api stage is not available",
                     caller=caller,
                     request_context=request_context,
-                    resource={"accessRequestId": access_request_id},
+                    resource={
+                        "accessRequestId": access_request_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                 ),
             )
             return api_error_response(
@@ -209,7 +218,10 @@ async def approve_api_access_request(
                     detail="active subscription already exists",
                     caller=caller,
                     request_context=request_context,
-                    resource={"accessRequestId": access_request_id},
+                    resource={
+                        "accessRequestId": access_request_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                 ),
             )
             return api_error_response(
@@ -240,7 +252,10 @@ async def approve_api_access_request(
                     detail="idempotency key is already used",
                     caller=caller,
                     request_context=request_context,
-                    resource={"accessRequestId": access_request_id},
+                    resource={
+                        "accessRequestId": access_request_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                 ),
             )
             return api_error_response(
@@ -372,7 +387,10 @@ async def approve_api_access_request(
                     detail="database integrity error",
                     caller=caller,
                     request_context=request_context,
-                    resource={"accessRequestId": access_request_id},
+                    resource={
+                        "accessRequestId": access_request_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                     error=error,
                 ),
             )
@@ -409,7 +427,10 @@ async def approve_api_access_request(
                     detail="database commit failed",
                     caller=caller,
                     request_context=request_context,
-                    resource={"accessRequestId": access_request_id},
+                    resource={
+                        "accessRequestId": access_request_id,
+                        "idempotencyKey": idempotency_key,
+                    },
                     error=error,
                 ),
             )
@@ -452,7 +473,10 @@ async def approve_api_access_request(
                 detail=str(error),
                 caller=caller,
                 request_context=request_context,
-                resource={"accessRequestId": access_request_id},
+                resource={
+                    "accessRequestId": access_request_id,
+                    "idempotencyKey": idempotency_key,
+                },
                 error=error,
             ),
         )

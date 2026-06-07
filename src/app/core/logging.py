@@ -98,7 +98,7 @@ _ALLOWED_SECRET_METADATA_KEYS = {
     "enable_token_revocation",
 }
 _MAX_STRING_LENGTH = 4096
-_DOTTED_LOG_CONTEXT_PREFIXES = {"api", "resource", "aws", "metrics", "error"}
+_DOTTED_LOG_CONTEXT_PREFIXES = {"api", "request", "resource", "aws", "metrics", "error"}
 
 
 def _log_context_alias(field_name: str) -> str:
@@ -124,6 +124,15 @@ class OperationalLogContextSchema(BaseModel):
     actor_principal_id: str | None = Field(
         default=None,
         description="APIを呼び出した認証主体IDです。",
+    )
+    request_source_ip: str | None = Field(default=None, description="呼び出し元IPアドレスです。")
+    request_user_agent: str | None = Field(
+        default=None,
+        description="呼び出し元User-Agentです。",
+    )
+    request_actor_type: str | None = Field(
+        default=None,
+        description="リクエスト実行主体の種別です。",
     )
     api_method: str | None = Field(default=None, description="呼び出されたAPIのHTTP methodです。")
     api_route: str | None = Field(default=None, description="呼び出されたAPI routeです。")

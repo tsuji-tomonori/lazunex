@@ -74,6 +74,11 @@ async def list_apis(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="caller cannot list apis",
                     caller=caller,
+                    resource={
+                        "derivedState": query.derived_state,
+                        "keyword": query.keyword,
+                        "providerName": query.provider_name,
+                    },
                 ),
             )
             return api_error_response(status.HTTP_403_FORBIDDEN, "caller cannot list apis")
@@ -106,6 +111,11 @@ async def list_apis(
                 status_code=status_code_for_router_error(error),
                 detail=str(error),
                 caller=caller,
+                resource={
+                    "derivedState": query.derived_state,
+                    "keyword": query.keyword,
+                    "providerName": query.provider_name,
+                },
                 error=error,
             ),
         )

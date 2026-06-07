@@ -77,6 +77,11 @@ async def list_projects(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="caller cannot list projects",
                     caller=caller,
+                    resource={
+                        "derivedState": query.derived_state,
+                        "keyword": query.keyword,
+                        "ownerPrincipalId": query.owner_principal_id,
+                    },
                 ),
             )
             return api_error_response(status.HTTP_403_FORBIDDEN, "caller cannot list projects")
@@ -109,6 +114,11 @@ async def list_projects(
                 status_code=status_code_for_router_error(error),
                 detail=str(error),
                 caller=caller,
+                resource={
+                    "derivedState": query.derived_state,
+                    "keyword": query.keyword,
+                    "ownerPrincipalId": query.owner_principal_id,
+                },
                 error=error,
             ),
         )

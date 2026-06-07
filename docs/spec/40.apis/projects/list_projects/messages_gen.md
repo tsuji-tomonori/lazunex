@@ -55,6 +55,9 @@
 | `api.statusCode` | API responseとして返したHTTP status codeです。 |
 | `error.code` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | エラー内容を運用者が理解するための説明です。 |
+| `resource.derivedState` | 一覧復帰時に同じ絞り込みを再現するためのProject状態条件です。 |
+| `resource.keyword` | 一覧復帰時に同じ絞り込みを再現するための検索キーワードです。 |
+| `resource.ownerPrincipalId` | 一覧復帰時に同じ絞り込みを再現するためのProject所有者IDです。 |
 
 ### `M002` `listProjects.router_api_function_error`
 
@@ -69,7 +72,7 @@
 | 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
 | 対応すべきこと | 同一routeの5xx率、直近deploy、DB状態を確認する。 |
 | runbook | RUNBOOK-unexpected-api-failure |
-| 実装参照 | src/app/apis/projects/list_projects/router.py:87<br>wrapper: src/app/apis/projects/list_projects/router.py:87 (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/list_projects/router.py:92<br>wrapper: src/app/apis/projects/list_projects/router.py:92 (ops_logger.error) |
 
 #### 出力項目
 
@@ -81,13 +84,16 @@
 | `error.code` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | エラー内容を運用者が理解するための説明です。 |
 | `error.exceptionType` | 捕捉された例外の型名です。 |
+| `resource.derivedState` | 一覧復帰時に同じ絞り込みを再現するためのProject状態条件です。 |
+| `resource.keyword` | 一覧復帰時に同じ絞り込みを再現するための検索キーワードです。 |
+| `resource.ownerPrincipalId` | 一覧復帰時に同じ絞り込みを再現するためのProject所有者IDです。 |
 
 ## loggerラッパー呼び出し一覧
 
 | source | function | wrapper | catalog_id | message_id | level_hint | context keys |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `src/app/apis/projects/list_projects/router.py:58` | list_projects | `ops_logger.warning` | `M001` | `listProjects.caller_cannot_list_projects` | `WARNING` |  |
-| `src/app/apis/projects/list_projects/router.py:87` | list_projects | `ops_logger.error` | `M002` | `listProjects.router_api_function_error` | `ERROR` |  |
+| `src/app/apis/projects/list_projects/router.py:58` | list_projects | `ops_logger.warning` | `M001` | `listProjects.caller_cannot_list_projects` | `WARNING` | actorPrincipalId, api.statusCode, error.code, error.message, resource.derivedState, resource.keyword, resource.ownerPrincipalId |
+| `src/app/apis/projects/list_projects/router.py:92` | list_projects | `ops_logger.error` | `M002` | `listProjects.router_api_function_error` | `ERROR` | actorPrincipalId, api.statusCode, error.code, error.exceptionType, error.message, resource.derivedState, resource.keyword, resource.ownerPrincipalId |
 
 ## strict検証で要求する項目
 
