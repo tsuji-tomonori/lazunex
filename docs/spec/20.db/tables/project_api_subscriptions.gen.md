@@ -4,17 +4,17 @@
 
 | カラム | 型 | NULL許可 | キー | 説明 |
 | :--- | :--- | :--- | :--- | :--- |
-| `subscription_id` | `UUID` | NO | PK | 利用権ID。 |
-| `project_id` | `UUID` | NO | FK -> projects(project_id) | 利用権を持つProject ID。 |
-| `api_id` | `UUID` | NO | FK -> apis(api_id) | 利用可能なAPI ID。 |
-| `api_stage_id` | `UUID` | NO | FK -> api_gateway_stages(api_stage_id) | 利用可能なAPI stage ID。 |
-| `access_request_id` | `UUID` | NO | FK -> api_access_requests(access_request_id) | 利用権の元になった利用申請ID。 |
+| `subscription_id` | `CHAR(36)` | NO | PK | 利用権ID。 |
+| `project_id` | `CHAR(36)` | NO | FK -> projects(project_id) | 利用権を持つProject ID。 |
+| `api_id` | `CHAR(36)` | NO | FK -> apis(api_id) | 利用可能なAPI ID。 |
+| `api_stage_id` | `CHAR(36)` | NO | FK -> api_gateway_stages(api_stage_id) | 利用可能なAPI stage ID。 |
+| `access_request_id` | `CHAR(36)` | NO | FK -> api_access_requests(access_request_id) | 利用権の元になった利用申請ID。 |
 | `approved_auth_mode` | `VARCHAR(30)` | NO |  | 承認された認証方式。PUBLIC_PKCE、CLIENT_CREDENTIALS、BOTH。 |
 | `approved_by` | `VARCHAR(256)` | NO |  | 承認者のprincipal。 |
-| `approved_at` | `TIMESTAMPTZ` | NO |  | 承認日時。 |
-| `created_at` | `TIMESTAMPTZ` | NO |  | 作成日時。 |
+| `approved_at` | `DATETIME(6)` | NO |  | 承認日時。 |
+| `created_at` | `DATETIME(6)` | NO |  | 作成日時。 |
 | `created_by` | `VARCHAR(256)` | NO |  | 作成者のprincipal。 |
-| `updated_at` | `TIMESTAMPTZ` | NO |  | 更新日時。 |
+| `updated_at` | `DATETIME(6)` | NO |  | 更新日時。 |
 | `updated_by` | `VARCHAR(256)` | NO |  | 更新者のprincipal。 |
 | `row_version` | `INT` | NO |  | 楽観ロック用の行バージョン。 |
 

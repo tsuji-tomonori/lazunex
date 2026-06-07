@@ -184,7 +184,7 @@ def add_column_references(
         usage.add_column(
             table_name,
             column.name,
-            reference(path, starts, column, column.sql(dialect="postgres")),
+            reference(path, starts, column, column.sql(dialect="mysql")),
         )
 
 
@@ -193,7 +193,7 @@ def parse_sql_usage(sql: str, path: str | PathLike[str]) -> SqlUsage:
     starts = line_index(sql)
     usage = SqlUsage()
 
-    for tree in sqlglot.parse(sql, read="postgres"):
+    for tree in sqlglot.parse(sql, read="mysql"):
         if tree is None:
             continue
         if not isinstance(tree, Expression):
@@ -213,7 +213,7 @@ def collect_sql_usage(sql_dir: Path) -> SqlUsage:
 
 def ddl_like_sources(ddl_sql: str) -> set[str]:
     sources: set[str] = set()
-    for statement in sqlglot.parse(ddl_sql, read="postgres"):
+    for statement in sqlglot.parse(ddl_sql, read="mysql"):
         if not isinstance(statement, exp.Create) or statement.kind != "TABLE":
             continue
         properties = statement.args.get("properties")

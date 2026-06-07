@@ -1,14 +1,14 @@
 CREATE TABLE hub_users (
-    user_id uuid PRIMARY KEY,
-    external_subject varchar(256) NOT NULL UNIQUE,
-    email varchar(320) NOT NULL,
-    display_name varchar(200) NOT NULL,
-    department_code varchar(64) NOT NULL,
-    created_at timestamptz NOT NULL,
-    created_by varchar(256) NOT NULL,
-    updated_at timestamptz NOT NULL,
-    updated_by varchar(256) NOT NULL,
-    row_version integer NOT NULL
+    user_id CHAR(36) PRIMARY KEY,
+    external_subject VARCHAR(256) NOT NULL UNIQUE,
+    email VARCHAR(320) NOT NULL,
+    display_name VARCHAR(200) NOT NULL,
+    department_code VARCHAR(64) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    created_by VARCHAR(256) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+    row_version INTEGER NOT NULL
 );
 
 -- COMMENT ON TABLE hub_users IS 'Hub内の利用者、API提供者、審査者、プロジェクトメンバーを表す。状態はhub_user_eventsから導出する。';
@@ -24,20 +24,20 @@ CREATE TABLE hub_users (
 -- COMMENT ON COLUMN hub_users.row_version IS '楽観ロック用の行バージョン。';
 
 CREATE TABLE apis (
-    api_id uuid PRIMARY KEY,
-    api_code varchar(100) NOT NULL UNIQUE,
-    name varchar(200) NOT NULL, -- noqa: RF04
-    description text NOT NULL, -- noqa: RF04
-    provider_name varchar(200) NOT NULL,
-    provider_contact varchar(320) NOT NULL,
-    owner_principal_id varchar(256) NOT NULL,
-    visibility varchar(20) NOT NULL,
-    default_api_stage_id uuid,
-    created_at timestamptz NOT NULL,
-    created_by varchar(256) NOT NULL,
-    updated_at timestamptz NOT NULL,
-    updated_by varchar(256) NOT NULL,
-    row_version integer NOT NULL
+    api_id CHAR(36) PRIMARY KEY,
+    api_code VARCHAR(100) NOT NULL UNIQUE,
+    name VARCHAR(200) NOT NULL, -- noqa: RF04
+    description TEXT NOT NULL, -- noqa: RF04
+    provider_name VARCHAR(200) NOT NULL,
+    provider_contact VARCHAR(320) NOT NULL,
+    owner_principal_id VARCHAR(256) NOT NULL,
+    visibility VARCHAR(20) NOT NULL,
+    default_api_stage_id CHAR(36),
+    created_at DATETIME(6) NOT NULL,
+    created_by VARCHAR(256) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+    row_version INTEGER NOT NULL
 );
 
 -- COMMENT ON TABLE apis IS 'APIカタログの親情報を表す。公開、停止、廃止などの状態はapi_eventsから導出する。';
@@ -57,23 +57,23 @@ CREATE TABLE apis (
 -- COMMENT ON COLUMN apis.row_version IS '楽観ロック用の行バージョン。';
 
 CREATE TABLE api_gateway_stages (
-    api_stage_id uuid PRIMARY KEY,
-    api_id uuid NOT NULL REFERENCES apis (api_id),
-    aws_account_id varchar(12) NOT NULL,
-    aws_region varchar(32) NOT NULL,
-    apigw_rest_api_id varchar(128) NOT NULL,
-    apigw_stage_name varchar(128) NOT NULL,
-    invoke_url text NOT NULL,
-    custom_domain_url text,
-    deployment_id varchar(128),
-    authorizer_id varchar(128),
-    api_key_required_observed boolean NOT NULL,
-    scope_config_observed varchar(30) NOT NULL,
-    created_at timestamptz NOT NULL,
-    created_by varchar(256) NOT NULL,
-    updated_at timestamptz NOT NULL,
-    updated_by varchar(256) NOT NULL,
-    row_version integer NOT NULL,
+    api_stage_id CHAR(36) PRIMARY KEY,
+    api_id CHAR(36) NOT NULL REFERENCES apis (api_id),
+    aws_account_id VARCHAR(12) NOT NULL,
+    aws_region VARCHAR(32) NOT NULL,
+    apigw_rest_api_id VARCHAR(128) NOT NULL,
+    apigw_stage_name VARCHAR(128) NOT NULL,
+    invoke_url TEXT NOT NULL,
+    custom_domain_url TEXT,
+    deployment_id VARCHAR(128),
+    authorizer_id VARCHAR(128),
+    api_key_required_observed BOOLEAN NOT NULL,
+    scope_config_observed VARCHAR(30) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    created_by VARCHAR(256) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+    row_version INTEGER NOT NULL,
     UNIQUE (aws_account_id, aws_region, apigw_rest_api_id, apigw_stage_name)
 );
 
@@ -101,18 +101,18 @@ ALTER TABLE apis
     FOREIGN KEY (default_api_stage_id) REFERENCES api_gateway_stages (api_stage_id);
 
 CREATE TABLE api_cognito_scopes (
-    api_scope_id uuid PRIMARY KEY,
-    api_id uuid NOT NULL UNIQUE REFERENCES apis (api_id),
-    cognito_user_pool_id varchar(55) NOT NULL,
-    resource_server_identifier varchar(256) NOT NULL,
-    scope_name varchar(256) NOT NULL, -- noqa: RF04
-    scope_full_name varchar(600) NOT NULL UNIQUE,
-    scope_description varchar(256) NOT NULL,
-    created_at timestamptz NOT NULL,
-    created_by varchar(256) NOT NULL,
-    updated_at timestamptz NOT NULL,
-    updated_by varchar(256) NOT NULL,
-    row_version integer NOT NULL
+    api_scope_id CHAR(36) PRIMARY KEY,
+    api_id CHAR(36) NOT NULL UNIQUE REFERENCES apis (api_id),
+    cognito_user_pool_id VARCHAR(55) NOT NULL,
+    resource_server_identifier VARCHAR(256) NOT NULL,
+    scope_name VARCHAR(256) NOT NULL, -- noqa: RF04
+    scope_full_name VARCHAR(600) NOT NULL UNIQUE,
+    scope_description VARCHAR(256) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    created_by VARCHAR(256) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+    row_version INTEGER NOT NULL
 );
 
 -- COMMENT ON TABLE api_cognito_scopes IS 'APIごとのCognito custom scopeを表す。削除や無効化の状態はapi_scope_eventsから導出する。';
@@ -130,20 +130,20 @@ CREATE TABLE api_cognito_scopes (
 -- COMMENT ON COLUMN api_cognito_scopes.row_version IS '楽観ロック用の行バージョン。';
 
 CREATE TABLE api_documents (
-    api_document_id uuid PRIMARY KEY,
-    api_id uuid NOT NULL REFERENCES apis (api_id),
-    document_type varchar(20) NOT NULL,
-    version_label varchar(50) NOT NULL,
-    s3_uri text NOT NULL,
-    sha256 varchar(64) NOT NULL,
-    source_filename varchar(255) NOT NULL,
-    uploaded_by varchar(256) NOT NULL,
-    uploaded_at timestamptz NOT NULL,
-    created_at timestamptz NOT NULL,
-    created_by varchar(256) NOT NULL,
-    updated_at timestamptz NOT NULL,
-    updated_by varchar(256) NOT NULL,
-    row_version integer NOT NULL
+    api_document_id CHAR(36) PRIMARY KEY,
+    api_id CHAR(36) NOT NULL REFERENCES apis (api_id),
+    document_type VARCHAR(20) NOT NULL,
+    version_label VARCHAR(50) NOT NULL,
+    s3_uri TEXT NOT NULL,
+    sha256 VARCHAR(64) NOT NULL,
+    source_filename VARCHAR(255) NOT NULL,
+    uploaded_by VARCHAR(256) NOT NULL,
+    uploaded_at DATETIME(6) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    created_by VARCHAR(256) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+    row_version INTEGER NOT NULL
 );
 
 -- COMMENT ON TABLE api_documents IS 'APIに紐づくOpenAPI YAMLやREADMEなどのドキュメント配置情報を表す。';
@@ -163,15 +163,15 @@ CREATE TABLE api_documents (
 -- COMMENT ON COLUMN api_documents.row_version IS '楽観ロック用の行バージョン。';
 
 CREATE TABLE api_reviewers (
-    api_reviewer_id uuid PRIMARY KEY,
-    api_id uuid NOT NULL REFERENCES apis (api_id),
-    reviewer_principal_id varchar(256) NOT NULL,
-    reviewer_role varchar(20) NOT NULL,
-    created_at timestamptz NOT NULL,
-    created_by varchar(256) NOT NULL,
-    updated_at timestamptz NOT NULL,
-    updated_by varchar(256) NOT NULL,
-    row_version integer NOT NULL
+    api_reviewer_id CHAR(36) PRIMARY KEY,
+    api_id CHAR(36) NOT NULL REFERENCES apis (api_id),
+    reviewer_principal_id VARCHAR(256) NOT NULL,
+    reviewer_role VARCHAR(20) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    created_by VARCHAR(256) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+    row_version INTEGER NOT NULL
 );
 
 -- COMMENT ON TABLE api_reviewers IS 'APIごとの審査者割当を表す。追加や削除はapi_reviewer_eventsから導出する。';
@@ -186,17 +186,17 @@ CREATE TABLE api_reviewers (
 -- COMMENT ON COLUMN api_reviewers.row_version IS '楽観ロック用の行バージョン。';
 
 CREATE TABLE projects (
-    project_id uuid PRIMARY KEY,
-    project_code varchar(100) NOT NULL UNIQUE,
-    name varchar(200) NOT NULL, -- noqa: RF04
-    description text NOT NULL, -- noqa: RF04
-    owner_principal_id varchar(256) NOT NULL,
-    department_code varchar(64) NOT NULL,
-    created_at timestamptz NOT NULL,
-    created_by varchar(256) NOT NULL,
-    updated_at timestamptz NOT NULL,
-    updated_by varchar(256) NOT NULL,
-    row_version integer NOT NULL
+    project_id CHAR(36) PRIMARY KEY,
+    project_code VARCHAR(100) NOT NULL UNIQUE,
+    name VARCHAR(200) NOT NULL, -- noqa: RF04
+    description TEXT NOT NULL, -- noqa: RF04
+    owner_principal_id VARCHAR(256) NOT NULL,
+    department_code VARCHAR(64) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    created_by VARCHAR(256) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+    row_version INTEGER NOT NULL
 );
 
 -- COMMENT ON TABLE projects IS 'API利用単位となるプロジェクトを表す。状態はproject_eventsから導出する。';
@@ -213,15 +213,15 @@ CREATE TABLE projects (
 -- COMMENT ON COLUMN projects.row_version IS '楽観ロック用の行バージョン。';
 
 CREATE TABLE project_members (
-    project_member_id uuid PRIMARY KEY,
-    project_id uuid NOT NULL REFERENCES projects (project_id),
-    member_principal_id varchar(256) NOT NULL,
-    member_role varchar(20) NOT NULL,
-    created_at timestamptz NOT NULL,
-    created_by varchar(256) NOT NULL,
-    updated_at timestamptz NOT NULL,
-    updated_by varchar(256) NOT NULL,
-    row_version integer NOT NULL,
+    project_member_id CHAR(36) PRIMARY KEY,
+    project_id CHAR(36) NOT NULL REFERENCES projects (project_id),
+    member_principal_id VARCHAR(256) NOT NULL,
+    member_role VARCHAR(20) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    created_by VARCHAR(256) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+    row_version INTEGER NOT NULL,
     UNIQUE (project_id, member_principal_id)
 );
 
@@ -237,22 +237,22 @@ CREATE TABLE project_members (
 -- COMMENT ON COLUMN project_members.row_version IS '楽観ロック用の行バージョン。';
 
 CREATE TABLE project_api_keys (
-    project_api_key_id uuid PRIMARY KEY,
-    project_id uuid NOT NULL UNIQUE REFERENCES projects (project_id),
-    aws_account_id varchar(12) NOT NULL,
-    aws_region varchar(32) NOT NULL,
-    apigw_api_key_id varchar(128) NOT NULL UNIQUE,
-    apigw_api_key_name varchar(255) NOT NULL,
-    api_key_value_hash varchar(128) NOT NULL,
-    api_key_hash_key_version integer NOT NULL,
-    api_key_last4 varchar(8) NOT NULL,
-    observed_enabled boolean NOT NULL,
-    last_synced_at timestamptz,
-    created_at timestamptz NOT NULL,
-    created_by varchar(256) NOT NULL,
-    updated_at timestamptz NOT NULL,
-    updated_by varchar(256) NOT NULL,
-    row_version integer NOT NULL
+    project_api_key_id CHAR(36) PRIMARY KEY,
+    project_id CHAR(36) NOT NULL UNIQUE REFERENCES projects (project_id),
+    aws_account_id VARCHAR(12) NOT NULL,
+    aws_region VARCHAR(32) NOT NULL,
+    apigw_api_key_id VARCHAR(128) NOT NULL UNIQUE,
+    apigw_api_key_name VARCHAR(255) NOT NULL,
+    api_key_value_hash VARCHAR(128) NOT NULL,
+    api_key_hash_key_version INTEGER NOT NULL,
+    api_key_last4 VARCHAR(8) NOT NULL,
+    observed_enabled BOOLEAN NOT NULL,
+    last_synced_at DATETIME(6),
+    created_at DATETIME(6) NOT NULL,
+    created_by VARCHAR(256) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+    row_version INTEGER NOT NULL
 );
 
 -- COMMENT ON TABLE project_api_keys IS 'ProjectごとのAPI Gateway API Keyの識別子、ハッシュ、末尾表示情報を表す。平文のAPI key値は保存しない。';
@@ -274,22 +274,22 @@ CREATE TABLE project_api_keys (
 -- COMMENT ON COLUMN project_api_keys.row_version IS '楽観ロック用の行バージョン。';
 
 CREATE TABLE project_usage_plans (
-    project_usage_plan_id uuid PRIMARY KEY,
-    project_id uuid NOT NULL UNIQUE REFERENCES projects (project_id),
-    aws_account_id varchar(12) NOT NULL,
-    aws_region varchar(32) NOT NULL,
-    apigw_usage_plan_id varchar(128) NOT NULL UNIQUE,
-    usage_plan_name varchar(255) NOT NULL,
-    default_rate_limit integer,
-    default_burst_limit integer,
-    default_quota_limit integer,
-    default_quota_period varchar(10),
-    last_synced_at timestamptz,
-    created_at timestamptz NOT NULL,
-    created_by varchar(256) NOT NULL,
-    updated_at timestamptz NOT NULL,
-    updated_by varchar(256) NOT NULL,
-    row_version integer NOT NULL
+    project_usage_plan_id CHAR(36) PRIMARY KEY,
+    project_id CHAR(36) NOT NULL UNIQUE REFERENCES projects (project_id),
+    aws_account_id VARCHAR(12) NOT NULL,
+    aws_region VARCHAR(32) NOT NULL,
+    apigw_usage_plan_id VARCHAR(128) NOT NULL UNIQUE,
+    usage_plan_name VARCHAR(255) NOT NULL,
+    default_rate_limit INTEGER,
+    default_burst_limit INTEGER,
+    default_quota_limit INTEGER,
+    default_quota_period VARCHAR(10),
+    last_synced_at DATETIME(6),
+    created_at DATETIME(6) NOT NULL,
+    created_by VARCHAR(256) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+    row_version INTEGER NOT NULL
 );
 
 -- COMMENT ON TABLE project_usage_plans IS 'ProjectごとのAPI Gateway Usage Plan情報を表す。ライフサイクルはproject_usage_plan_eventsから導出する。';
@@ -311,19 +311,19 @@ CREATE TABLE project_usage_plans (
 -- COMMENT ON COLUMN project_usage_plans.row_version IS '楽観ロック用の行バージョン。';
 
 CREATE TABLE project_usage_plan_keys (
-    project_usage_plan_key_id uuid PRIMARY KEY,
-    project_id uuid NOT NULL REFERENCES projects (project_id),
-    project_usage_plan_id uuid NOT NULL REFERENCES project_usage_plans (project_usage_plan_id),
-    project_api_key_id uuid NOT NULL REFERENCES project_api_keys (project_api_key_id),
-    apigw_usage_plan_key_id varchar(128) NOT NULL UNIQUE,
-    apigw_usage_plan_id varchar(128) NOT NULL,
-    apigw_api_key_id varchar(128) NOT NULL,
-    provisioned_at timestamptz,
-    created_at timestamptz NOT NULL,
-    created_by varchar(256) NOT NULL,
-    updated_at timestamptz NOT NULL,
-    updated_by varchar(256) NOT NULL,
-    row_version integer NOT NULL,
+    project_usage_plan_key_id CHAR(36) PRIMARY KEY,
+    project_id CHAR(36) NOT NULL REFERENCES projects (project_id),
+    project_usage_plan_id CHAR(36) NOT NULL REFERENCES project_usage_plans (project_usage_plan_id),
+    project_api_key_id CHAR(36) NOT NULL REFERENCES project_api_keys (project_api_key_id),
+    apigw_usage_plan_key_id VARCHAR(128) NOT NULL UNIQUE,
+    apigw_usage_plan_id VARCHAR(128) NOT NULL,
+    apigw_api_key_id VARCHAR(128) NOT NULL,
+    provisioned_at DATETIME(6),
+    created_at DATETIME(6) NOT NULL,
+    created_by VARCHAR(256) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+    row_version INTEGER NOT NULL,
     UNIQUE (project_usage_plan_id, project_api_key_id)
 );
 
@@ -343,33 +343,33 @@ CREATE TABLE project_usage_plan_keys (
 -- COMMENT ON COLUMN project_usage_plan_keys.row_version IS '楽観ロック用の行バージョン。';
 
 CREATE TABLE project_cognito_clients (
-    project_cognito_client_id uuid PRIMARY KEY,
-    project_id uuid NOT NULL REFERENCES projects (project_id),
-    client_type varchar(40) NOT NULL,
-    cognito_user_pool_id varchar(55) NOT NULL,
-    app_client_id varchar(128) NOT NULL UNIQUE,
-    app_client_name varchar(128) NOT NULL,
-    generate_secret boolean NOT NULL,
-    client_secret_value_hash varchar(128),
-    client_secret_hash_key_version integer,
-    client_secret_last4 varchar(8),
-    allowed_oauth_flows json NOT NULL,
-    base_allowed_scopes json NOT NULL,
-    access_token_validity integer NOT NULL,
-    access_token_unit varchar(10) NOT NULL,
-    id_token_validity integer,
-    id_token_unit varchar(10),
-    refresh_token_validity integer,
-    refresh_token_unit varchar(10),
-    refresh_token_rotation_enabled boolean NOT NULL,
-    retry_grace_period_seconds integer,
-    enable_token_revocation boolean NOT NULL,
-    last_synced_at timestamptz,
-    created_at timestamptz NOT NULL,
-    created_by varchar(256) NOT NULL,
-    updated_at timestamptz NOT NULL,
-    updated_by varchar(256) NOT NULL,
-    row_version integer NOT NULL,
+    project_cognito_client_id CHAR(36) PRIMARY KEY,
+    project_id CHAR(36) NOT NULL REFERENCES projects (project_id),
+    client_type VARCHAR(40) NOT NULL,
+    cognito_user_pool_id VARCHAR(55) NOT NULL,
+    app_client_id VARCHAR(128) NOT NULL UNIQUE,
+    app_client_name VARCHAR(128) NOT NULL,
+    generate_secret BOOLEAN NOT NULL,
+    client_secret_value_hash VARCHAR(128),
+    client_secret_hash_key_version INTEGER,
+    client_secret_last4 VARCHAR(8),
+    allowed_oauth_flows JSON NOT NULL,
+    base_allowed_scopes JSON NOT NULL,
+    access_token_validity INTEGER NOT NULL,
+    access_token_unit VARCHAR(10) NOT NULL,
+    id_token_validity INTEGER,
+    id_token_unit VARCHAR(10),
+    refresh_token_validity INTEGER,
+    refresh_token_unit VARCHAR(10),
+    refresh_token_rotation_enabled BOOLEAN NOT NULL,
+    retry_grace_period_seconds INTEGER,
+    enable_token_revocation BOOLEAN NOT NULL,
+    last_synced_at DATETIME(6),
+    created_at DATETIME(6) NOT NULL,
+    created_by VARCHAR(256) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+    row_version INTEGER NOT NULL,
     UNIQUE (project_id, client_type)
 );
 
@@ -403,15 +403,15 @@ CREATE TABLE project_cognito_clients (
 -- COMMENT ON COLUMN project_cognito_clients.row_version IS '楽観ロック用の行バージョン。';
 
 CREATE TABLE project_cognito_client_urls (
-    client_url_id uuid PRIMARY KEY,
-    project_cognito_client_id uuid NOT NULL REFERENCES project_cognito_clients (project_cognito_client_id),
-    url_type varchar(20) NOT NULL,
-    url text NOT NULL,
-    created_at timestamptz NOT NULL,
-    created_by varchar(256) NOT NULL,
-    updated_at timestamptz NOT NULL,
-    updated_by varchar(256) NOT NULL,
-    row_version integer NOT NULL,
+    client_url_id CHAR(36) PRIMARY KEY,
+    project_cognito_client_id CHAR(36) NOT NULL REFERENCES project_cognito_clients (project_cognito_client_id),
+    url_type VARCHAR(20) NOT NULL,
+    url TEXT NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    created_by VARCHAR(256) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+    row_version INTEGER NOT NULL,
     UNIQUE (project_cognito_client_id, url_type, url)
 );
 
@@ -427,19 +427,19 @@ CREATE TABLE project_cognito_client_urls (
 -- COMMENT ON COLUMN project_cognito_client_urls.row_version IS '楽観ロック用の行バージョン。';
 
 CREATE TABLE api_access_requests (
-    access_request_id uuid PRIMARY KEY,
-    project_id uuid NOT NULL REFERENCES projects (project_id),
-    api_id uuid NOT NULL REFERENCES apis (api_id),
-    api_stage_id uuid NOT NULL REFERENCES api_gateway_stages (api_stage_id),
-    requested_auth_mode varchar(30) NOT NULL,
-    requested_reason text NOT NULL,
-    requested_by varchar(256) NOT NULL,
-    requested_at timestamptz NOT NULL,
-    created_at timestamptz NOT NULL,
-    created_by varchar(256) NOT NULL,
-    updated_at timestamptz NOT NULL,
-    updated_by varchar(256) NOT NULL,
-    row_version integer NOT NULL
+    access_request_id CHAR(36) PRIMARY KEY,
+    project_id CHAR(36) NOT NULL REFERENCES projects (project_id),
+    api_id CHAR(36) NOT NULL REFERENCES apis (api_id),
+    api_stage_id CHAR(36) NOT NULL REFERENCES api_gateway_stages (api_stage_id),
+    requested_auth_mode VARCHAR(30) NOT NULL,
+    requested_reason TEXT NOT NULL,
+    requested_by VARCHAR(256) NOT NULL,
+    requested_at DATETIME(6) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    created_by VARCHAR(256) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+    row_version INTEGER NOT NULL
 );
 
 -- COMMENT ON TABLE api_access_requests IS 'ProjectとAPI stageの組み合わせに対する利用申請を表す。状態はaccess_request_eventsから導出する。';
@@ -458,18 +458,18 @@ CREATE TABLE api_access_requests (
 -- COMMENT ON COLUMN api_access_requests.row_version IS '楽観ロック用の行バージョン。';
 
 CREATE TABLE api_access_reviews (
-    access_review_id uuid PRIMARY KEY,
-    access_request_id uuid NOT NULL REFERENCES api_access_requests (access_request_id),
-    decision varchar(20) NOT NULL,
-    approved_auth_mode varchar(30),
-    reviewer_principal_id varchar(256) NOT NULL,
-    review_comment text,
-    reviewed_at timestamptz NOT NULL,
-    created_at timestamptz NOT NULL,
-    created_by varchar(256) NOT NULL,
-    updated_at timestamptz NOT NULL,
-    updated_by varchar(256) NOT NULL,
-    row_version integer NOT NULL
+    access_review_id CHAR(36) PRIMARY KEY,
+    access_request_id CHAR(36) NOT NULL REFERENCES api_access_requests (access_request_id),
+    decision VARCHAR(20) NOT NULL,
+    approved_auth_mode VARCHAR(30),
+    reviewer_principal_id VARCHAR(256) NOT NULL,
+    review_comment TEXT,
+    reviewed_at DATETIME(6) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    created_by VARCHAR(256) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+    row_version INTEGER NOT NULL
 );
 
 -- COMMENT ON TABLE api_access_reviews IS '利用申請に対する承認または却下の審査結果を表す事実テーブル。';
@@ -487,19 +487,19 @@ CREATE TABLE api_access_reviews (
 -- COMMENT ON COLUMN api_access_reviews.row_version IS '楽観ロック用の行バージョン。';
 
 CREATE TABLE project_api_subscriptions (
-    subscription_id uuid PRIMARY KEY,
-    project_id uuid NOT NULL REFERENCES projects (project_id),
-    api_id uuid NOT NULL REFERENCES apis (api_id),
-    api_stage_id uuid NOT NULL REFERENCES api_gateway_stages (api_stage_id),
-    access_request_id uuid NOT NULL REFERENCES api_access_requests (access_request_id),
-    approved_auth_mode varchar(30) NOT NULL,
-    approved_by varchar(256) NOT NULL,
-    approved_at timestamptz NOT NULL,
-    created_at timestamptz NOT NULL,
-    created_by varchar(256) NOT NULL,
-    updated_at timestamptz NOT NULL,
-    updated_by varchar(256) NOT NULL,
-    row_version integer NOT NULL,
+    subscription_id CHAR(36) PRIMARY KEY,
+    project_id CHAR(36) NOT NULL REFERENCES projects (project_id),
+    api_id CHAR(36) NOT NULL REFERENCES apis (api_id),
+    api_stage_id CHAR(36) NOT NULL REFERENCES api_gateway_stages (api_stage_id),
+    access_request_id CHAR(36) NOT NULL REFERENCES api_access_requests (access_request_id),
+    approved_auth_mode VARCHAR(30) NOT NULL,
+    approved_by VARCHAR(256) NOT NULL,
+    approved_at DATETIME(6) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    created_by VARCHAR(256) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+    row_version INTEGER NOT NULL,
     UNIQUE (project_id, api_stage_id)
 );
 
@@ -519,19 +519,19 @@ CREATE TABLE project_api_subscriptions (
 -- COMMENT ON COLUMN project_api_subscriptions.row_version IS '楽観ロック用の行バージョン。';
 
 CREATE TABLE project_usage_plan_api_stages (
-    usage_plan_api_stage_id uuid PRIMARY KEY,
-    project_id uuid NOT NULL REFERENCES projects (project_id),
-    project_usage_plan_id uuid NOT NULL REFERENCES project_usage_plans (project_usage_plan_id),
-    subscription_id uuid NOT NULL REFERENCES project_api_subscriptions (subscription_id),
-    api_stage_id uuid NOT NULL REFERENCES api_gateway_stages (api_stage_id),
-    apigw_rest_api_id varchar(128) NOT NULL,
-    apigw_stage_name varchar(128) NOT NULL,
-    provisioned_at timestamptz,
-    created_at timestamptz NOT NULL,
-    created_by varchar(256) NOT NULL,
-    updated_at timestamptz NOT NULL,
-    updated_by varchar(256) NOT NULL,
-    row_version integer NOT NULL
+    usage_plan_api_stage_id CHAR(36) PRIMARY KEY,
+    project_id CHAR(36) NOT NULL REFERENCES projects (project_id),
+    project_usage_plan_id CHAR(36) NOT NULL REFERENCES project_usage_plans (project_usage_plan_id),
+    subscription_id CHAR(36) NOT NULL REFERENCES project_api_subscriptions (subscription_id),
+    api_stage_id CHAR(36) NOT NULL REFERENCES api_gateway_stages (api_stage_id),
+    apigw_rest_api_id VARCHAR(128) NOT NULL,
+    apigw_stage_name VARCHAR(128) NOT NULL,
+    provisioned_at DATETIME(6),
+    created_at DATETIME(6) NOT NULL,
+    created_by VARCHAR(256) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+    row_version INTEGER NOT NULL
 );
 
 -- COMMENT ON TABLE project_usage_plan_api_stages IS '承認時にProject Usage Planへ追加したAPI stageの紐づけを表す。状態はusage_plan_stage_eventsから導出する。';
@@ -550,18 +550,18 @@ CREATE TABLE project_usage_plan_api_stages (
 -- COMMENT ON COLUMN project_usage_plan_api_stages.row_version IS '楽観ロック用の行バージョン。';
 
 CREATE TABLE project_cognito_client_scopes (
-    project_cognito_client_scope_id uuid PRIMARY KEY,
-    project_id uuid NOT NULL REFERENCES projects (project_id),
-    project_cognito_client_id uuid NOT NULL REFERENCES project_cognito_clients (project_cognito_client_id),
-    api_scope_id uuid NOT NULL REFERENCES api_cognito_scopes (api_scope_id),
-    subscription_id uuid NOT NULL REFERENCES project_api_subscriptions (subscription_id),
-    scope_full_name varchar(600) NOT NULL,
-    granted_at timestamptz,
-    created_at timestamptz NOT NULL,
-    created_by varchar(256) NOT NULL,
-    updated_at timestamptz NOT NULL,
-    updated_by varchar(256) NOT NULL,
-    row_version integer NOT NULL,
+    project_cognito_client_scope_id CHAR(36) PRIMARY KEY,
+    project_id CHAR(36) NOT NULL REFERENCES projects (project_id),
+    project_cognito_client_id CHAR(36) NOT NULL REFERENCES project_cognito_clients (project_cognito_client_id),
+    api_scope_id CHAR(36) NOT NULL REFERENCES api_cognito_scopes (api_scope_id),
+    subscription_id CHAR(36) NOT NULL REFERENCES project_api_subscriptions (subscription_id),
+    scope_full_name VARCHAR(600) NOT NULL,
+    granted_at DATETIME(6),
+    created_at DATETIME(6) NOT NULL,
+    created_by VARCHAR(256) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+    row_version INTEGER NOT NULL,
     UNIQUE (project_cognito_client_id, api_scope_id)
 );
 
@@ -580,19 +580,19 @@ CREATE TABLE project_cognito_client_scopes (
 -- COMMENT ON COLUMN project_cognito_client_scopes.row_version IS '楽観ロック用の行バージョン。';
 
 CREATE TABLE provisioning_operations (
-    operation_id uuid PRIMARY KEY,
-    idempotency_key varchar(200) NOT NULL UNIQUE,
-    operation_type varchar(50) NOT NULL,
-    target_type varchar(50) NOT NULL,
-    target_id uuid,
-    request_payload json NOT NULL,
-    result_payload json,
-    retry_count integer NOT NULL,
-    created_at timestamptz NOT NULL,
-    created_by varchar(256) NOT NULL,
-    updated_at timestamptz NOT NULL,
-    updated_by varchar(256) NOT NULL,
-    row_version integer NOT NULL
+    operation_id CHAR(36) PRIMARY KEY,
+    idempotency_key VARCHAR(200) NOT NULL UNIQUE,
+    operation_type VARCHAR(50) NOT NULL,
+    target_type VARCHAR(50) NOT NULL,
+    target_id CHAR(36),
+    request_payload JSON NOT NULL,
+    result_payload JSON,
+    retry_count INTEGER NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    created_by VARCHAR(256) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+    row_version INTEGER NOT NULL
 );
 
 -- COMMENT ON TABLE provisioning_operations IS 'CognitoやAPI GatewayなどAWSリソース反映処理の親operationを表す。同期実行でも記録する。';
@@ -611,23 +611,23 @@ CREATE TABLE provisioning_operations (
 -- COMMENT ON COLUMN provisioning_operations.row_version IS '楽観ロック用の行バージョン。';
 
 CREATE TABLE provisioning_steps (
-    operation_step_id uuid PRIMARY KEY,
-    operation_id uuid NOT NULL REFERENCES provisioning_operations (operation_id),
-    step_order integer NOT NULL,
-    step_name varchar(100) NOT NULL,
-    aws_service varchar(50) NOT NULL,
-    aws_action varchar(100) NOT NULL,
-    request_payload json,
-    response_payload json,
-    error_code varchar(100),
-    error_message text,
-    started_at timestamptz,
-    finished_at timestamptz,
-    created_at timestamptz NOT NULL,
-    created_by varchar(256) NOT NULL,
-    updated_at timestamptz NOT NULL,
-    updated_by varchar(256) NOT NULL,
-    row_version integer NOT NULL
+    operation_step_id CHAR(36) PRIMARY KEY,
+    operation_id CHAR(36) NOT NULL REFERENCES provisioning_operations (operation_id),
+    step_order INTEGER NOT NULL,
+    step_name VARCHAR(100) NOT NULL,
+    aws_service VARCHAR(50) NOT NULL,
+    aws_action VARCHAR(100) NOT NULL,
+    request_payload JSON,
+    response_payload JSON,
+    error_code VARCHAR(100),
+    error_message TEXT,
+    started_at DATETIME(6),
+    finished_at DATETIME(6),
+    created_at DATETIME(6) NOT NULL,
+    created_by VARCHAR(256) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+    row_version INTEGER NOT NULL
 );
 
 -- COMMENT ON TABLE provisioning_steps IS 'AWS反映operation内のAWS API呼び出し単位のstepを表す。状態はprovisioning_step_eventsから導出する。';
@@ -650,17 +650,17 @@ CREATE TABLE provisioning_steps (
 -- COMMENT ON COLUMN provisioning_steps.row_version IS '楽観ロック用の行バージョン。';
 
 CREATE TABLE idempotency_records (
-    idempotency_record_id uuid PRIMARY KEY,
-    idempotency_key varchar(200) NOT NULL UNIQUE,
-    request_hash varchar(128) NOT NULL,
-    operation_id uuid REFERENCES provisioning_operations (operation_id),
-    response_payload json,
-    expires_at timestamptz NOT NULL,
-    created_at timestamptz NOT NULL,
-    created_by varchar(256) NOT NULL,
-    updated_at timestamptz NOT NULL,
-    updated_by varchar(256) NOT NULL,
-    row_version integer NOT NULL
+    idempotency_record_id CHAR(36) PRIMARY KEY,
+    idempotency_key VARCHAR(200) NOT NULL UNIQUE,
+    request_hash VARCHAR(128) NOT NULL,
+    operation_id CHAR(36) REFERENCES provisioning_operations (operation_id),
+    response_payload JSON,
+    expires_at DATETIME(6) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    created_by VARCHAR(256) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+    row_version INTEGER NOT NULL
 );
 
 -- COMMENT ON TABLE idempotency_records IS '変更系APIの二重実行を防止するための冪等性記録を表す。';
@@ -677,16 +677,16 @@ CREATE TABLE idempotency_records (
 -- COMMENT ON COLUMN idempotency_records.row_version IS '楽観ロック用の行バージョン。';
 
 CREATE TABLE audit_events (
-    audit_event_id uuid PRIMARY KEY,
-    actor_principal_id varchar(256) NOT NULL,
-    action varchar(100) NOT NULL, -- noqa: RF04
-    target_type varchar(50) NOT NULL,
-    target_id uuid NOT NULL,
-    operation_id uuid REFERENCES provisioning_operations (operation_id),
-    source_ip varchar(64),
-    user_agent text,
-    details json,
-    created_at timestamptz NOT NULL
+    audit_event_id CHAR(36) PRIMARY KEY,
+    actor_principal_id VARCHAR(256) NOT NULL,
+    action VARCHAR(100) NOT NULL, -- noqa: RF04
+    target_type VARCHAR(50) NOT NULL,
+    target_id CHAR(36) NOT NULL,
+    operation_id CHAR(36) REFERENCES provisioning_operations (operation_id),
+    source_ip VARCHAR(64),
+    user_agent TEXT,
+    details JSON,
+    created_at DATETIME(6) NOT NULL
 );
 
 -- COMMENT ON TABLE audit_events IS '誰が、いつ、何に対して、どの操作を行ったかを追跡する監査イベントを表す。append-onlyで扱う。';
@@ -702,17 +702,17 @@ CREATE TABLE audit_events (
 -- COMMENT ON COLUMN audit_events.created_at IS '監査イベント発生日時。';
 
 CREATE TABLE hub_user_events (
-    event_id uuid PRIMARY KEY,
-    aggregate_id uuid NOT NULL,
-    event_seq bigint NOT NULL,
-    event_name varchar(128) NOT NULL,
-    actor_principal_id varchar(256) NOT NULL,
-    actor_type varchar(32) NOT NULL,
-    occurred_at timestamptz NOT NULL,
-    reason text,
-    correlation_id varchar(128) NOT NULL,
-    idempotency_key varchar(256),
-    event_payload json,
+    event_id CHAR(36) PRIMARY KEY,
+    aggregate_id CHAR(36) NOT NULL,
+    event_seq BIGINT NOT NULL,
+    event_name VARCHAR(128) NOT NULL,
+    actor_principal_id VARCHAR(256) NOT NULL,
+    actor_type VARCHAR(32) NOT NULL,
+    occurred_at DATETIME(6) NOT NULL,
+    reason TEXT,
+    correlation_id VARCHAR(128) NOT NULL,
+    idempotency_key VARCHAR(256),
+    event_payload JSON,
     UNIQUE (aggregate_id, event_seq)
 );
 

@@ -28,8 +28,8 @@ from tools.generate_db_table_specs import (
 
 def test_parse_column_extracts_key_nullability_and_reference() -> None:
     statement = parse_one(
-        "CREATE TABLE sample (api_id uuid NOT NULL UNIQUE REFERENCES apis(api_id));",
-        read="postgres",
+        "CREATE TABLE sample (api_id CHAR(36) NOT NULL UNIQUE REFERENCES apis(api_id));",
+        read="mysql",
     )
     assert isinstance(statement.this, exp.Schema)
     column_def = statement.this.expressions[0]
@@ -39,7 +39,7 @@ def test_parse_column_extracts_key_nullability_and_reference() -> None:
 
     assert column == Column(
         name="api_id",
-        data_type="UUID",
+        data_type="CHAR(36)",
         nullable=False,
         primary_key=False,
         unique=True,
@@ -56,7 +56,7 @@ def test_sqlglot_helper_fallbacks() -> None:
 
 
 def test_parse_column_marks_primary_key_as_unique_and_not_nullable() -> None:
-    statement = parse_one("CREATE TABLE sample (sample_id uuid PRIMARY KEY);", read="postgres")
+    statement = parse_one("CREATE TABLE sample (sample_id CHAR(36) PRIMARY KEY);", read="mysql")
     assert isinstance(statement.this, exp.Schema)
     column_def = statement.this.expressions[0]
     assert isinstance(column_def, exp.ColumnDef)
@@ -69,7 +69,7 @@ def test_parse_column_marks_primary_key_as_unique_and_not_nullable() -> None:
 
 
 def test_parse_create_table_rejects_non_schema_create() -> None:
-    statement = parse_one("CREATE VIEW sample AS SELECT 1", read="postgres")
+    statement = parse_one("CREATE VIEW sample AS SELECT 1", read="mysql")
     assert isinstance(statement, exp.Create)
 
     with pytest.raises(ValueError, match="CREATE TABLE statement has no schema"):
@@ -79,8 +79,8 @@ def test_parse_create_table_rejects_non_schema_create() -> None:
 def test_parse_tables_supports_comments_and_like_tables() -> None:
     sql = """
     CREATE TABLE base_events (
-        event_id uuid PRIMARY KEY,
-        aggregate_id uuid NOT NULL,
+        event_id CHAR(36) PRIMARY KEY,
+        aggregate_id CHAR(36) NOT NULL,
         event_payload json,
         UNIQUE (aggregate_id, event_id)
     );
@@ -103,7 +103,7 @@ def test_parse_tables_supports_comments_and_like_tables() -> None:
 
     direct_like_tables = parse_tables("""
     CREATE TABLE base_events (
-        event_id uuid PRIMARY KEY
+        event_id CHAR(36) PRIMARY KEY
     );
     CREATE TABLE api_events LIKE base_events;
     """)
@@ -113,7 +113,7 @@ def test_parse_tables_supports_comments_and_like_tables() -> None:
 def test_parse_tables_supports_commented_out_comment_on_metadata() -> None:
     sql = """
     CREATE TABLE api_events (
-        event_id uuid PRIMARY KEY
+        event_id CHAR(36) PRIMARY KEY
     );
     -- COMMENT ON TABLE api_events IS 'APIイベント。';
     -- COMMENT ON COLUMN api_events.event_id IS 'イベントID。';
@@ -135,8 +135,8 @@ def test_render_table_markdown_includes_columns_constraints_and_escapes_pipe() -
     table = parse_tables(
         """
         CREATE TABLE sample (
-            sample_id uuid PRIMARY KEY,
-            api_id uuid REFERENCES apis(api_id),
+            sample_id CHAR(36) PRIMARY KEY,
+            api_id CHAR(36) REFERENCES apis(api_id),
             label text,
             UNIQUE (label)
         );
@@ -149,8 +149,8 @@ def test_render_table_markdown_includes_columns_constraints_and_escapes_pipe() -
     markdown = render_table_markdown(table)
 
     assert markdown.startswith("# sample")
-    assert "| `sample_id` | `UUID` | NO | PK | 主キー。 |" in markdown
-    assert "| `api_id` | `UUID` | YES | FK -> apis(api_id) | API\\|ID。 |" in markdown
+    assert "| `sample_id` | `CHAR(36)` | NO | PK | 主キー。 |" in markdown
+    assert "| `api_id` | `CHAR(36)` | YES | FK -> apis(api_id) | API\\|ID。 |" in markdown
     assert "- `UNIQUE (label)`" in markdown
 
 
@@ -159,8 +159,8 @@ def test_generate_writes_sorted_table_specs(tmp_path: Path) -> None:
     output_dir = tmp_path / "tables"
     ddl_path.write_text(
         """
-        CREATE TABLE zeta (zeta_id uuid PRIMARY KEY);
-        CREATE TABLE alpha (alpha_id uuid PRIMARY KEY);
+        CREATE TABLE zeta (zeta_id CHAR(36) PRIMARY KEY);
+        CREATE TABLE alpha (alpha_id CHAR(36) PRIMARY KEY);
         COMMENT ON TABLE alpha IS 'アルファ。';
         COMMENT ON COLUMN alpha.alpha_id IS 'アルファID。';
         """,
@@ -185,7 +185,7 @@ def test_arg_parser_defaults_and_main_output(
 
     ddl_path = tmp_path / "ddl.sql"
     output_dir = tmp_path / "tables"
-    ddl_path.write_text("CREATE TABLE sample (sample_id uuid PRIMARY KEY);", encoding="utf-8")
+    ddl_path.write_text("CREATE TABLE sample (sample_id CHAR(36) PRIMARY KEY);", encoding="utf-8")
     monkeypatch.setattr(
         "sys.argv",
         [
@@ -206,8 +206,7 @@ def test_arg_parser_defaults_and_main_output(
 def test_small_helpers() -> None:
     assert unescape_sql_comment("Bob''s table\ncomment") == "Bob's table comment"
     assert markdown_escape("a|b\nc") == "a\\|b c"
-    assert key_label(Column("id", "uuid", False, primary_key=True)) == "PK"
+    assert key_label(Column("id", "CHAR(36)", False, primary_key=True)) == "PK"
     assert key_label(Column("code", "text", False, unique=True)) == "UNIQUE"
-    assert (
-        key_label(Column("api_id", "uuid", True, references="apis(api_id)")) == "FK -> apis(api_id)"
-    )
+    api_id = Column("api_id", "CHAR(36)", True, references="apis(api_id)")
+    assert key_label(api_id) == "FK -> apis(api_id)"

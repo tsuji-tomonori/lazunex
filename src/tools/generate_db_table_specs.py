@@ -63,7 +63,7 @@ def literal_value(expression: Any | None) -> str:
 
 
 def render_sql(expression: Any) -> str:
-    return " ".join(expression.sql(dialect="postgres").split())
+    return " ".join(expression.sql(dialect="mysql").split())
 
 
 def reference_label(reference: exp.Reference) -> str:
@@ -160,7 +160,7 @@ def parse_create_table(statement: exp.Create) -> tuple[str, list[Column], list[s
 
 
 def parse_tables(sql: str) -> dict[str, Table]:
-    expressions = [expression for expression in sqlglot.parse(sql, read="postgres") if expression]
+    expressions = [expression for expression in sqlglot.parse(sql, read="mysql") if expression]
     comment_expressions = [
         expression
         for expression in sqlglot.parse(uncomment_comment_on_statements(sql), read="postgres")

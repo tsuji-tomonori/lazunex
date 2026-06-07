@@ -84,6 +84,8 @@ def base_type_from_sql(data_type: str) -> str:
     normalized = data_type.upper()
     if normalized.startswith("UUID"):
         return "UUID"
+    if normalized == "CHAR(36)":
+        return "UUID"
     if normalized.startswith(("VARCHAR", "TEXT", "CHAR")):
         return "str"
     if normalized.startswith(("INT", "BIGINT", "SMALLINT")):

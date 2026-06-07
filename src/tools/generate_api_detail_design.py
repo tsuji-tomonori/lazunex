@@ -358,7 +358,7 @@ def sql_expression_source(
     parameters = expression_parameters(expression)
     if len(parameters) == 1 and not list(expression.find_all(exp.Select)):
         return SqlSourceValue(parameter=parameters[0], source=parameters[0])
-    sql = " ".join(expression.sql(dialect="postgres").split())
+    sql = " ".join(expression.sql(dialect="mysql").split())
     if len(sql) <= 60 and not list(expression.find_all(exp.Select)):
         return SqlSourceValue(parameter=sql, source=f"SQL式: {sql}")
     column_sources = expression_column_sources(expression, output_column=output_column)
@@ -373,7 +373,7 @@ def sql_expression_source(
 def sql_tables(path: Path) -> tuple[str, ...]:
     text = path.read_text(encoding="utf-8")
     tables: list[str] = []
-    for statement in sqlglot.parse(text, read="postgres"):
+    for statement in sqlglot.parse(text, read="mysql"):
         if statement is None:
             continue
         for table in statement.find_all(exp.Table):
@@ -393,7 +393,7 @@ def table_aliases(expression: Expression) -> dict[str, str]:
 
 def select_output_sources(path: Path) -> dict[str, str]:
     text = path.read_text(encoding="utf-8")
-    statement = next((item for item in sqlglot.parse(text, read="postgres") if item), None)
+    statement = next((item for item in sqlglot.parse(text, read="mysql") if item), None)
     if not isinstance(statement, exp.Select):
         return {}
     aliases = table_aliases(statement)
@@ -412,7 +412,7 @@ def select_output_sources(path: Path) -> dict[str, str]:
 
 def sql_action_spec(path: Path) -> SqlSpec | None:
     text = path.read_text(encoding="utf-8")
-    statement = next((item for item in sqlglot.parse(text, read="postgres") if item), None)
+    statement = next((item for item in sqlglot.parse(text, read="mysql") if item), None)
     if isinstance(statement, exp.Insert) and isinstance(statement.this, exp.Schema):
         columns = [column.name for column in statement.this.expressions]
         values_expression = statement.args.get("expression")

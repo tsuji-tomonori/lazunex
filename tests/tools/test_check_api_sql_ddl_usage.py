@@ -65,11 +65,11 @@ def test_compare_usage_to_ddl_reports_both_directions() -> None:
     )
     ddl = """
     CREATE TABLE projects (
-        project_id uuid PRIMARY KEY,
+        project_id CHAR(36) PRIMARY KEY,
         ddl_only text
     );
     CREATE TABLE ddl_only_table (
-        id uuid PRIMARY KEY
+        id CHAR(36) PRIMARY KEY
     );
     """
 
@@ -88,7 +88,7 @@ def test_compare_usage_to_ddl_ignores_like_source_tables() -> None:
     )
     ddl = """
     CREATE TABLE hub_user_events (
-        event_id uuid PRIMARY KEY
+        event_id CHAR(36) PRIMARY KEY
     );
     CREATE TABLE api_events LIKE hub_user_events;
     """
@@ -103,10 +103,10 @@ def test_compare_usage_to_ddl_ignores_hub_users_table() -> None:
         parse_sql_usage("SELECT p.project_id FROM projects AS p;", path="sample.sql"),
         """
         CREATE TABLE hub_users (
-            user_id uuid PRIMARY KEY
+            user_id CHAR(36) PRIMARY KEY
         );
         CREATE TABLE projects (
-            project_id uuid PRIMARY KEY
+            project_id CHAR(36) PRIMARY KEY
         );
         """,
     )
@@ -144,7 +144,7 @@ def test_render_report_includes_locations_and_no_drift_message() -> None:
     )
     matching_report = compare_usage_to_ddl(
         matching_usage,
-        "CREATE TABLE projects (project_id uuid PRIMARY KEY);",
+        "CREATE TABLE projects (project_id CHAR(36) PRIMARY KEY);",
     )
 
     assert render_report(matching_report, matching_usage) == (
@@ -157,7 +157,7 @@ def test_render_report_includes_locations_and_no_drift_message() -> None:
     )
     drift_report = compare_usage_to_ddl(
         drift_usage,
-        "CREATE TABLE projects (project_id uuid PRIMARY KEY);",
+        "CREATE TABLE projects (project_id CHAR(36) PRIMARY KEY);",
     )
 
     rendered = render_report(drift_report, drift_usage)
@@ -175,7 +175,10 @@ def test_check_and_arg_parser_defaults(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     ddl_path = tmp_path / "ddl.sql"
-    ddl_path.write_text("CREATE TABLE projects (project_id uuid PRIMARY KEY);", encoding="utf-8")
+    ddl_path.write_text(
+        "CREATE TABLE projects (project_id CHAR(36) PRIMARY KEY);",
+        encoding="utf-8",
+    )
 
     report, usage = check(api_sql_dir, ddl_path)
     args = build_arg_parser().parse_args([])

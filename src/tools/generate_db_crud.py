@@ -112,7 +112,7 @@ def statement_operations(statement: Any) -> dict[str, set[str]]:
 
 def sql_operations(sql: str) -> dict[str, set[str]]:
     operations: dict[str, set[str]] = defaultdict(set)
-    for statement in sqlglot.parse(sql, read="postgres"):
+    for statement in sqlglot.parse(sql, read="mysql"):
         if statement is None:
             continue
         for table, table_operations in statement_operations(statement).items():

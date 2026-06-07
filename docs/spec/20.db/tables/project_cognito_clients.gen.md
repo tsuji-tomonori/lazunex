@@ -4,8 +4,8 @@ Projectごとのpublicまたはconfidential Cognito App Clientを表す。client
 
 | カラム | 型 | NULL許可 | キー | 説明 |
 | :--- | :--- | :--- | :--- | :--- |
-| `project_cognito_client_id` | `UUID` | NO | PK | Project App Client ID。 |
-| `project_id` | `UUID` | NO | FK -> projects(project_id) | 紐づくProject ID。 |
+| `project_cognito_client_id` | `CHAR(36)` | NO | PK | Project App Client ID。 |
+| `project_id` | `CHAR(36)` | NO | FK -> projects(project_id) | 紐づくProject ID。 |
 | `client_type` | `VARCHAR(40)` | NO |  | App Client種別。PUBLIC_PKCEまたはCONFIDENTIAL_CLIENT_CREDENTIALS。 |
 | `cognito_user_pool_id` | `VARCHAR(55)` | NO |  | Cognito User Pool ID。 |
 | `app_client_id` | `VARCHAR(128)` | NO | UNIQUE | Cognito App Client ID。 |
@@ -25,10 +25,10 @@ Projectごとのpublicまたはconfidential Cognito App Clientを表す。client
 | `refresh_token_rotation_enabled` | `BOOLEAN` | NO |  | refresh token rotationを有効にするかどうか。 |
 | `retry_grace_period_seconds` | `INT` | YES |  | refresh token rotationの再試行猶予秒数。 |
 | `enable_token_revocation` | `BOOLEAN` | NO |  | token revocationを有効にするかどうか。 |
-| `last_synced_at` | `TIMESTAMPTZ` | YES |  | Cognitoとの最終同期日時。 |
-| `created_at` | `TIMESTAMPTZ` | NO |  | 作成日時。 |
+| `last_synced_at` | `DATETIME(6)` | YES |  | Cognitoとの最終同期日時。 |
+| `created_at` | `DATETIME(6)` | NO |  | 作成日時。 |
 | `created_by` | `VARCHAR(256)` | NO |  | 作成者のprincipal。 |
-| `updated_at` | `TIMESTAMPTZ` | NO |  | 更新日時。 |
+| `updated_at` | `DATETIME(6)` | NO |  | 更新日時。 |
 | `updated_by` | `VARCHAR(256)` | NO |  | 更新者のprincipal。 |
 | `row_version` | `INT` | NO |  | 楽観ロック用の行バージョン。 |
 
