@@ -77,11 +77,15 @@ def test_api_unit_test_factors_from_router_ast(tmp_path: Path) -> None:
     assert doc.factors[0].source == (
         "not await api_functions.has_project_creation_permission(caller)"
     )
+    assert doc.factors[0].title.startswith("条件分岐: ")
+    assert " L" not in doc.factors[0].title
     assert doc.factors[0].title.endswith("Project 作成権限がない場合。")
     assert doc.factors[0].elements[0].expected == (
         "HTTP 403 error response: caller cannot create project"
     )
     assert doc.factors[2].source == "SQLAlchemyError"
+    assert doc.factors[2].title.startswith("例外処理: ")
+    assert " L" not in doc.factors[2].title
     assert doc.factors[2].title.endswith("DB commit が一時的に失敗した場合。")
     assert [element.name for element in doc.factors[3].elements] == [
         "発生しない",
@@ -142,4 +146,6 @@ def test_render_unit_test_markdown_uses_three_sections(tmp_path: Path) -> None:
     assert "| `F04-raised-apifunctionerror` | ApiFunctionError |" in content
     assert "| `F04-raised-externalapierror` | ExternalApiError |" in content
     assert "| `F04-raised-httpexception` | HTTPException |" in content
-    assert "`F01` 条件分岐 L" in content
+    assert "`F01` 条件分岐: " in content
+    assert "条件分岐 L" not in content
+    assert "例外処理 L" not in content

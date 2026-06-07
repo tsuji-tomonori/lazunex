@@ -346,7 +346,7 @@ def if_factor(
     return TestFactor(
         factor_id=f"F{index:02d}",
         kind="条件分岐",
-        title=f"条件分岐 L{node.lineno}: {description}",
+        title=f"条件分岐: {description}",
         source=expression,
         elements=(
             FactorElement(
@@ -384,7 +384,7 @@ def except_factor(
     return TestFactor(
         factor_id=f"F{index:02d}",
         kind="例外処理",
-        title=f"例外処理 L{handler.lineno}: {description}",
+        title=f"例外処理: {description}",
         source=exception_type,
         elements=(
             FactorElement(

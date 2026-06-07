@@ -9,7 +9,7 @@
 
 ### F01 条件分岐
 
-- 対象: 条件分岐 L72: 呼び出し元がProject詳細を参照できないため、リクエストを拒否した。
+- 対象: 条件分岐: 呼び出し元がProject詳細を参照できないため、リクエストを拒否した。
 - AST: `not await api_functions.has_project_view_permission(project, caller)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -19,7 +19,7 @@
 
 ### F02 例外処理
 
-- 対象: 例外処理 L100: Routerで捕捉した例外によりProject詳細取得が失敗した。
+- 対象: 例外処理: Routerで捕捉した例外によりProject詳細取得が失敗した。
 - AST: `ROUTER_HANDLED_EXCEPTIONS`
 
 | 要素ID | 要素 | 期待観点 |
@@ -45,33 +45,33 @@
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L72: 呼び出し元がProject詳細を参照できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot view project<br>log message_id: getProject.caller_cannot_view_project<br>log summary: 呼び出し元がProject詳細を参照できないため、リクエストを拒否した。 |
+| `F01` 条件分岐: 呼び出し元がProject詳細を参照できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot view project<br>log message_id: getProject.caller_cannot_view_project<br>log summary: 呼び出し元がProject詳細を参照できないため、リクエストを拒否した。 |
 
 ### TC002
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L72: 呼び出し元がProject詳細を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 例外処理 L100: Routerで捕捉した例外によりProject詳細取得が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐: 呼び出し元がProject詳細を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 例外処理: Routerで捕捉した例外によりProject詳細取得が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 | API正常応答 | 正常 | HTTP 200 success response |
 
 ### TC003
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L72: 呼び出し元がProject詳細を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 例外処理 L100: Routerで捕捉した例外によりProject詳細取得が失敗した。 | ApiFunctionError | HTTP 500 error response: forced router error<br>log message_id: getProject.router_api_function_error<br>log summary: Routerで捕捉したApiFunctionErrorによりProject詳細取得が失敗した。 |
+| `F01` 条件分岐: 呼び出し元がProject詳細を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 例外処理: Routerで捕捉した例外によりProject詳細取得が失敗した。 | ApiFunctionError | HTTP 500 error response: forced router error<br>log message_id: getProject.router_api_function_error<br>log summary: Routerで捕捉したApiFunctionErrorによりProject詳細取得が失敗した。 |
 
 ### TC004
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L72: 呼び出し元がProject詳細を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 例外処理 L100: Routerで捕捉した例外によりProject詳細取得が失敗した。 | ExternalApiError | HTTP 502 error response: external service request failed<br>log message_id: getProject.router_external_api_error<br>log summary: Routerで捕捉したExternalApiErrorによりProject詳細取得が失敗した。 |
+| `F01` 条件分岐: 呼び出し元がProject詳細を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 例外処理: Routerで捕捉した例外によりProject詳細取得が失敗した。 | ExternalApiError | HTTP 502 error response: external service request failed<br>log message_id: getProject.router_external_api_error<br>log summary: Routerで捕捉したExternalApiErrorによりProject詳細取得が失敗した。 |
 
 ### TC005
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L72: 呼び出し元がProject詳細を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 例外処理 L100: Routerで捕捉した例外によりProject詳細取得が失敗した。 | HTTPException | HTTP 400 error response: forced http exception<br>log message_id: getProject.router_http_exception<br>log summary: Routerで捕捉したHTTPExceptionによりProject詳細取得が失敗した。 |
+| `F01` 条件分岐: 呼び出し元がProject詳細を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 例外処理: Routerで捕捉した例外によりProject詳細取得が失敗した。 | HTTPException | HTTP 400 error response: forced http exception<br>log message_id: getProject.router_http_exception<br>log summary: Routerで捕捉したHTTPExceptionによりProject詳細取得が失敗した。 |

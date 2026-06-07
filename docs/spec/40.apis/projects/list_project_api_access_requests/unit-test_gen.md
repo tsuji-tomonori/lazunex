@@ -9,7 +9,7 @@
 
 ### F01 条件分岐
 
-- 対象: 条件分岐 L76: 呼び出し元がProjectのAPI利用申請一覧を参照できないため、リクエストを拒否した。
+- 対象: 条件分岐: 呼び出し元がProjectのAPI利用申請一覧を参照できないため、リクエストを拒否した。
 - AST: `not await api_functions.has_project_access_request_view_permission(project, caller)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -19,7 +19,7 @@
 
 ### F02 例外処理
 
-- 対象: 例外処理 L113: Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。
+- 対象: 例外処理: Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。
 - AST: `ROUTER_HANDLED_EXCEPTIONS`
 
 | 要素ID | 要素 | 期待観点 |
@@ -45,33 +45,33 @@
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L76: 呼び出し元がProjectのAPI利用申請一覧を参照できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot list project access requests<br>log message_id: listProjectApiAccessRequests.caller_cannot_list_project_access_requests<br>log summary: 呼び出し元がProjectのAPI利用申請一覧を参照できないため、リクエストを拒否した。 |
+| `F01` 条件分岐: 呼び出し元がProjectのAPI利用申請一覧を参照できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot list project access requests<br>log message_id: listProjectApiAccessRequests.caller_cannot_list_project_access_requests<br>log summary: 呼び出し元がProjectのAPI利用申請一覧を参照できないため、リクエストを拒否した。 |
 
 ### TC002
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L76: 呼び出し元がProjectのAPI利用申請一覧を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 例外処理 L113: Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐: 呼び出し元がProjectのAPI利用申請一覧を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 例外処理: Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 | API正常応答 | 正常 | HTTP 200 success response |
 
 ### TC003
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L76: 呼び出し元がProjectのAPI利用申請一覧を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 例外処理 L113: Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。 | ApiFunctionError | HTTP 500 error response: forced router error<br>log message_id: listProjectApiAccessRequests.router_api_function_error<br>log summary: Routerで捕捉したApiFunctionErrorによりProjectのAPI利用申請一覧取得が失敗した。 |
+| `F01` 条件分岐: 呼び出し元がProjectのAPI利用申請一覧を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 例外処理: Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。 | ApiFunctionError | HTTP 500 error response: forced router error<br>log message_id: listProjectApiAccessRequests.router_api_function_error<br>log summary: Routerで捕捉したApiFunctionErrorによりProjectのAPI利用申請一覧取得が失敗した。 |
 
 ### TC004
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L76: 呼び出し元がProjectのAPI利用申請一覧を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 例外処理 L113: Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。 | ExternalApiError | HTTP 502 error response: external service request failed<br>log message_id: listProjectApiAccessRequests.router_external_api_error<br>log summary: Routerで捕捉したExternalApiErrorによりProjectのAPI利用申請一覧取得が失敗した。 |
+| `F01` 条件分岐: 呼び出し元がProjectのAPI利用申請一覧を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 例外処理: Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。 | ExternalApiError | HTTP 502 error response: external service request failed<br>log message_id: listProjectApiAccessRequests.router_external_api_error<br>log summary: Routerで捕捉したExternalApiErrorによりProjectのAPI利用申請一覧取得が失敗した。 |
 
 ### TC005
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐 L76: 呼び出し元がProjectのAPI利用申請一覧を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 例外処理 L113: Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。 | HTTPException | HTTP 400 error response: forced http exception<br>log message_id: listProjectApiAccessRequests.router_http_exception<br>log summary: Routerで捕捉したHTTPExceptionによりProjectのAPI利用申請一覧取得が失敗した。 |
+| `F01` 条件分岐: 呼び出し元がProjectのAPI利用申請一覧を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 例外処理: Routerで捕捉した例外によりProjectのAPI利用申請一覧取得が失敗した。 | HTTPException | HTTP 400 error response: forced http exception<br>log message_id: listProjectApiAccessRequests.router_http_exception<br>log summary: Routerで捕捉したHTTPExceptionによりProjectのAPI利用申請一覧取得が失敗した。 |
