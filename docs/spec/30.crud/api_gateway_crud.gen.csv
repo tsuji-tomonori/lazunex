@@ -1,0 +1,4 @@
+api,api_key,deployment,method,resource,stage,usage_plan,usage_plan_key,usage_plan_stage
+approve_api_access_request,,,,,,,,C
+create_project,C,,,,,C,C,
+publish_api,,C,RU,R,R,,,

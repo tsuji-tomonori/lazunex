@@ -1,0 +1,5 @@
+api,resource_server,user_pool_client
+approve_api_access_request,,RU
+create_project,,C
+publish_api,RU,
+update_project_public_client,,RU
