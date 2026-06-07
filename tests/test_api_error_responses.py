@@ -30,7 +30,18 @@ def test_api_error_responses_are_selected_per_operation() -> None:
             "429",
             "500",
         },
-        "createApiAccessRequest": {"201", "400", "401", "403", "404", "409", "422", "429", "500"},
+        "createApiAccessRequest": {
+            "201",
+            "400",
+            "401",
+            "403",
+            "404",
+            "409",
+            "422",
+            "429",
+            "500",
+            "503",
+        },
         "updateProjectPublicClient": {
             "200",
             "400",
@@ -56,7 +67,18 @@ def test_api_error_responses_are_selected_per_operation() -> None:
             "502",
             "503",
         },
-        "rejectApiAccessRequest": {"200", "400", "401", "403", "404", "409", "422", "429", "500"},
+        "rejectApiAccessRequest": {
+            "200",
+            "400",
+            "401",
+            "403",
+            "404",
+            "409",
+            "422",
+            "429",
+            "500",
+            "503",
+        },
     }
 
     actual_statuses = {

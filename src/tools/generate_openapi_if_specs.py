@@ -332,7 +332,43 @@ def response_media(response: JsonObject) -> tuple[str, JsonObject]:
     return str(media_type), schema
 
 
-def response_summary_rows(operation: JsonObject, components: JsonObject) -> list[list[str]]:
+def status_sample_description(status_code: str, samples: OperationSamples | None) -> str | None:
+    if samples is None or samples.status_samples is None:
+        return None
+    try:
+        status = int(status_code)
+    except ValueError:
+        return None
+    status_sample = samples.status_samples.get(status)
+    if not status_sample:
+        return None
+    response = as_object(status_sample.get("response"))
+    error = as_object(response.get("error"))
+    details = as_list(error.get("details"))
+    for detail in details:
+        detail_object = as_object(detail)
+        reason = detail_object.get("reason")
+        if isinstance(reason, str) and reason.strip():
+            return reason
+    message = error.get("message")
+    if isinstance(message, str) and message.strip():
+        return message
+    return None
+
+
+def response_description(
+    status_code: str,
+    response: JsonObject,
+    samples: OperationSamples | None,
+) -> str:
+    return status_sample_description(status_code, samples) or str(response.get("description") or "-")
+
+
+def response_summary_rows(
+    operation: JsonObject,
+    components: JsonObject,
+    samples: OperationSamples | None = None,
+) -> list[list[str]]:
     rows: list[list[str]] = []
     responses = as_object(operation.get("responses", {}))
     if not responses:
@@ -345,7 +381,12 @@ def response_summary_rows(operation: JsonObject, components: JsonObject) -> list
         body_rows = object_field_rows(schema, components)
         body = f"{len(body_rows)} field(s)" if body_rows else "-"
         rows.append(
-            [str(status_code), str(response_object.get("description") or "-"), media_type, body]
+            [
+                str(status_code),
+                response_description(str(status_code), response_object, samples),
+                media_type,
+                body,
+            ]
         )
     return rows
 
@@ -389,7 +430,11 @@ def render_response_summary(rows: list[list[str]]) -> list[str]:
     return lines
 
 
-def render_response_details(operation: JsonObject, components: JsonObject) -> list[str]:
+def render_response_details(
+    operation: JsonObject,
+    components: JsonObject,
+    samples: OperationSamples | None = None,
+) -> list[str]:
     lines: list[str] = []
     responses = as_object(operation.get("responses", {}))
     if not responses:
@@ -402,7 +447,7 @@ def render_response_details(operation: JsonObject, components: JsonObject) -> li
         body_rows = object_field_rows(schema, components)
         if not body_rows:
             continue
-        description = str(response_object.get("description") or "-")
+        description = response_description(str(status_code), response_object, samples)
         lines.extend(
             [
                 "",
@@ -549,9 +594,13 @@ def render_operation_markdown(
     )
     lines.extend(["## Data", "", *render_field_table(request_body_rows(operation, components)), ""])
     lines.extend(
-        ["## Responses", "", *render_response_summary(response_summary_rows(operation, components))]
+        [
+            "## Responses",
+            "",
+            *render_response_summary(response_summary_rows(operation, components, samples)),
+        ]
     )
-    lines.extend(render_response_details(operation, components))
+    lines.extend(render_response_details(operation, components, samples))
     lines.extend(["", *render_samples_section(path, method, operation, samples)])
     content = "\n".join(lines).rstrip()
     return f"{content}\n"

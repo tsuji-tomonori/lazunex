@@ -6,7 +6,7 @@ from fastapi import HTTPException, status
 from starlette.responses import JSONResponse
 
 from app.apis.exceptions import ApiFunctionError
-from app.apis.responses import ErrorBody, ErrorResponse
+from app.apis.responses import ErrorBody, ErrorDetail, ErrorResponse
 from app.apis.sequence_types import CallerIdentity, IdempotencyRecordRef, RequestContext
 from app.integrations.common_errors import (
     ExternalApiConflictError,
@@ -24,13 +24,22 @@ def api_error_response(
     detail: str,
     *,
     trace_id: str = "unavailable",
+    resource: dict[str, str] | None = None,
 ) -> JSONResponse:
     """共通 error schema を HTTP response として返す。"""
     body = ErrorResponse(
         error=ErrorBody(
             code=_error_code(status_code),
-            message=detail,
-            details=[],
+            message=_client_action_message(status_code, detail),
+            details=[
+                ErrorDetail(
+                    reason=detail,
+                    status_code=status_code,
+                    retryable=_is_retryable_status(status_code),
+                    reference=trace_id,
+                    resource=resource,
+                )
+            ],
             trace_id=trace_id,
         )
     )
@@ -47,16 +56,19 @@ def has_existing_idempotency_result(record: IdempotencyRecordRef) -> bool:
 
 def error_response_for_router_error(
     error: ApiFunctionError | ExternalApiError | HTTPException,
+    *,
+    trace_id: str = "unavailable",
 ) -> JSONResponse:
     """Router で捕捉した sequence / provider 例外を HTTP error response に変換する。"""
     if isinstance(error, HTTPException):
         return api_error_response(
             error.status_code,
             str(error.detail),
+            trace_id=trace_id,
         )
     if isinstance(error, ApiFunctionError):
-        return error_response_for_api_function_error(error)
-    return error_response_for_external_error(error)
+        return error_response_for_api_function_error(error, trace_id=trace_id)
+    return error_response_for_external_error(error, trace_id=trace_id)
 
 
 def status_code_for_router_error(error: ApiFunctionError | ExternalApiError | HTTPException) -> int:
@@ -107,12 +119,20 @@ def router_log_context(
     return context
 
 
-def error_response_for_api_function_error(error: ApiFunctionError) -> JSONResponse:
+def error_response_for_api_function_error(
+    error: ApiFunctionError,
+    *,
+    trace_id: str = "unavailable",
+) -> JSONResponse:
     """Sequence function の業務例外を HTTP error response に変換する。"""
-    return api_error_response(error.status_code, error.detail)
+    return api_error_response(error.status_code, error.detail, trace_id=trace_id)
 
 
-def error_response_for_external_error(error: ExternalApiError) -> JSONResponse:
+def error_response_for_external_error(
+    error: ExternalApiError,
+    *,
+    trace_id: str = "unavailable",
+) -> JSONResponse:
     """Provider client の例外を HTTP error response に変換する。"""
     if isinstance(error, ExternalApiNotFoundError):
         status_code = status.HTTP_404_NOT_FOUND
@@ -122,11 +142,55 @@ def error_response_for_external_error(error: ExternalApiError) -> JSONResponse:
         status_code = status.HTTP_503_SERVICE_UNAVAILABLE
     else:
         status_code = status.HTTP_502_BAD_GATEWAY
-    return api_error_response(status_code, str(error))
+    return api_error_response(
+        status_code,
+        _external_error_detail(status_code),
+        trace_id=trace_id,
+    )
+
+
+def _external_error_detail(status_code: int) -> str:
+    if status_code == status.HTTP_404_NOT_FOUND:
+        return "external resource was not found"
+    if status_code == status.HTTP_409_CONFLICT:
+        return "external resource state conflicts with the request"
+    if status_code == status.HTTP_503_SERVICE_UNAVAILABLE:
+        return "external service is temporarily unavailable"
+    return "external service request failed"
 
 
 def _error_code(status_code: int) -> str:
     return error_code_for_status(status_code)
+
+
+def _client_action_message(status_code: int, detail: str) -> str:
+    if status_code == status.HTTP_400_BAD_REQUEST:
+        return f"リクエスト内容を修正して再送してください。理由: {detail}"
+    if status_code == status.HTTP_401_UNAUTHORIZED:
+        return "認証情報を確認し、有効な認証情報で再送してください。"
+    if status_code == status.HTTP_403_FORBIDDEN:
+        return "操作権限を確認し、必要な権限を持つ利用者で再送してください。"
+    if status_code == status.HTTP_404_NOT_FOUND:
+        return "指定したリソースIDが正しいか確認してから再送してください。"
+    if status_code == status.HTTP_409_CONFLICT:
+        return f"リソースの最新状態またはIdempotency-Keyを確認してから再送してください。理由: {detail}"
+    if status_code == status.HTTP_422_UNPROCESSABLE_CONTENT:
+        return "リクエストの型、必須項目、制約をOpenAPI仕様に合わせて修正してください。"
+    if status_code == status.HTTP_429_TOO_MANY_REQUESTS:
+        return "呼び出し頻度を下げ、時間をおいてから再送してください。"
+    if status_code == status.HTTP_502_BAD_GATEWAY:
+        return "外部サービス連携で失敗しました。時間をおいて再送し、解消しない場合は追跡IDを添えて問い合わせてください。"
+    if status_code == status.HTTP_503_SERVICE_UNAVAILABLE:
+        return "一時的に処理できません。時間をおいて同じリクエストを再送してください。"
+    return "想定外のエラーが発生しました。追跡IDを添えて問い合わせてください。"
+
+
+def _is_retryable_status(status_code: int) -> bool:
+    return status_code in {
+        status.HTTP_429_TOO_MANY_REQUESTS,
+        status.HTTP_502_BAD_GATEWAY,
+        status.HTTP_503_SERVICE_UNAVAILABLE,
+    }
 
 
 def error_code_for_status(status_code: int) -> str:

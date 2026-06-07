@@ -32,6 +32,7 @@ from tools.generate_openapi_if_specs import (
     render_response_summary,
     render_samples_section,
     request_body_rows,
+    response_description,
     response_media,
     response_summary_rows,
     router_operation_id,
@@ -343,6 +344,47 @@ def test_response_summary_and_render_markdown() -> None:
     assert "| `profile.displayName` | `string` | yes | 画面に表示するユーザー名。 | - |" in rendered
     assert "| `addresses[].postalCode` | `string` | yes | 郵便番号。 | - |" in rendered
     assert "##### `401` 認証が必要です。" in rendered
+
+
+def test_response_description_prefers_status_sample_error_reason() -> None:
+    samples = OperationSamples(
+        request=None,
+        response=None,
+        status_samples={
+            401: {
+                "request": {"path": {"userId": "user-1"}},
+                "response": {
+                    "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "認証情報を確認し、有効な認証情報で再送してください。",
+                        "details": [
+                            {
+                                "reason": "認証情報が未指定、期限切れ、または検証できない場合。",
+                                "statusCode": 401,
+                                "retryable": False,
+                                "reference": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S",
+                            }
+                        ],
+                        "traceId": "trc_01HZY6WJ7X4W9A0V7P9N2Q3R4S",
+                    }
+                },
+            }
+        },
+    )
+    rows = response_summary_rows(delete_operation(), components(), samples)
+    rendered = render_operation_markdown(
+        "/admin/users/{userId}",
+        "delete",
+        delete_operation(),
+        components(),
+        samples,
+    )
+
+    assert response_description("401", {"description": "共通説明。"}, samples) == (
+        "認証情報が未指定、期限切れ、または検証できない場合。"
+    )
+    assert rows[1][1] == "認証情報が未指定、期限切れ、または検証できない場合。"
+    assert "認証情報が未指定、期限切れ、または検証できない場合。" in rendered
 
 
 def test_empty_and_invalid_sections_render_none() -> None:

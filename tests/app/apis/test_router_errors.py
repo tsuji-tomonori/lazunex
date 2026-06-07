@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 import pytest
 from fastapi import status
 
@@ -77,3 +79,18 @@ def test_raise_http_exception_for_external_error_maps_status(
     response = error_response_for_external_error(error)
 
     assert response.status_code == expected_status
+
+
+def test_external_error_response_does_not_expose_raw_error_message() -> None:
+    response = error_response_for_external_error(
+        ExternalApiError("aws request id abc with internal table name")
+    )
+
+    body = json.loads(response.body)
+
+    assert response.status_code == status.HTTP_502_BAD_GATEWAY
+    assert "aws request id abc" not in response.body.decode()
+    assert body["error"]["message"] == (
+        "外部サービス連携で失敗しました。時間をおいて再送し、解消しない場合は追跡IDを添えて問い合わせてください。"
+    )
+    assert body["error"]["details"][0]["reason"] == "external service request failed"

@@ -314,4 +314,4 @@ async def create_project(
                 error=error,
             ),
         )
-        return error_response_for_router_error(error)
+        return error_response_for_router_error(error, trace_id=request_context.correlation_id)
