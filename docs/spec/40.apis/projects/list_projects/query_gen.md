@@ -32,7 +32,7 @@
 
 | DDLテーブル | DDL項目 | SQL項目 | 日本語名 | 型 | nullable |
 | --- | --- | --- | --- | --- | --- |
-| <code>projects</code> | <code>project_id</code> | <code>project_id</code> | Project ID。 | <code>UUID</code> | no |
+| <code>projects</code> | <code>project_id</code> | <code>project_id</code> | Project ID。 | <code>CHAR(36)</code> | no |
 | <code>projects</code> | <code>project_code</code> | <code>project_code</code> | 人が読めるProjectコード。例: payment-frontend。 | <code>VARCHAR(100)</code> | no |
 | <code>projects</code> | <code>name</code> | <code>name</code> | プロジェクト名。 | <code>VARCHAR(200)</code> | no |
 | <code>projects</code> | <code>description</code> | <code>description</code> | プロジェクトの説明。 | <code>TEXT</code> | no |

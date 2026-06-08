@@ -68,6 +68,7 @@ services:
     ports:
       - "3306:3306"
     volumes:
+      - ./src/db/ddl.sql:/docker-entrypoint-initdb.d/001_schema.sql:ro
       - mysql_data:/var/lib/mysql
     healthcheck:
       test:

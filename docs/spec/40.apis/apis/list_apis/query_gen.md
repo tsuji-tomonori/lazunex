@@ -31,13 +31,13 @@
 
 | DDLテーブル | DDL項目 | SQL項目 | 日本語名 | 型 | nullable |
 | --- | --- | --- | --- | --- | --- |
-| <code>apis</code> | <code>api_id</code> | <code>api_id</code> | Lazunex内API ID。 | <code>UUID</code> | no |
+| <code>apis</code> | <code>api_id</code> | <code>api_id</code> | Lazunex内API ID。 | <code>CHAR(36)</code> | no |
 | <code>apis</code> | <code>api_code</code> | <code>api_code</code> | 人が読めるAPIコード。例: billing-api-v1。 | <code>VARCHAR(100)</code> | no |
 | <code>apis</code> | <code>name</code> | <code>name</code> | API表示名。 | <code>VARCHAR(200)</code> | no |
 | <code>apis</code> | <code>description</code> | <code>description</code> | APIの説明。 | <code>TEXT</code> | no |
 | <code>apis</code> | <code>provider_name</code> | <code>provider_name</code> | API提供チーム名。 | <code>VARCHAR(200)</code> | no |
 | <code>apis</code> | <code>visibility</code> | <code>visibility</code> | 公開範囲。INTERNALまたはRESTRICTED。 | <code>VARCHAR(20)</code> | no |
-| <code>api_gateway_stages</code> | <code>api_stage_id</code> | <code>api_stage_id</code> | API stage ID。 | <code>UUID</code> | no |
+| <code>api_gateway_stages</code> | <code>api_stage_id</code> | <code>api_stage_id</code> | API stage ID。 | <code>CHAR(36)</code> | no |
 | <code>api_gateway_stages</code> | <code>apigw_stage_name</code> | <code>apigw_stage_name</code> | API Gateway stage名。例: prod。 | <code>VARCHAR(128)</code> | no |
 | <code>api_gateway_stages</code> | <code>invoke_url</code> | <code>invoke_url</code> | execute-apiの呼び出しURL。 | <code>TEXT</code> | no |
 | <code>api_cognito_scopes</code> | <code>scope_full_name</code> | <code>scope_full_name</code> | Resource Server識別子を含むscope名。例: api-hub/api:{apiId}:invoke。 | <code>VARCHAR(600)</code> | no |

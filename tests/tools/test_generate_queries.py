@@ -34,20 +34,20 @@ from tools.generate_queries import (
 
 DDL = """
 CREATE TABLE projects (
-    project_id uuid PRIMARY KEY,
+    project_id CHAR(36) PRIMARY KEY,
     project_code varchar(100) NOT NULL,
     name varchar(200) NOT NULL,
     description text,
-    created_at timestamptz NOT NULL,
+    created_at DATETIME(6) NOT NULL,
     row_version int NOT NULL
 );
 CREATE TABLE project_events (
-    event_id uuid PRIMARY KEY,
-    aggregate_id uuid NOT NULL,
+    event_id CHAR(36) PRIMARY KEY,
+    aggregate_id CHAR(36) NOT NULL,
     event_payload json
 );
 CREATE TABLE metrics (
-    metric_id uuid PRIMARY KEY,
+    metric_id CHAR(36) PRIMARY KEY,
     measured_on date NOT NULL,
     amount numeric(10, 2) NOT NULL
 );
@@ -63,13 +63,13 @@ def test_name_helpers() -> None:
 
 
 def test_type_helpers() -> None:
-    assert base_type_from_sql("uuid") == "UUID"
+    assert base_type_from_sql("CHAR(36)") == "UUID"
     assert base_type_from_sql("varchar(100)") == "str"
     assert base_type_from_sql("integer") == "int"
     assert base_type_from_sql("numeric(10, 2)") == "Decimal"
     assert base_type_from_sql("boolean") == "bool"
     assert base_type_from_sql("date") == "date"
-    assert base_type_from_sql("timestamptz") == "datetime"
+    assert base_type_from_sql("DATETIME(6)") == "datetime"
     assert base_type_from_sql("json") == "dict[str, Any]"
     assert base_type_from_sql("custom") == "Any"
     assert model_type("str", True) == "str | None"
@@ -175,21 +175,21 @@ def test_parse_query_spec_marks_left_join_rows_nullable(tmp_path: Path) -> None:
 
 def test_operation_from_statements_detects_statement_kind() -> None:
     assert (
-        operation_from_statements([parse_one("SELECT project_id FROM projects", read="postgres")])
+        operation_from_statements([parse_one("SELECT project_id FROM projects", read="mysql")])
         == "select"
     )
     assert (
         operation_from_statements(
-            [parse_one("INSERT INTO projects (project_id) VALUES (@project_id)", read="postgres")]
+            [parse_one("INSERT INTO projects (project_id) VALUES (@project_id)", read="mysql")]
         )
         == "insert"
     )
     assert (
-        operation_from_statements([parse_one("UPDATE projects SET name = @name", read="postgres")])
+        operation_from_statements([parse_one("UPDATE projects SET name = @name", read="mysql")])
         == "update"
     )
     assert (
-        operation_from_statements([parse_one("DELETE FROM projects", read="postgres")]) == "delete"
+        operation_from_statements([parse_one("DELETE FROM projects", read="mysql")]) == "delete"
     )
     assert operation_from_statements([]) == "execute"
 
@@ -269,7 +269,7 @@ def test_returning_and_mutation_helpers_handle_missing_returning_or_target() -> 
         table_name: {column.name: column for column in table.columns}
         for table_name, table in tables.items()
     }
-    select = parse_one("SELECT project_id FROM projects", read="postgres")
+    select = parse_one("SELECT project_id FROM projects", read="mysql")
     assert mutation_target_table(select) is None
     assert returning_output_fields(select, columns) == []
 
@@ -280,18 +280,18 @@ def test_collect_param_columns_handles_non_standard_insert_and_update() -> None:
         table_name: {column.name: column for column in table.columns}
         for table_name, table in tables.items()
     }
-    select = parse_one("SELECT project_id FROM projects", read="postgres")
+    select = parse_one("SELECT project_id FROM projects", read="mysql")
     assert isinstance(select, exp.Select)
     assert collect_insert_param_columns(select, columns) == {}  # type: ignore[arg-type]
 
     insert_select = parse_one(
         "INSERT INTO projects (project_id) SELECT project_id FROM projects",
-        read="postgres",
+        read="mysql",
     )
     assert isinstance(insert_select, exp.Insert)
     assert collect_insert_param_columns(insert_select, columns) == {}
 
-    update = parse_one("UPDATE projects SET row_version = row_version + 1", read="postgres")
+    update = parse_one("UPDATE projects SET row_version = row_version + 1", read="mysql")
     assert isinstance(update, exp.Update)
     assert collect_update_param_columns(update, columns) == {}
 
@@ -419,17 +419,17 @@ def test_output_field_falls_back_for_unknown_column_and_plain_expression() -> No
         table_name: {column.name: column for column in table.columns}
         for table_name, table in tables.items()
     }
-    unknown_column = parse_one("SELECT unknown_column FROM projects", read="postgres").expressions[
+    unknown_column = parse_one("SELECT unknown_column FROM projects", read="mysql").expressions[
         0
     ]
-    literal_expression = parse_one("SELECT 1", read="postgres").expressions[0]
+    literal_expression = parse_one("SELECT 1", read="mysql").expressions[0]
 
     assert output_field(unknown_column, {}, columns).type_hint == "Any"
     assert output_field(literal_expression, {}, columns).name == "field_1"
 
 
 def test_infer_row_fields_returns_empty_when_no_select_or_returning() -> None:
-    statement = parse_one("DELETE FROM projects WHERE project_id = @project_id", read="postgres")
+    statement = parse_one("DELETE FROM projects WHERE project_id = @project_id", read="mysql")
 
     assert infer_row_fields([statement], parse_tables(DDL)) == []
 

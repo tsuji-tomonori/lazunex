@@ -98,7 +98,7 @@ def test_mutation_target_returns_none_without_target() -> None:
 def test_expression_tables_returns_empty_for_non_expression() -> None:
     assert expression_tables(False) == set()
     assert expression_tables([False]) == set()
-    assert expression_tables(parse_one("SELECT project_id FROM projects", read="postgres")) == {
+    assert expression_tables(parse_one("SELECT project_id FROM projects", read="mysql")) == {
         "projects"
     }
 
@@ -163,8 +163,8 @@ def test_generate_writes_db_crud_csv(tmp_path: Path) -> None:
     ddl_path = tmp_path / "ddl.sql"
     ddl_path.write_text(
         """
-        CREATE TABLE project_members (project_member_id uuid PRIMARY KEY);
-        CREATE TABLE projects (project_id uuid PRIMARY KEY);
+        CREATE TABLE project_members (project_member_id CHAR(36) PRIMARY KEY);
+        CREATE TABLE projects (project_id CHAR(36) PRIMARY KEY);
         """,
         encoding="utf-8",
     )
@@ -197,7 +197,10 @@ def test_arg_parser_defaults_and_main_output(
         "SELECT project_id FROM projects;", encoding="utf-8"
     )
     ddl_path = tmp_path / "ddl.sql"
-    ddl_path.write_text("CREATE TABLE projects (project_id uuid PRIMARY KEY);", encoding="utf-8")
+    ddl_path.write_text(
+        "CREATE TABLE projects (project_id CHAR(36) PRIMARY KEY);",
+        encoding="utf-8",
+    )
     output_path = tmp_path / "db_crud.gen.csv"
     monkeypatch.setattr(
         "sys.argv",

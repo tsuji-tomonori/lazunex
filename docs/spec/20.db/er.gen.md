@@ -7,93 +7,93 @@
 ```mermaid
 erDiagram
   access_request_events {
-    uuid event_id PK
-    uuid aggregate_id
+    char_36 event_id PK
+    char_36 aggregate_id
     bigint event_seq
     varchar_128 event_name
     varchar_256 actor_principal_id
     varchar_32 actor_type
-    timestamptz occurred_at
+    datetime_6 occurred_at
     text reason
     varchar_128 correlation_id
     varchar_256 idempotency_key
     json event_payload
   }
   api_access_requests {
-    uuid access_request_id PK
-    uuid project_id FK
-    uuid api_id FK
-    uuid api_stage_id FK
+    char_36 access_request_id PK
+    char_36 project_id FK
+    char_36 api_id FK
+    char_36 api_stage_id FK
     varchar_30 requested_auth_mode
     text requested_reason
     varchar_256 requested_by
-    timestamptz requested_at
-    timestamptz created_at
+    datetime_6 requested_at
+    datetime_6 created_at
     varchar_256 created_by
-    timestamptz updated_at
+    datetime_6 updated_at
     varchar_256 updated_by
     int row_version
   }
   api_access_reviews {
-    uuid access_review_id PK
-    uuid access_request_id FK
+    char_36 access_review_id PK
+    char_36 access_request_id FK
     varchar_20 decision
     varchar_30 approved_auth_mode
     varchar_256 reviewer_principal_id
     text review_comment
-    timestamptz reviewed_at
-    timestamptz created_at
+    datetime_6 reviewed_at
+    datetime_6 created_at
     varchar_256 created_by
-    timestamptz updated_at
+    datetime_6 updated_at
     varchar_256 updated_by
     int row_version
   }
   api_cognito_scopes {
-    uuid api_scope_id PK
-    uuid api_id UK, FK
+    char_36 api_scope_id PK
+    char_36 api_id UK, FK
     varchar_55 cognito_user_pool_id
     varchar_256 resource_server_identifier
     varchar_256 scope_name
     varchar_600 scope_full_name UK
     varchar_256 scope_description
-    timestamptz created_at
+    datetime_6 created_at
     varchar_256 created_by
-    timestamptz updated_at
+    datetime_6 updated_at
     varchar_256 updated_by
     int row_version
   }
   api_documents {
-    uuid api_document_id PK
-    uuid api_id FK
+    char_36 api_document_id PK
+    char_36 api_id FK
     varchar_20 document_type
     varchar_50 version_label
     text s3_uri
     varchar_64 sha256
     varchar_255 source_filename
     varchar_256 uploaded_by
-    timestamptz uploaded_at
-    timestamptz created_at
+    datetime_6 uploaded_at
+    datetime_6 created_at
     varchar_256 created_by
-    timestamptz updated_at
+    datetime_6 updated_at
     varchar_256 updated_by
     int row_version
   }
   api_events {
-    uuid event_id PK
-    uuid aggregate_id
+    char_36 event_id PK
+    char_36 aggregate_id
     bigint event_seq
     varchar_128 event_name
     varchar_256 actor_principal_id
     varchar_32 actor_type
-    timestamptz occurred_at
+    datetime_6 occurred_at
     text reason
     varchar_128 correlation_id
     varchar_256 idempotency_key
     json event_payload
   }
   api_gateway_stages {
-    uuid api_stage_id PK
-    uuid api_id FK
+    char_36 api_stage_id PK
+    char_36 api_id FK
     varchar_12 aws_account_id
     varchar_32 aws_region
     varchar_128 apigw_rest_api_id
@@ -104,64 +104,64 @@ erDiagram
     varchar_128 authorizer_id
     boolean api_key_required_observed
     varchar_30 scope_config_observed
-    timestamptz created_at
+    datetime_6 created_at
     varchar_256 created_by
-    timestamptz updated_at
+    datetime_6 updated_at
     varchar_256 updated_by
     int row_version
   }
   api_reviewer_events {
-    uuid event_id PK
-    uuid aggregate_id
+    char_36 event_id PK
+    char_36 aggregate_id
     bigint event_seq
     varchar_128 event_name
     varchar_256 actor_principal_id
     varchar_32 actor_type
-    timestamptz occurred_at
+    datetime_6 occurred_at
     text reason
     varchar_128 correlation_id
     varchar_256 idempotency_key
     json event_payload
   }
   api_reviewers {
-    uuid api_reviewer_id PK
-    uuid api_id FK
+    char_36 api_reviewer_id PK
+    char_36 api_id FK
     varchar_256 reviewer_principal_id
     varchar_20 reviewer_role
-    timestamptz created_at
+    datetime_6 created_at
     varchar_256 created_by
-    timestamptz updated_at
+    datetime_6 updated_at
     varchar_256 updated_by
     int row_version
   }
   api_scope_events {
-    uuid event_id PK
-    uuid aggregate_id
+    char_36 event_id PK
+    char_36 aggregate_id
     bigint event_seq
     varchar_128 event_name
     varchar_256 actor_principal_id
     varchar_32 actor_type
-    timestamptz occurred_at
+    datetime_6 occurred_at
     text reason
     varchar_128 correlation_id
     varchar_256 idempotency_key
     json event_payload
   }
   api_stage_events {
-    uuid event_id PK
-    uuid aggregate_id
+    char_36 event_id PK
+    char_36 aggregate_id
     bigint event_seq
     varchar_128 event_name
     varchar_256 actor_principal_id
     varchar_32 actor_type
-    timestamptz occurred_at
+    datetime_6 occurred_at
     text reason
     varchar_128 correlation_id
     varchar_256 idempotency_key
     json event_payload
   }
   apis {
-    uuid api_id PK
+    char_36 api_id PK
     varchar_100 api_code UK
     varchar_200 name
     text description
@@ -169,92 +169,92 @@ erDiagram
     varchar_320 provider_contact
     varchar_256 owner_principal_id
     varchar_20 visibility
-    uuid default_api_stage_id FK
-    timestamptz created_at
+    char_36 default_api_stage_id FK
+    datetime_6 created_at
     varchar_256 created_by
-    timestamptz updated_at
+    datetime_6 updated_at
     varchar_256 updated_by
     int row_version
   }
   audit_events {
-    uuid audit_event_id PK
+    char_36 audit_event_id PK
     varchar_256 actor_principal_id
     varchar_100 action
     varchar_50 target_type
-    uuid target_id
-    uuid operation_id FK
+    char_36 target_id
+    char_36 operation_id FK
     varchar_64 source_ip
     text user_agent
     json details
-    timestamptz created_at
+    datetime_6 created_at
   }
   client_scope_events {
-    uuid event_id PK
-    uuid aggregate_id
+    char_36 event_id PK
+    char_36 aggregate_id
     bigint event_seq
     varchar_128 event_name
     varchar_256 actor_principal_id
     varchar_32 actor_type
-    timestamptz occurred_at
+    datetime_6 occurred_at
     text reason
     varchar_128 correlation_id
     varchar_256 idempotency_key
     json event_payload
   }
   hub_user_events {
-    uuid event_id PK
-    uuid aggregate_id
+    char_36 event_id PK
+    char_36 aggregate_id
     bigint event_seq
     varchar_128 event_name
     varchar_256 actor_principal_id
     varchar_32 actor_type
-    timestamptz occurred_at
+    datetime_6 occurred_at
     text reason
     varchar_128 correlation_id
     varchar_256 idempotency_key
     json event_payload
   }
   hub_users {
-    uuid user_id PK
+    char_36 user_id PK
     varchar_256 external_subject UK
     varchar_320 email
     varchar_200 display_name
     varchar_64 department_code
-    timestamptz created_at
+    datetime_6 created_at
     varchar_256 created_by
-    timestamptz updated_at
+    datetime_6 updated_at
     varchar_256 updated_by
     int row_version
   }
   idempotency_records {
-    uuid idempotency_record_id PK
+    char_36 idempotency_record_id PK
     varchar_200 idempotency_key UK
     varchar_128 request_hash
-    uuid operation_id FK
+    char_36 operation_id FK
     json response_payload
-    timestamptz expires_at
-    timestamptz created_at
+    datetime_6 expires_at
+    datetime_6 created_at
     varchar_256 created_by
-    timestamptz updated_at
+    datetime_6 updated_at
     varchar_256 updated_by
     int row_version
   }
   project_api_key_events {
-    uuid event_id PK
-    uuid aggregate_id
+    char_36 event_id PK
+    char_36 aggregate_id
     bigint event_seq
     varchar_128 event_name
     varchar_256 actor_principal_id
     varchar_32 actor_type
-    timestamptz occurred_at
+    datetime_6 occurred_at
     text reason
     varchar_128 correlation_id
     varchar_256 idempotency_key
     json event_payload
   }
   project_api_keys {
-    uuid project_api_key_id PK
-    uuid project_id UK, FK
+    char_36 project_api_key_id PK
+    char_36 project_id UK, FK
     varchar_12 aws_account_id
     varchar_32 aws_region
     varchar_128 apigw_api_key_id UK
@@ -263,69 +263,69 @@ erDiagram
     int api_key_hash_key_version
     varchar_8 api_key_last4
     boolean observed_enabled
-    timestamptz last_synced_at
-    timestamptz created_at
+    datetime_6 last_synced_at
+    datetime_6 created_at
     varchar_256 created_by
-    timestamptz updated_at
+    datetime_6 updated_at
     varchar_256 updated_by
     int row_version
   }
   project_api_subscriptions {
-    uuid subscription_id PK
-    uuid project_id FK
-    uuid api_id FK
-    uuid api_stage_id FK
-    uuid access_request_id FK
+    char_36 subscription_id PK
+    char_36 project_id FK
+    char_36 api_id FK
+    char_36 api_stage_id FK
+    char_36 access_request_id FK
     varchar_30 approved_auth_mode
     varchar_256 approved_by
-    timestamptz approved_at
-    timestamptz created_at
+    datetime_6 approved_at
+    datetime_6 created_at
     varchar_256 created_by
-    timestamptz updated_at
+    datetime_6 updated_at
     varchar_256 updated_by
     int row_version
   }
   project_cognito_client_events {
-    uuid event_id PK
-    uuid aggregate_id
+    char_36 event_id PK
+    char_36 aggregate_id
     bigint event_seq
     varchar_128 event_name
     varchar_256 actor_principal_id
     varchar_32 actor_type
-    timestamptz occurred_at
+    datetime_6 occurred_at
     text reason
     varchar_128 correlation_id
     varchar_256 idempotency_key
     json event_payload
   }
   project_cognito_client_scopes {
-    uuid project_cognito_client_scope_id PK
-    uuid project_id FK
-    uuid project_cognito_client_id FK
-    uuid api_scope_id FK
-    uuid subscription_id FK
+    char_36 project_cognito_client_scope_id PK
+    char_36 project_id FK
+    char_36 project_cognito_client_id FK
+    char_36 api_scope_id FK
+    char_36 subscription_id FK
     varchar_600 scope_full_name
-    timestamptz granted_at
-    timestamptz created_at
+    datetime_6 granted_at
+    datetime_6 created_at
     varchar_256 created_by
-    timestamptz updated_at
+    datetime_6 updated_at
     varchar_256 updated_by
     int row_version
   }
   project_cognito_client_urls {
-    uuid client_url_id PK
-    uuid project_cognito_client_id FK
+    char_36 client_url_id PK
+    char_36 project_cognito_client_id FK
     varchar_20 url_type
-    text url
-    timestamptz created_at
+    varchar_500 url
+    datetime_6 created_at
     varchar_256 created_by
-    timestamptz updated_at
+    datetime_6 updated_at
     varchar_256 updated_by
     int row_version
   }
   project_cognito_clients {
-    uuid project_cognito_client_id PK
-    uuid project_id FK
+    char_36 project_cognito_client_id PK
+    char_36 project_id FK
     varchar_40 client_type
     varchar_55 cognito_user_pool_id
     varchar_128 app_client_id UK
@@ -345,109 +345,109 @@ erDiagram
     boolean refresh_token_rotation_enabled
     int retry_grace_period_seconds
     boolean enable_token_revocation
-    timestamptz last_synced_at
-    timestamptz created_at
+    datetime_6 last_synced_at
+    datetime_6 created_at
     varchar_256 created_by
-    timestamptz updated_at
+    datetime_6 updated_at
     varchar_256 updated_by
     int row_version
   }
   project_events {
-    uuid event_id PK
-    uuid aggregate_id
+    char_36 event_id PK
+    char_36 aggregate_id
     bigint event_seq
     varchar_128 event_name
     varchar_256 actor_principal_id
     varchar_32 actor_type
-    timestamptz occurred_at
+    datetime_6 occurred_at
     text reason
     varchar_128 correlation_id
     varchar_256 idempotency_key
     json event_payload
   }
   project_member_events {
-    uuid event_id PK
-    uuid aggregate_id
+    char_36 event_id PK
+    char_36 aggregate_id
     bigint event_seq
     varchar_128 event_name
     varchar_256 actor_principal_id
     varchar_32 actor_type
-    timestamptz occurred_at
+    datetime_6 occurred_at
     text reason
     varchar_128 correlation_id
     varchar_256 idempotency_key
     json event_payload
   }
   project_members {
-    uuid project_member_id PK
-    uuid project_id FK
+    char_36 project_member_id PK
+    char_36 project_id FK
     varchar_256 member_principal_id
     varchar_20 member_role
-    timestamptz created_at
+    datetime_6 created_at
     varchar_256 created_by
-    timestamptz updated_at
+    datetime_6 updated_at
     varchar_256 updated_by
     int row_version
   }
   project_usage_plan_api_stages {
-    uuid usage_plan_api_stage_id PK
-    uuid project_id FK
-    uuid project_usage_plan_id FK
-    uuid subscription_id FK
-    uuid api_stage_id FK
+    char_36 usage_plan_api_stage_id PK
+    char_36 project_id FK
+    char_36 project_usage_plan_id FK
+    char_36 subscription_id FK
+    char_36 api_stage_id FK
     varchar_128 apigw_rest_api_id
     varchar_128 apigw_stage_name
-    timestamptz provisioned_at
-    timestamptz created_at
+    datetime_6 provisioned_at
+    datetime_6 created_at
     varchar_256 created_by
-    timestamptz updated_at
+    datetime_6 updated_at
     varchar_256 updated_by
     int row_version
   }
   project_usage_plan_events {
-    uuid event_id PK
-    uuid aggregate_id
+    char_36 event_id PK
+    char_36 aggregate_id
     bigint event_seq
     varchar_128 event_name
     varchar_256 actor_principal_id
     varchar_32 actor_type
-    timestamptz occurred_at
+    datetime_6 occurred_at
     text reason
     varchar_128 correlation_id
     varchar_256 idempotency_key
     json event_payload
   }
   project_usage_plan_key_events {
-    uuid event_id PK
-    uuid aggregate_id
+    char_36 event_id PK
+    char_36 aggregate_id
     bigint event_seq
     varchar_128 event_name
     varchar_256 actor_principal_id
     varchar_32 actor_type
-    timestamptz occurred_at
+    datetime_6 occurred_at
     text reason
     varchar_128 correlation_id
     varchar_256 idempotency_key
     json event_payload
   }
   project_usage_plan_keys {
-    uuid project_usage_plan_key_id PK
-    uuid project_id FK
-    uuid project_usage_plan_id FK
-    uuid project_api_key_id FK
+    char_36 project_usage_plan_key_id PK
+    char_36 project_id FK
+    char_36 project_usage_plan_id FK
+    char_36 project_api_key_id FK
     varchar_128 apigw_usage_plan_key_id UK
     varchar_128 apigw_usage_plan_id
     varchar_128 apigw_api_key_id
-    timestamptz provisioned_at
-    timestamptz created_at
+    datetime_6 provisioned_at
+    datetime_6 created_at
     varchar_256 created_by
-    timestamptz updated_at
+    datetime_6 updated_at
     varchar_256 updated_by
     int row_version
   }
   project_usage_plans {
-    uuid project_usage_plan_id PK
-    uuid project_id UK, FK
+    char_36 project_usage_plan_id PK
+    char_36 project_id UK, FK
     varchar_12 aws_account_id
     varchar_32 aws_region
     varchar_128 apigw_usage_plan_id UK
@@ -456,70 +456,70 @@ erDiagram
     int default_burst_limit
     int default_quota_limit
     varchar_10 default_quota_period
-    timestamptz last_synced_at
-    timestamptz created_at
+    datetime_6 last_synced_at
+    datetime_6 created_at
     varchar_256 created_by
-    timestamptz updated_at
+    datetime_6 updated_at
     varchar_256 updated_by
     int row_version
   }
   projects {
-    uuid project_id PK
+    char_36 project_id PK
     varchar_100 project_code UK
     varchar_200 name
     text description
     varchar_256 owner_principal_id
     varchar_64 department_code
-    timestamptz created_at
+    datetime_6 created_at
     varchar_256 created_by
-    timestamptz updated_at
+    datetime_6 updated_at
     varchar_256 updated_by
     int row_version
   }
   provisioning_operation_events {
-    uuid event_id PK
-    uuid aggregate_id
+    char_36 event_id PK
+    char_36 aggregate_id
     bigint event_seq
     varchar_128 event_name
     varchar_256 actor_principal_id
     varchar_32 actor_type
-    timestamptz occurred_at
+    datetime_6 occurred_at
     text reason
     varchar_128 correlation_id
     varchar_256 idempotency_key
     json event_payload
   }
   provisioning_operations {
-    uuid operation_id PK
+    char_36 operation_id PK
     varchar_200 idempotency_key UK
     varchar_50 operation_type
     varchar_50 target_type
-    uuid target_id
+    char_36 target_id
     json request_payload
     json result_payload
     int retry_count
-    timestamptz created_at
+    datetime_6 created_at
     varchar_256 created_by
-    timestamptz updated_at
+    datetime_6 updated_at
     varchar_256 updated_by
     int row_version
   }
   provisioning_step_events {
-    uuid event_id PK
-    uuid aggregate_id
+    char_36 event_id PK
+    char_36 aggregate_id
     bigint event_seq
     varchar_128 event_name
     varchar_256 actor_principal_id
     varchar_32 actor_type
-    timestamptz occurred_at
+    datetime_6 occurred_at
     text reason
     varchar_128 correlation_id
     varchar_256 idempotency_key
     json event_payload
   }
   provisioning_steps {
-    uuid operation_step_id PK
-    uuid operation_id FK
+    char_36 operation_step_id PK
+    char_36 operation_id FK
     int step_order
     varchar_100 step_name
     varchar_50 aws_service
@@ -528,35 +528,35 @@ erDiagram
     json response_payload
     varchar_100 error_code
     text error_message
-    timestamptz started_at
-    timestamptz finished_at
-    timestamptz created_at
+    datetime_6 started_at
+    datetime_6 finished_at
+    datetime_6 created_at
     varchar_256 created_by
-    timestamptz updated_at
+    datetime_6 updated_at
     varchar_256 updated_by
     int row_version
   }
   subscription_events {
-    uuid event_id PK
-    uuid aggregate_id
+    char_36 event_id PK
+    char_36 aggregate_id
     bigint event_seq
     varchar_128 event_name
     varchar_256 actor_principal_id
     varchar_32 actor_type
-    timestamptz occurred_at
+    datetime_6 occurred_at
     text reason
     varchar_128 correlation_id
     varchar_256 idempotency_key
     json event_payload
   }
   usage_plan_stage_events {
-    uuid event_id PK
-    uuid aggregate_id
+    char_36 event_id PK
+    char_36 aggregate_id
     bigint event_seq
     varchar_128 event_name
     varchar_256 actor_principal_id
     varchar_32 actor_type
-    timestamptz occurred_at
+    datetime_6 occurred_at
     text reason
     varchar_128 correlation_id
     varchar_256 idempotency_key

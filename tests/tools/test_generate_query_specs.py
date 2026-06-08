@@ -41,16 +41,16 @@ from tools.generate_query_specs import (
 
 DDL = """
 CREATE TABLE projects (
-    project_id uuid PRIMARY KEY,
+    project_id CHAR(36) PRIMARY KEY,
     project_code varchar(100) NOT NULL,
     name varchar(200) NOT NULL,
     description text,
-    created_at timestamptz NOT NULL,
+    created_at DATETIME(6) NOT NULL,
     row_version int NOT NULL
 );
 CREATE TABLE project_events (
-    event_id uuid PRIMARY KEY,
-    aggregate_id uuid NOT NULL,
+    event_id CHAR(36) PRIMARY KEY,
+    aggregate_id CHAR(36) NOT NULL,
     event_payload json
 );
 -- COMMENT ON COLUMN projects.project_id IS 'Project ID。';
@@ -408,7 +408,7 @@ def test_generate_query_specs_renders_source_tables_and_expanded_aliases(
     ) in content
     assert (
         "| <code>projects</code> | <code>project_id</code> | <code>project_id</code> | "
-        "Project ID。 | <code>UUID</code> | no |"
+        "Project ID。 | <code>CHAR(36)</code> | no |"
     ) in content
     assert (
         "| <code>-</code> | <code>event_count</code> | <code>event_count</code> | "

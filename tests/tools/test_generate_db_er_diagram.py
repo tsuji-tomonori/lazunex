@@ -22,22 +22,22 @@ from tools.generate_db_table_specs import parse_tables
 
 DDL_WITH_RELATIONSHIPS = """
 CREATE TABLE parents (
-    parent_id uuid PRIMARY KEY,
+    parent_id CHAR(36) PRIMARY KEY,
     parent_code varchar(64) NOT NULL UNIQUE
 );
 
 CREATE TABLE children (
-    child_id uuid PRIMARY KEY,
-    parent_id uuid NOT NULL REFERENCES parents (parent_id),
-    alt_parent_id uuid,
-    profile_id uuid UNIQUE,
+    child_id CHAR(36) PRIMARY KEY,
+    parent_id CHAR(36) NOT NULL REFERENCES parents (parent_id),
+    alt_parent_id CHAR(36),
+    profile_id CHAR(36) UNIQUE,
     CONSTRAINT fk_children_alt_parent
         FOREIGN KEY (alt_parent_id) REFERENCES parents (parent_id)
 );
 
 CREATE TABLE profiles (
-    profile_id uuid PRIMARY KEY,
-    parent_id uuid NOT NULL UNIQUE REFERENCES parents (parent_id)
+    profile_id CHAR(36) PRIMARY KEY,
+    parent_id CHAR(36) NOT NULL UNIQUE REFERENCES parents (parent_id)
 );
 
 ALTER TABLE children
@@ -112,7 +112,7 @@ def test_child_columns_are_unique_supports_composite_table_constraints() -> None
     table = parse_tables(
         """
         CREATE TABLE members (
-            project_id uuid NOT NULL,
+            project_id CHAR(36) NOT NULL,
             principal_id varchar(256) NOT NULL,
             member_role varchar(20) NOT NULL,
             UNIQUE (project_id, principal_id)
@@ -132,9 +132,9 @@ def test_render_mermaid_includes_tables_keys_and_relationships() -> None:
 
     assert mermaid.startswith("erDiagram\n")
     assert "  children {" in mermaid
-    assert "    uuid child_id PK" in mermaid
-    assert "    uuid parent_id FK" in mermaid
-    assert "    uuid profile_id UK, FK" in mermaid
+    assert "    char_36 child_id PK" in mermaid
+    assert "    char_36 parent_id FK" in mermaid
+    assert "    char_36 profile_id UK, FK" in mermaid
     assert "  parents ||--o{ children : parent_id" in mermaid
     assert "  parents o|--o{ children : fk_children_alt_parent" in mermaid
     assert "  parents ||--o| profiles : parent_id" in mermaid
