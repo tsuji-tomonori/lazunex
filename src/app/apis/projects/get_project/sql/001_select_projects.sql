@@ -16,12 +16,12 @@ SELECT
     up.default_quota_period,
     c.client_type,
     c.app_client_id,
-    (c.client_secret_last4 IS NOT NULL) AS has_client_secret,
     c.access_token_validity,
     c.access_token_unit,
     c.refresh_token_rotation_enabled,
     u.url_type,
-    u.url
+    u.url,
+    (c.client_secret_last4 IS NOT NULL) AS has_client_secret
 FROM projects AS p
 INNER JOIN project_api_keys AS k
     ON k.project_id = p.project_id

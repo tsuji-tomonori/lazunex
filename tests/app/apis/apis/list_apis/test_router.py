@@ -89,7 +89,7 @@ async def test_tc001_list_apis_router_matches_unit_test_gen(
         "app.apis.apis.list_apis.functions.has_api_list_permission", raise_expected_error
     )
     monkeypatch.setattr(
-        "app.apis.apis.list_apis.router.operational_log_context_model",
+        "app.apis.apis.list_apis.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -141,7 +141,7 @@ async def test_tc003_list_apis_router_matches_unit_test_gen(
         "app.apis.apis.list_apis.functions.has_api_list_permission", raise_expected_error
     )
     monkeypatch.setattr(
-        "app.apis.apis.list_apis.router.operational_log_context_model",
+        "app.apis.apis.list_apis.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -178,7 +178,7 @@ async def test_tc004_list_apis_router_matches_unit_test_gen(
         "app.apis.apis.list_apis.functions.has_api_list_permission", raise_expected_error
     )
     monkeypatch.setattr(
-        "app.apis.apis.list_apis.router.operational_log_context_model",
+        "app.apis.apis.list_apis.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -215,7 +215,7 @@ async def test_tc005_list_apis_router_matches_unit_test_gen(
         "app.apis.apis.list_apis.functions.has_api_list_permission", raise_expected_error
     )
     monkeypatch.setattr(
-        "app.apis.apis.list_apis.router.operational_log_context_model",
+        "app.apis.apis.list_apis.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 

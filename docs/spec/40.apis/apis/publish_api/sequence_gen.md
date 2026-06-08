@@ -30,32 +30,20 @@ sequenceDiagram
   alt reviewers に重複する reviewerPrincipalId が含まれる場合。
     API-->>User: HTTP 400 Bad Request<br/>reviewers must not contain duplicate reviewer_principal_id values
   end
-  alt 呼び出し元が API 公開登録できない場合。
-    API-->>User: HTTP 403 Forbidden<br/>caller cannot publish api
-  end
   alt 呼び出し元が API 公開登録できる場合。
+    API->>API: API 公開登録権限がない場合の運用ログと error response を組み立てる。
     Note over API,DB: DB transaction範囲開始 (最初のDB操作からcommit/rollbackまで)
     API->>DB: Idempotency-Key に対応する既存レコードを取得する。<br/>SQL 018_select_idempotency_records.sql<br/>テーブル idempotency_records
-    alt router が idempotency key is already used と判定した場合。
-      API->>DB: DB transactionをrollbackして変更を破棄する。
-      API-->>User: HTTP 409 Conflict<br/>idempotency key is already used
-    end
+    API->>API: Idempotency-Key が既存結果に紐づく場合の運用ログと error response を組み立てる。
     API->>R_api_gateway_control: 登録対象 API Gateway stage の登録情報を検証する。
     alt API Gateway method に API key と Cognito scope が設定されていない場合。
       API->>DB: DB transactionをrollbackして変更を破棄する。
       API-->>User: HTTP 502 Bad Gateway<br/>API Gateway method is not configured for API key and Cognito scope
     end
-    alt 登録対象 API Gateway stage の登録情報を検証できない場合。
-      API->>DB: DB transactionをrollbackして変更を破棄する。
-      API-->>User: HTTP 502 Bad Gateway<br/>API Gateway stage registration is not valid
-    end
-    alt 登録対象 API が既に登録済みである場合。
-      API->>DB: DB transactionをrollbackして変更を破棄する。
-      API-->>User: HTTP 409 Conflict<br/>api is already registered
-    end
+    API->>API: API Gateway stage 登録を検証できない場合の運用ログと error response を組み立てる。
     API->>DB: API codeの重複登録を防ぐため、既存APIを取得する。<br/>SQL 001_select_apis.sql<br/>テーブル apis
     API->>DB: API Gateway stageの重複登録を防ぐため、既存stageを取得する。<br/>SQL 019_select_api_gateway_stages_by_unique_key.sql<br/>テーブル api_gateway_stages
-    alt 登録対象 API が既に登録済みでない場合。
+    alt 登録対象 API が既に登録済みである場合。
       alt 登録対象 API code が既に登録済みである場合。
         API->>DB: DB transactionをrollbackして変更を破棄する。
         API-->>User: HTTP 409 Conflict<br/>api code is already registered
@@ -64,6 +52,7 @@ sequenceDiagram
         API->>DB: DB transactionをrollbackして変更を破棄する。
         API-->>User: HTTP 409 Conflict<br/>API Gateway stage is already registered
       end
+      API->>API: API が既に登録済みの場合の運用ログと error response を組み立てる。
       API->>DB: API 公開用の provisioning operation を作成する。<br/>SQL 003_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
       API->>DB: 冪等性レコードを作成または確認する。<br/>SQL 011_insert_idempotency_records.sql<br/>テーブル idempotency_records
       API->>R_identity: Cognito Resource Server に custom scope を追加する。
@@ -79,10 +68,10 @@ sequenceDiagram
       API->>DB: provisioning operation/step event を追記する。<br/>SQL 016_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
       API->>DB: 監査イベントを追記する。<br/>SQL 010_insert_audit_events.sql<br/>テーブル audit_events
       API->>DB: DB transactionをcommitして変更を確定する。
+      API->>API: DB 整合性違反時の運用ログと error response を組み立てる。
+      API->>API: DB commit 失敗時の運用ログと error response を組み立てる。
       API->>API: API 公開登録レスポンスを組み立てる。
-      alt Router で捕捉した例外を error response に変換する場合。
-        API-->>User: HTTP 500 Internal Server Error<br/>internal server error
-      end
+      API->>API: Router で捕捉した例外を運用ログと HTTP error response に変換する。
       API-->>User: HTTP 201 Created
     end
   end

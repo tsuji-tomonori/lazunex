@@ -37,19 +37,24 @@ def test_validate_file_accepts_generated_sequence_shape(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
         "docs/spec/40.apis/projects/list_projects/sequence_gen.md",
-        """
-```mermaid
-sequenceDiagram
-  autonumber
-  participant API as API
-  participant DB as DB
-  Note over API,DB: DB transaction範囲開始 (最初のDB操作からcommit/rollbackまで)
-  API->>API: Project 一覧取得条件を検証する。
-  alt 呼び出し元が Project 一覧を参照できる場合。
-    API->>DB: レコードを参照する SQL 001_select_projects.sql<br/>テーブル projects, project_members
-  end
-```
-""",
+        "\n".join(
+            [
+                "",
+                "```mermaid",
+                "sequenceDiagram",
+                "  autonumber",
+                "  participant API as API",
+                "  participant DB as DB",
+                "  Note over API,DB: DB transaction範囲開始 (最初のDB操作からcommit/rollbackまで)",
+                "  API->>API: Project 一覧取得条件を検証する。",
+                "  alt 呼び出し元が Project 一覧を参照できる場合。",
+                "    API->>DB: レコードを参照する SQL 001_select_projects.sql<br/>"
+                "テーブル projects, project_members",
+                "  end",
+                "```",
+                "",
+            ]
+        ),
     )
 
     assert validate_file(path) == []

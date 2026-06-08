@@ -16,9 +16,9 @@
 
 ## 生成・検証方針
 
-- WARNING以上のMessage catalogは `router.py` の `ops_logger.warning/error(...)` kwargsを一次情報にする。
+- WARNING以上のMessage catalogは `router.py`、`functions.py` または `response_builders.py` の `ops_logger.warning/error(...)` kwargsを一次情報にする。
 - `api_error_response(...)` のstatus/detailとlogger呼び出しのstatus/detailを照合する。
-- 実装中の `app.core.logging` ラッパー呼び出しを検出し、WARN以上はrouter内のemitとcatalog定義の一致を検証する。
+- 実装中の `app.core.logging` ラッパー呼び出しを検出し、WARN以上はAPI operation内のemitとcatalog定義の一致を検証する。
 - `logging.getLogger(...)`、`logger.info(...)` などの直接呼び出しは許可しない。
 - WARNING以上は運用上の意味を持つ前提で、必要な確認手順・runbook・contextを検証対象にする。
 
@@ -48,7 +48,7 @@
 | 説明 | 対象API利用申請がpending状態ではない場合。 |
 | 対応すべきこと | accessRequestId、現在state、既存reviewを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py (ops_logger.warning) |
+| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/functions.py<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/functions.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -59,7 +59,6 @@
 | `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.accessRequestId` | `string \| null` | 却下対象の存在確認、審査状態確認、重複却下確認に使用するAPI利用申請IDです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じAPI利用申請却下リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 | `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
 | `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |
@@ -79,7 +78,7 @@
 | 説明 | 呼び出し元が対象APIのreviewerではない場合。 |
 | 対応すべきこと | actorPrincipalId、apiId、reviewer設定を確認する。 |
 | runbook | RUNBOOK-authorization-forbidden |
-| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py (ops_logger.warning) |
+| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/functions.py<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/functions.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -90,7 +89,6 @@
 | `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.accessRequestId` | `string \| null` | 却下対象の存在確認、審査状態確認、重複却下確認に使用するAPI利用申請IDです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じAPI利用申請却下リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 | `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
 | `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |
@@ -110,7 +108,7 @@
 | 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
 | 対応すべきこと | 同一routeの5xx率、直近deploy、DB状態を確認する。 |
 | runbook | RUNBOOK-unexpected-api-failure |
-| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py (ops_logger.error) |
+| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/functions.py<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/functions.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -121,7 +119,6 @@
 | `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.accessRequestId` | `string \| null` | 却下対象の存在確認、審査状態確認、重複却下確認に使用するAPI利用申請IDです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じAPI利用申請却下リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 | `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
 | `error.exceptionType` | `string \| null` | 捕捉された例外の型名です。 |
@@ -142,7 +139,7 @@
 | 説明 | API利用申請却下のDB transaction commitでIntegrityErrorを捕捉した場合。 |
 | 対応すべきこと | access_request/review/idempotency、制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。 |
 | runbook | RUNBOOK-db-data-repair |
-| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py (ops_logger.error) |
+| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/functions.py<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/functions.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -153,7 +150,6 @@
 | `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.accessRequestId` | `string \| null` | 却下対象の存在確認、審査状態確認、重複却下確認に使用するAPI利用申請IDです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じAPI利用申請却下リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 | `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
 | `error.exceptionType` | `string \| null` | 捕捉された例外の型名です。 |
@@ -174,7 +170,7 @@
 | 説明 | API利用申請却下のDB transaction commitでSQLAlchemyErrorを捕捉した場合。 |
 | 対応すべきこと | DB接続状態、transaction rollback、idempotency状態を確認し、必要に応じて利用者へ再実行を案内する。 |
 | runbook | RUNBOOK-db-commit-retry |
-| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py (ops_logger.error) |
+| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/functions.py<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/functions.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -185,7 +181,6 @@
 | `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.accessRequestId` | `string \| null` | 却下対象の存在確認、審査状態確認、重複却下確認に使用するAPI利用申請IDです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じAPI利用申請却下リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 | `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
 | `error.exceptionType` | `string \| null` | 捕捉された例外の型名です。 |
@@ -206,7 +201,7 @@
 | 説明 | Idempotency-Keyに対応する処理結果が既に存在する場合。 |
 | 対応すべきこと | Idempotency-Key、operationId、既存responsePayloadを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/router.py<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/router.py (ops_logger.warning) |
+| 実装参照 | src/app/apis/api_access_requests/reject_api_access_request/functions.py<br>wrapper: src/app/apis/api_access_requests/reject_api_access_request/functions.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -217,7 +212,6 @@
 | `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.accessRequestId` | `string \| null` | 却下対象の存在確認、審査状態確認、重複却下確認に使用するAPI利用申請IDです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じAPI利用申請却下リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 | `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
 | `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |

@@ -16,9 +16,9 @@
 
 ## 生成・検証方針
 
-- WARNING以上のMessage catalogは `router.py` の `ops_logger.warning/error(...)` kwargsを一次情報にする。
+- WARNING以上のMessage catalogは `router.py`、`functions.py` または `response_builders.py` の `ops_logger.warning/error(...)` kwargsを一次情報にする。
 - `api_error_response(...)` のstatus/detailとlogger呼び出しのstatus/detailを照合する。
-- 実装中の `app.core.logging` ラッパー呼び出しを検出し、WARN以上はrouter内のemitとcatalog定義の一致を検証する。
+- 実装中の `app.core.logging` ラッパー呼び出しを検出し、WARN以上はAPI operation内のemitとcatalog定義の一致を検証する。
 - `logging.getLogger(...)`、`logger.info(...)` などの直接呼び出しは許可しない。
 - WARNING以上は運用上の意味を持つ前提で、必要な確認手順・runbook・contextを検証対象にする。
 
@@ -49,7 +49,7 @@
 | 説明 | 呼び出し元がAPI公開登録権限を持たない場合。 |
 | 対応すべきこと | actorPrincipalIdとAPI公開登録権限を確認する。 |
 | runbook | RUNBOOK-authorization-forbidden |
-| 実装参照 | src/app/apis/apis/publish_api/router.py<br>wrapper: src/app/apis/apis/publish_api/router.py (ops_logger.warning) |
+| 実装参照 | src/app/apis/apis/publish_api/response_builders.py<br>wrapper: src/app/apis/apis/publish_api/response_builders.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -63,10 +63,6 @@
 | `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |
 | `request.sourceIp` | `string \| null` | 呼び出し元IPアドレスです。 |
 | `request.userAgent` | `string \| null` | 呼び出し元User-Agentです。 |
-| `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
-| `resource.apiCode` | `string \| null` | 公開登録対象APIの重複確認、状態確認、再送に使用するAPI codeです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じAPI公開登録リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
-| `resource.ownerPrincipalId` | `string \| null` | 公開登録対象APIの所有者確認、権限確認、問い合わせに使用する認証主体IDです。 |
 
 ### `M002` `publishApi.api_gateway_stage_registration_is_not_valid`
 
@@ -81,7 +77,7 @@
 | 説明 | API Gateway stage登録の検証に失敗した場合。 |
 | 対応すべきこと | API Gateway REST API ID、stage名、権限、リージョンを確認する。 |
 | runbook | RUNBOOK-dependency-provisioning-failure |
-| 実装参照 | src/app/apis/apis/publish_api/router.py<br>wrapper: src/app/apis/apis/publish_api/router.py (ops_logger.error) |
+| 実装参照 | src/app/apis/apis/publish_api/response_builders.py<br>wrapper: src/app/apis/apis/publish_api/response_builders.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -95,10 +91,6 @@
 | `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |
 | `request.sourceIp` | `string \| null` | 呼び出し元IPアドレスです。 |
 | `request.userAgent` | `string \| null` | 呼び出し元User-Agentです。 |
-| `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
-| `resource.apiCode` | `string \| null` | 公開登録対象APIの重複確認、状態確認、再送に使用するAPI codeです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じAPI公開登録リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
-| `resource.ownerPrincipalId` | `string \| null` | 公開登録対象APIの所有者確認、権限確認、問い合わせに使用する認証主体IDです。 |
 
 ### `M003` `publishApi.api_is_already_registered`
 
@@ -113,7 +105,7 @@
 | 説明 | 同一API Gateway stageが既にAPI catalogに登録されている場合。 |
 | 対応すべきこと | 既存API metadataとIdempotency-Keyを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/apis/publish_api/router.py<br>wrapper: src/app/apis/apis/publish_api/router.py (ops_logger.warning) |
+| 実装参照 | src/app/apis/apis/publish_api/response_builders.py<br>wrapper: src/app/apis/apis/publish_api/response_builders.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -127,10 +119,6 @@
 | `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |
 | `request.sourceIp` | `string \| null` | 呼び出し元IPアドレスです。 |
 | `request.userAgent` | `string \| null` | 呼び出し元User-Agentです。 |
-| `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
-| `resource.apiCode` | `string \| null` | 公開登録対象APIの重複確認、状態確認、再送に使用するAPI codeです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じAPI公開登録リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
-| `resource.ownerPrincipalId` | `string \| null` | 公開登録対象APIの所有者確認、権限確認、問い合わせに使用する認証主体IDです。 |
 
 ### `M004` `publishApi.router_api_function_error`
 
@@ -145,7 +133,7 @@
 | 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
 | 対応すべきこと | 同一routeの5xx率、直近deploy、Cognito/API Gateway/DB状態を確認する。 |
 | runbook | RUNBOOK-unexpected-api-failure |
-| 実装参照 | src/app/apis/apis/publish_api/router.py<br>wrapper: src/app/apis/apis/publish_api/router.py (ops_logger.error) |
+| 実装参照 | src/app/apis/apis/publish_api/response_builders.py<br>wrapper: src/app/apis/apis/publish_api/response_builders.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -160,10 +148,6 @@
 | `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |
 | `request.sourceIp` | `string \| null` | 呼び出し元IPアドレスです。 |
 | `request.userAgent` | `string \| null` | 呼び出し元User-Agentです。 |
-| `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
-| `resource.apiCode` | `string \| null` | 公開登録対象APIの重複確認、状態確認、再送に使用するAPI codeです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じAPI公開登録リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
-| `resource.ownerPrincipalId` | `string \| null` | 公開登録対象APIの所有者確認、権限確認、問い合わせに使用する認証主体IDです。 |
 
 ### `M005` `publishApi.db_integrity_error`
 
@@ -178,7 +162,7 @@
 | 説明 | API公開登録のDB transaction commitでIntegrityErrorを捕捉した場合。 |
 | 対応すべきこと | API catalog/provisioning/idempotency、Cognito/API Gateway、制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。 |
 | runbook | RUNBOOK-db-data-repair |
-| 実装参照 | src/app/apis/apis/publish_api/router.py<br>wrapper: src/app/apis/apis/publish_api/router.py (ops_logger.error) |
+| 実装参照 | src/app/apis/apis/publish_api/response_builders.py<br>wrapper: src/app/apis/apis/publish_api/response_builders.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -193,10 +177,6 @@
 | `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |
 | `request.sourceIp` | `string \| null` | 呼び出し元IPアドレスです。 |
 | `request.userAgent` | `string \| null` | 呼び出し元User-Agentです。 |
-| `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
-| `resource.apiCode` | `string \| null` | 公開登録対象APIの重複確認、状態確認、再送に使用するAPI codeです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じAPI公開登録リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
-| `resource.ownerPrincipalId` | `string \| null` | 公開登録対象APIの所有者確認、権限確認、問い合わせに使用する認証主体IDです。 |
 
 ### `M006` `publishApi.db_commit_failed`
 
@@ -211,7 +191,7 @@
 | 説明 | API公開登録のDB transaction commitでSQLAlchemyErrorを捕捉した場合。 |
 | 対応すべきこと | DB接続状態、transaction rollback、idempotency状態を確認し、必要に応じて利用者へ再実行を案内する。 |
 | runbook | RUNBOOK-db-commit-retry |
-| 実装参照 | src/app/apis/apis/publish_api/router.py<br>wrapper: src/app/apis/apis/publish_api/router.py (ops_logger.error) |
+| 実装参照 | src/app/apis/apis/publish_api/response_builders.py<br>wrapper: src/app/apis/apis/publish_api/response_builders.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -226,10 +206,6 @@
 | `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |
 | `request.sourceIp` | `string \| null` | 呼び出し元IPアドレスです。 |
 | `request.userAgent` | `string \| null` | 呼び出し元User-Agentです。 |
-| `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
-| `resource.apiCode` | `string \| null` | 公開登録対象APIの重複確認、状態確認、再送に使用するAPI codeです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じAPI公開登録リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
-| `resource.ownerPrincipalId` | `string \| null` | 公開登録対象APIの所有者確認、権限確認、問い合わせに使用する認証主体IDです。 |
 
 ### `M007` `publishApi.idempotency_key_already_used`
 
@@ -244,7 +220,7 @@
 | 説明 | Idempotency-Keyに対応する処理結果が既に存在する場合。 |
 | 対応すべきこと | Idempotency-Key、operationId、既存responsePayloadを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/apis/publish_api/router.py<br>wrapper: src/app/apis/apis/publish_api/router.py (ops_logger.warning) |
+| 実装参照 | src/app/apis/apis/publish_api/response_builders.py<br>wrapper: src/app/apis/apis/publish_api/response_builders.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -258,10 +234,6 @@
 | `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |
 | `request.sourceIp` | `string \| null` | 呼び出し元IPアドレスです。 |
 | `request.userAgent` | `string \| null` | 呼び出し元User-Agentです。 |
-| `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
-| `resource.apiCode` | `string \| null` | 公開登録対象APIの重複確認、状態確認、再送に使用するAPI codeです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じAPI公開登録リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
-| `resource.ownerPrincipalId` | `string \| null` | 公開登録対象APIの所有者確認、権限確認、問い合わせに使用する認証主体IDです。 |
 
 
 ## strict検証で要求する項目

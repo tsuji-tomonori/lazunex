@@ -19,14 +19,10 @@ sequenceDiagram
   alt 対象 API が存在しない場合。
     API-->>User: HTTP 404 Not Found<br/>API not found
   end
-  alt 対象 API が呼び出し元から参照可能でない場合。
-    API-->>User: HTTP 403 Forbidden<br/>caller cannot view api
-  end
   alt 対象 API が呼び出し元から参照可能な場合。
+    API->>API: API 詳細参照権限がない場合の運用ログと error response を組み立てる。
     API->>API: API 詳細レスポンスを組み立てる。
-    alt Router で捕捉した例外を error response に変換する場合。
-      API-->>User: HTTP 500 Internal Server Error<br/>internal server error
-    end
+    API->>API: Router で捕捉した例外を運用ログと HTTP error response に変換する。
     API-->>User: HTTP 200 OK
   end
 ```

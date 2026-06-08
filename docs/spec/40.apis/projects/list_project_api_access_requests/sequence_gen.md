@@ -16,16 +16,12 @@ sequenceDiagram
     API-->>User: HTTP 422 Unprocessable Content<br/>request validation failed
   end
   API->>API: 対象 Project の参照を組み立てる。
-  alt 呼び出し元が Project 内の利用申請履歴を参照できない場合。
-    API-->>User: HTTP 403 Forbidden<br/>caller cannot list project access requests
-  end
   alt 呼び出し元が Project 内の利用申請履歴を参照できる場合。
+    API->>API: Project API 利用申請一覧参照権限がない場合の運用ログと error response を組み立てる。
     API->>DB: Project に紐づく access request を検索する。<br/>SQL 001_select_api_access_requests.sql<br/>テーブル api_access_requests, projects, apis, api_gateway_stages, api_access_reviews, api_reviewers, project_members
     API->>API: 一覧取得結果に limit と nextToken を適用する。
     API->>API: Project 利用申請一覧レスポンスを組み立てる。
-    alt Router で捕捉した例外を error response に変換する場合。
-      API-->>User: HTTP 500 Internal Server Error<br/>internal server error
-    end
+    API->>API: Router で捕捉した例外を運用ログと HTTP error response に変換する。
     API-->>User: HTTP 200 OK
   end
 ```

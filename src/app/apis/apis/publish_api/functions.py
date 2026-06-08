@@ -36,6 +36,7 @@ from app.apis.sequence_types import (
 )
 from app.apis.types import ResourceId
 from app.core.config import settings
+from app.core.logging import get_operation_logger
 from app.integrations.api_gateway_control.port import ApiGatewayControlPort
 from app.integrations.api_gateway_control.schemas import (
     CreateDeploymentInput,
@@ -49,6 +50,28 @@ from app.integrations.identity.schemas import (
     DescribeResourceServerInput,
     UpdateResourceServerInput,
 )
+
+from .response_builders import (
+    build_api_already_registered_response,
+    build_api_gateway_stage_registration_invalid_response,
+    build_caller_cannot_publish_api_response,
+    build_db_commit_failed_response,
+    build_db_integrity_error_response,
+    build_idempotency_key_already_used_response,
+    build_router_error_response,
+)
+
+__all__ = (
+    "build_api_already_registered_response",
+    "build_api_gateway_stage_registration_invalid_response",
+    "build_caller_cannot_publish_api_response",
+    "build_db_commit_failed_response",
+    "build_db_integrity_error_response",
+    "build_idempotency_key_already_used_response",
+    "build_router_error_response",
+)
+
+ops_logger = get_operation_logger(__name__)
 
 
 def _now() -> datetime:

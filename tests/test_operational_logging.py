@@ -54,7 +54,7 @@ def test_operation_logger_emits_structured_masked_event(caplog: LogCaptureFixtur
         "when": "2xx responseを返す直前。",
         "contextModel": {
             "traceId": "trace-1",
-            "requestId": "request-1",
+            "request.id": "request-1",
             "actorPrincipalId": "user-1",
             "api.statusCode": 200,
         },

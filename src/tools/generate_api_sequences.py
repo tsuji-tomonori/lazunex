@@ -576,6 +576,15 @@ def function_metadata(functions_path: Path) -> dict[str, FunctionMetadata]:
     return metadata
 
 
+def operation_function_metadata(api_dir: Path) -> dict[str, FunctionMetadata]:
+    metadata: dict[str, FunctionMetadata] = {}
+    for path in (api_dir / "functions.py", api_dir / "response_builders.py"):
+        if not path.exists():
+            continue
+        metadata.update(function_metadata(path))
+    return metadata
+
+
 def sequence_label(step: SequenceStep) -> str:
     return step.description
 
@@ -1085,6 +1094,10 @@ def operation_queries_path(api_dir: Path) -> Path:
     return generated_path if generated_path.exists() else api_dir / "queries.py"
 
 
+def sql_files(sql_dir: Path) -> list[Path]:
+    return sorted(sql_dir.glob("*.sql"))
+
+
 def sql_sequence_steps(
     sql_dir: Path,
     summaries: dict[str, str] | None = None,
@@ -1094,7 +1107,7 @@ def sql_sequence_steps(
         return []
     steps: list[SqlStep] = []
     summaries = summaries or {}
-    for path in sorted(sql_dir.glob("*.sql")):
+    for path in sql_files(sql_dir):
         if filenames is not None and path.name not in filenames:
             continue
         tables = sql_tables(path.read_text(encoding="utf-8"))
@@ -1116,10 +1129,9 @@ def api_sequence_from_dir(
     integrations_root: Path | None = None,
 ) -> ApiSequence:
     router_path = api_dir / "router.py"
-    functions_path = api_dir / "functions.py"
     tree = ast.parse(router_path.read_text(encoding="utf-8"), filename=str(router_path))
     function = endpoint_function(tree)
-    metadata = function_metadata(functions_path)
+    metadata = operation_function_metadata(api_dir)
     items = [
         *implicit_router_error_returns(function),
         *endpoint_sequence_items(function, metadata, endpoint_success_status_code(function)),
@@ -1313,9 +1325,10 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
 def query_sql_filenames_for_step(step: SequenceStep, sql_steps: list[SqlStep]) -> list[str]:
     filenames: list[str] = []
     for query_function in step.query_functions:
-        suffix = f"_{query_function}.sql"
+        suffix = f"_{query_function}"
         for sql_step in sql_steps:
-            if sql_step.filename == f"{query_function}.sql" or sql_step.filename.endswith(suffix):
+            stem = sql_step.filename.removesuffix(".sql")
+            if stem == query_function or stem.endswith(suffix):
                 filenames.append(sql_step.filename)
                 break
     return filenames

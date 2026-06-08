@@ -41,13 +41,13 @@
 
 ## 2. 正常系前提
 
-- 条件分岐: 呼び出し元がAPIを公開登録できないため、リクエストを拒否した。: 不成立
-- 条件分岐: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。: 不成立
-- 条件分岐: API Gateway stage登録を検証できないため、API公開登録を中断した。: 不成立
-- 条件分岐: APIが既に登録済みのため、リクエストを拒否した。: 不成立
-- 例外処理: DB整合性違反によりAPI公開登録のcommitが失敗した。: 発生しない
-- 例外処理: DB commit失敗によりAPI公開登録を確定できなかった。: 発生しない
-- 例外処理: Routerで捕捉した例外によりAPI公開登録が失敗した。: 発生しない
+- 条件分岐: 呼び出し元が API 公開登録できない場合。: 不成立
+- 条件分岐: has_existing_idempotency_result(idempotency_record): 不成立
+- 条件分岐: 登録対象 API Gateway stage の登録情報を検証できない場合。: 不成立
+- 条件分岐: 登録対象 API が既に登録済みである場合。: 不成立
+- 例外処理: IntegrityError: 発生しない
+- 例外処理: SQLAlchemyError: 発生しない
+- 例外処理: ROUTER_HANDLED_EXCEPTIONS: 発生しない
 
 ## 3. 正常系リソース変更
 

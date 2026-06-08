@@ -16,9 +16,9 @@
 
 ## 生成・検証方針
 
-- WARNING以上のMessage catalogは `router.py` の `ops_logger.warning/error(...)` kwargsを一次情報にする。
+- WARNING以上のMessage catalogは `router.py`、`functions.py` または `response_builders.py` の `ops_logger.warning/error(...)` kwargsを一次情報にする。
 - `api_error_response(...)` のstatus/detailとlogger呼び出しのstatus/detailを照合する。
-- 実装中の `app.core.logging` ラッパー呼び出しを検出し、WARN以上はrouter内のemitとcatalog定義の一致を検証する。
+- 実装中の `app.core.logging` ラッパー呼び出しを検出し、WARN以上はAPI operation内のemitとcatalog定義の一致を検証する。
 - `logging.getLogger(...)`、`logger.info(...)` などの直接呼び出しは許可しない。
 - WARNING以上は運用上の意味を持つ前提で、必要な確認手順・runbook・contextを検証対象にする。
 
@@ -47,7 +47,7 @@
 | 説明 | 呼び出し元が対象Projectのownerではない場合。 |
 | 対応すべきこと | actorPrincipalId、projectId、Project member roleを確認する。 |
 | runbook | RUNBOOK-authorization-forbidden |
-| 実装参照 | src/app/apis/projects/update_project_public_client/router.py<br>wrapper: src/app/apis/projects/update_project_public_client/router.py (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/update_project_public_client/functions.py<br>wrapper: src/app/apis/projects/update_project_public_client/functions.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -58,8 +58,6 @@
 | `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.projectId` | `string \| null` | 更新対象Projectの存在確認、権限確認、状態確認に使用するProject IDです。 |
-| `resource.expectedRowVersion` | `integer \| null` | 楽観ロック競合時に現在値との差分確認と再送判断に使用する期待行versionです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じpublic client更新リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 | `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
 | `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |
@@ -79,7 +77,7 @@
 | 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
 | 対応すべきこと | 同一routeの5xx率、直近deploy、Cognito/DB状態を確認する。 |
 | runbook | RUNBOOK-unexpected-api-failure |
-| 実装参照 | src/app/apis/projects/update_project_public_client/router.py<br>wrapper: src/app/apis/projects/update_project_public_client/router.py (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/update_project_public_client/functions.py<br>wrapper: src/app/apis/projects/update_project_public_client/functions.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -90,8 +88,6 @@
 | `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.projectId` | `string \| null` | 更新対象Projectの存在確認、権限確認、状態確認に使用するProject IDです。 |
-| `resource.expectedRowVersion` | `integer \| null` | 楽観ロック競合時に現在値との差分確認と再送判断に使用する期待行versionです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じpublic client更新リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 | `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
 | `error.exceptionType` | `string \| null` | 捕捉された例外の型名です。 |
@@ -112,7 +108,7 @@
 | 説明 | public app client更新のDB transaction commitでIntegrityErrorを捕捉した場合。 |
 | 対応すべきこと | project/public_client/provisioning/idempotency、Cognito、制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。 |
 | runbook | RUNBOOK-db-data-repair |
-| 実装参照 | src/app/apis/projects/update_project_public_client/router.py<br>wrapper: src/app/apis/projects/update_project_public_client/router.py (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/update_project_public_client/functions.py<br>wrapper: src/app/apis/projects/update_project_public_client/functions.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -123,8 +119,6 @@
 | `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.projectId` | `string \| null` | 更新対象Projectの存在確認、権限確認、状態確認に使用するProject IDです。 |
-| `resource.expectedRowVersion` | `integer \| null` | 楽観ロック競合時に現在値との差分確認と再送判断に使用する期待行versionです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じpublic client更新リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 | `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
 | `error.exceptionType` | `string \| null` | 捕捉された例外の型名です。 |
@@ -145,7 +139,7 @@
 | 説明 | public app client更新のDB transaction commitでSQLAlchemyErrorを捕捉した場合。 |
 | 対応すべきこと | DB接続状態、transaction rollback、idempotency状態を確認し、必要に応じて利用者へ再実行を案内する。 |
 | runbook | RUNBOOK-db-commit-retry |
-| 実装参照 | src/app/apis/projects/update_project_public_client/router.py<br>wrapper: src/app/apis/projects/update_project_public_client/router.py (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/update_project_public_client/functions.py<br>wrapper: src/app/apis/projects/update_project_public_client/functions.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -156,8 +150,6 @@
 | `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.projectId` | `string \| null` | 更新対象Projectの存在確認、権限確認、状態確認に使用するProject IDです。 |
-| `resource.expectedRowVersion` | `integer \| null` | 楽観ロック競合時に現在値との差分確認と再送判断に使用する期待行versionです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じpublic client更新リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 | `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
 | `error.exceptionType` | `string \| null` | 捕捉された例外の型名です。 |
@@ -178,7 +170,7 @@
 | 説明 | Idempotency-Keyに対応する処理結果が既に存在する場合。 |
 | 対応すべきこと | Idempotency-Key、operationId、既存responsePayloadを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/projects/update_project_public_client/router.py<br>wrapper: src/app/apis/projects/update_project_public_client/router.py (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/update_project_public_client/functions.py<br>wrapper: src/app/apis/projects/update_project_public_client/functions.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -189,8 +181,6 @@
 | `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.projectId` | `string \| null` | 更新対象Projectの存在確認、権限確認、状態確認に使用するProject IDです。 |
-| `resource.expectedRowVersion` | `integer \| null` | 楽観ロック競合時に現在値との差分確認と再送判断に使用する期待行versionです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じpublic client更新リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 | `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
 | `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |

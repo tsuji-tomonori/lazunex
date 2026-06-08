@@ -871,7 +871,9 @@ def functions_vocab_names(item: RuleItem, context: CheckContext) -> list[CheckRe
                         )
                     )
             elif head in rules["actions"]:
-                if tail not in rules["targets"]:
+                if tail not in rules["targets"] and not (
+                    head == "build" and tail.endswith("_response")
+                ):
                     issues.append(
                         _fail(
                             "functions_vocab_names",

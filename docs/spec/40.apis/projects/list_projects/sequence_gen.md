@@ -15,16 +15,12 @@ sequenceDiagram
   alt Path/Query/Header/Body が型または制約に一致しない場合。
     API-->>User: HTTP 422 Unprocessable Content<br/>request validation failed
   end
-  alt 呼び出し元が Project 一覧を参照できない場合。
-    API-->>User: HTTP 403 Forbidden<br/>caller cannot list projects
-  end
   alt 呼び出し元が Project 一覧を参照できる場合。
+    API->>API: Project 一覧参照権限がない場合の運用ログと error response を組み立てる。
     API->>DB: 呼び出し元が参照可能な Project を検索する。<br/>SQL 001_select_projects.sql<br/>テーブル projects, project_members, project_api_subscriptions
     API->>API: 一覧取得結果に limit と nextToken を適用する。
     API->>API: Project 一覧レスポンスを組み立てる。
-    alt Router で捕捉した例外を error response に変換する場合。
-      API-->>User: HTTP 500 Internal Server Error<br/>internal server error
-    end
+    API->>API: Router で捕捉した例外を運用ログと HTTP error response に変換する。
     API-->>User: HTTP 200 OK
   end
 ```

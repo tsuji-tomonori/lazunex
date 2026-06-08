@@ -98,7 +98,7 @@ async def test_tc001_list_project_subscriptions_router_matches_unit_test_gen(
         "app.apis.projects.list_project_subscriptions.functions.get_project", raise_expected_error
     )
     monkeypatch.setattr(
-        "app.apis.projects.list_project_subscriptions.router.operational_log_context_model",
+        "app.apis.projects.list_project_subscriptions.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -158,7 +158,7 @@ async def test_tc003_list_project_subscriptions_router_matches_unit_test_gen(
         "app.apis.projects.list_project_subscriptions.functions.get_project", raise_expected_error
     )
     monkeypatch.setattr(
-        "app.apis.projects.list_project_subscriptions.router.operational_log_context_model",
+        "app.apis.projects.list_project_subscriptions.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -195,7 +195,7 @@ async def test_tc004_list_project_subscriptions_router_matches_unit_test_gen(
         "app.apis.projects.list_project_subscriptions.functions.get_project", raise_expected_error
     )
     monkeypatch.setattr(
-        "app.apis.projects.list_project_subscriptions.router.operational_log_context_model",
+        "app.apis.projects.list_project_subscriptions.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -232,7 +232,7 @@ async def test_tc005_list_project_subscriptions_router_matches_unit_test_gen(
         "app.apis.projects.list_project_subscriptions.functions.get_project", raise_expected_error
     )
     monkeypatch.setattr(
-        "app.apis.projects.list_project_subscriptions.router.operational_log_context_model",
+        "app.apis.projects.list_project_subscriptions.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 

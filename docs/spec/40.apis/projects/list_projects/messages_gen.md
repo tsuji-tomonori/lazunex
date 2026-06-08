@@ -16,9 +16,9 @@
 
 ## 生成・検証方針
 
-- WARNING以上のMessage catalogは `router.py` の `ops_logger.warning/error(...)` kwargsを一次情報にする。
+- WARNING以上のMessage catalogは `router.py`、`functions.py` または `response_builders.py` の `ops_logger.warning/error(...)` kwargsを一次情報にする。
 - `api_error_response(...)` のstatus/detailとlogger呼び出しのstatus/detailを照合する。
-- 実装中の `app.core.logging` ラッパー呼び出しを検出し、WARN以上はrouter内のemitとcatalog定義の一致を検証する。
+- 実装中の `app.core.logging` ラッパー呼び出しを検出し、WARN以上はAPI operation内のemitとcatalog定義の一致を検証する。
 - `logging.getLogger(...)`、`logger.info(...)` などの直接呼び出しは許可しない。
 - WARNING以上は運用上の意味を持つ前提で、必要な確認手順・runbook・contextを検証対象にする。
 
@@ -44,7 +44,7 @@
 | 説明 | 呼び出し元がProject一覧を参照できない場合。 |
 | 対応すべきこと | actorPrincipalIdと認可条件を確認し、Project一覧参照権限の不足を切り分ける。 |
 | runbook | RUNBOOK-authorization-forbidden |
-| 実装参照 | src/app/apis/projects/list_projects/router.py<br>wrapper: src/app/apis/projects/list_projects/router.py (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/list_projects/functions.py<br>wrapper: src/app/apis/projects/list_projects/functions.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -73,7 +73,7 @@
 | 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
 | 対応すべきこと | 同一routeの5xx率、直近deploy、DB状態を確認する。 |
 | runbook | RUNBOOK-unexpected-api-failure |
-| 実装参照 | src/app/apis/projects/list_projects/router.py<br>wrapper: src/app/apis/projects/list_projects/router.py (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/list_projects/functions.py<br>wrapper: src/app/apis/projects/list_projects/functions.py (ops_logger.error) |
 
 #### 出力項目
 

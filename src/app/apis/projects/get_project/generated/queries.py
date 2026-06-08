@@ -38,12 +38,12 @@ class SelectProjectsRow(BaseModel):
     default_quota_period: str | None = None
     client_type: str
     app_client_id: str
-    has_client_secret: Any
     access_token_validity: int
     access_token_unit: str
     refresh_token_rotation_enabled: bool
     url_type: str | None = None
     url: str | None = None
+    has_client_secret: Any
 
 
 async def select_projects(

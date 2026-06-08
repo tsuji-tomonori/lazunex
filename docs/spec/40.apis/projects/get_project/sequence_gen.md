@@ -19,14 +19,10 @@ sequenceDiagram
   alt 対象 Project が存在しない、または呼び出し元が参照できない場合。
     API-->>User: HTTP 404 Not Found<br/>Project not found
   end
-  alt 呼び出し元が Project 詳細を参照できない場合。
-    API-->>User: HTTP 403 Forbidden<br/>caller cannot view project
-  end
   alt 呼び出し元が Project 詳細を参照できる場合。
+    API->>API: Project 詳細参照権限がない場合の運用ログと error response を組み立てる。
     API->>API: secret 値を含めずに Project 詳細レスポンスを組み立てる。
-    alt Router で捕捉した例外を error response に変換する場合。
-      API-->>User: HTTP 500 Internal Server Error<br/>internal server error
-    end
+    API->>API: Router で捕捉した例外を運用ログと HTTP error response に変換する。
     API-->>User: HTTP 200 OK
   end
 ```

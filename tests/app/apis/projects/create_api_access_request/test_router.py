@@ -112,7 +112,7 @@ async def test_tc001_create_api_access_request_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.create_api_access_request.router.operational_log_context_model",
+        "app.apis.projects.create_api_access_request.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -155,7 +155,7 @@ async def test_tc002_create_api_access_request_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.create_api_access_request.router.operational_log_context_model",
+        "app.apis.projects.create_api_access_request.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -195,7 +195,7 @@ async def test_tc003_create_api_access_request_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.create_api_access_request.router.operational_log_context_model",
+        "app.apis.projects.create_api_access_request.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -237,7 +237,7 @@ async def test_tc004_create_api_access_request_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.create_api_access_request.router.operational_log_context_model",
+        "app.apis.projects.create_api_access_request.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -290,7 +290,7 @@ async def test_tc005_create_api_access_request_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.create_api_access_request.router.operational_log_context_model",
+        "app.apis.projects.create_api_access_request.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -337,7 +337,7 @@ async def test_tc006_create_api_access_request_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.create_api_access_request.router.operational_log_context_model",
+        "app.apis.projects.create_api_access_request.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -386,7 +386,7 @@ async def test_tc007_create_api_access_request_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.create_api_access_request.router.operational_log_context_model",
+        "app.apis.projects.create_api_access_request.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -445,7 +445,7 @@ async def test_tc009_create_api_access_request_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.create_api_access_request.router.operational_log_context_model",
+        "app.apis.projects.create_api_access_request.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -484,7 +484,7 @@ async def test_tc010_create_api_access_request_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.create_api_access_request.router.operational_log_context_model",
+        "app.apis.projects.create_api_access_request.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -523,7 +523,7 @@ async def test_tc011_create_api_access_request_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.create_api_access_request.router.operational_log_context_model",
+        "app.apis.projects.create_api_access_request.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -566,7 +566,7 @@ async def test_tc012_create_api_access_request_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.create_api_access_request.router.operational_log_context_model",
+        "app.apis.projects.create_api_access_request.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -606,7 +606,7 @@ async def test_tc013_create_api_access_request_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.create_api_access_request.router.operational_log_context_model",
+        "app.apis.projects.create_api_access_request.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 

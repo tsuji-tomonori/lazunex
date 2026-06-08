@@ -46,6 +46,10 @@ def pascal_case(value: str) -> str:
     return "".join(part.capitalize() for part in python_identifier(value).split("_"))
 
 
+def sql_files(sql_dir: Path) -> list[Path]:
+    return sorted(sql_dir.glob("*.sql"))
+
+
 def class_prefix_from_sql_path(sql_path: Path) -> str:
     stem = SQL_PREFIX_RE.sub("", sql_path.stem)
     return pascal_case(stem)
@@ -558,7 +562,7 @@ def render_outputs(api_root: Path, ddl_path: Path) -> dict[Path, str]:
     rendered: dict[Path, str] = {}
 
     for sql_dir in api_sql_dirs(api_root):
-        specs = [parse_query_spec(sql_path, tables) for sql_path in sorted(sql_dir.glob("*.sql"))]
+        specs = [parse_query_spec(sql_path, tables) for sql_path in sql_files(sql_dir)]
         generated_dir = sql_dir.parent / "generated"
         rendered[generated_dir / "__init__.py"] = '"""Generated operation query wrappers."""\n'
         rendered[generated_dir / "queries.py"] = render_queries_py(specs)

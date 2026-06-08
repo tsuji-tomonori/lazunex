@@ -16,9 +16,9 @@
 
 ## 生成・検証方針
 
-- WARNING以上のMessage catalogは `router.py` の `ops_logger.warning/error(...)` kwargsを一次情報にする。
+- WARNING以上のMessage catalogは `router.py`、`functions.py` または `response_builders.py` の `ops_logger.warning/error(...)` kwargsを一次情報にする。
 - `api_error_response(...)` のstatus/detailとlogger呼び出しのstatus/detailを照合する。
-- 実装中の `app.core.logging` ラッパー呼び出しを検出し、WARN以上はrouter内のemitとcatalog定義の一致を検証する。
+- 実装中の `app.core.logging` ラッパー呼び出しを検出し、WARN以上はAPI operation内のemitとcatalog定義の一致を検証する。
 - `logging.getLogger(...)`、`logger.info(...)` などの直接呼び出しは許可しない。
 - WARNING以上は運用上の意味を持つ前提で、必要な確認手順・runbook・contextを検証対象にする。
 
@@ -52,7 +52,7 @@
 | 説明 | 呼び出し元が対象Projectのownerではない場合。 |
 | 対応すべきこと | actorPrincipalId、projectId、Project member roleを確認する。 |
 | runbook | RUNBOOK-authorization-forbidden |
-| 実装参照 | src/app/apis/projects/create_api_access_request/router.py<br>wrapper: src/app/apis/projects/create_api_access_request/router.py (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/create_api_access_request/functions.py<br>wrapper: src/app/apis/projects/create_api_access_request/functions.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -63,9 +63,6 @@
 | `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.projectId` | `string \| null` | 申請元Projectの存在確認、権限確認、状態確認に使用するProject IDです。 |
-| `resource.apiId` | `string \| null` | 申請対象APIの存在確認、公開状態確認、重複申請確認に使用するAPI IDです。 |
-| `resource.apiStageId` | `string \| null` | 申請対象stageの存在確認、公開状態確認、重複申請確認に使用するAPI stage IDです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じAPI利用申請作成リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 | `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
 | `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |
@@ -85,7 +82,7 @@
 | 説明 | 指定されたAPI/stageが公開済みAPI catalogに存在しない場合。 |
 | 対応すべきこと | apiId、apiStageId、公開登録状態を確認する。 |
 | runbook | RUNBOOK-api-client-error |
-| 実装参照 | src/app/apis/projects/create_api_access_request/router.py<br>wrapper: src/app/apis/projects/create_api_access_request/router.py (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/create_api_access_request/functions.py<br>wrapper: src/app/apis/projects/create_api_access_request/functions.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -96,9 +93,6 @@
 | `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.projectId` | `string \| null` | 申請元Projectの存在確認、権限確認、状態確認に使用するProject IDです。 |
-| `resource.apiId` | `string \| null` | 申請対象APIの存在確認、公開状態確認、重複申請確認に使用するAPI IDです。 |
-| `resource.apiStageId` | `string \| null` | 申請対象stageの存在確認、公開状態確認、重複申請確認に使用するAPI stage IDです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じAPI利用申請作成リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 | `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
 | `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |
@@ -118,7 +112,7 @@
 | 説明 | Projectに要求認証方式へ対応するclientが設定されていない場合。 |
 | 対応すべきこと | Projectのpublic/confidential client設定とrequestedAuthModeを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/projects/create_api_access_request/router.py<br>wrapper: src/app/apis/projects/create_api_access_request/router.py (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/create_api_access_request/functions.py<br>wrapper: src/app/apis/projects/create_api_access_request/functions.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -129,9 +123,6 @@
 | `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.projectId` | `string \| null` | 申請元Projectの存在確認、権限確認、状態確認に使用するProject IDです。 |
-| `resource.apiId` | `string \| null` | 申請対象APIの存在確認、公開状態確認、重複申請確認に使用するAPI IDです。 |
-| `resource.apiStageId` | `string \| null` | 申請対象stageの存在確認、公開状態確認、重複申請確認に使用するAPI stage IDです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じAPI利用申請作成リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 | `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
 | `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |
@@ -151,7 +142,7 @@
 | 説明 | 同一Project/API stageのactive subscriptionが既に存在する場合。 |
 | 対応すべきこと | 既存subscription、projectId、apiId、apiStageIdを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/projects/create_api_access_request/router.py<br>wrapper: src/app/apis/projects/create_api_access_request/router.py (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/create_api_access_request/functions.py<br>wrapper: src/app/apis/projects/create_api_access_request/functions.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -162,9 +153,6 @@
 | `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.projectId` | `string \| null` | 申請元Projectの存在確認、権限確認、状態確認に使用するProject IDです。 |
-| `resource.apiId` | `string \| null` | 申請対象APIの存在確認、公開状態確認、重複申請確認に使用するAPI IDです。 |
-| `resource.apiStageId` | `string \| null` | 申請対象stageの存在確認、公開状態確認、重複申請確認に使用するAPI stage IDです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じAPI利用申請作成リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 | `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
 | `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |
@@ -184,7 +172,7 @@
 | 説明 | 同一Project/API stageのpending利用申請が既に存在する場合。 |
 | 対応すべきこと | 既存access_request、projectId、apiId、apiStageIdを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/projects/create_api_access_request/router.py<br>wrapper: src/app/apis/projects/create_api_access_request/router.py (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/create_api_access_request/functions.py<br>wrapper: src/app/apis/projects/create_api_access_request/functions.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -195,9 +183,6 @@
 | `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.projectId` | `string \| null` | 申請元Projectの存在確認、権限確認、状態確認に使用するProject IDです。 |
-| `resource.apiId` | `string \| null` | 申請対象APIの存在確認、公開状態確認、重複申請確認に使用するAPI IDです。 |
-| `resource.apiStageId` | `string \| null` | 申請対象stageの存在確認、公開状態確認、重複申請確認に使用するAPI stage IDです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じAPI利用申請作成リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 | `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
 | `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |
@@ -217,7 +202,7 @@
 | 説明 | ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。 |
 | 対応すべきこと | 同一routeの5xx率、直近deploy、DB状態を確認する。 |
 | runbook | RUNBOOK-unexpected-api-failure |
-| 実装参照 | src/app/apis/projects/create_api_access_request/router.py<br>wrapper: src/app/apis/projects/create_api_access_request/router.py (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/create_api_access_request/functions.py<br>wrapper: src/app/apis/projects/create_api_access_request/functions.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -228,9 +213,6 @@
 | `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.projectId` | `string \| null` | 申請元Projectの存在確認、権限確認、状態確認に使用するProject IDです。 |
-| `resource.apiId` | `string \| null` | 申請対象APIの存在確認、公開状態確認、重複申請確認に使用するAPI IDです。 |
-| `resource.apiStageId` | `string \| null` | 申請対象stageの存在確認、公開状態確認、重複申請確認に使用するAPI stage IDです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じAPI利用申請作成リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 | `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
 | `error.exceptionType` | `string \| null` | 捕捉された例外の型名です。 |
@@ -251,7 +233,7 @@
 | 説明 | API利用申請作成のDB transaction commitでIntegrityErrorを捕捉した場合。 |
 | 対応すべきこと | project/access_request/idempotency、制約違反対象を確認し、パッチ適用手順を作成してデータ補正を行う。 |
 | runbook | RUNBOOK-db-data-repair |
-| 実装参照 | src/app/apis/projects/create_api_access_request/router.py<br>wrapper: src/app/apis/projects/create_api_access_request/router.py (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/create_api_access_request/functions.py<br>wrapper: src/app/apis/projects/create_api_access_request/functions.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -262,9 +244,6 @@
 | `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.projectId` | `string \| null` | 申請元Projectの存在確認、権限確認、状態確認に使用するProject IDです。 |
-| `resource.apiId` | `string \| null` | 申請対象APIの存在確認、公開状態確認、重複申請確認に使用するAPI IDです。 |
-| `resource.apiStageId` | `string \| null` | 申請対象stageの存在確認、公開状態確認、重複申請確認に使用するAPI stage IDです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じAPI利用申請作成リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 | `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
 | `error.exceptionType` | `string \| null` | 捕捉された例外の型名です。 |
@@ -285,7 +264,7 @@
 | 説明 | API利用申請作成のDB transaction commitでSQLAlchemyErrorを捕捉した場合。 |
 | 対応すべきこと | DB接続状態、transaction rollback、idempotency状態を確認し、必要に応じて利用者へ再実行を案内する。 |
 | runbook | RUNBOOK-db-commit-retry |
-| 実装参照 | src/app/apis/projects/create_api_access_request/router.py<br>wrapper: src/app/apis/projects/create_api_access_request/router.py (ops_logger.error) |
+| 実装参照 | src/app/apis/projects/create_api_access_request/functions.py<br>wrapper: src/app/apis/projects/create_api_access_request/functions.py (ops_logger.error) |
 
 #### 出力項目
 
@@ -296,9 +275,6 @@
 | `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.projectId` | `string \| null` | 申請元Projectの存在確認、権限確認、状態確認に使用するProject IDです。 |
-| `resource.apiId` | `string \| null` | 申請対象APIの存在確認、公開状態確認、重複申請確認に使用するAPI IDです。 |
-| `resource.apiStageId` | `string \| null` | 申請対象stageの存在確認、公開状態確認、重複申請確認に使用するAPI stage IDです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じAPI利用申請作成リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 | `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
 | `error.exceptionType` | `string \| null` | 捕捉された例外の型名です。 |
@@ -319,7 +295,7 @@
 | 説明 | 対象API stageのreviewer情報が空の場合。 |
 | 対応すべきこと | apiId、apiStageId、reviewer設定を確認する。 |
 | runbook | RUNBOOK-api-client-error |
-| 実装参照 | src/app/apis/projects/create_api_access_request/router.py<br>wrapper: src/app/apis/projects/create_api_access_request/router.py (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/create_api_access_request/functions.py<br>wrapper: src/app/apis/projects/create_api_access_request/functions.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -330,9 +306,6 @@
 | `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.projectId` | `string \| null` | 申請元Projectの存在確認、権限確認、状態確認に使用するProject IDです。 |
-| `resource.apiId` | `string \| null` | 申請対象APIの存在確認、公開状態確認、重複申請確認に使用するAPI IDです。 |
-| `resource.apiStageId` | `string \| null` | 申請対象stageの存在確認、公開状態確認、重複申請確認に使用するAPI stage IDです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じAPI利用申請作成リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 | `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
 | `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |
@@ -352,7 +325,7 @@
 | 説明 | Idempotency-Keyに対応する処理結果が既に存在する場合。 |
 | 対応すべきこと | Idempotency-Key、operationId、既存responsePayloadを確認する。 |
 | runbook | RUNBOOK-state-conflict-idempotency |
-| 実装参照 | src/app/apis/projects/create_api_access_request/router.py<br>wrapper: src/app/apis/projects/create_api_access_request/router.py (ops_logger.warning) |
+| 実装参照 | src/app/apis/projects/create_api_access_request/functions.py<br>wrapper: src/app/apis/projects/create_api_access_request/functions.py (ops_logger.warning) |
 
 #### 出力項目
 
@@ -363,9 +336,6 @@
 | `api.statusCode` | `integer \| null` | API responseとして返したHTTP status codeです。 |
 | `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |
 | `resource.projectId` | `string \| null` | 申請元Projectの存在確認、権限確認、状態確認に使用するProject IDです。 |
-| `resource.apiId` | `string \| null` | 申請対象APIの存在確認、公開状態確認、重複申請確認に使用するAPI IDです。 |
-| `resource.apiStageId` | `string \| null` | 申請対象stageの存在確認、公開状態確認、重複申請確認に使用するAPI stage IDです。 |
-| `resource.idempotencyKey` | `string \| null` | 同じAPI利用申請作成リクエストの結果確認と再送に使用するIdempotency-Keyです。 |
 | `error.code` | `string \| null` | エラー分類を表す機械処理向けコードです。 |
 | `error.message` | `string \| null` | エラー内容を運用者が理解するための説明です。 |
 | `request.actorType` | `string \| null` | リクエスト実行主体の種別です。 |

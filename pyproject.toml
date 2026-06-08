@@ -57,6 +57,7 @@ addopts = [
     "--strict-config",
     "--strict-markers",
     "--cov=src/app",
+    "--cov=src/app_tool",
     "--cov=src/tools",
     "--cov-branch",
     "--cov-report=term-missing",

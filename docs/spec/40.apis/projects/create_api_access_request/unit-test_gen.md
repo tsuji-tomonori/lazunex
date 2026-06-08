@@ -16,7 +16,7 @@
 
 ### F01 条件分岐
 
-- 対象: 条件分岐: 呼び出し元がProject ownerではないため、リクエストを拒否した。
+- 対象: 条件分岐: 呼び出し元が Project owner でない場合。
 - AST: `not await api_functions.has_project_owner_permission(project, caller)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -26,7 +26,7 @@
 
 ### F02 条件分岐
 
-- 対象: 条件分岐: 対象APIが公開済みではないため、リクエストを拒否した。
+- 対象: 条件分岐: 対象 API が公開済みでない場合。
 - AST: `not await api_functions.is_published_api(validated_request.api_id, validated_request.api_stage_id, session)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -36,7 +36,7 @@
 
 ### F03 条件分岐
 
-- 対象: 条件分岐: 対象APIのreviewerが未設定のため、リクエストを拒否した。
+- 対象: 条件分岐: not api_reviewer.reviewer_principal_ids
 - AST: `not api_reviewer.reviewer_principal_ids`
 
 | 要素ID | 要素 | 期待観点 |
@@ -46,7 +46,7 @@
 
 ### F04 条件分岐
 
-- 対象: 条件分岐: 要求された認証方式のclientが未設定のため、リクエストを拒否した。
+- 対象: 条件分岐: not has_requested_auth_mode_clients
 - AST: `not has_requested_auth_mode_clients`
 
 | 要素ID | 要素 | 期待観点 |
@@ -56,7 +56,7 @@
 
 ### F05 条件分岐
 
-- 対象: 条件分岐: 有効なsubscriptionが既に存在するため、リクエストを拒否した。
+- 対象: 条件分岐: has_active_subscription
 - AST: `has_active_subscription`
 
 | 要素ID | 要素 | 期待観点 |
@@ -66,7 +66,7 @@
 
 ### F06 条件分岐
 
-- 対象: 条件分岐: 審査待ち利用申請が既に存在するため、リクエストを拒否した。
+- 対象: 条件分岐: has_pending_access_request
 - AST: `has_pending_access_request`
 
 | 要素ID | 要素 | 期待観点 |
@@ -76,7 +76,7 @@
 
 ### F07 条件分岐
 
-- 対象: 条件分岐: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。
+- 対象: 条件分岐: has_existing_idempotency_result(idempotency_record)
 - AST: `has_existing_idempotency_result(idempotency_record)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -86,7 +86,7 @@
 
 ### F08 例外処理
 
-- 対象: 例外処理: DB整合性違反によりAPI利用申請作成のcommitが失敗した。
+- 対象: 例外処理: IntegrityError
 - AST: `IntegrityError`
 
 | 要素ID | 要素 | 期待観点 |
@@ -96,7 +96,7 @@
 
 ### F09 例外処理
 
-- 対象: 例外処理: DB commit失敗によりAPI利用申請作成を確定できなかった。
+- 対象: 例外処理: SQLAlchemyError
 - AST: `SQLAlchemyError`
 
 | 要素ID | 要素 | 期待観点 |
@@ -106,15 +106,15 @@
 
 ### F10 例外処理
 
-- 対象: 例外処理: Routerで捕捉した例外によりAPI利用申請作成が失敗した。
+- 対象: 例外処理: ROUTER_HANDLED_EXCEPTIONS
 - AST: `ROUTER_HANDLED_EXCEPTIONS`
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F10-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F10-raised-apifunctionerror` | ApiFunctionError | HTTP 500 error response: forced router error<br>log message_id: createApiAccessRequest.router_api_function_error<br>log summary: Routerで捕捉したApiFunctionErrorによりAPI利用申請作成が失敗した。 |
-| `F10-raised-externalapierror` | ExternalApiError | HTTP 502 error response: external service request failed<br>log message_id: createApiAccessRequest.router_external_api_error<br>log summary: Routerで捕捉したExternalApiErrorによりAPI利用申請作成が失敗した。 |
-| `F10-raised-httpexception` | HTTPException | HTTP 400 error response: forced http exception<br>log message_id: createApiAccessRequest.router_http_exception<br>log summary: Routerで捕捉したHTTPExceptionによりAPI利用申請作成が失敗した。 |
+| `F10-raised-apifunctionerror` | ApiFunctionError | HTTP 500 error response: forced router error |
+| `F10-raised-externalapierror` | ExternalApiError | HTTP 502 error response: external service request failed |
+| `F10-raised-httpexception` | HTTPException | HTTP 400 error response: forced http exception |
 
 ## 2. 直積したテストケース一覧
 
@@ -140,149 +140,149 @@
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller is not a project owner<br>log message_id: createApiAccessRequest.caller_is_not_a_project_owner<br>log summary: 呼び出し元がProject ownerではないため、リクエストを拒否した。 |
+| `F01` 条件分岐: 呼び出し元が Project owner でない場合。 | 成立 | HTTP 403 error response: caller is not a project owner<br>log message_id: createApiAccessRequest.caller_is_not_a_project_owner<br>log summary: 呼び出し元がProject ownerではないため、リクエストを拒否した。 |
 
 ### TC002
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐: 対象APIが公開済みではないため、リクエストを拒否した。 | 成立 | HTTP 404 error response: api is not published<br>log message_id: createApiAccessRequest.api_is_not_published<br>log summary: 対象APIが公開済みではないため、リクエストを拒否した。 |
+| `F01` 条件分岐: 呼び出し元が Project owner でない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐: 対象 API が公開済みでない場合。 | 成立 | HTTP 404 error response: api is not published<br>log message_id: createApiAccessRequest.api_is_not_published<br>log summary: 対象APIが公開済みではないため、リクエストを拒否した。 |
 
 ### TC003
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐: 対象APIが公開済みではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐: 対象APIのreviewerが未設定のため、リクエストを拒否した。 | 成立 | HTTP 409 error response: api reviewer is not configured<br>log message_id: createApiAccessRequest.api_reviewer_is_not_configured<br>log summary: 対象APIのreviewerが未設定のため、リクエストを拒否した。 |
+| `F01` 条件分岐: 呼び出し元が Project owner でない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐: 対象 API が公開済みでない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐: not api_reviewer.reviewer_principal_ids | 成立 | HTTP 409 error response: api reviewer is not configured<br>log message_id: createApiAccessRequest.api_reviewer_is_not_configured<br>log summary: 対象APIのreviewerが未設定のため、リクエストを拒否した。 |
 
 ### TC004
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐: 対象APIが公開済みではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐: 対象APIのreviewerが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐: 要求された認証方式のclientが未設定のため、リクエストを拒否した。 | 成立 | HTTP 409 error response: requested auth mode client is not configured<br>log message_id: createApiAccessRequest.requested_auth_mode_client_is_not_configured<br>log summary: 要求された認証方式のclientが未設定のため、リクエストを拒否した。 |
+| `F01` 条件分岐: 呼び出し元が Project owner でない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐: 対象 API が公開済みでない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐: not api_reviewer.reviewer_principal_ids | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐: not has_requested_auth_mode_clients | 成立 | HTTP 409 error response: requested auth mode client is not configured<br>log message_id: createApiAccessRequest.requested_auth_mode_client_is_not_configured<br>log summary: 要求された認証方式のclientが未設定のため、リクエストを拒否した。 |
 
 ### TC005
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐: 対象APIが公開済みではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐: 対象APIのreviewerが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐: 要求された認証方式のclientが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐: 有効なsubscriptionが既に存在するため、リクエストを拒否した。 | 成立 | HTTP 409 error response: active subscription already exists<br>log message_id: createApiAccessRequest.active_subscription_already_exists<br>log summary: 有効なsubscriptionが既に存在するため、リクエストを拒否した。 |
+| `F01` 条件分岐: 呼び出し元が Project owner でない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐: 対象 API が公開済みでない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐: not api_reviewer.reviewer_principal_ids | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐: not has_requested_auth_mode_clients | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐: has_active_subscription | 成立 | HTTP 409 error response: active subscription already exists<br>log message_id: createApiAccessRequest.active_subscription_already_exists<br>log summary: 有効なsubscriptionが既に存在するため、リクエストを拒否した。 |
 
 ### TC006
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐: 対象APIが公開済みではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐: 対象APIのreviewerが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐: 要求された認証方式のclientが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐: 有効なsubscriptionが既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 条件分岐: 審査待ち利用申請が既に存在するため、リクエストを拒否した。 | 成立 | HTTP 409 error response: pending access request already exists<br>log message_id: createApiAccessRequest.pending_access_request_already_exists<br>log summary: 審査待ち利用申請が既に存在するため、リクエストを拒否した。 |
+| `F01` 条件分岐: 呼び出し元が Project owner でない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐: 対象 API が公開済みでない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐: not api_reviewer.reviewer_principal_ids | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐: not has_requested_auth_mode_clients | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐: has_active_subscription | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 条件分岐: has_pending_access_request | 成立 | HTTP 409 error response: pending access request already exists<br>log message_id: createApiAccessRequest.pending_access_request_already_exists<br>log summary: 審査待ち利用申請が既に存在するため、リクエストを拒否した。 |
 
 ### TC007
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐: 対象APIが公開済みではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐: 対象APIのreviewerが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐: 要求された認証方式のclientが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐: 有効なsubscriptionが既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 条件分岐: 審査待ち利用申請が既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F07` 条件分岐: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 成立 | HTTP 409 error response: idempotency key is already used<br>log message_id: createApiAccessRequest.idempotency_key_already_used<br>log summary: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
+| `F01` 条件分岐: 呼び出し元が Project owner でない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐: 対象 API が公開済みでない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐: not api_reviewer.reviewer_principal_ids | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐: not has_requested_auth_mode_clients | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐: has_active_subscription | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 条件分岐: has_pending_access_request | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F07` 条件分岐: has_existing_idempotency_result(idempotency_record) | 成立 | HTTP 409 error response: idempotency key is already used<br>log message_id: createApiAccessRequest.idempotency_key_already_used<br>log summary: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 |
 
 ### TC008
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐: 対象APIが公開済みではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐: 対象APIのreviewerが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐: 要求された認証方式のclientが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐: 有効なsubscriptionが既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 条件分岐: 審査待ち利用申請が既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F07` 条件分岐: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F08` 例外処理: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F09` 例外処理: DB commit失敗によりAPI利用申請作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F10` 例外処理: Routerで捕捉した例外によりAPI利用申請作成が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐: 呼び出し元が Project owner でない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐: 対象 API が公開済みでない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐: not api_reviewer.reviewer_principal_ids | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐: not has_requested_auth_mode_clients | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐: has_active_subscription | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 条件分岐: has_pending_access_request | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F07` 条件分岐: has_existing_idempotency_result(idempotency_record) | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F08` 例外処理: IntegrityError | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F09` 例外処理: SQLAlchemyError | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F10` 例外処理: ROUTER_HANDLED_EXCEPTIONS | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 | API正常応答 | 正常 | HTTP 201 success response |
 
 ### TC009
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐: 対象APIが公開済みではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐: 対象APIのreviewerが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐: 要求された認証方式のclientが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐: 有効なsubscriptionが既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 条件分岐: 審査待ち利用申請が既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F07` 条件分岐: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F08` 例外処理: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F09` 例外処理: DB commit失敗によりAPI利用申請作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F10` 例外処理: Routerで捕捉した例外によりAPI利用申請作成が失敗した。 | ApiFunctionError | HTTP 500 error response: forced router error<br>log message_id: createApiAccessRequest.router_api_function_error<br>log summary: Routerで捕捉したApiFunctionErrorによりAPI利用申請作成が失敗した。 |
+| `F01` 条件分岐: 呼び出し元が Project owner でない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐: 対象 API が公開済みでない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐: not api_reviewer.reviewer_principal_ids | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐: not has_requested_auth_mode_clients | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐: has_active_subscription | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 条件分岐: has_pending_access_request | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F07` 条件分岐: has_existing_idempotency_result(idempotency_record) | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F08` 例外処理: IntegrityError | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F09` 例外処理: SQLAlchemyError | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F10` 例外処理: ROUTER_HANDLED_EXCEPTIONS | ApiFunctionError | HTTP 500 error response: forced router error |
 
 ### TC010
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐: 対象APIが公開済みではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐: 対象APIのreviewerが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐: 要求された認証方式のclientが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐: 有効なsubscriptionが既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 条件分岐: 審査待ち利用申請が既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F07` 条件分岐: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F08` 例外処理: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F09` 例外処理: DB commit失敗によりAPI利用申請作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F10` 例外処理: Routerで捕捉した例外によりAPI利用申請作成が失敗した。 | ExternalApiError | HTTP 502 error response: external service request failed<br>log message_id: createApiAccessRequest.router_external_api_error<br>log summary: Routerで捕捉したExternalApiErrorによりAPI利用申請作成が失敗した。 |
+| `F01` 条件分岐: 呼び出し元が Project owner でない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐: 対象 API が公開済みでない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐: not api_reviewer.reviewer_principal_ids | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐: not has_requested_auth_mode_clients | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐: has_active_subscription | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 条件分岐: has_pending_access_request | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F07` 条件分岐: has_existing_idempotency_result(idempotency_record) | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F08` 例外処理: IntegrityError | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F09` 例外処理: SQLAlchemyError | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F10` 例外処理: ROUTER_HANDLED_EXCEPTIONS | ExternalApiError | HTTP 502 error response: external service request failed |
 
 ### TC011
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐: 対象APIが公開済みではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐: 対象APIのreviewerが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐: 要求された認証方式のclientが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐: 有効なsubscriptionが既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 条件分岐: 審査待ち利用申請が既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F07` 条件分岐: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F08` 例外処理: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F09` 例外処理: DB commit失敗によりAPI利用申請作成を確定できなかった。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F10` 例外処理: Routerで捕捉した例外によりAPI利用申請作成が失敗した。 | HTTPException | HTTP 400 error response: forced http exception<br>log message_id: createApiAccessRequest.router_http_exception<br>log summary: Routerで捕捉したHTTPExceptionによりAPI利用申請作成が失敗した。 |
+| `F01` 条件分岐: 呼び出し元が Project owner でない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐: 対象 API が公開済みでない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐: not api_reviewer.reviewer_principal_ids | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐: not has_requested_auth_mode_clients | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐: has_active_subscription | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 条件分岐: has_pending_access_request | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F07` 条件分岐: has_existing_idempotency_result(idempotency_record) | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F08` 例外処理: IntegrityError | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F09` 例外処理: SQLAlchemyError | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F10` 例外処理: ROUTER_HANDLED_EXCEPTIONS | HTTPException | HTTP 400 error response: forced http exception |
 
 ### TC012
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐: 対象APIが公開済みではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐: 対象APIのreviewerが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐: 要求された認証方式のclientが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐: 有効なsubscriptionが既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 条件分岐: 審査待ち利用申請が既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F07` 条件分岐: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F08` 例外処理: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F09` 例外処理: DB commit失敗によりAPI利用申請作成を確定できなかった。 | SQLAlchemyError | HTTP 503 error response: database commit failed<br>log message_id: createApiAccessRequest.db_commit_failed<br>log summary: DB commit失敗によりAPI利用申請作成を確定できなかった。 |
+| `F01` 条件分岐: 呼び出し元が Project owner でない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐: 対象 API が公開済みでない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐: not api_reviewer.reviewer_principal_ids | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐: not has_requested_auth_mode_clients | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐: has_active_subscription | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 条件分岐: has_pending_access_request | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F07` 条件分岐: has_existing_idempotency_result(idempotency_record) | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F08` 例外処理: IntegrityError | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F09` 例外処理: SQLAlchemyError | SQLAlchemyError | HTTP 503 error response: database commit failed<br>log message_id: createApiAccessRequest.db_commit_failed<br>log summary: DB commit失敗によりAPI利用申請作成を確定できなかった。 |
 
 ### TC013
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐: 呼び出し元がProject ownerではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 条件分岐: 対象APIが公開済みではないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F03` 条件分岐: 対象APIのreviewerが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F04` 条件分岐: 要求された認証方式のclientが未設定のため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F05` 条件分岐: 有効なsubscriptionが既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F06` 条件分岐: 審査待ち利用申請が既に存在するため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F07` 条件分岐: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F08` 例外処理: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 | IntegrityError | HTTP 500 error response: database integrity error<br>log message_id: createApiAccessRequest.db_integrity_error<br>log summary: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 |
+| `F01` 条件分岐: 呼び出し元が Project owner でない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 条件分岐: 対象 API が公開済みでない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F03` 条件分岐: not api_reviewer.reviewer_principal_ids | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F04` 条件分岐: not has_requested_auth_mode_clients | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F05` 条件分岐: has_active_subscription | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F06` 条件分岐: has_pending_access_request | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F07` 条件分岐: has_existing_idempotency_result(idempotency_record) | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F08` 例外処理: IntegrityError | IntegrityError | HTTP 500 error response: database integrity error<br>log message_id: createApiAccessRequest.db_integrity_error<br>log summary: DB整合性違反によりAPI利用申請作成のcommitが失敗した。 |

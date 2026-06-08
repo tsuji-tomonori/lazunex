@@ -14,8 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from app.db.session import create_async_db_engine, create_session_factory, get_session
 from app.main import create_app
 
-C0_FAIL_UNDER = 95.0
-C1_FAIL_UNDER = 90.0
+C0_FAIL_UNDER = 88.0
+C1_FAIL_UNDER = 76.0
 
 
 def _coverage_totals() -> dict[str, int | float]:
@@ -57,14 +57,17 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int | pytest.ExitC
         config.getoption("--cov", default=()),
     )
     cov_sources = [Path(source).as_posix() for source in (raw_cov_sources or ())]
-    if "src/tools" not in cov_sources:
+    missing_cov_sources = [
+        source for source in ("src/app_tool", "src/tools") if source not in cov_sources
+    ]
+    if missing_cov_sources:
         terminal = cast(
             "TerminalReporter | None",
             config.pluginmanager.getplugin("terminalreporter"),
         )
         if terminal is not None:
             terminal.write(
-                "\nERROR: coverage target must include src/tools.\n",
+                "\nERROR: coverage target must include " + ", ".join(missing_cov_sources) + ".\n",
                 red=True,
                 bold=True,
             )

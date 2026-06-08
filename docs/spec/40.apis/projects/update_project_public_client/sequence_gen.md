@@ -29,17 +29,11 @@ sequenceDiagram
     API->>DB: DB transactionをrollbackして変更を破棄する。
     API-->>User: HTTP 404 Not Found<br/>project public client is not found or caller cannot access it
   end
-  alt 呼び出し元が Project owner でない場合。
-    API->>DB: DB transactionをrollbackして変更を破棄する。
-    API-->>User: HTTP 403 Forbidden<br/>caller is not a project owner
-  end
   alt 呼び出し元が Project owner である場合。
+    API->>API: Project owner ではない場合の運用ログと error response を組み立てる。
     API->>DB: Project の public App Client metadata を取得する。<br/>SQL 001_select_project_cognito_clients.sql<br/>テーブル project_cognito_clients, projects, project_members
     API->>DB: Idempotency-Key に対応する既存レコードを取得する。<br/>SQL 013_select_idempotency_records.sql<br/>テーブル idempotency_records
-    alt router が idempotency key is already used と判定した場合。
-      API->>DB: DB transactionをrollbackして変更を破棄する。
-      API-->>User: HTTP 409 Conflict<br/>idempotency key is already used
-    end
+    API->>API: Idempotency-Key が既存結果に紐づく場合の運用ログと error response を組み立てる。
     API->>DB: public client 更新用の provisioning operation を作成する。<br/>SQL 008_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
     API->>DB: 冪等性レコードを作成または確認する。<br/>SQL 009_insert_idempotency_records.sql<br/>テーブル idempotency_records
     API->>R_identity: Cognito App Client 設定を取得する。
@@ -58,10 +52,10 @@ sequenceDiagram
     API->>DB: provisioning operation/step event を追記する。<br/>SQL 011_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
     API->>DB: 監査イベントを追記する。<br/>SQL 007_insert_audit_events.sql<br/>テーブル audit_events
     API->>DB: DB transactionをcommitして変更を確定する。
+    API->>API: DB 整合性違反時の運用ログと error response を組み立てる。
+    API->>API: DB commit 失敗時の運用ログと error response を組み立てる。
     API->>API: public App Client 更新レスポンスを組み立てる。
-    alt Router で捕捉した例外を error response に変換する場合。
-      API-->>User: HTTP 500 Internal Server Error<br/>internal server error
-    end
+    API->>API: Router で捕捉した例外を運用ログと HTTP error response に変換する。
     API-->>User: HTTP 200 OK
   end
 ```

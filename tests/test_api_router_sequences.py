@@ -87,6 +87,9 @@ def step_value() -> SimpleNamespace:
         api_stage_id=UUID("7b0d4a98-0000-0000-0000-000000000101"),
         api_key_value="local-api-key-secret",
         client_secret="client-secret-value",  # noqa: S106
+        operation_id=None,
+        response_payload=None,
+        reviewer_principal_ids=("reviewer-12345",),
     )
 
 

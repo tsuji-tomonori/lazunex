@@ -23,33 +23,22 @@ sequenceDiagram
     API->>DB: DB transactionをrollbackして変更を破棄する。
     API-->>User: HTTP 404 Not Found<br/>pending access request is not found
   end
-  alt 利用申請が審査中状態でない場合。
-    API->>DB: DB transactionをrollbackして変更を破棄する。
-    API-->>User: HTTP 409 Conflict<br/>access request is not pending
-  end
   alt 利用申請が審査中状態である場合。
-    alt 呼び出し元が対象 API の reviewer または Hub 管理者でない場合。
-      API->>DB: DB transactionをrollbackして変更を破棄する。
-      API-->>User: HTTP 403 Forbidden<br/>caller is not an api reviewer
-    end
+    API->>API: 利用申請が審査待ちではない場合の運用ログと error response を組み立てる。
     API->>DB: 呼び出し元が対象 API の reviewer または Hub 管理者であるかを判定する。<br/>SQL 002_select_api_reviewers.sql<br/>テーブル api_reviewers
     alt 呼び出し元が対象 API の reviewer または Hub 管理者である場合。
-      alt 承認対象の Project、API、stage が利用可能でない場合。
+      alt 呼び出し元が対象 API の reviewer または Hub 管理者でない場合。
         API->>DB: DB transactionをrollbackして変更を破棄する。
-        API-->>User: HTTP 409 Conflict<br/>project api stage is not available
+        API-->>User: HTTP 403 Forbidden<br/>caller is not an api reviewer
       end
+      API->>API: API reviewer ではない場合の運用ログと error response を組み立てる。
       alt 承認対象の Project、API、stage が利用可能な場合。
-        alt 同一 Project/API の active subscription が存在する場合。
-          API->>DB: DB transactionをrollbackして変更を破棄する。
-          API-->>User: HTTP 409 Conflict<br/>active subscription already exists
-        end
+        API->>API: Project/API stage が承認可能でない場合の運用ログと error response を組み立てる。
         API->>DB: 同一 Project/API の active subscription が存在するかを判定する。<br/>SQL 003_select_subscriptions.sql<br/>テーブル project_api_subscriptions
-        alt 同一 Project/API の active subscription が存在しない場合。
+        alt 同一 Project/API の active subscription が存在する場合。
+          API->>API: 有効な subscription が既にある場合の運用ログと error response を組み立てる。
           API->>DB: Idempotency-Key に対応する既存レコードを取得する。<br/>SQL 019_select_idempotency_records.sql<br/>テーブル idempotency_records
-          alt router が idempotency key is already used と判定した場合。
-            API->>DB: DB transactionをrollbackして変更を破棄する。
-            API-->>User: HTTP 409 Conflict<br/>idempotency key is already used
-          end
+          API->>API: Idempotency-Key が既存結果に紐づく場合の運用ログと error response を組み立てる。
           API->>DB: 利用申請承認開始イベントを追記する。<br/>SQL 004_insert_access_request_events.sql<br/>テーブル access_request_events
           API->>DB: 承認反映用の provisioning operation を作成する。<br/>SQL 005_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
           API->>DB: 冪等性レコードを作成または確認する。<br/>SQL 013_insert_idempotency_records.sql<br/>テーブル idempotency_records
@@ -73,10 +62,10 @@ sequenceDiagram
           API->>DB: provisioning operation/step event を追記する。<br/>SQL 017_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
           API->>DB: 監査イベントを追記する。<br/>SQL 012_insert_audit_events.sql<br/>テーブル audit_events
           API->>DB: DB transactionをcommitして変更を確定する。
+          API->>API: DB 整合性違反時の運用ログと error response を組み立てる。
+          API->>API: DB commit 失敗時の運用ログと error response を組み立てる。
           API->>API: 利用申請承認レスポンスを組み立てる。
-          alt Router で捕捉した例外を error response に変換する場合。
-            API-->>User: HTTP 500 Internal Server Error<br/>internal server error
-          end
+          API->>API: Router で捕捉した例外を運用ログと HTTP error response に変換する。
           API-->>User: HTTP 200 OK
         end
       end

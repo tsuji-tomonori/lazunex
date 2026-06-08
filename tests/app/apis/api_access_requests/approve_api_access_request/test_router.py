@@ -242,7 +242,7 @@ async def test_tc001_approve_api_access_request_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.api_access_requests.approve_api_access_request.router.operational_log_context_model",
+        "app.apis.api_access_requests.approve_api_access_request.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -287,7 +287,7 @@ async def test_tc002_approve_api_access_request_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.api_access_requests.approve_api_access_request.router.operational_log_context_model",
+        "app.apis.api_access_requests.approve_api_access_request.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -334,7 +334,7 @@ async def test_tc003_approve_api_access_request_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.api_access_requests.approve_api_access_request.router.operational_log_context_model",
+        "app.apis.api_access_requests.approve_api_access_request.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -384,7 +384,7 @@ async def test_tc004_approve_api_access_request_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.api_access_requests.approve_api_access_request.router.operational_log_context_model",
+        "app.apis.api_access_requests.approve_api_access_request.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -432,7 +432,7 @@ async def test_tc005_approve_api_access_request_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.api_access_requests.approve_api_access_request.router.operational_log_context_model",
+        "app.apis.api_access_requests.approve_api_access_request.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -487,7 +487,7 @@ async def test_tc007_approve_api_access_request_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.api_access_requests.approve_api_access_request.router.operational_log_context_model",
+        "app.apis.api_access_requests.approve_api_access_request.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -526,7 +526,7 @@ async def test_tc008_approve_api_access_request_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.api_access_requests.approve_api_access_request.router.operational_log_context_model",
+        "app.apis.api_access_requests.approve_api_access_request.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -565,7 +565,7 @@ async def test_tc009_approve_api_access_request_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.api_access_requests.approve_api_access_request.router.operational_log_context_model",
+        "app.apis.api_access_requests.approve_api_access_request.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -610,7 +610,7 @@ async def test_tc010_approve_api_access_request_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.api_access_requests.approve_api_access_request.router.operational_log_context_model",
+        "app.apis.api_access_requests.approve_api_access_request.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -652,7 +652,7 @@ async def test_tc011_approve_api_access_request_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.api_access_requests.approve_api_access_request.router.operational_log_context_model",
+        "app.apis.api_access_requests.approve_api_access_request.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 

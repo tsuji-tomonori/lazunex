@@ -908,6 +908,25 @@ def response_constructor_values(
     return values
 
 
+def operation_response_constructor_values(
+    api_dir: Path,
+    response_model: str | None,
+    query_by_name: dict[str, QuerySpec],
+    endpoint_origins: dict[str, str],
+) -> dict[str, str]:
+    values: dict[str, str] = {}
+    for path in (api_dir / "functions.py", api_dir / "response_builders.py"):
+        values.update(
+            response_constructor_values(
+                path,
+                response_model,
+                query_by_name,
+                endpoint_origins,
+            )
+        )
+    return values
+
+
 def row_sources_by_function_arg(
     function: ast.AsyncFunctionDef | ast.FunctionDef,
     row_source_maps: dict[str, dict[str, str]],
@@ -950,6 +969,26 @@ def response_constructor_source_maps(
                         origins,
                         row_sources,
                     )
+    return maps
+
+
+def operation_response_constructor_source_maps(
+    api_dir: Path,
+    query_by_name: dict[str, QuerySpec],
+    endpoint_origins: dict[str, str],
+    row_source_maps: dict[str, dict[str, str]],
+) -> dict[str, dict[str, str]]:
+    maps: dict[str, dict[str, str]] = {}
+    for path in (api_dir / "functions.py", api_dir / "response_builders.py"):
+        if not path.exists():
+            continue
+        for class_name, fields in response_constructor_source_maps(
+            path,
+            query_by_name,
+            endpoint_origins,
+            row_source_maps,
+        ).items():
+            maps.setdefault(class_name, {}).update(fields)
     return maps
 
 
@@ -1053,14 +1092,14 @@ def api_detail_design_from_dir(
         response_values=response_value_rows(
             response_schema,
             specs,
-            response_constructor_values(
-                api_dir / "functions.py",
+            operation_response_constructor_values(
+                api_dir,
                 response_schema_name,
                 queries,
                 endpoint_origins,
             ),
-            response_constructor_source_maps(
-                api_dir / "functions.py",
+            operation_response_constructor_source_maps(
+                api_dir,
                 queries,
                 endpoint_origins,
                 row_source_maps,

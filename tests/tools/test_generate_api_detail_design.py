@@ -265,7 +265,12 @@ class SelectWidgetsRow(BaseModel):
     reviewer_id: str
 
 async def select_widgets(session) -> list[SelectWidgetsRow]:
-    return await fetch_all(session, SQL_DIR / "001_select_widgets.sql", None, SelectWidgetsRow)
+    return await fetch_all(
+        session,
+        SQL_DIR / "001_select_widgets.sql",
+        None,
+        SelectWidgetsRow,
+    )
 """,
         encoding="utf-8",
     )

@@ -2,11 +2,14 @@ from __future__ import annotations
 
 from typing import cast
 
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import JSONResponse
 
 from app.apis.api_access_requests.common import AuthMode
 from app.apis.common import IdentityGroup, raise_missing_runtime_dependency
 from app.apis.deps import build_caller_identity
+from app.apis.exceptions import ApiFunctionError
 from app.apis.projects.common import SubscriptionDerivedState
 from app.apis.projects.list_project_subscriptions.generated import queries
 from app.apis.projects.list_project_subscriptions.schemas import (
@@ -14,8 +17,21 @@ from app.apis.projects.list_project_subscriptions.schemas import (
     ListProjectSubscriptionsResponse,
     ProjectSubscriptionItemResponse,
 )
+from app.apis.router_errors import (
+    api_error_response,
+    error_code_for_status,
+    error_response_for_router_error,
+    router_error_message_id,
+    router_error_summary,
+    router_log_context,
+    status_code_for_router_error,
+)
 from app.apis.sequence_types import CallerIdentity, ProjectRef, SequencePage
 from app.apis.types import ResourceId
+from app.core.logging import get_operation_logger, operational_log_context_model
+from app.integrations.common_errors import ExternalApiError
+
+ops_logger = get_operation_logger(__name__)
 
 
 async def get_caller_identity(
@@ -87,6 +103,81 @@ async def build_project_subscription_list_response(
 ) -> ListProjectSubscriptionsResponse:
     """secret 値を含めずに Project subscription 一覧レスポンスを組み立てる。"""
     return ListProjectSubscriptionsResponse(items=list(page.items), next_token=page.next_token)
+
+
+async def build_caller_cannot_list_project_subscriptions_response(
+    project_id: ResourceId,
+    caller: CallerIdentity,
+) -> JSONResponse:
+    """Project subscription 一覧参照権限がない場合の運用ログと error response を組み立てる。"""
+    ops_logger.warning(
+        "listProjectSubscriptions.caller_cannot_list_project_subscriptions",
+        catalog_id="M001",
+        summary="呼び出し元がProjectの利用可能API一覧を参照できないため、リクエストを拒否した。",
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="caller cannot list project subscriptions",
+        when="呼び出し元が対象Projectのsubscription一覧を参照できない場合。",
+        why_production="Project subscription一覧の認可拒否を運用で追跡するため。",
+        context_model=operational_log_context_model(
+            trace_id=None,
+            actor_principal_id=caller.principal_id,
+            api_status_code=status.HTTP_403_FORBIDDEN,
+            resource_project_id=str(project_id),
+            error_code=error_code_for_status(status.HTTP_403_FORBIDDEN),
+            error_message="caller cannot list project subscriptions",
+        ),
+        operator_action="actorPrincipalId、projectId、Project権限を確認する。",
+        runbook="RUNBOOK-authorization-forbidden",
+        context=router_log_context(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="caller cannot list project subscriptions",
+            caller=caller,
+            resource={"projectId": project_id},
+        ),
+    )
+    return api_error_response(
+        status.HTTP_403_FORBIDDEN,
+        "caller cannot list project subscriptions",
+    )
+
+
+async def build_router_error_response(
+    project_id: ResourceId,
+    caller: CallerIdentity,
+    error: ApiFunctionError | ExternalApiError | HTTPException,
+) -> JSONResponse:
+    """Router で捕捉した例外を運用ログと HTTP error response に変換する。"""
+    ops_logger.error(
+        router_error_message_id("listProjectSubscriptions", error),
+        catalog_id="M002",
+        summary=router_error_summary(
+            "Routerで捕捉した例外によりProject subscription一覧取得が失敗した。",
+            error,
+        ),
+        when="ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。",
+        check_procedure="traceId/requestIdでログを検索し、"
+        "routerで捕捉された例外種別とprojectIdを確認する。",
+        remediation_procedure="原因を特定し、再試行可能な処理は同一projectIdで再実行する。",
+        context_model=operational_log_context_model(
+            trace_id=None,
+            actor_principal_id=caller.principal_id,
+            api_status_code=status_code_for_router_error(error),
+            resource_project_id=str(project_id),
+            error_code=error_code_for_status(status_code_for_router_error(error)),
+            error_message=str(error),
+            error_exception_type=type(error).__name__,
+        ),
+        operator_action="同一routeの5xx率、直近deploy、DB状態を確認する。",
+        runbook="RUNBOOK-unexpected-api-failure",
+        context=router_log_context(
+            status_code=status_code_for_router_error(error),
+            detail=str(error),
+            caller=caller,
+            resource={"projectId": project_id},
+            error=error,
+        ),
+    )
+    return error_response_for_router_error(error)
 
 
 def _to_response_item(

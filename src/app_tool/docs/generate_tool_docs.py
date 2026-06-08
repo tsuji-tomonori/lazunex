@@ -112,7 +112,7 @@ def render_testcase_spec(specs: tuple[ToolSpec, ...]) -> str:
         "| T005 | OpenAPI example 不一致 | samples と OpenAPI example の不一致を検出する。 |",
         "| T006 | router に直接 logger | archlint が拒否する。 |",
         "| T007 | SQL と generated queries 不一致 | app-codegen check 導入後に拒否する。 |",
-        "| T008 | `*.manual.sql` 以外の新規 SQL | archlint 導入後に拒否する。 |",
+        "| T008 | `*.sql` 以外の新規 SQL | archlint 導入後に拒否する。 |",
         "| T009 | generated pytest | `pytest --collect-only` に全 Case ID が出る。 |",
         "| T010 | Tool Registry | usage docs に全 ToolSpec が掲載される。 |",
         "",

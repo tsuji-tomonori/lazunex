@@ -209,7 +209,7 @@ async def test_tc001_create_project_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.create_project.router.operational_log_context_model",
+        "app.apis.projects.create_project.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -252,7 +252,7 @@ async def test_tc002_create_project_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.create_project.router.operational_log_context_model",
+        "app.apis.projects.create_project.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -305,7 +305,7 @@ async def test_tc004_create_project_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.create_project.router.operational_log_context_model",
+        "app.apis.projects.create_project.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -344,7 +344,7 @@ async def test_tc005_create_project_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.create_project.router.operational_log_context_model",
+        "app.apis.projects.create_project.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -383,7 +383,7 @@ async def test_tc006_create_project_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.create_project.router.operational_log_context_model",
+        "app.apis.projects.create_project.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -425,7 +425,7 @@ async def test_tc007_create_project_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.create_project.router.operational_log_context_model",
+        "app.apis.projects.create_project.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -465,7 +465,7 @@ async def test_tc008_create_project_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.create_project.router.operational_log_context_model",
+        "app.apis.projects.create_project.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 

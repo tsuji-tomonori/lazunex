@@ -5,8 +5,10 @@ import json
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
-from fastapi import status
+from fastapi import HTTPException, status
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import JSONResponse
 
 from app.apis.api_access_requests.common import AccessRequestDerivedState
 from app.apis.api_access_requests.reject_api_access_request.generated import queries
@@ -17,6 +19,15 @@ from app.apis.api_access_requests.reject_api_access_request.schemas import (
 from app.apis.common import IdentityGroup, raise_missing_runtime_dependency
 from app.apis.deps import build_caller_identity
 from app.apis.exceptions import ApiFunctionError
+from app.apis.router_errors import (
+    api_error_response,
+    error_code_for_status,
+    error_response_for_router_error,
+    router_error_message_id,
+    router_error_summary,
+    router_log_context,
+    status_code_for_router_error,
+)
 from app.apis.sequence_types import (
     ApiAccessRequestRef,
     ApiAccessReviewRef,
@@ -26,6 +37,10 @@ from app.apis.sequence_types import (
     RequestContext,
 )
 from app.apis.types import ResourceId
+from app.core.logging import get_operation_logger, operational_log_context_model
+from app.integrations.common_errors import ExternalApiError
+
+ops_logger = get_operation_logger(__name__)
 
 
 async def get_caller_identity(
@@ -315,3 +330,253 @@ async def build_reject_access_request_response(
         derived_state=AccessRequestDerivedState.REJECTED,
         reviewed_at=review.reviewed_at,
     )
+
+
+def _reject_access_request_log_resource(
+    access_request_id: ResourceId,
+    idempotency_key: str,
+) -> dict[str, object]:
+    return {
+        "accessRequestId": access_request_id,
+        "idempotencyKey": idempotency_key,
+    }
+
+
+async def build_access_request_not_pending_response(
+    access_request_id: ResourceId,
+    idempotency_key: str,
+    caller: CallerIdentity,
+    request_context: RequestContext,
+) -> JSONResponse:
+    """利用申請が審査待ちではない場合の運用ログと error response を組み立てる。"""
+    ops_logger.warning(
+        "rejectApiAccessRequest.access_request_is_not_pending",
+        catalog_id="M001",
+        summary="API利用申請が審査待ちではないため、却下リクエストを拒否した。",
+        status_code=status.HTTP_409_CONFLICT,
+        detail="access request is not pending",
+        when="対象API利用申請がpending状態ではない場合。",
+        why_production="二重レビューや状態競合を運用で追跡するため。",
+        context_model=operational_log_context_model(
+            trace_id=request_context.correlation_id,
+            actor_principal_id=caller.principal_id,
+            api_status_code=status.HTTP_409_CONFLICT,
+            resource_access_request_id=str(access_request_id),
+            error_code=error_code_for_status(status.HTTP_409_CONFLICT),
+            error_message="access request is not pending",
+        ),
+        operator_action="accessRequestId、現在state、既存reviewを確認する。",
+        runbook="RUNBOOK-state-conflict-idempotency",
+        context=router_log_context(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="access request is not pending",
+            caller=caller,
+            request_context=request_context,
+            resource=_reject_access_request_log_resource(access_request_id, idempotency_key),
+        ),
+    )
+    return api_error_response(status.HTTP_409_CONFLICT, "access request is not pending")
+
+
+async def build_caller_is_not_api_reviewer_response(
+    access_request_id: ResourceId,
+    idempotency_key: str,
+    caller: CallerIdentity,
+    request_context: RequestContext,
+) -> JSONResponse:
+    """API reviewer ではない場合の運用ログと error response を組み立てる。"""
+    ops_logger.warning(
+        "rejectApiAccessRequest.caller_is_not_an_api_reviewer",
+        catalog_id="M002",
+        summary="呼び出し元がAPI reviewerではないため、却下リクエストを拒否した。",
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="caller is not an api reviewer",
+        when="呼び出し元が対象APIのreviewerではない場合。",
+        why_production="API reviewer認可拒否を運用で追跡するため。",
+        context_model=operational_log_context_model(
+            trace_id=request_context.correlation_id,
+            actor_principal_id=caller.principal_id,
+            api_status_code=status.HTTP_403_FORBIDDEN,
+            resource_access_request_id=str(access_request_id),
+            error_code=error_code_for_status(status.HTTP_403_FORBIDDEN),
+            error_message="caller is not an api reviewer",
+        ),
+        operator_action="actorPrincipalId、apiId、reviewer設定を確認する。",
+        runbook="RUNBOOK-authorization-forbidden",
+        context=router_log_context(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="caller is not an api reviewer",
+            caller=caller,
+            request_context=request_context,
+            resource=_reject_access_request_log_resource(access_request_id, idempotency_key),
+        ),
+    )
+    return api_error_response(status.HTTP_403_FORBIDDEN, "caller is not an api reviewer")
+
+
+async def build_idempotency_key_already_used_response(
+    access_request_id: ResourceId,
+    idempotency_key: str,
+    caller: CallerIdentity,
+    request_context: RequestContext,
+) -> JSONResponse:
+    """Idempotency-Key が既存結果に紐づく場合の運用ログと error response を組み立てる。"""
+    ops_logger.warning(
+        "rejectApiAccessRequest.idempotency_key_already_used",
+        catalog_id="M006",
+        summary="Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。",
+        status_code=status.HTTP_409_CONFLICT,
+        detail="idempotency key is already used",
+        when="Idempotency-Keyに対応する処理結果が既に存在する場合。",
+        why_production="冪等性キーの再利用やリトライ衝突を運用で追跡するため。",
+        context_model=operational_log_context_model(
+            trace_id=request_context.correlation_id,
+            actor_principal_id=caller.principal_id,
+            api_status_code=status.HTTP_409_CONFLICT,
+            resource_access_request_id=str(access_request_id),
+            error_code=error_code_for_status(status.HTTP_409_CONFLICT),
+            error_message="idempotency key is already used",
+        ),
+        operator_action="Idempotency-Key、operationId、既存responsePayloadを確認する。",
+        runbook="RUNBOOK-state-conflict-idempotency",
+        context=router_log_context(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="idempotency key is already used",
+            caller=caller,
+            request_context=request_context,
+            resource=_reject_access_request_log_resource(access_request_id, idempotency_key),
+        ),
+    )
+    return api_error_response(status.HTTP_409_CONFLICT, "idempotency key is already used")
+
+
+async def build_db_integrity_error_response(
+    access_request_id: ResourceId,
+    idempotency_key: str,
+    caller: CallerIdentity,
+    request_context: RequestContext,
+    error: IntegrityError,
+) -> JSONResponse:
+    """DB 整合性違反時の運用ログと error response を組み立てる。"""
+    ops_logger.error(
+        "rejectApiAccessRequest.db_integrity_error",
+        catalog_id="M004",
+        summary="DB整合性違反によりAPI利用申請却下のcommitが失敗した。",
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail="database integrity error",
+        when="API利用申請却下のDB transaction commitでIntegrityErrorを捕捉した場合。",
+        check_procedure="traceId/requestIdでログを検索し、access_request/"
+        "review/idempotencyの重複や参照整合性を確認する。",
+        remediation_procedure="DB内不整合を特定し、DBパッチまたはデータ補正を行う。"
+        "補正後、冪等性状態を確認してから同一Idempotency-Keyで再実行する。",
+        context_model=operational_log_context_model(
+            trace_id=request_context.correlation_id,
+            actor_principal_id=caller.principal_id,
+            api_status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            resource_access_request_id=str(access_request_id),
+            error_code=error_code_for_status(status.HTTP_500_INTERNAL_SERVER_ERROR),
+            error_message="database integrity error",
+            error_exception_type=type(error).__name__,
+        ),
+        operator_action="access_request/review/idempotency、制約違反対象を確認し、"
+        "パッチ適用手順を作成してデータ補正を行う。",
+        runbook="RUNBOOK-db-data-repair",
+        context=router_log_context(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="database integrity error",
+            caller=caller,
+            request_context=request_context,
+            resource=_reject_access_request_log_resource(access_request_id, idempotency_key),
+            error=error,
+        ),
+    )
+    return api_error_response(
+        status.HTTP_500_INTERNAL_SERVER_ERROR,
+        "database integrity error",
+    )
+
+
+async def build_db_commit_failed_response(
+    access_request_id: ResourceId,
+    idempotency_key: str,
+    caller: CallerIdentity,
+    request_context: RequestContext,
+    error: SQLAlchemyError,
+) -> JSONResponse:
+    """DB commit 失敗時の運用ログと error response を組み立てる。"""
+    ops_logger.error(
+        "rejectApiAccessRequest.db_commit_failed",
+        catalog_id="M005",
+        summary="DB commit失敗によりAPI利用申請却下を確定できなかった。",
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail="database commit failed",
+        when="API利用申請却下のDB transaction commitでSQLAlchemyErrorを捕捉した場合。",
+        check_procedure="traceId/requestIdでログを検索し、DB接続、timeout、"
+        "transaction rollback状態を確認する。",
+        remediation_procedure="DB一時障害またはcommit失敗として扱い、rollbackを確認する。"
+        "利用者へ同一Idempotency-Keyでの再実行を依頼する。",
+        context_model=operational_log_context_model(
+            trace_id=request_context.correlation_id,
+            actor_principal_id=caller.principal_id,
+            api_status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            resource_access_request_id=str(access_request_id),
+            error_code=error_code_for_status(status.HTTP_503_SERVICE_UNAVAILABLE),
+            error_message="database commit failed",
+            error_exception_type=type(error).__name__,
+        ),
+        operator_action="DB接続状態、transaction rollback、idempotency状態を確認し、"
+        "必要に応じて利用者へ再実行を案内する。",
+        runbook="RUNBOOK-db-commit-retry",
+        context=router_log_context(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="database commit failed",
+            caller=caller,
+            request_context=request_context,
+            resource=_reject_access_request_log_resource(access_request_id, idempotency_key),
+            error=error,
+        ),
+    )
+    return api_error_response(status.HTTP_503_SERVICE_UNAVAILABLE, "database commit failed")
+
+
+async def build_router_error_response(
+    access_request_id: ResourceId,
+    idempotency_key: str,
+    caller: CallerIdentity,
+    request_context: RequestContext,
+    error: ApiFunctionError | ExternalApiError | HTTPException,
+) -> JSONResponse:
+    """Router で捕捉した例外を運用ログと HTTP error response に変換する。"""
+    ops_logger.error(
+        router_error_message_id("rejectApiAccessRequest", error),
+        catalog_id="M003",
+        summary=router_error_summary(
+            "Routerで捕捉した例外によりAPI利用申請却下が失敗した。",
+            error,
+        ),
+        when="ROUTER_HANDLED_EXCEPTIONSを捕捉した場合。",
+        check_procedure="traceId/requestIdでログを検索し、"
+        "routerで捕捉された例外種別とaccessRequestIdを確認する。",
+        remediation_procedure="原因を特定し、冪等性状態を確認してから"
+        "同一Idempotency-Keyで再実行する。",
+        context_model=operational_log_context_model(
+            trace_id=request_context.correlation_id,
+            actor_principal_id=caller.principal_id,
+            api_status_code=status_code_for_router_error(error),
+            resource_access_request_id=str(access_request_id),
+            error_code=error_code_for_status(status_code_for_router_error(error)),
+            error_message=str(error),
+            error_exception_type=type(error).__name__,
+        ),
+        operator_action="同一routeの5xx率、直近deploy、DB状態を確認する。",
+        runbook="RUNBOOK-unexpected-api-failure",
+        context=router_log_context(
+            status_code=status_code_for_router_error(error),
+            detail=str(error),
+            caller=caller,
+            request_context=request_context,
+            resource=_reject_access_request_log_resource(access_request_id, idempotency_key),
+            error=error,
+        ),
+    )
+    return error_response_for_router_error(error, trace_id=request_context.correlation_id)

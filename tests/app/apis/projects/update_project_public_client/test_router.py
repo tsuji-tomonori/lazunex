@@ -151,7 +151,7 @@ async def test_tc001_update_project_public_client_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.update_project_public_client.router.operational_log_context_model",
+        "app.apis.projects.update_project_public_client.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -196,7 +196,7 @@ async def test_tc002_update_project_public_client_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.update_project_public_client.router.operational_log_context_model",
+        "app.apis.projects.update_project_public_client.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -226,7 +226,7 @@ async def test_tc003_update_project_public_client_router_matches_unit_test_gen(
     monkeypatch: Any,
 ) -> None:
     monkeypatch.setattr(
-        "app.apis.projects.update_project_public_client.router.operational_log_context_model",
+        "app.apis.projects.update_project_public_client.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
     seeded = await router_seed_project(router_db_harness)
@@ -258,7 +258,7 @@ async def test_tc004_update_project_public_client_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.update_project_public_client.router.operational_log_context_model",
+        "app.apis.projects.update_project_public_client.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -297,7 +297,7 @@ async def test_tc005_update_project_public_client_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.update_project_public_client.router.operational_log_context_model",
+        "app.apis.projects.update_project_public_client.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -336,7 +336,7 @@ async def test_tc006_update_project_public_client_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.update_project_public_client.router.operational_log_context_model",
+        "app.apis.projects.update_project_public_client.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -379,7 +379,7 @@ async def test_tc007_update_project_public_client_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.update_project_public_client.router.operational_log_context_model",
+        "app.apis.projects.update_project_public_client.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -422,7 +422,7 @@ async def test_tc008_update_project_public_client_router_matches_unit_test_gen(
         raise_expected_error,
     )
     monkeypatch.setattr(
-        "app.apis.projects.update_project_public_client.router.operational_log_context_model",
+        "app.apis.projects.update_project_public_client.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 

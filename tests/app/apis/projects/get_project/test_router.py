@@ -97,7 +97,7 @@ async def test_tc001_get_project_router_matches_unit_test_gen(
         "app.apis.projects.get_project.functions.get_project_detail", raise_expected_error
     )
     monkeypatch.setattr(
-        "app.apis.projects.get_project.router.operational_log_context_model",
+        "app.apis.projects.get_project.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -149,7 +149,7 @@ async def test_tc003_get_project_router_matches_unit_test_gen(
         "app.apis.projects.get_project.functions.get_project_detail", raise_expected_error
     )
     monkeypatch.setattr(
-        "app.apis.projects.get_project.router.operational_log_context_model",
+        "app.apis.projects.get_project.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -186,7 +186,7 @@ async def test_tc004_get_project_router_matches_unit_test_gen(
         "app.apis.projects.get_project.functions.get_project_detail", raise_expected_error
     )
     monkeypatch.setattr(
-        "app.apis.projects.get_project.router.operational_log_context_model",
+        "app.apis.projects.get_project.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -223,7 +223,7 @@ async def test_tc005_get_project_router_matches_unit_test_gen(
         "app.apis.projects.get_project.functions.get_project_detail", raise_expected_error
     )
     monkeypatch.setattr(
-        "app.apis.projects.get_project.router.operational_log_context_model",
+        "app.apis.projects.get_project.functions.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 

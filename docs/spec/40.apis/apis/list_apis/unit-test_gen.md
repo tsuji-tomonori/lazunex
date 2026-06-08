@@ -16,7 +16,7 @@
 
 ### F01 条件分岐
 
-- 対象: 条件分岐: 呼び出し元がAPI一覧を参照できないため、リクエストを拒否した。
+- 対象: 条件分岐: 呼び出し元が API 一覧を参照できない場合。
 - AST: `not await api_functions.has_api_list_permission(caller)`
 
 | 要素ID | 要素 | 期待観点 |
@@ -26,15 +26,15 @@
 
 ### F02 例外処理
 
-- 対象: 例外処理: Routerで捕捉した例外によりAPI一覧取得が失敗した。
+- 対象: 例外処理: ROUTER_HANDLED_EXCEPTIONS
 - AST: `ROUTER_HANDLED_EXCEPTIONS`
 
 | 要素ID | 要素 | 期待観点 |
 | --- | --- | --- |
 | `F02-normal` | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
-| `F02-raised-apifunctionerror` | ApiFunctionError | HTTP 500 error response: forced router error<br>log message_id: listApis.router_api_function_error<br>log summary: Routerで捕捉したApiFunctionErrorによりAPI一覧取得が失敗した。 |
-| `F02-raised-externalapierror` | ExternalApiError | HTTP 502 error response: external service request failed<br>log message_id: listApis.router_external_api_error<br>log summary: Routerで捕捉したExternalApiErrorによりAPI一覧取得が失敗した。 |
-| `F02-raised-httpexception` | HTTPException | HTTP 400 error response: forced http exception<br>log message_id: listApis.router_http_exception<br>log summary: Routerで捕捉したHTTPExceptionによりAPI一覧取得が失敗した。 |
+| `F02-raised-apifunctionerror` | ApiFunctionError | HTTP 500 error response: forced router error |
+| `F02-raised-externalapierror` | ExternalApiError | HTTP 502 error response: external service request failed |
+| `F02-raised-httpexception` | HTTPException | HTTP 400 error response: forced http exception |
 
 ## 2. 直積したテストケース一覧
 
@@ -52,33 +52,33 @@
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐: 呼び出し元がAPI一覧を参照できないため、リクエストを拒否した。 | 成立 | HTTP 403 error response: caller cannot list apis<br>log message_id: listApis.caller_cannot_list_apis<br>log summary: 呼び出し元がAPI一覧を参照できないため、リクエストを拒否した。 |
+| `F01` 条件分岐: 呼び出し元が API 一覧を参照できない場合。 | 成立 | HTTP 403 error response: caller cannot list apis<br>log message_id: listApis.caller_cannot_list_apis<br>log summary: 呼び出し元がAPI一覧を参照できないため、リクエストを拒否した。 |
 
 ### TC002
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐: 呼び出し元がAPI一覧を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 例外処理: Routerで捕捉した例外によりAPI一覧取得が失敗した。 | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
+| `F01` 条件分岐: 呼び出し元が API 一覧を参照できない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 例外処理: ROUTER_HANDLED_EXCEPTIONS | 発生しない | try bodyを継続し、このexcept handlerへ遷移しない。 |
 | API正常応答 | 正常 | HTTP 200 success response |
 
 ### TC003
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐: 呼び出し元がAPI一覧を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 例外処理: Routerで捕捉した例外によりAPI一覧取得が失敗した。 | ApiFunctionError | HTTP 500 error response: forced router error<br>log message_id: listApis.router_api_function_error<br>log summary: Routerで捕捉したApiFunctionErrorによりAPI一覧取得が失敗した。 |
+| `F01` 条件分岐: 呼び出し元が API 一覧を参照できない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 例外処理: ROUTER_HANDLED_EXCEPTIONS | ApiFunctionError | HTTP 500 error response: forced router error |
 
 ### TC004
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐: 呼び出し元がAPI一覧を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 例外処理: Routerで捕捉した例外によりAPI一覧取得が失敗した。 | ExternalApiError | HTTP 502 error response: external service request failed<br>log message_id: listApis.router_external_api_error<br>log summary: Routerで捕捉したExternalApiErrorによりAPI一覧取得が失敗した。 |
+| `F01` 条件分岐: 呼び出し元が API 一覧を参照できない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 例外処理: ROUTER_HANDLED_EXCEPTIONS | ExternalApiError | HTTP 502 error response: external service request failed |
 
 ### TC005
 
 | 要因 | 要素 | 期待観点 |
 | --- | --- | --- |
-| `F01` 条件分岐: 呼び出し元がAPI一覧を参照できないため、リクエストを拒否した。 | 不成立 | 条件不成立側または後続処理を継続する。 |
-| `F02` 例外処理: Routerで捕捉した例外によりAPI一覧取得が失敗した。 | HTTPException | HTTP 400 error response: forced http exception<br>log message_id: listApis.router_http_exception<br>log summary: Routerで捕捉したHTTPExceptionによりAPI一覧取得が失敗した。 |
+| `F01` 条件分岐: 呼び出し元が API 一覧を参照できない場合。 | 不成立 | 条件不成立側または後続処理を継続する。 |
+| `F02` 例外処理: ROUTER_HANDLED_EXCEPTIONS | HTTPException | HTTP 400 error response: forced http exception |

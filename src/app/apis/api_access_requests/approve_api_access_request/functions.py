@@ -30,6 +30,7 @@ from app.apis.sequence_types import (
 )
 from app.apis.types import ResourceId
 from app.core.config import settings
+from app.core.logging import get_operation_logger
 from app.integrations.api_gateway_control.port import ApiGatewayControlPort
 from app.integrations.api_gateway_control.schemas import AddUsagePlanStageInput
 from app.integrations.identity.port import IdentityAdminPort
@@ -37,6 +38,30 @@ from app.integrations.identity.schemas import (
     DescribeUserPoolClientInput,
     UpdateUserPoolClientInput,
 )
+
+from .response_builders import (
+    build_access_request_not_pending_response,
+    build_active_subscription_already_exists_response,
+    build_caller_is_not_api_reviewer_response,
+    build_db_commit_failed_response,
+    build_db_integrity_error_response,
+    build_idempotency_key_already_used_response,
+    build_project_api_stage_not_available_response,
+    build_router_error_response,
+)
+
+__all__ = (
+    "build_access_request_not_pending_response",
+    "build_active_subscription_already_exists_response",
+    "build_caller_is_not_api_reviewer_response",
+    "build_db_commit_failed_response",
+    "build_db_integrity_error_response",
+    "build_idempotency_key_already_used_response",
+    "build_project_api_stage_not_available_response",
+    "build_router_error_response",
+)
+
+ops_logger = get_operation_logger(__name__)
 
 
 def _now() -> datetime:

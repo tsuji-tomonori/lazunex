@@ -17,6 +17,7 @@ from tools.generate_queries import (
     parameter_name,
     parse_query_spec,
     placeholder_names,
+    sql_files,
     table_aliases,
 )
 
@@ -555,7 +556,7 @@ def api_query_doc_from_sql_dir(
     relative = sql_dir.parent.relative_to(api_root)
     domain, api = relative.parts
     sql_specs: list[SqlDocSpec] = []
-    for sql_path in sorted(sql_dir.glob("*.sql")):
+    for sql_path in sql_files(sql_dir):
         sql = sql_path.read_text(encoding="utf-8")
         statements = parse_statements(sql)
         query = parse_query_spec(sql_path, tables)

@@ -217,19 +217,24 @@ def function_docstrings(functions_path: Path) -> dict[str, str]:
     return descriptions
 
 
+def api_function_name_from_call(node: ast.AST) -> str | None:
+    call = node.value if isinstance(node, ast.Await) else node
+    if not isinstance(call, ast.Call):
+        return None
+    function = call.func
+    if not isinstance(function, ast.Attribute):
+        return None
+    if not isinstance(function.value, ast.Name) or function.value.id != "api_functions":
+        return None
+    return function.attr
+
+
 def api_function_names(node: ast.AST) -> list[str]:
     names: list[str] = []
     for child in ast.walk(node):
-        call = child.value if isinstance(child, ast.Await) else child
-        if not isinstance(call, ast.Call):
-            continue
-        function = call.func
-        if not isinstance(function, ast.Attribute):
-            continue
-        if not isinstance(function.value, ast.Name) or function.value.id != "api_functions":
-            continue
-        if function.attr not in names:
-            names.append(function.attr)
+        function_name = api_function_name_from_call(child)
+        if function_name is not None and function_name not in names:
+            names.append(function_name)
     return names
 
 
@@ -264,7 +269,10 @@ def factor_description(
     )
 
 
-def response_summary_from_return(node: ast.stmt) -> str | None:
+def response_summary_from_return(
+    node: ast.stmt,
+    function_response_summaries: dict[str, str] | None = None,
+) -> str | None:
     if not isinstance(node, ast.Return):
         return None
     call = api_error_response_call(node)
@@ -278,6 +286,10 @@ def response_summary_from_return(node: ast.stmt) -> str | None:
         return "error response"
     if error_response_for_router_error_call(node) is not None:
         return "router error response"
+    if node.value is not None:
+        function_name = api_function_name_from_call(node.value)
+        if function_name is not None and function_response_summaries is not None:
+            return function_response_summaries.get(function_name)
     return None
 
 
@@ -310,25 +322,58 @@ def append_log_expectation(summary: str, nodes: Iterable[ast.stmt]) -> str:
     return f"{summary}<br>log message_id: {message_id}<br>log summary: {log_summary}"
 
 
-def first_response_summary(nodes: Iterable[ast.stmt]) -> str | None:
+def first_response_summary(
+    nodes: Iterable[ast.stmt],
+    function_response_summaries: dict[str, str] | None = None,
+) -> str | None:
     for node in nodes:
-        if summary := response_summary_from_return(node):
+        if summary := response_summary_from_return(node, function_response_summaries):
             return summary
         for child in ast.iter_child_nodes(node):
-            if isinstance(child, ast.stmt) and (summary := response_summary_from_return(child)):
+            if isinstance(child, ast.stmt) and (
+                summary := response_summary_from_return(child, function_response_summaries)
+            ):
                 return summary
     return None
 
 
-def branch_expected(nodes: list[ast.stmt], fallback: str) -> str:
-    response_summary = first_response_summary(nodes)
+def branch_expected(
+    nodes: list[ast.stmt],
+    fallback: str,
+    function_response_summaries: dict[str, str] | None = None,
+) -> str:
+    response_summary = first_response_summary(nodes, function_response_summaries)
     if response_summary is None:
         return fallback
     return append_log_expectation(response_summary, nodes)
 
 
-def branch_is_terminal(nodes: list[ast.stmt]) -> bool:
-    return first_response_summary(nodes) is not None
+def branch_is_terminal(
+    nodes: list[ast.stmt],
+    function_response_summaries: dict[str, str] | None = None,
+) -> bool:
+    return first_response_summary(nodes, function_response_summaries) is not None
+
+
+def function_response_summaries(functions_path: Path) -> dict[str, str]:
+    if not functions_path.exists():
+        return {}
+    tree = ast.parse(functions_path.read_text(encoding="utf-8"), filename=str(functions_path))
+    summaries: dict[str, str] = {}
+    for node in tree.body:
+        if not isinstance(node, ast.AsyncFunctionDef | ast.FunctionDef):
+            continue
+        summary = branch_expected(node.body, "", {})
+        if summary:
+            summaries[node.name] = summary
+    return summaries
+
+
+def operation_function_response_summaries(api_dir: Path) -> dict[str, str]:
+    summaries: dict[str, str] = {}
+    for path in (api_dir / "functions.py", api_dir / "response_builders.py"):
+        summaries.update(function_response_summaries(path))
+    return summaries
 
 
 def if_factor(
@@ -336,6 +381,7 @@ def if_factor(
     index: int,
     source_lines: list[str],
     function_descriptions: dict[str, str],
+    function_response_summaries: dict[str, str],
 ) -> TestFactor:
     expression = expression_text(node.test)
     description = factor_description(
@@ -355,14 +401,22 @@ def if_factor(
             FactorElement(
                 key="true",
                 name="成立",
-                expected=branch_expected(node.body, "条件成立側の処理を実行する。"),
-                terminal=branch_is_terminal(node.body),
+                expected=branch_expected(
+                    node.body,
+                    "条件成立側の処理を実行する。",
+                    function_response_summaries,
+                ),
+                terminal=branch_is_terminal(node.body, function_response_summaries),
             ),
             FactorElement(
                 key="false",
                 name="不成立",
-                expected=branch_expected(node.orelse, "条件不成立側または後続処理を継続する。"),
-                terminal=branch_is_terminal(node.orelse),
+                expected=branch_expected(
+                    node.orelse,
+                    "条件不成立側または後続処理を継続する。",
+                    function_response_summaries,
+                ),
+                terminal=branch_is_terminal(node.orelse, function_response_summaries),
             ),
         ),
     )
@@ -374,6 +428,7 @@ def except_factor(
     operation_id: str,
     source_lines: list[str],
     exception_aliases: dict[str, tuple[str, ...]],
+    function_response_summaries: dict[str, str],
 ) -> TestFactor:
     exception_type = exception_type_text(handler.type)
     exception_types = exception_type_texts(handler.type, exception_aliases)
@@ -405,9 +460,13 @@ def except_factor(
                             exception_type=exception_type,
                             base_summary=router_error_base_summary,
                         )
-                        or branch_expected(handler.body, "例外を捕捉してエラー処理を実行する。")
+                        or branch_expected(
+                            handler.body,
+                            "例外を捕捉してエラー処理を実行する。",
+                            function_response_summaries,
+                        )
                     ),
-                    terminal=branch_is_terminal(handler.body),
+                    terminal=branch_is_terminal(handler.body, function_response_summaries),
                 )
                 for exception_type in exception_types
             ),
@@ -420,12 +479,21 @@ def endpoint_factors(
     source_lines: list[str],
     function_descriptions: dict[str, str],
     exception_aliases: dict[str, tuple[str, ...]],
+    function_response_summaries: dict[str, str],
 ) -> tuple[TestFactor, ...]:
     factors: list[TestFactor] = []
 
     class Visitor(ast.NodeVisitor):
         def visit_If(self, node: ast.If) -> None:
-            factors.append(if_factor(node, len(factors) + 1, source_lines, function_descriptions))
+            factors.append(
+                if_factor(
+                    node,
+                    len(factors) + 1,
+                    source_lines,
+                    function_descriptions,
+                    function_response_summaries,
+                )
+            )
             self.generic_visit(node)
 
         def visit_Try(self, node: ast.Try) -> None:
@@ -439,6 +507,7 @@ def endpoint_factors(
                         endpoint_operation_id(function),
                         source_lines,
                         exception_aliases,
+                        function_response_summaries,
                     )
                 )
                 for child in handler.body:
@@ -456,7 +525,9 @@ def api_unit_test_factors_from_dir(api_dir: Path, api_root: Path) -> ApiUnitTest
     source = router_path.read_text(encoding="utf-8")
     tree = ast.parse(source, filename=str(router_path))
     function = endpoint_function(tree)
-    descriptions = function_docstrings(api_dir / "functions.py")
+    functions_path = api_dir / "functions.py"
+    descriptions = function_docstrings(functions_path)
+    response_summaries = operation_function_response_summaries(api_dir)
     relative = api_dir.relative_to(api_root)
     domain, api = relative.parts
     return ApiUnitTestFactors(
@@ -472,6 +543,7 @@ def api_unit_test_factors_from_dir(api_dir: Path, api_root: Path) -> ApiUnitTest
             source.splitlines(),
             descriptions,
             exception_aliases(api_root),
+            response_summaries,
         ),
     )
 

@@ -31,16 +31,11 @@ sequenceDiagram
   alt retry_grace_period_seconds が60秒を超える場合。
     API-->>User: HTTP 400 Bad Request<br/>retry_grace_period_seconds must be 60 seconds or fewer
   end
-  alt 呼び出し元が Project を作成できない場合。
-    API-->>User: HTTP 403 Forbidden<br/>caller cannot create project
-  end
   alt 呼び出し元が Project を作成できる場合。
+    API->>API: Project 作成権限がない場合の運用ログと error response を組み立てる。
     Note over API,DB: DB transaction範囲開始 (最初のDB操作からcommit/rollbackまで)
     API->>DB: Idempotency-Key に対応する既存レコードを取得する。<br/>SQL 019_select_idempotency_records.sql<br/>テーブル idempotency_records
-    alt router が idempotency key is already used と判定した場合。
-      API->>DB: DB transactionをrollbackして変更を破棄する。
-      API-->>User: HTTP 409 Conflict<br/>idempotency key is already used
-    end
+    API->>API: Idempotency-Key が既存結果に紐づく場合の運用ログと error response を組み立てる。
     API->>DB: Project codeの重複作成を防ぐため、既存Projectを取得する。<br/>SQL 001_select_projects.sql<br/>テーブル projects
     API->>DB: Project作成の処理結果として、provisioning operationを追加する。<br/>SQL 004_insert_provisioning_operations.sql<br/>テーブル provisioning_operations
     alt 登録対象 Project code が既に登録済みである場合。
@@ -74,10 +69,10 @@ sequenceDiagram
     API->>DB: provisioning operation/step event を追記する。<br/>SQL 017_insert_provisioning_operation_events.sql<br/>テーブル provisioning_operation_events
     API->>DB: 監査イベントを追記する。<br/>SQL 020_insert_audit_events.sql<br/>テーブル audit_events
     API->>DB: DB transactionをcommitして変更を確定する。
+    API->>API: DB 整合性違反時の運用ログと error response を組み立てる。
+    API->>API: DB commit 失敗時の運用ログと error response を組み立てる。
     API->>API: Project 作成レスポンスを組み立てる。
-    alt Router で捕捉した例外を error response に変換する場合。
-      API-->>User: HTTP 500 Internal Server Error<br/>internal server error
-    end
+    API->>API: Router で捕捉した例外を運用ログと HTTP error response に変換する。
     API-->>User: HTTP 201 Created
   end
 ```

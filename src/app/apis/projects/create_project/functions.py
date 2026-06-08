@@ -43,6 +43,7 @@ from app.apis.sequence_types import (
 )
 from app.apis.types import ApiGatewayId, SecretValue
 from app.core.config import settings
+from app.core.logging import get_operation_logger
 from app.integrations.api_gateway_control.port import ApiGatewayControlPort
 from app.integrations.api_gateway_control.schemas import (
     ApiKeyCreated,
@@ -57,6 +58,24 @@ from app.integrations.identity.schemas import (
 )
 from app.integrations.secret_values.port import SecretValuesPort
 from app.integrations.secret_values.schemas import GetHashPepperInput
+
+from .response_builders import (
+    build_caller_cannot_create_project_response,
+    build_db_commit_failed_response,
+    build_db_integrity_error_response,
+    build_idempotency_key_already_used_response,
+    build_router_error_response,
+)
+
+__all__ = (
+    "build_caller_cannot_create_project_response",
+    "build_db_commit_failed_response",
+    "build_db_integrity_error_response",
+    "build_idempotency_key_already_used_response",
+    "build_router_error_response",
+)
+
+ops_logger = get_operation_logger(__name__)
 
 
 def _now() -> datetime:

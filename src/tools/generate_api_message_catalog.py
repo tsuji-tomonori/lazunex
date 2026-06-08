@@ -85,6 +85,8 @@ CATALOG_FILENAMES = (
     "operational_messages.py",
     "ops.py",
 )
+WARN_MESSAGE_SOURCE_FILENAMES = ("router.py", "functions.py", "response_builders.py")
+WARN_MESSAGE_SOURCE_LABEL = "`router.py`、`functions.py` または `response_builders.py`"
 CATALOG_VARIABLE_NAMES = {
     "MESSAGE_CATALOG",
     "MESSAGES",
@@ -1801,9 +1803,9 @@ def render_catalog(catalog: ApiCatalog, root: Path) -> str:
         "",
         "## 生成・検証方針",
         "",
-        "- WARNING以上のMessage catalogは `router.py` の `ops_logger.warning/error(...)` kwargsを一次情報にする。",
+        f"- WARNING以上のMessage catalogは {WARN_MESSAGE_SOURCE_LABEL} の `ops_logger.warning/error(...)` kwargsを一次情報にする。",
         "- `api_error_response(...)` のstatus/detailとlogger呼び出しのstatus/detailを照合する。",
-        "- 実装中の `app.core.logging` ラッパー呼び出しを検出し、WARN以上はrouter内のemitとcatalog定義の一致を検証する。",
+        "- 実装中の `app.core.logging` ラッパー呼び出しを検出し、WARN以上はAPI operation内のemitとcatalog定義の一致を検証する。",
         "- `logging.getLogger(...)`、`logger.info(...)` などの直接呼び出しは許可しない。",
         "- WARNING以上は運用上の意味を持つ前提で、必要な確認手順・runbook・contextを検証対象にする。",
         "",
@@ -1995,18 +1997,18 @@ def validate_catalogs(
             if message.level not in LEVEL_ORDER:
                 errors.append(f"{api_ref}: {message.message_id}: unknown level {message.level}")
             if LEVEL_ORDER.get(message.level, 0) >= LEVEL_ORDER["WARNING"]:
-                if "router.py" not in message.source:
+                if not any(path in message.source for path in WARN_MESSAGE_SOURCE_FILENAMES):
                     errors.append(
-                        f"{api_ref}: {message.message_id}: WARN以上のMessage catalogはrouter.pyで定義してください"
+                        f"{api_ref}: {message.message_id}: WARN以上のMessage catalogはrouter.py、functions.pyまたはresponse_builders.pyで定義してください"
                     )
                 if (
                     fail_on_undocumented_emits
                     and message.message_id not in wrapper_calls_by_message_id
                 ):
                     errors.append(
-                        f"{api_ref}: {message.message_id}: WARN以上のMessage catalogに対応するrouter logger emitがありません"
+                        f"{api_ref}: {message.message_id}: WARN以上のMessage catalogに対応するlogger emitがありません"
                     )
-            if message.status_code is not None and message.detail:
+            if message.status_code is not None and message.detail and "router.py" in message.source:
                 ref = (message.status_code, message.detail)
                 if ref not in router_return_refs:
                     errors.append(
@@ -2047,12 +2049,11 @@ def validate_catalogs(
                     f"{api_ref}: {expected_router_error_id}: router error message level must be ERROR"
                 )
         for wrapper_call in catalog.wrapper_calls:
-            if (
-                wrapper_call.level_hint in {"WARNING", "ERROR", "CRITICAL"}
-                and "/router.py:" not in wrapper_call.source
+            if wrapper_call.level_hint in {"WARNING", "ERROR", "CRITICAL"} and not any(
+                f"/{filename}:" in wrapper_call.source for filename in WARN_MESSAGE_SOURCE_FILENAMES
             ):
                 errors.append(
-                    f"{api_ref}: WARN以上のlogger wrapper callはrouter.pyに限定してください "
+                    f"{api_ref}: WARN以上のlogger wrapper callはrouter.py、functions.pyまたはresponse_builders.pyに限定してください "
                     f"({wrapper_call.source})"
                 )
             if fail_on_missing_catalog_id and not wrapper_call.catalog_id:

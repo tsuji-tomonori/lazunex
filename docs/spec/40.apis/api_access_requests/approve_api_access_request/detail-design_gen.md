@@ -22,14 +22,14 @@
 
 ## 2. 正常系前提
 
-- 条件分岐: API利用申請が審査待ちではないため、承認リクエストを拒否した。: 不成立
-- 条件分岐: 呼び出し元がAPI reviewerではないため、承認リクエストを拒否した。: 不成立
-- 条件分岐: Project/API stageが利用可能ではないため、承認リクエストを拒否した。: 不成立
-- 条件分岐: 有効なsubscriptionが既に存在するため、承認リクエストを拒否した。: 不成立
-- 条件分岐: Idempotency-Keyが既に処理結果へ紐づいているため、リクエストを拒否した。: 不成立
-- 例外処理: DB整合性違反によりAPI利用申請承認のcommitが失敗した。: 発生しない
-- 例外処理: DB commit失敗によりAPI利用申請承認を確定できなかった。: 発生しない
-- 例外処理: Routerで捕捉した例外によりAPI利用申請承認が失敗した。: 発生しない
+- 条件分岐: 利用申請が審査中状態でない場合。: 不成立
+- 条件分岐: 呼び出し元が対象 API の reviewer または Hub 管理者でない場合。: 不成立
+- 条件分岐: 承認対象の Project、API、stage が利用可能でない場合。: 不成立
+- 条件分岐: 同一 Project/API の active subscription が存在する場合。: 不成立
+- 条件分岐: has_existing_idempotency_result(idempotency_record): 不成立
+- 例外処理: IntegrityError: 発生しない
+- 例外処理: SQLAlchemyError: 発生しない
+- 例外処理: ROUTER_HANDLED_EXCEPTIONS: 発生しない
 
 ## 3. 正常系リソース変更
 

@@ -150,7 +150,7 @@ async def test_tc001_publish_api_router_matches_unit_test_gen(
         "app.apis.apis.publish_api.functions.validate_api_publish_request", raise_expected_error
     )
     monkeypatch.setattr(
-        "app.apis.apis.publish_api.router.operational_log_context_model",
+        "app.apis.apis.publish_api.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -192,7 +192,7 @@ async def test_tc002_publish_api_router_matches_unit_test_gen(
         "app.apis.apis.publish_api.functions.validate_api_publish_request", raise_expected_error
     )
     monkeypatch.setattr(
-        "app.apis.apis.publish_api.router.operational_log_context_model",
+        "app.apis.apis.publish_api.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -236,7 +236,7 @@ async def test_tc003_publish_api_router_matches_unit_test_gen(
         "app.apis.apis.publish_api.functions.validate_api_publish_request", raise_expected_error
     )
     monkeypatch.setattr(
-        "app.apis.apis.publish_api.router.operational_log_context_model",
+        "app.apis.apis.publish_api.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -281,7 +281,7 @@ async def test_tc004_publish_api_router_matches_unit_test_gen(
         "app.apis.apis.publish_api.functions.validate_api_publish_request", raise_expected_error
     )
     monkeypatch.setattr(
-        "app.apis.apis.publish_api.router.operational_log_context_model",
+        "app.apis.apis.publish_api.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -330,7 +330,7 @@ async def test_tc006_publish_api_router_matches_unit_test_gen(
         "app.apis.apis.publish_api.functions.validate_api_publish_request", raise_expected_error
     )
     monkeypatch.setattr(
-        "app.apis.apis.publish_api.router.operational_log_context_model",
+        "app.apis.apis.publish_api.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -368,7 +368,7 @@ async def test_tc007_publish_api_router_matches_unit_test_gen(
         "app.apis.apis.publish_api.functions.validate_api_publish_request", raise_expected_error
     )
     monkeypatch.setattr(
-        "app.apis.apis.publish_api.router.operational_log_context_model",
+        "app.apis.apis.publish_api.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -406,7 +406,7 @@ async def test_tc008_publish_api_router_matches_unit_test_gen(
         "app.apis.apis.publish_api.functions.validate_api_publish_request", raise_expected_error
     )
     monkeypatch.setattr(
-        "app.apis.apis.publish_api.router.operational_log_context_model",
+        "app.apis.apis.publish_api.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -447,7 +447,7 @@ async def test_tc009_publish_api_router_matches_unit_test_gen(
         "app.apis.apis.publish_api.functions.validate_api_publish_request", raise_expected_error
     )
     monkeypatch.setattr(
-        "app.apis.apis.publish_api.router.operational_log_context_model",
+        "app.apis.apis.publish_api.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 
@@ -486,7 +486,7 @@ async def test_tc010_publish_api_router_matches_unit_test_gen(
         "app.apis.apis.publish_api.functions.validate_api_publish_request", raise_expected_error
     )
     monkeypatch.setattr(
-        "app.apis.apis.publish_api.router.operational_log_context_model",
+        "app.apis.apis.publish_api.response_builders.operational_log_context_model",
         ignore_operational_log_context_model,
     )
 

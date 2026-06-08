@@ -100,7 +100,7 @@ def check_function_name(
                 )
             )
     elif head in rules["actions"]:
-        if tail not in rules["targets"]:
+        if tail not in rules["targets"] and not (head == "build" and tail.endswith("_response")):
             issues.append(
                 FunctionNameIssue(
                     path=path,
