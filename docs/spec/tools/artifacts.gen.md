@@ -5,6 +5,7 @@
 | Tool | Category | 入力 | 出力 | check | CI |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `generate_queries` | codegen | `src/app/apis/*/*/sql/*.sql`<br>`src/db/ddl.sql` | `src/app/apis/*/*/generated/queries.py`<br>`src/app/apis/*/*/queries.py` | yes | yes |
+| `generate_api_pytest_cases` | codegen | `docs/spec/40.apis/*/*/unit-test_gen.md` | `tests/generated/test_*_*.py` | yes | yes |
 | `generate_openapi_if_specs` | docs | `app.main:create_app().openapi()`<br>`src/app/apis/*/*/samples.py` | `docs/spec/40.apis/*/*/if_gen.md` | yes | yes |
 | `generate_api_list` | docs | `app.main:create_app().openapi()` | `docs/spec/40.apis/apis_list_gen.md` | yes | yes |
 | `generate_api_sequences` | docs | `src/app/apis/*/*/router.py`<br>`src/app/apis/*/*/functions.py`<br>`src/app/apis/*/*/generated/queries.py`<br>`src/app/apis/*/*/sql/*.sql` | `docs/spec/40.apis/*/*/sequence_gen.md` | yes | yes |
@@ -16,6 +17,7 @@
 | `generate_external_crud` | docs | `src/app/apis/*/*/functions.py`<br>`src/app/integrations` | `docs/spec/30.crud/*_crud.gen.csv` | yes | yes |
 | `generate_db_er_diagram` | docs | `src/db/ddl.sql` | `docs/spec/20.db/er.gen.md` | yes | yes |
 | `check_api_status_samples` | lint | `src/app/apis/*/*/router.py`<br>`src/app/apis/*/*/samples.py`<br>`app.main:create_app().openapi()` | `stdout` | yes | yes |
+| `check_api_contracts` | lint | `src/app/apis/*/*/contract.py`<br>`src/app/apis/*/*/router.py` | `stdout` | yes | yes |
 | `check_api_mermaid_sequences` | lint | `docs/spec/40.apis/*/*/sequence_gen.md`<br>`src/app/apis/*/*/router.py` | `stdout` | yes | yes |
 | `check_api_sequence_success_responses` | lint | `docs/spec/40.apis/*/*/sequence_gen.md`<br>`src/app/apis/*/*/router.py` | `stdout` | yes | yes |
 | `check_api_router_unit_test_factors` | lint | `src/app/apis/*/*/router.py`<br>`docs/spec/40.apis/*/*/unit-test_gen.md` | `stdout` | yes | yes |

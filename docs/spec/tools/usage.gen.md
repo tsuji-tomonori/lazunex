@@ -21,6 +21,14 @@ API operation の SQL から query wrapper を生成する。
 uv run python -m tools.generate_queries
 ```
 
+### `generate_api_pytest_cases`
+
+unit-test_gen.md の Case ID から generated pytest を生成する。
+
+```bash
+uv run python -m tools.generate_api_pytest_cases
+```
+
 ### `generate_openapi_if_specs`
 
 FastAPI OpenAPI と samples から API IF 仕様を生成する。
@@ -107,6 +115,14 @@ router の declared status と samples/OpenAPI example の整合を検査する�
 
 ```bash
 uv run python -m tools.check_api_status_samples
+```
+
+### `check_api_contracts`
+
+operation contract.py と router operation_id / docs slug の整合を検査する。
+
+```bash
+uv run python -m tools.check_api_contracts
 ```
 
 ### `check_api_mermaid_sequences`

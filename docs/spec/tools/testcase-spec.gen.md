@@ -20,6 +20,7 @@
 | Tool | Golden | Check mode | Idempotency | Input validation |
 | :--- | :--- | :--- | :--- | :--- |
 | `generate_queries` | required | required | required | required |
+| `generate_api_pytest_cases` | required | required | required | required |
 | `generate_openapi_if_specs` | required | required | required | required |
 | `generate_api_list` | required | required | required | required |
 | `generate_api_sequences` | required | required | required | required |
@@ -31,6 +32,7 @@
 | `generate_external_crud` | required | required | required | required |
 | `generate_db_er_diagram` | required | required | required | required |
 | `check_api_status_samples` | required | required | required | required |
+| `check_api_contracts` | required | required | required | required |
 | `check_api_mermaid_sequences` | required | required | required | required |
 | `check_api_sequence_success_responses` | required | required | required | required |
 | `check_api_router_unit_test_factors` | required | required | required | required |

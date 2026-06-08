@@ -5,6 +5,8 @@
 ```mermaid
 flowchart TD
   generate_queries[generate_queries]
+  generate_api_pytest_cases[generate_api_pytest_cases]
+  generate_api_unit_test_factors --> generate_api_pytest_cases
   generate_openapi_if_specs[generate_openapi_if_specs]
   generate_queries --> generate_openapi_if_specs
   generate_api_list[generate_api_list]
@@ -26,6 +28,7 @@ flowchart TD
   generate_db_er_diagram[generate_db_er_diagram]
   check_api_status_samples[check_api_status_samples]
   generate_openapi_if_specs --> check_api_status_samples
+  check_api_contracts[check_api_contracts]
   check_api_mermaid_sequences[check_api_mermaid_sequences]
   generate_api_sequences --> check_api_mermaid_sequences
   check_api_sequence_success_responses[check_api_sequence_success_responses]
