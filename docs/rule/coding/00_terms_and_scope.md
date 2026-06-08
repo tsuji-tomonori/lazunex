@@ -14,27 +14,39 @@
 
 ## 実装すべき内容
 
-- **MUST** `[checker:rule_has_checker_tag]`: `MUST`、`MUST NOT`、`SHOULD`、`SHOULD NOT`、`MAY` の規約行は checker tag を 1 個以上持つ。
-- **MUST** `[checker:normative_no_ambiguous_words]`: 規約行は設定ファイルの `ambiguous_words` に含まれる語を含めない。
-- **MUST** `[checker:required_paths]`: `src/app`、`src/db`、`src/tools` を配置する。
-- **MUST** `[checker:repo_python_policy]`: `pyproject.toml` は Python `>=3.14,<3.15`、Ruff `py314`、Pyright `3.14`、mypy `3.14` を宣言する。
-- **MUST** `[checker:quality_commands_declared]`: `ruff format`、`ruff check`、`pyright`、`mypy`、`pytest` の実行コマンドをリポジトリ内に記載する。
+- `MUST`、`MUST NOT`、`SHOULD`、`SHOULD NOT`、`MAY` の規約行は checker tag を 1 個以上持つ。
+- 規約行は設定ファイルの `ambiguous_words` に含まれる語を含めない。
+- `src/app`、`src/db`、`src/tools` を配置する。
+- `pyproject.toml` は Python `>=3.14,<3.15`、Ruff `py314`、Pyright `3.14`、mypy `3.14` を宣言する。
+- `ruff format`、`ruff check`、`pyright`、`mypy`、`pytest` の実行コマンドをリポジトリ内に記載する。
 
 ## 実装してはいけない内容
 
-- **MUST NOT** `[checker:rule_has_checker_tag]`: checker を持たない規約行を追加しない。
-- **MUST NOT** `[checker:normative_no_ambiguous_words]`: 規約行へ判定条件を数値化できない語を入れない。
+- checker を持たない規約行を追加しない。
+- 規約行へ判定条件を数値化できない語を入れない。
+
+## 機械チェック項目
+
+| Rule ID | Level | Checker | 対象 | 判定条件 |
+| :--- | :--- | :--- | :--- | :--- |
+| SCOPE-DO-001 | MUST | `rule_has_checker_tag` | - | `MUST`、`MUST NOT`、`SHOULD`、`SHOULD NOT`、`MAY` の規約行は checker tag を 1 個以上持つ。 |
+| SCOPE-DO-002 | MUST | `normative_no_ambiguous_words` | - | 規約行は設定ファイルの `ambiguous_words` に含まれる語を含めない。 |
+| SCOPE-DO-003 | MUST | `required_paths` | - | `src/app`、`src/db`、`src/tools` を配置する。 |
+| SCOPE-DO-004 | MUST | `repo_python_policy` | `pyproject.toml` | Python `>=3.14,<3.15`、Ruff `py314`、Pyright `3.14`、mypy `3.14` を宣言する。 |
+| SCOPE-DO-005 | MUST | `quality_commands_declared` | - | `ruff format`、`ruff check`、`pyright`、`mypy`、`pytest` の実行コマンドをリポジトリ内に記載する。 |
+| SCOPE-DONT-001 | MUST NOT | `rule_has_checker_tag` | - | checker を持たない規約行を追加しない。 |
+| SCOPE-DONT-002 | MUST NOT | `normative_no_ambiguous_words` | - | 規約行へ判定条件を数値化できない語を入れない。 |
 
 <!-- rulecheck:generated-checklist:start -->
 
 ## 自動生成チェックリスト
 
-- [ ] `RULE-00_TERMS_AND_SCOPE-L017-01` **MUST** `[checker:rule_has_checker_tag]` `MUST`、`MUST NOT`、`SHOULD`、`SHOULD NOT`、`MAY` の規約行は checker tag を 1 個以上持つ。  `source:00_terms_and_scope.md:17`
-- [ ] `RULE-00_TERMS_AND_SCOPE-L018-02` **MUST** `[checker:normative_no_ambiguous_words]` 規約行は設定ファイルの `ambiguous_words` に含まれる語を含めない。  `source:00_terms_and_scope.md:18`
-- [ ] `RULE-00_TERMS_AND_SCOPE-L019-03` **MUST** `[checker:required_paths]` `src/app`、`src/db`、`src/tools` を配置する。  `source:00_terms_and_scope.md:19`
-- [ ] `RULE-00_TERMS_AND_SCOPE-L020-04` **MUST** `[checker:repo_python_policy]` `pyproject.toml` は Python `>=3.14,<3.15`、Ruff `py314`、Pyright `3.14`、mypy `3.14` を宣言する。  `source:00_terms_and_scope.md:20`
-- [ ] `RULE-00_TERMS_AND_SCOPE-L021-05` **MUST** `[checker:quality_commands_declared]` `ruff format`、`ruff check`、`pyright`、`mypy`、`pytest` の実行コマンドをリポジトリ内に記載する。  `source:00_terms_and_scope.md:21`
-- [ ] `RULE-00_TERMS_AND_SCOPE-L025-06` **MUST NOT** `[checker:rule_has_checker_tag]` checker を持たない規約行を追加しない。  `source:00_terms_and_scope.md:25`
-- [ ] `RULE-00_TERMS_AND_SCOPE-L026-07` **MUST NOT** `[checker:normative_no_ambiguous_words]` 規約行へ判定条件を数値化できない語を入れない。  `source:00_terms_and_scope.md:26`
+- [ ] `MUST`、`MUST NOT`、`SHOULD`、`SHOULD NOT`、`MAY` の規約行は checker tag を 1 個以上持つ。 (`SCOPE-DO-001`, **MUST**, `[checker:rule_has_checker_tag]`)  `source:00_terms_and_scope.md:32`
+- [ ] 規約行は設定ファイルの `ambiguous_words` に含まれる語を含めない。 (`SCOPE-DO-002`, **MUST**, `[checker:normative_no_ambiguous_words]`)  `source:00_terms_and_scope.md:33`
+- [ ] `src/app`、`src/db`、`src/tools` を配置する。 (`SCOPE-DO-003`, **MUST**, `[checker:required_paths]`)  `source:00_terms_and_scope.md:34`
+- [ ] `pyproject.toml`: Python `>=3.14,<3.15`、Ruff `py314`、Pyright `3.14`、mypy `3.14` を宣言する。 (`SCOPE-DO-004`, **MUST**, `[checker:repo_python_policy]`)  `source:00_terms_and_scope.md:35`
+- [ ] `ruff format`、`ruff check`、`pyright`、`mypy`、`pytest` の実行コマンドをリポジトリ内に記載する。 (`SCOPE-DO-005`, **MUST**, `[checker:quality_commands_declared]`)  `source:00_terms_and_scope.md:36`
+- [ ] checker を持たない規約行を追加しない。 (`SCOPE-DONT-001`, **MUST NOT**, `[checker:rule_has_checker_tag]`)  `source:00_terms_and_scope.md:37`
+- [ ] 規約行へ判定条件を数値化できない語を入れない。 (`SCOPE-DONT-002`, **MUST NOT**, `[checker:normative_no_ambiguous_words]`)  `source:00_terms_and_scope.md:38`
 
 <!-- rulecheck:generated-checklist:end -->

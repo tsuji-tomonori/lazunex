@@ -13,8 +13,8 @@ END = "<!-- rulecheck:generated-checklist:end -->"
 def render_item(item: RuleItem) -> str:
     checker_text = ",".join(item.checkers) if item.checkers else "NO_CHECKER"
     return (
-        f"- [ ] `{item.id}` **{item.level}** `[checker:{checker_text}]` "
-        f"{item.text}  "
+        f"- [ ] {item.text} "
+        f"(`{item.id}`, **{item.level}**, `[checker:{checker_text}]`)  "
         f"`source:{item.source_ref}`"
     )
 
@@ -52,6 +52,7 @@ def render_central_checklist(items: tuple[RuleItem, ...]) -> str:
     ]
     for source_path in sorted(by_file):
         lines.extend([f"## {source_path.as_posix()}", ""])
+        lines.extend(["### 実装修正項目", ""])
         lines.extend(render_item(item) for item in by_file[source_path])
         lines.append("")
     lines.extend([END, ""])

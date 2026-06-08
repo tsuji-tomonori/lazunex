@@ -14,7 +14,13 @@ def test_rulecheck_cli_generate_verify_and_check(tmp_path: Path) -> None:
     config_path = tmp_path / "config.json"
 
     rule_path.write_text(
-        "# Sample\n\n- **MUST** `[checker:required_paths]`: `README.md` を配置する。\n",
+        "# Sample\n\n"
+        "## 実装すべき内容\n\n"
+        "- `README.md` を配置する。\n\n"
+        "## 機械チェック項目\n\n"
+        "| Rule ID | Level | Checker | 対象 | 判定条件 |\n"
+        "| :--- | :--- | :--- | :--- | :--- |\n"
+        "| SAMPLE-DO-001 | MUST | `required_paths` | `README.md` | ファイルを配置する。 |\n",
         encoding="utf-8",
     )
     config_path.write_text('{"ambiguous_words": []}\n', encoding="utf-8")
@@ -31,7 +37,7 @@ def test_rulecheck_cli_generate_verify_and_check(tmp_path: Path) -> None:
         )
         == 0
     )
-    assert "RULE-00_SAMPLE" in checklist_path.read_text(encoding="utf-8")
+    assert "SAMPLE-DO-001" in checklist_path.read_text(encoding="utf-8")
 
     common_args = [
         "--repo-root",
