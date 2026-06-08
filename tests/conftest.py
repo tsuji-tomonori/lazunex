@@ -36,12 +36,20 @@ def _percent(covered: int | float, total: int | float) -> float:
     return covered / total * 100
 
 
+def _is_full_test_run(config: pytest.Config) -> bool:
+    args = tuple(Path(str(arg)).as_posix().rstrip("/") for arg in config.args)
+    testpaths = tuple(Path(str(path)).as_posix().rstrip("/") for path in config.getini("testpaths"))
+    return not args or args == testpaths
+
+
 @pytest.hookimpl(trylast=True)
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int | pytest.ExitCode) -> None:
     config = session.config
     no_cov = config.getoption("--no-cov", default=False)
     collect_only = config.getoption("collectonly", default=False)
     if no_cov or collect_only:
+        return
+    if not _is_full_test_run(config):
         return
 
     raw_cov_sources = cast(

@@ -66,6 +66,9 @@ source = [
     "src/app",
     "src/tools",
 ]
+omit = [
+    "src/tools/rulecheck/*",
+]
 
 [tool.ruff]
 target-version = "py314"
@@ -90,6 +93,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S101"]
+"src/tools/rulecheck/**/*.py" = ["E501", "SIM102", "SIM105"]
 
 [tool.sqlfluff.core]
 dialect = "mysql"

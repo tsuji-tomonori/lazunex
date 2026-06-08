@@ -1,0 +1,68 @@
+{
+  "ambiguous_words": [
+    "適切",
+    "必要に応じて",
+    "可能な限り",
+    "できるだけ",
+    "原則",
+    "最小限",
+    "など",
+    "十分",
+    "なるべく"
+  ],
+  "operation_required_files": [
+    "__init__.py",
+    "router.py",
+    "functions.py",
+    "schemas.py",
+    "samples.py",
+    "queries.py",
+    "sql"
+  ],
+  "tools_required_files": [
+    "check_api_function_names.py",
+    "generate_api_sequences.py",
+    "check_api_mermaid_sequences.py",
+    "generate_queries.py",
+    "generate_db_crud.py",
+    "check_operational_logging.py"
+  ],
+  "metrics": {
+    "cyclomatic_complexity": [
+      {"glob": "src/app/apis/**/router.py", "max": 17},
+      {"glob": "src/app/**/*.py", "max": 17},
+      {"glob": "src/tools/**/*.py", "max": 21}
+    ],
+    "control_nesting_depth": [
+      {"glob": "src/app/apis/**/router.py", "max": 5},
+      {"glob": "src/app/**/*.py", "max": 5},
+      {"glob": "src/tools/**/*.py", "max": 5}
+    ],
+    "function_logical_lines": [
+      {"glob": "src/app/apis/**/router.py", "max": 450},
+      {"glob": "src/app/**/*.py", "max": 450},
+      {"glob": "src/tools/**/*.py", "max": 160}
+    ],
+    "file_logical_lines": [
+      {"glob": "src/app/apis/**/router.py", "max": 550},
+      {"glob": "src/app/**/*.py", "max": 800},
+      {"glob": "src/tools/**/*.py", "max": 1700}
+    ],
+    "function_argument_count": [
+      {"glob": "src/app/apis/**/router.py", "max": 20},
+      {"glob": "src/app/**/*.py", "max": 20},
+      {"glob": "src/tools/**/*.py", "max": 12}
+    ],
+    "return_count": [
+      {"glob": "src/app/**/*.py", "max": 12},
+      {"glob": "src/tools/**/*.py", "max": 12}
+    ],
+    "condition_complexity": {
+      "bool_ops_max": 3,
+      "comparison_ops_max": 4,
+      "ast_depth_max": 9,
+      "forbid_mixed_and_or": false,
+      "forbid_nested_ternary": true
+    }
+  }
+}

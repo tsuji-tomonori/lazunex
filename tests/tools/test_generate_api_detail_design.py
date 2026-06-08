@@ -193,7 +193,7 @@ CREATE TABLE widgets (
         "※1 SQL式: 取得元 DB: widgets.aggregate_id |"
     ) in generated_content
     assert "取得元 DB: widgets.event_seq" not in generated_content
-    assert "SELECT MAX(event_seq) + 1 FROM widgets WHERE aggregate_id = $aggregate_id" in (
+    assert "SELECT MAX(event_seq) + 1 FROM widgets WHERE aggregate_id = @aggregate_id" in (
         generated_content
     )
     assert "| `row_version` | 行バージョン。 | `1` | SQL式: 1 |" in generated_content
