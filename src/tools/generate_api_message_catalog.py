@@ -634,8 +634,8 @@ def pydantic_log_context_types(module: ast.Module) -> dict[str, str]:
                 continue
             if not isinstance(statement.target, ast.Name):
                 continue
-            types[log_context_alias_from_field_name(statement.target.id)] = (
-                log_context_field_type(statement.annotation)
+            types[log_context_alias_from_field_name(statement.target.id)] = log_context_field_type(
+                statement.annotation
             )
     return types
 
@@ -676,8 +676,8 @@ def api_error_resource_types(api_dir: Path) -> dict[str, str]:
                 continue
             if not isinstance(statement.target, ast.Name):
                 continue
-            types[f"resource.{snake_to_lower_camel(statement.target.id)}"] = (
-                log_context_field_type(statement.annotation)
+            types[f"resource.{snake_to_lower_camel(statement.target.id)}"] = log_context_field_type(
+                statement.annotation
             )
     return types
 

@@ -102,7 +102,7 @@ async def get_project(project_id):
         "projects/get_project/functions.py",
         """
 from app.apis.types import ResourceId
-from app.apis.projects.get_project import queries
+from app.apis.projects.get_project.generated import queries
 
 async def get_project(project_id: ResourceId) -> ProjectRef:
     \"\"\"プロジェクト情報を取得する。\"\"\"
@@ -568,9 +568,7 @@ def test_render_sequence_markdown_limits_resources_and_groups_tables() -> None:
     assert "alt プロジェクトを参照できる場合。" in markdown
     assert "API->>API: プロジェクトを参照できるかを判定する。" not in markdown
     assert "    API->>API: プロジェクト詳細レスポンスを組み立てる。" in markdown
-    assert (
-        "API->>API: Project 作成イベントを追記する。" not in markdown
-    )
+    assert "API->>API: Project 作成イベントを追記する。" not in markdown
     assert (
         "API->>DB: Project 作成イベントを追記する。"
         "<br/>SQL 003_insert_project_events.sql<br/>テーブル project_events" in markdown
@@ -655,8 +653,7 @@ def test_render_sequence_markdown_marks_transaction_scope_until_commit() -> None
     )
 
     assert (
-        "Note over API,DB: DB transaction範囲開始 "
-        "(最初のDB操作からcommit/rollbackまで)" in markdown
+        "Note over API,DB: DB transaction範囲開始 (最初のDB操作からcommit/rollbackまで)" in markdown
     )
     assert "API->>DB: DB transactionをrollbackして変更を破棄する。" in markdown
     assert "API->>DB: DB transactionをcommitして変更を確定する。" in markdown
@@ -666,12 +663,8 @@ def test_render_sequence_markdown_marks_transaction_scope_until_commit() -> None
     assert markdown.index("Project 作成イベントを追記する。") < markdown.index(
         "DB transactionをrollback"
     )
-    assert markdown.index("DB transactionをrollback") < markdown.index(
-        "HTTP 409 Conflict"
-    )
-    assert markdown.index("HTTP 409 Conflict") < markdown.index(
-        "DB transactionをcommit"
-    )
+    assert markdown.index("DB transactionをrollback") < markdown.index("HTTP 409 Conflict")
+    assert markdown.index("HTTP 409 Conflict") < markdown.index("DB transactionをcommit")
     assert markdown.index("DB transactionをcommit") < markdown.index(
         "Project 作成レスポンスを組み立てる。"
     )

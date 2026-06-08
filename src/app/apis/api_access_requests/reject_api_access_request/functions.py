@@ -9,7 +9,7 @@ from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.api_access_requests.common import AccessRequestDerivedState
-from app.apis.api_access_requests.reject_api_access_request import queries
+from app.apis.api_access_requests.reject_api_access_request.generated import queries
 from app.apis.api_access_requests.reject_api_access_request.schemas import (
     RejectApiAccessRequestRequest,
     RejectApiAccessRequestResponse,

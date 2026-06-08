@@ -57,7 +57,7 @@
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM access_request_events WHERE aggregate_id = $access_request_id), 1)
+COALESCE((SELECT MAX(event_seq) + 1 FROM access_request_events WHERE aggregate_id = @access_request_id), 1)
 ```
 
 ### DB `access_request_events` 作成
@@ -84,7 +84,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM access_request_events WHERE aggregate_i
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM access_request_events WHERE aggregate_id = $access_request_id), 1)
+COALESCE((SELECT MAX(event_seq) + 1 FROM access_request_events WHERE aggregate_id = @access_request_id), 1)
 ```
 
 ### DB `provisioning_operations` 作成
@@ -214,7 +214,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM access_request_events WHERE aggregate_i
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM subscription_events WHERE aggregate_id = $subscription_id), 1)
+COALESCE((SELECT MAX(event_seq) + 1 FROM subscription_events WHERE aggregate_id = @subscription_id), 1)
 ```
 
 ### DB `audit_events` 作成
@@ -303,7 +303,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM subscription_events WHERE aggregate_id 
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM usage_plan_stage_events WHERE aggregate_id = $usage_plan_api_stage_id), 1)
+COALESCE((SELECT MAX(event_seq) + 1 FROM usage_plan_stage_events WHERE aggregate_id = @usage_plan_api_stage_id), 1)
 ```
 
 ### DB `client_scope_events` 作成
@@ -330,7 +330,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM usage_plan_stage_events WHERE aggregate
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM client_scope_events WHERE aggregate_id = $project_cognito_client_scope_id), 1)
+COALESCE((SELECT MAX(event_seq) + 1 FROM client_scope_events WHERE aggregate_id = @project_cognito_client_scope_id), 1)
 ```
 
 ### DB `provisioning_operation_events` 作成
@@ -357,7 +357,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM client_scope_events WHERE aggregate_id 
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM provisioning_operation_events WHERE aggregate_id = $operation_id), 1)
+COALESCE((SELECT MAX(event_seq) + 1 FROM provisioning_operation_events WHERE aggregate_id = @operation_id), 1)
 ```
 
 ### DB `provisioning_step_events` 作成
@@ -384,7 +384,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM provisioning_operation_events WHERE agg
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM provisioning_step_events WHERE aggregate_id = $operation_step_id), 1)
+COALESCE((SELECT MAX(event_seq) + 1 FROM provisioning_step_events WHERE aggregate_id = @operation_step_id), 1)
 ```
 
 ### 外部リソース `AddUsagePlanStageInput`

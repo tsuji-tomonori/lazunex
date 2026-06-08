@@ -19,7 +19,7 @@ from app.apis.projects.common import (
     validate_refresh_token_validity,
     validate_retry_grace_period_seconds,
 )
-from app.apis.projects.update_project_public_client import queries
+from app.apis.projects.update_project_public_client.generated import queries
 from app.apis.projects.update_project_public_client.schemas import (
     UpdatedPublicClientResponse,
     UpdateProjectPublicClientRequest,

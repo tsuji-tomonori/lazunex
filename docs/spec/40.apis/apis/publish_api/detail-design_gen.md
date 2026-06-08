@@ -202,7 +202,7 @@
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM api_events WHERE aggregate_id = $api_id), 1)
+COALESCE((SELECT MAX(event_seq) + 1 FROM api_events WHERE aggregate_id = @api_id), 1)
 ```
 
 ### DB `audit_events` 作成
@@ -291,7 +291,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM api_events WHERE aggregate_id = $api_id
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM api_stage_events WHERE aggregate_id = $api_stage_id), 1)
+COALESCE((SELECT MAX(event_seq) + 1 FROM api_stage_events WHERE aggregate_id = @api_stage_id), 1)
 ```
 
 ### DB `api_scope_events` 作成
@@ -318,7 +318,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM api_stage_events WHERE aggregate_id = $
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM api_scope_events WHERE aggregate_id = $api_scope_id), 1)
+COALESCE((SELECT MAX(event_seq) + 1 FROM api_scope_events WHERE aggregate_id = @api_scope_id), 1)
 ```
 
 ### DB `api_reviewer_events` 作成
@@ -345,7 +345,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM api_scope_events WHERE aggregate_id = $
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM api_reviewer_events WHERE aggregate_id = $api_reviewer_id), 1)
+COALESCE((SELECT MAX(event_seq) + 1 FROM api_reviewer_events WHERE aggregate_id = @api_reviewer_id), 1)
 ```
 
 ### DB `provisioning_operation_events` 作成
@@ -372,7 +372,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM api_reviewer_events WHERE aggregate_id 
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM provisioning_operation_events WHERE aggregate_id = $operation_id), 1)
+COALESCE((SELECT MAX(event_seq) + 1 FROM provisioning_operation_events WHERE aggregate_id = @operation_id), 1)
 ```
 
 ### DB `provisioning_step_events` 作成
@@ -399,7 +399,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM provisioning_operation_events WHERE agg
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM provisioning_step_events WHERE aggregate_id = $operation_step_id), 1)
+COALESCE((SELECT MAX(event_seq) + 1 FROM provisioning_step_events WHERE aggregate_id = @operation_step_id), 1)
 ```
 
 ### 外部リソース `GetStageInput`

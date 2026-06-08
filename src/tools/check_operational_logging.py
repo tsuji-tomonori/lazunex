@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# ruff: noqa: E501
 """Fail fast check for Lazunex operational logging policy.
 
 This is a thin CI-friendly wrapper around the static analysis contained in
@@ -29,9 +28,21 @@ from tools.generate_api_message_catalog import (
 
 def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Validate Lazunex operational logger usage.")
-    parser.add_argument("--root", type=Path, default=Path("."), help="Repository root. Defaults to current directory.")
-    parser.add_argument("--api-root", type=Path, default=DEFAULT_API_ROOT, help="API root relative to --root.")
-    parser.add_argument("--scan-root", type=Path, default=DEFAULT_SCAN_ROOT, help="Python source root relative to --root.")
+    parser.add_argument(
+        "--root",
+        type=Path,
+        default=Path("."),
+        help="Repository root. Defaults to current directory.",
+    )
+    parser.add_argument(
+        "--api-root", type=Path, default=DEFAULT_API_ROOT, help="API root relative to --root."
+    )
+    parser.add_argument(
+        "--scan-root",
+        type=Path,
+        default=DEFAULT_SCAN_ROOT,
+        help="Python source root relative to --root.",
+    )
     parser.add_argument(
         "--allowed-direct-logger-file",
         action="append",

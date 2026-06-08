@@ -185,8 +185,7 @@ CREATE TABLE widgets (
     assert "### DB `widgets` 作成" in content
     assert "| `name` | Widget名。 | `name` | request.body.name |" in generated_content
     assert (
-        "| `created_by` | 作成者。 | `actor_principal_id` | "
-        "認証主体: caller.principalId |"
+        "| `created_by` | 作成者。 | `actor_principal_id` | 認証主体: caller.principalId |"
     ) in generated_content
     assert (
         "| `event_seq` | Widgetごとのイベント連番。 | `※1` | "

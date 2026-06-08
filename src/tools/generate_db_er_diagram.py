@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from tools.generate_db_table_specs import Column, Table, parse_tables
+from tools.generation_io import check_outputs, write_outputs
 
 
 @dataclass(frozen=True)
@@ -413,16 +414,25 @@ def write_er_diagram(
 def generate(ddl_path: Path, output_path: Path, output_format: str | None = None) -> Path:
     """Generate an ER diagram from the DDL file."""
 
+    rendered = render_output(ddl_path, output_path, output_format)
+    write_outputs(rendered)
+    return output_path
+
+
+def render_output(
+    ddl_path: Path,
+    output_path: Path,
+    output_format: str | None = None,
+) -> dict[Path, str]:
+    """Render an ER diagram from the DDL file."""
+
     sql = ddl_path.read_text(encoding="utf-8")
     tables = parse_tables(sql)
     relationships = parse_relationships(sql, tables)
-    return write_er_diagram(
-        tables,
-        relationships,
-        ddl_path,
-        output_path,
-        output_format or infer_output_format(output_path),
-    )
+    resolved_format = output_format or infer_output_format(output_path)
+    if resolved_format == "mermaid":
+        return {output_path: render_mermaid(tables, relationships)}
+    return {output_path: render_markdown(tables, relationships, ddl_path)}
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -434,14 +444,19 @@ def build_arg_parser() -> argparse.ArgumentParser:
         choices=["markdown", "mermaid"],
         help="Output format. Defaults to mermaid for .mmd/.mermaid, otherwise markdown.",
     )
+    parser.add_argument("--check", action="store_true")
     return parser
 
 
-def main() -> None:
-    args = build_arg_parser().parse_args()
-    output_path = generate(args.ddl, args.output, args.format)
-    print(f"Generated ER diagram: {output_path.as_posix()}")
+def main(argv: list[str] | None = None) -> int:
+    args = build_arg_parser().parse_args(argv)
+    rendered = render_output(args.ddl, args.output, args.format)
+    if args.check:
+        return check_outputs(rendered)
+    write_outputs(rendered)
+    print(f"Generated ER diagram: {args.output.as_posix()}")
+    return 0
 
 
 if __name__ == "__main__":  # pragma: no cover
-    main()
+    raise SystemExit(main())

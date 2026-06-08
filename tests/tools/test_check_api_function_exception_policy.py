@@ -16,7 +16,7 @@ def write_api_functions(tmp_path: Path, source: str) -> Path:
 def test_reports_wrong_exception_policy(tmp_path: Path) -> None:
     path = write_api_functions(
         tmp_path,
-        '''
+        """
 async def get_project(session=None):
     await queries.select_projects(session)
     return object()
@@ -36,7 +36,7 @@ async def validate_runtime_dependency():
         "get_project requires runtime dependencies.",
         summary="runtime dependency",
     )
-''',
+""",
     )
 
     issues = check_api_function_exception_policy(tmp_path)
@@ -73,7 +73,7 @@ async def validate_runtime_dependency():
 def test_accepts_business_errors_and_runtime_dependency_guards(tmp_path: Path) -> None:
     write_api_functions(
         tmp_path,
-        '''
+        """
 async def validate_project():
     raise ApiFunctionError(400, "invalid", summary="入力が不正な場合。")
 
@@ -85,7 +85,7 @@ async def get_project(session=None):
 
 async def get_caller_identity(principal_id=None):
     return build_caller_identity(principal_id=principal_id)
-''',
+""",
     )
 
     assert check_api_function_exception_policy(tmp_path) == []

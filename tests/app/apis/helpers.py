@@ -20,6 +20,7 @@ from .router_db import RouterDbHarness
 def capture_operational_log_events(capsys: Any) -> Any:
     capsys.readouterr()
     with _temporary_operational_stdout_handler():
+
         def find_log_event(message_id: str) -> dict[str, Any]:
             return _find_json_log_event(capsys.readouterr().out, message_id)
 

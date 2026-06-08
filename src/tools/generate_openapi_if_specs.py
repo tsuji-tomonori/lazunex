@@ -16,6 +16,7 @@ from tools.check_api_descriptions import (
     enum_members,
     is_str_enum_class,
 )
+from tools.generation_io import check_outputs, write_outputs
 
 HTTP_METHODS = {"get", "post", "put", "patch", "delete", "options", "head"}
 type JsonObject = dict[str, Any]
@@ -835,24 +836,30 @@ def generate_from_openapi(
     operation_paths: dict[str, Path] | None = None,
     operation_samples: dict[str, OperationSamples] | None = None,
 ) -> list[Path]:
+    rendered = render_outputs_from_openapi(openapi, output_dir, operation_paths, operation_samples)
+    write_outputs(rendered)
+    return list(rendered)
+
+
+def render_outputs_from_openapi(
+    openapi: JsonObject,
+    output_dir: Path,
+    operation_paths: dict[str, Path] | None = None,
+    operation_samples: dict[str, OperationSamples] | None = None,
+) -> dict[Path, str]:
     components = schema_components(openapi)
-    written: list[Path] = []
+    rendered: dict[Path, str] = {}
     for path, method, operation in iter_operations(openapi):
         operation_id = str(operation.get("operationId") or operation.get("summary") or "api")
         output_path = operation_output_path(output_dir, operation, operation_paths)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(
-            render_operation_markdown(
-                path,
-                method,
-                operation,
-                components,
-                (operation_samples or {}).get(operation_id),
-            ),
-            encoding="utf-8",
+        rendered[output_path] = render_operation_markdown(
+            path,
+            method,
+            operation,
+            components,
+            (operation_samples or {}).get(operation_id),
         )
-        written.append(output_path)
-    return written
+    return rendered
 
 
 def load_fastapi_openapi() -> JsonObject:
@@ -860,8 +867,14 @@ def load_fastapi_openapi() -> JsonObject:
 
 
 def generate(output_dir: Path, api_root: Path = DEFAULT_API_ROOT) -> list[Path]:
+    rendered = render_outputs(output_dir, api_root)
+    write_outputs(rendered)
+    return list(rendered)
+
+
+def render_outputs(output_dir: Path, api_root: Path = DEFAULT_API_ROOT) -> dict[Path, str]:
     operation_paths = implementation_operation_paths(api_root)
-    return generate_from_openapi(
+    return render_outputs_from_openapi(
         load_fastapi_openapi(),
         output_dir,
         operation_paths,
@@ -873,14 +886,20 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Generate IF specs from FastAPI OpenAPI.")
     parser.add_argument("--output-dir", type=Path, default=Path("docs/spec/40.apis"))
     parser.add_argument("--api-root", type=Path, default=DEFAULT_API_ROOT)
+    parser.add_argument("--check", action="store_true")
     return parser
 
 
-def main() -> None:
-    args = build_arg_parser().parse_args()
-    written = generate(args.output_dir, args.api_root)
+def main(argv: list[str] | None = None) -> int:
+    args = build_arg_parser().parse_args(argv)
+    rendered = render_outputs(args.output_dir, args.api_root)
+    if args.check:
+        return check_outputs(rendered)
+    write_outputs(rendered)
+    written = list(rendered)
     print(f"Generated {len(written)} IF spec files.")
+    return 0
 
 
 if __name__ == "__main__":  # pragma: no cover
-    main()
+    raise SystemExit(main())

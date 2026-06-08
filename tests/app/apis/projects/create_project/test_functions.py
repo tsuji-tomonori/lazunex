@@ -12,7 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apis.helpers import record_async_call
 from app.apis.common import IdentityGroup
 from app.apis.exceptions import ApiFunctionError
-from app.apis.projects.create_project import functions, queries
+from app.apis.projects.create_project import functions
+from app.apis.projects.create_project.generated import queries
 from app.apis.projects.create_project.samples import CREATE_PROJECT_REQUEST_SAMPLE
 from app.apis.sequence_types import (
     CallerIdentity,

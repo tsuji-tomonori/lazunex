@@ -487,9 +487,20 @@ def query_specs(queries_path: Path) -> dict[str, QuerySpec]:
             row_class=row_class,
             sql_filename=sql_file,
             summary=clean_docstring(ast.get_docstring(node)),
-            tables=sql_tables(queries_path.with_name("sql") / sql_file),
+            tables=sql_tables(sql_dir_for_queries(queries_path) / sql_file),
         )
     return specs
+
+
+def operation_queries_path(api_dir: Path) -> Path:
+    generated_path = api_dir / "generated" / "queries.py"
+    return generated_path if generated_path.exists() else api_dir / "queries.py"
+
+
+def sql_dir_for_queries(queries_path: Path) -> Path:
+    if queries_path.parent.name == "generated":
+        return queries_path.parent.parent / "sql"
+    return queries_path.with_name("sql")
 
 
 def query_row_source_maps(
@@ -630,11 +641,15 @@ def source_expression(node: ast.AST | None, origins: dict[str, str] | None = Non
     if isinstance(node, ast.Constant):
         return repr(node.value)
     if isinstance(node, ast.Dict):
-        return "{" + ", ".join(
-            f"{source_expression(key, origins)}: {source_expression(value, origins)}"
-            for key, value in zip(node.keys, node.values, strict=True)
-            if key is not None
-        ) + "}"
+        return (
+            "{"
+            + ", ".join(
+                f"{source_expression(key, origins)}: {source_expression(value, origins)}"
+                for key, value in zip(node.keys, node.values, strict=True)
+                if key is not None
+            )
+            + "}"
+        )
     return format_origin_expression(ast.unparse(node), origins)
 
 
@@ -827,8 +842,9 @@ def resource_changes_from_dir(
     api_dir: Path,
     endpoint_origins: dict[str, str],
 ) -> tuple[ResourceChange, ...]:
-    queries = query_specs(api_dir / "queries.py")
-    model_fields = model_fields_by_class(api_dir / "queries.py")
+    queries_path = operation_queries_path(api_dir)
+    queries = query_specs(queries_path)
+    model_fields = model_fields_by_class(queries_path)
     param_calls = query_param_calls(api_dir / "functions.py", queries, endpoint_origins)
     changes: list[ResourceChange] = []
     for function_name, query in queries.items():
@@ -1006,7 +1022,7 @@ def api_detail_design_from_dir(
     router_tree = ast.parse((api_dir / "router.py").read_text(encoding="utf-8"))
     endpoint = endpoint_function(router_tree)
     specs = schema_specs(api_dir / "schemas.py")
-    queries = query_specs(api_dir / "queries.py")
+    queries = query_specs(operation_queries_path(api_dir))
     row_source_maps = query_row_source_maps(api_dir, queries)
     endpoint_origins = endpoint_input_origins(endpoint)
     request_schema_name = endpoint_body_schema(endpoint)

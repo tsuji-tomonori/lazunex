@@ -8,7 +8,7 @@ from app.apis.api_access_requests.common import AuthMode
 from app.apis.common import IdentityGroup, raise_missing_runtime_dependency
 from app.apis.deps import build_caller_identity
 from app.apis.projects.common import SubscriptionDerivedState
-from app.apis.projects.list_project_subscriptions import queries
+from app.apis.projects.list_project_subscriptions.generated import queries
 from app.apis.projects.list_project_subscriptions.schemas import (
     ListProjectSubscriptionsQuery,
     ListProjectSubscriptionsResponse,

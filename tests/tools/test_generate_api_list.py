@@ -106,11 +106,10 @@ def test_arg_parser_defaults_and_main_output(
 
     output_path = tmp_path / "apis_list_gen.md"
 
-    def generate_stub(output: Path) -> Path:
-        output.write_text("generated\n", encoding="utf-8")
-        return output
+    def render_output_stub(output: Path) -> dict[Path, str]:
+        return {output: "generated\n"}
 
-    monkeypatch.setattr("tools.generate_api_list.generate", generate_stub)
+    monkeypatch.setattr("tools.generate_api_list.render_output", render_output_stub)
 
     main(["--output", str(output_path)])
 

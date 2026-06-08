@@ -86,10 +86,11 @@ def test_external_error_response_does_not_expose_raw_error_message() -> None:
         ExternalApiError("aws request id abc with internal table name")
     )
 
-    body = json.loads(response.body)
+    response_body = bytes(response.body)
+    body = json.loads(response_body)
 
     assert response.status_code == status.HTTP_502_BAD_GATEWAY
-    assert "aws request id abc" not in response.body.decode()
+    assert "aws request id abc" not in response_body.decode()
     assert body["error"]["message"] == (
         "外部サービス連携で失敗しました。時間をおいて再送し、解消しない場合は追跡IDを添えて問い合わせてください。"
     )

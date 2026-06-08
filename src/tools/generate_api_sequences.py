@@ -1080,6 +1080,11 @@ def query_sql_filenames(queries_path: Path) -> dict[str, str]:
     return filenames
 
 
+def operation_queries_path(api_dir: Path) -> Path:
+    generated_path = api_dir / "generated" / "queries.py"
+    return generated_path if generated_path.exists() else api_dir / "queries.py"
+
+
 def sql_sequence_steps(
     sql_dir: Path,
     summaries: dict[str, str] | None = None,
@@ -1122,7 +1127,8 @@ def api_sequence_from_dir(
     steps = [item for item in items if isinstance(item, SequenceStep)]
     error_returns = [item for item in items if isinstance(item, ErrorReturnStep)]
     success_returns = [item for item in items if isinstance(item, SuccessReturnStep)]
-    query_filenames = query_sql_filenames(api_dir / "queries.py")
+    queries_path = operation_queries_path(api_dir)
+    query_filenames = query_sql_filenames(queries_path)
     called_query_filenames = {
         query_filenames[query_function]
         for step in steps
@@ -1141,7 +1147,7 @@ def api_sequence_from_dir(
         success_returns=success_returns,
         sql_steps=sql_sequence_steps(
             api_dir / "sql",
-            query_sql_summaries(api_dir / "queries.py"),
+            query_sql_summaries(queries_path),
             called_query_filenames or None,
         ),
         integration_resources=(
@@ -1202,8 +1208,7 @@ def render_sequence_markdown(sequence: ApiSequence) -> str:
             indent = "  " + ("  " * alt_depth)
             label = step.description if len(step_sql_steps) == 1 else sql_step.summary
             lines.append(
-                f"{indent}API->>DB: {label}"
-                f"<br/>SQL {sql_step.filename}<br/>テーブル {tables}"
+                f"{indent}API->>DB: {label}<br/>SQL {sql_step.filename}<br/>テーブル {tables}"
             )
 
     def transaction_indent() -> str:

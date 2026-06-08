@@ -12,7 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from apis.helpers import record_async_call
 from app.apis.apis.common import ScopeAttachmentMode
-from app.apis.apis.publish_api import functions, queries
+from app.apis.apis.publish_api import functions
+from app.apis.apis.publish_api.generated import queries
 from app.apis.apis.publish_api.samples import PUBLISH_API_REQUEST_SAMPLE
 from app.apis.common import IdentityGroup
 from app.apis.sequence_types import (

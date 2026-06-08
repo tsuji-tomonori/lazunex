@@ -13,7 +13,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apis.helpers import record_async_call
 from app.apis.common import IdentityGroup
 from app.apis.projects.common import ProjectCognitoClientType, TokenValidityUnit
-from app.apis.projects.update_project_public_client import functions, queries
+from app.apis.projects.update_project_public_client import functions
+from app.apis.projects.update_project_public_client.generated import queries
 from app.apis.projects.update_project_public_client.samples import (
     UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE,
     UPDATE_PROJECT_PUBLIC_CLIENT_RESPONSE_SAMPLE,

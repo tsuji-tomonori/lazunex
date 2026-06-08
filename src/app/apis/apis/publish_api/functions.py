@@ -16,7 +16,7 @@ from app.apis.apis.common import (
     ApiLifecycleReason,
     ScopeAttachmentMode,
 )
-from app.apis.apis.publish_api import queries
+from app.apis.apis.publish_api.generated import queries
 from app.apis.apis.publish_api.schemas import (
     ApiScopeResponse,
     PublishApiRequest,

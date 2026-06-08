@@ -8,7 +8,7 @@ from uuid import uuid4
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.apis.api_access_requests.approve_api_access_request import queries
+from app.apis.api_access_requests.approve_api_access_request.generated import queries
 from app.apis.api_access_requests.approve_api_access_request.schemas import (
     ApproveApiAccessRequestRequest,
     ApproveApiAccessRequestResponse,

@@ -4,7 +4,7 @@ from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.apis.common import ApiDerivedState, ApiVisibility, ReviewerRole, ScopeConfigObserved
-from app.apis.apis.get_api import queries
+from app.apis.apis.get_api.generated import queries
 from app.apis.apis.get_api.schemas import (
     ApiDetailStageResponse,
     ApiReviewerResponse,

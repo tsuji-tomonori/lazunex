@@ -19,6 +19,29 @@ uv run --locked mypy src tests
 uv run --locked pytest
 ```
 
+## Project Tools
+
+既存の個別 generator/checker はそのまま利用できる。通常は Tool Registry を経由する
+統一 CLI を入口にする。
+
+```bash
+uv run app-codegen all
+uv run app-docs generate
+uv run app-archlint all
+```
+
+tools の使い方、入出力、実行順、テスト仕様は以下を生成して確認する。
+
+```bash
+uv run app-docs generate-tools
+uv run app-docs generate-tools --check
+```
+
+- `docs/spec/tools/usage.gen.md`
+- `docs/spec/tools/artifacts.gen.md`
+- `docs/spec/tools/execution-flow.gen.md`
+- `docs/spec/tools/testcase-spec.gen.md`
+
 ## Coding Rule Check
 
 `docs/rule/coding/` contains source-level coding rules and a generated review

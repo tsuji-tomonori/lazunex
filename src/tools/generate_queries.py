@@ -9,6 +9,7 @@ import sqlglot
 from sqlglot import exp
 
 from tools.generate_db_table_specs import Column, Table, parse_tables, table_name
+from tools.generation_io import check_outputs, write_outputs
 
 PLACEHOLDER_RE = re.compile(r"@(?P<name>[a-zA-Z_][a-zA-Z0-9_]*)")
 SQL_PREFIX_RE = re.compile(r"^\d+_")
@@ -511,7 +512,7 @@ def render_queries_py(specs: list[QuerySpec]) -> str:
             "# This file is generated from SQL files in the sibling sql directory.",
             "# Do not edit generated models by hand.",
             "",
-            'SQL_DIR = Path(__file__).with_name("sql")',
+            'SQL_DIR = Path(__file__).parents[1] / "sql"',
             "",
             "",
         ]
@@ -534,17 +535,36 @@ def render_queries_py(specs: list[QuerySpec]) -> str:
     return "\n".join(lines)
 
 
+def render_compat_queries_py() -> str:
+    return "\n".join(
+        [
+            "# Compatibility shim. Query wrappers are generated in generated/queries.py.",
+            "from __future__ import annotations",
+            "",
+            "from .generated.queries import *  # noqa: F403",
+            "",
+        ]
+    )
+
+
 def generate_queries(api_root: Path, ddl_path: Path) -> list[Path]:
+    rendered = render_outputs(api_root, ddl_path)
+    write_outputs(rendered)
+    return list(rendered)
+
+
+def render_outputs(api_root: Path, ddl_path: Path) -> dict[Path, str]:
     tables = parse_tables(ddl_path.read_text(encoding="utf-8"))
-    written: list[Path] = []
+    rendered: dict[Path, str] = {}
 
     for sql_dir in api_sql_dirs(api_root):
         specs = [parse_query_spec(sql_path, tables) for sql_path in sorted(sql_dir.glob("*.sql"))]
-        output_path = sql_dir.parent / "queries.py"
-        output_path.write_text(render_queries_py(specs), encoding="utf-8")
-        written.append(output_path)
+        generated_dir = sql_dir.parent / "generated"
+        rendered[generated_dir / "__init__.py"] = '"""Generated operation query wrappers."""\n'
+        rendered[generated_dir / "queries.py"] = render_queries_py(specs)
+        rendered[sql_dir.parent / "queries.py"] = render_compat_queries_py()
 
-    return written
+    return rendered
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -553,14 +573,20 @@ def build_arg_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--api-root", type=Path, default=Path("src/app/apis"))
     parser.add_argument("--ddl", type=Path, default=Path("src/db/ddl.sql"))
+    parser.add_argument("--check", action="store_true")
     return parser
 
 
-def main() -> None:
-    args = build_arg_parser().parse_args()
-    written = generate_queries(args.api_root, args.ddl)
+def main(argv: list[str] | None = None) -> int:
+    args = build_arg_parser().parse_args(argv)
+    rendered = render_outputs(args.api_root, args.ddl)
+    if args.check:
+        return check_outputs(rendered)
+    write_outputs(rendered)
+    written = list(rendered)
     print(f"Generated {len(written)} queries.py files.")
+    return 0
 
 
 if __name__ == "__main__":  # pragma: no cover
-    main()
+    raise SystemExit(main())

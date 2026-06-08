@@ -13,7 +13,7 @@ from app.apis.projects.common import (
     QuotaPeriod,
     TokenValidityUnit,
 )
-from app.apis.projects.get_project import queries
+from app.apis.projects.get_project.generated import queries
 from app.apis.projects.get_project.schemas import (
     GetProjectResponse,
     ProjectApiKeyResponse,

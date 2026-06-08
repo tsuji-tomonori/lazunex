@@ -74,7 +74,7 @@
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM access_request_events WHERE aggregate_id = $access_request_id), 1)
+COALESCE((SELECT MAX(event_seq) + 1 FROM access_request_events WHERE aggregate_id = @access_request_id), 1)
 ```
 
 ### DB `access_request_events` 作成
@@ -101,7 +101,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM access_request_events WHERE aggregate_i
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM access_request_events WHERE aggregate_id = $access_request_id), 1)
+COALESCE((SELECT MAX(event_seq) + 1 FROM access_request_events WHERE aggregate_id = @access_request_id), 1)
 ```
 
 ### DB `audit_events` 作成

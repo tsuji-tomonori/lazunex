@@ -5,7 +5,7 @@ from typing import cast
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.apis.common import ApiDerivedState, ApiVisibility
-from app.apis.apis.list_apis import queries
+from app.apis.apis.list_apis.generated import queries
 from app.apis.apis.list_apis.schemas import (
     ApiListItemResponse,
     ApiListStageResponse,

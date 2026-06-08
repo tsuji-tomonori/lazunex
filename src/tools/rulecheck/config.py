@@ -34,6 +34,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "schemas.py",
         "samples.py",
         "queries.py",
+        "generated",
         "sql",
     ],
     "tools_required_files": [

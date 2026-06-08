@@ -194,7 +194,7 @@ async def test_approve_api_access_request_router_rejects_duplicate_subscription(
     )
 
     assert response.status_code == 409, response.text
-    assert response.json()["error"]["message"] == "active subscription already exists"
+    assert response.json()["error"]["details"][0]["reason"] == "active subscription already exists"
 
 
 @pytest.mark.anyio

@@ -25,6 +25,7 @@ from tools.generate_queries import (
     pascal_case,
     placeholder_names,
     python_identifier,
+    render_compat_queries_py,
     render_queries_py,
     render_query_function,
     required_imports,
@@ -188,9 +189,7 @@ def test_operation_from_statements_detects_statement_kind() -> None:
         operation_from_statements([parse_one("UPDATE projects SET name = @name", read="mysql")])
         == "update"
     )
-    assert (
-        operation_from_statements([parse_one("DELETE FROM projects", read="mysql")]) == "delete"
-    )
+    assert operation_from_statements([parse_one("DELETE FROM projects", read="mysql")]) == "delete"
     assert operation_from_statements([]) == "execute"
 
 
@@ -319,7 +318,7 @@ def test_render_queries_py_includes_required_imports_and_empty_params(tmp_path: 
     assert "from pathlib import Path" in rendered
     assert "from sqlalchemy.ext.asyncio import AsyncSession" in rendered
     assert "from app.db.query import execute_sql" in rendered
-    assert 'SQL_DIR = Path(__file__).with_name("sql")' in rendered
+    assert 'SQL_DIR = Path(__file__).parents[1] / "sql"' in rendered
     assert "from typing import Any" in rendered
     assert "from uuid import UUID" in rendered
     assert "class InsertProjectEventsParams(BaseModel):" in rendered
@@ -340,7 +339,7 @@ def test_render_queries_py_uses_two_blank_lines_between_top_level_blocks(
 
     rendered = render_queries_py([spec])
 
-    assert 'SQL_DIR = Path(__file__).with_name("sql")\n\n\nclass SelectProjectsParams' in rendered
+    assert 'SQL_DIR = Path(__file__).parents[1] / "sql"\n\n\nclass SelectProjectsParams' in rendered
     assert "    pass\n\n\nclass SelectProjectsRow" in rendered
     assert "    project_id: UUID\n\n\nasync def select_projects(" in rendered
 
@@ -419,9 +418,7 @@ def test_output_field_falls_back_for_unknown_column_and_plain_expression() -> No
         table_name: {column.name: column for column in table.columns}
         for table_name, table in tables.items()
     }
-    unknown_column = parse_one("SELECT unknown_column FROM projects", read="mysql").expressions[
-        0
-    ]
+    unknown_column = parse_one("SELECT unknown_column FROM projects", read="mysql").expressions[0]
     literal_expression = parse_one("SELECT 1", read="mysql").expressions[0]
 
     assert output_field(unknown_column, {}, columns).type_hint == "Any"
@@ -456,12 +453,25 @@ def test_generate_queries_writes_each_api_queries_file(tmp_path: Path) -> None:
 
     written = generate_queries(api_root, ddl_path)
 
-    assert written == [sql_dir.parent / "queries.py"]
-    content = written[0].read_text(encoding="utf-8")
+    assert written == [
+        sql_dir.parent / "generated" / "__init__.py",
+        sql_dir.parent / "generated" / "queries.py",
+        sql_dir.parent / "queries.py",
+    ]
+    content = (sql_dir.parent / "generated" / "queries.py").read_text(encoding="utf-8")
     assert "class SelectProjectsParams(BaseModel):" in content
     assert "project_code: str" in content
     assert "class SelectProjectsRow(BaseModel):" in content
     assert "async def select_projects(" in content
+    assert "from .generated.queries import *" in (sql_dir.parent / "queries.py").read_text(
+        encoding="utf-8"
+    )
+
+
+def test_render_compat_queries_py_re_exports_generated_queries() -> None:
+    rendered = render_compat_queries_py()
+
+    assert "from .generated.queries import *" in rendered
 
 
 def test_arg_parser_defaults_and_main_output(
@@ -495,7 +505,8 @@ def test_arg_parser_defaults_and_main_output(
 
     main()
 
-    assert capsys.readouterr().out == "Generated 1 queries.py files.\n"
+    assert capsys.readouterr().out == "Generated 3 queries.py files.\n"
+    assert (sql_dir.parent / "generated" / "queries.py").exists()
     assert (sql_dir.parent / "queries.py").exists()
 
 

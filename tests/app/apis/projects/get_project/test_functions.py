@@ -10,7 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.apis.common import IdentityGroup
 from app.apis.exceptions import ApiFunctionError
 from app.apis.projects.common import ProjectCognitoClientType, ProjectCognitoClientUrlType
-from app.apis.projects.get_project import functions, queries
+from app.apis.projects.get_project import functions
+from app.apis.projects.get_project.generated import queries
 from app.apis.sequence_types import CallerIdentity
 
 pytestmark = pytest.mark.anyio

@@ -7,7 +7,8 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.common import IdentityGroup
-from app.apis.projects.list_project_subscriptions import functions, queries
+from app.apis.projects.list_project_subscriptions import functions
+from app.apis.projects.list_project_subscriptions.generated import queries
 from app.apis.projects.list_project_subscriptions.samples import (
     LIST_PROJECT_SUBSCRIPTIONS_RESPONSE_SAMPLE,
 )

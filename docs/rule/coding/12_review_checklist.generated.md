@@ -55,13 +55,13 @@
 
 ### 実装修正項目
 
-- [ ] `src/app/apis/{domain}/{operation}/`: `__init__.py`、`router.py`、`functions.py`、`schemas.py`、`samples.py`、`queries.py`、`sql/` を持つ。 (`OPERATION-DO-001`, **MUST**, `[checker:api_operation_required_files]`)  `source:04_api_operation_directory.md:73`
-- [ ] `sql/`: 1 個以上の `000_name.sql` 形式 SQL ファイルを持つ。 (`OPERATION-DO-002`, **MUST**, `[checker:operation_sql_dir_files]`)  `source:04_api_operation_directory.md:74`
-- [ ] operation 直下の `queries.py` は sibling `sql/` 由来の生成物であることを示す marker と `SQL_DIR = Path(__file__).with_name("sql")` を持つ。 (`OPERATION-DO-003`, **MUST**, `[checker:queries_generated_marker]`)  `source:04_api_operation_directory.md:75`
-- [ ] SQL 由来の query wrapper は `src/app/apis/{domain}/{operation}/queries.py` に配置する。 (`OPERATION-DO-004`, **MUST**, `[checker:forbid_generated_subdir_queries]`)  `source:04_api_operation_directory.md:76`
-- [ ] `docs/spec/40.apis` を仕様生成物の出力先として配置する。 (`OPERATION-DO-005`, **MUST**, `[checker:required_paths]`)  `source:04_api_operation_directory.md:77`
-- [ ] `src/app/apis/{domain}/{operation}/generated/queries.py` を作らない。 (`OPERATION-DONT-001`, **MUST NOT**, `[checker:forbid_generated_subdir_queries]`)  `source:04_api_operation_directory.md:78`
-- [ ] operation ごとに `router.py`、`functions.py`、`schemas.py`、`samples.py`、`queries.py` の名前を変えない。 (`OPERATION-DONT-002`, **MUST NOT**, `[checker:api_operation_required_files]`)  `source:04_api_operation_directory.md:79`
+- [ ] `src/app/apis/{domain}/{operation}/`: `__init__.py`、`router.py`、`functions.py`、`schemas.py`、`samples.py`、`queries.py`、`generated/`、`sql/` を持つ。 (`OPERATION-DO-001`, **MUST**, `[checker:api_operation_required_files]`)  `source:04_api_operation_directory.md:77`
+- [ ] `sql/`: 1 個以上の `000_name.sql` 形式 SQL ファイルを持つ。 (`OPERATION-DO-002`, **MUST**, `[checker:operation_sql_dir_files]`)  `source:04_api_operation_directory.md:78`
+- [ ] operation の `generated/queries.py` は sibling `sql/` 由来の生成物であることを示す marker と `SQL_DIR = Path(__file__).parents[1] / "sql"` を持つ。 (`OPERATION-DO-003`, **MUST**, `[checker:queries_generated_marker]`)  `source:04_api_operation_directory.md:79`
+- [ ] SQL 由来の query wrapper は `src/app/apis/{domain}/{operation}/generated/queries.py` に配置する。 (`OPERATION-DO-004`, **MUST**, `[checker:generated_queries_layout]`)  `source:04_api_operation_directory.md:80`
+- [ ] `docs/spec/40.apis` を仕様生成物の出力先として配置する。 (`OPERATION-DO-005`, **MUST**, `[checker:required_paths]`)  `source:04_api_operation_directory.md:81`
+- [ ] operation 直下の `queries.py` は移行期間の互換 shim として `generated.queries` を re-export する。 (`OPERATION-DO-006`, **MUST**, `[checker:generated_queries_layout]`)  `source:04_api_operation_directory.md:82`
+- [ ] operation ごとに `router.py`、`functions.py`、`schemas.py`、`samples.py`、`queries.py` の名前を変えない。 (`OPERATION-DONT-002`, **MUST NOT**, `[checker:api_operation_required_files]`)  `source:04_api_operation_directory.md:83`
 
 ## 05_router_sequence_and_logging.md
 
@@ -100,11 +100,11 @@
 - [ ] SQL ファイルの最初の非空行は `-- ` で始まる処理要約にする。 (`SQL-DO-002`, **MUST**, `[checker:sql_first_comment_summary]`)  `source:07_sql_and_query_generation.md:25`
 - [ ] SQL bind placeholder は `@name` 形式にする。 (`SQL-DO-003`, **MUST**, `[checker:sql_placeholders_at_names]`)  `source:07_sql_and_query_generation.md:26`
 - [ ] SELECT 句は取得列名を列挙する。 (`SQL-DO-004`, **MUST**, `[checker:sql_no_select_star]`)  `source:07_sql_and_query_generation.md:27`
-- [ ] 生成後の `queries.py` は Pydantic params/row model と query function を持つ。 (`SQL-DO-005`, **MUST**, `[checker:queries_generated_marker]`)  `source:07_sql_and_query_generation.md:28`
+- [ ] 生成後の `generated/queries.py` は Pydantic params/row model と query function を持つ。 (`SQL-DO-005`, **MUST**, `[checker:queries_generated_marker]`)  `source:07_sql_and_query_generation.md:28`
 - [ ] `src/app/db/query.py`: `@name` placeholder を SQLAlchemy `:name` に変換する `load_sql` を持つ。 (`SQL-DO-006`, **MUST**, `[checker:db_query_contract]`)  `source:07_sql_and_query_generation.md:29`
 - [ ] SQL で `SELECT *` を使わない。 (`SQL-DONT-001`, **MUST NOT**, `[checker:sql_no_select_star]`)  `source:07_sql_and_query_generation.md:30`
 - [ ] SQL ファイルへ `:name` placeholder を書かない。 (`SQL-DONT-002`, **MUST NOT**, `[checker:sql_placeholders_at_names]`)  `source:07_sql_and_query_generation.md:31`
-- [ ] SQL 生成物を operation の `generated/` 配下へ置かない。 (`SQL-DONT-003`, **MUST NOT**, `[checker:forbid_generated_subdir_queries]`)  `source:07_sql_and_query_generation.md:32`
+- [ ] SQL 生成物を operation 直下の `queries.py` 本体へ戻さない。 (`SQL-DONT-003`, **MUST NOT**, `[checker:generated_queries_layout]`)  `source:07_sql_and_query_generation.md:32`
 
 ## 08_integrations.md
 
@@ -135,11 +135,11 @@
 ### 実装修正項目
 
 - [ ] `src/tools/check_api_function_names.py`、`generate_api_sequences.py`、`check_api_mermaid_sequences.py`、`generate_queries.py`、`generate_db_crud.py`、`check_operational_logging.py` を配置する。 (`TOOLS-DO-001`, **MUST**, `[checker:tools_existing_checks]`)  `source:10_tools_docs_and_generated_outputs.md:22`
-- [ ] `generate_queries.py` の出力は operation 直下の `queries.py` にする。 (`TOOLS-DO-002`, **MUST**, `[checker:queries_generated_marker]`)  `source:10_tools_docs_and_generated_outputs.md:23`
+- [ ] `generate_queries.py` の出力は operation の `generated/queries.py` にする。 (`TOOLS-DO-002`, **MUST**, `[checker:generated_queries_layout]`)  `source:10_tools_docs_and_generated_outputs.md:23`
 - [ ] CI 用コマンドに `ruff format`、`ruff check`、`pyright`、`mypy`、`pytest` を含める。 (`TOOLS-DO-003`, **MUST**, `[checker:quality_commands_declared]`)  `source:10_tools_docs_and_generated_outputs.md:24`
 - [ ] `src/tools/**/*.py` のファイル論理行数は設定ファイルの `file_logical_lines` 以下にする。 (`TOOLS-DO-004`, **MUST**, `[checker:file_logical_lines]`)  `source:10_tools_docs_and_generated_outputs.md:25`
 - [ ] `src/tools/**/*.py` の関数論理行数は設定ファイルの `function_logical_lines` 以下にする。 (`TOOLS-DO-005`, **MUST**, `[checker:function_logical_lines]`)  `source:10_tools_docs_and_generated_outputs.md:26`
-- [ ] `src/tools/generate_queries.py` の出力先を `generated/queries.py` に戻さない。 (`TOOLS-DONT-001`, **MUST NOT**, `[checker:forbid_generated_subdir_queries]`)  `source:10_tools_docs_and_generated_outputs.md:27`
+- [ ] `src/tools/generate_queries.py` の出力先を operation 直下の `queries.py` 本体へ戻さない。 (`TOOLS-DONT-001`, **MUST NOT**, `[checker:generated_queries_layout]`)  `source:10_tools_docs_and_generated_outputs.md:27`
 - [ ] 現行 checker/generator のファイル名を変更しない。 (`TOOLS-DONT-002`, **MUST NOT**, `[checker:tools_existing_checks]`)  `source:10_tools_docs_and_generated_outputs.md:28`
 
 ## 11_quantitative_thresholds.md

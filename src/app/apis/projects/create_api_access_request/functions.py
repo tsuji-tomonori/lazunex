@@ -13,7 +13,7 @@ from app.apis.common import raise_missing_runtime_dependency
 from app.apis.deps import build_caller_identity
 from app.apis.exceptions import ApiFunctionError
 from app.apis.projects.common import ProjectCognitoClientType
-from app.apis.projects.create_api_access_request import queries
+from app.apis.projects.create_api_access_request.generated import queries
 from app.apis.projects.create_api_access_request.schemas import (
     CreateApiAccessRequestRequest,
     CreateApiAccessRequestResponse,

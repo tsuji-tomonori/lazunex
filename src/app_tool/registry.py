@@ -1,0 +1,248 @@
+from __future__ import annotations
+
+from .specs import ToolSpec
+
+TOOL_SPECS: tuple[ToolSpec, ...] = (
+    ToolSpec(
+        name="generate_queries",
+        command="uv run python -m tools.generate_queries",
+        category="codegen",
+        summary="API operation の SQL から query wrapper を生成する。",
+        inputs=("src/app/apis/*/*/sql/*.sql", "src/db/ddl.sql"),
+        outputs=("src/app/apis/*/*/generated/queries.py", "src/app/apis/*/*/queries.py"),
+        depends_on=(),
+        check_supported=True,
+        safe_to_run_in_ci=True,
+        examples=("uv run app-codegen all", "uv run python -m tools.generate_queries --check"),
+    ),
+    ToolSpec(
+        name="generate_openapi_if_specs",
+        command="uv run python -m tools.generate_openapi_if_specs",
+        category="docs",
+        summary="FastAPI OpenAPI と samples から API IF 仕様を生成する。",
+        inputs=("app.main:create_app().openapi()", "src/app/apis/*/*/samples.py"),
+        outputs=("docs/spec/40.apis/*/*/if_gen.md",),
+        depends_on=("generate_queries",),
+        check_supported=True,
+        safe_to_run_in_ci=True,
+        examples=(
+            "uv run app-docs generate",
+            "uv run python -m tools.generate_openapi_if_specs --check",
+        ),
+    ),
+    ToolSpec(
+        name="generate_api_list",
+        command="uv run python -m tools.generate_api_list",
+        category="docs",
+        summary="FastAPI OpenAPI から API 一覧を生成する。",
+        inputs=("app.main:create_app().openapi()",),
+        outputs=("docs/spec/40.apis/apis_list_gen.md",),
+        depends_on=("generate_openapi_if_specs",),
+        check_supported=True,
+        safe_to_run_in_ci=True,
+        examples=("uv run app-docs generate", "uv run python -m tools.generate_api_list --check"),
+    ),
+    ToolSpec(
+        name="generate_api_sequences",
+        command="uv run python -m tools.generate_api_sequences",
+        category="docs",
+        summary="router/functions/queries/SQL から API sequence 仕様を生成する。",
+        inputs=(
+            "src/app/apis/*/*/router.py",
+            "src/app/apis/*/*/functions.py",
+            "src/app/apis/*/*/generated/queries.py",
+            "src/app/apis/*/*/sql/*.sql",
+        ),
+        outputs=("docs/spec/40.apis/*/*/sequence_gen.md",),
+        depends_on=("generate_queries",),
+        check_supported=True,
+        safe_to_run_in_ci=True,
+        examples=(
+            "uv run app-docs generate",
+            "uv run python -m tools.generate_api_sequences --check",
+        ),
+    ),
+    ToolSpec(
+        name="generate_query_specs",
+        command="uv run python -m tools.generate_query_specs",
+        category="docs",
+        summary="SQL と DDL から API query 仕様を生成する。",
+        inputs=("src/app/apis/*/*/sql/*.sql", "src/db/ddl.sql"),
+        outputs=("docs/spec/40.apis/*/*/query_gen.md",),
+        depends_on=("generate_queries",),
+        check_supported=True,
+        safe_to_run_in_ci=True,
+        examples=(
+            "uv run app-docs generate",
+            "uv run python -m tools.generate_query_specs --check",
+        ),
+    ),
+    ToolSpec(
+        name="generate_api_detail_design",
+        command="uv run python -m tools.generate_api_detail_design",
+        category="docs",
+        summary="router/functions/schemas/SQL/queries から API 詳細設計を生成する。",
+        inputs=(
+            "src/app/apis/*/*/router.py",
+            "src/app/apis/*/*/functions.py",
+            "src/app/apis/*/*/schemas.py",
+            "src/app/apis/*/*/sql/*.sql",
+        ),
+        outputs=("docs/spec/40.apis/*/*/detail-design_gen.md",),
+        depends_on=("generate_queries", "generate_query_specs", "generate_api_sequences"),
+        check_supported=True,
+        safe_to_run_in_ci=True,
+        examples=(
+            "uv run app-docs generate",
+            "uv run python -m tools.generate_api_detail_design --check",
+        ),
+    ),
+    ToolSpec(
+        name="generate_api_unit_test_factors",
+        command="uv run python -m tools.generate_api_unit_test_factors",
+        category="docs",
+        summary="router AST から API unit test 要因・ケース仕様を生成する。",
+        inputs=("src/app/apis/*/*/router.py", "src/app/apis/*/*/functions.py"),
+        outputs=("docs/spec/40.apis/*/*/unit-test_gen.md",),
+        depends_on=("generate_api_sequences",),
+        check_supported=True,
+        safe_to_run_in_ci=True,
+        examples=(
+            "uv run app-docs generate",
+            "uv run python -m tools.generate_api_unit_test_factors --check",
+        ),
+    ),
+    ToolSpec(
+        name="generate_api_message_catalog",
+        command="uv run python -m tools.generate_api_message_catalog",
+        category="docs",
+        summary="operational log call と message catalog から API message 仕様を生成する。",
+        inputs=("src/app/apis/*/*/router.py", "src/app/apis/*/*/functions.py"),
+        outputs=(
+            "docs/spec/40.apis/*/*/messages_gen.md",
+            "docs/spec/40.apis/messages_index_gen.md",
+        ),
+        depends_on=(),
+        check_supported=True,
+        safe_to_run_in_ci=True,
+        examples=(
+            "uv run app-docs generate",
+            "uv run python -m tools.generate_api_message_catalog --check",
+        ),
+    ),
+    ToolSpec(
+        name="generate_db_crud",
+        command="uv run python -m tools.generate_db_crud",
+        category="docs",
+        summary="API 配下 SQL と DDL から DB CRUD 表を生成する。",
+        inputs=("src/app/apis/*/*/sql/*.sql", "src/db/ddl.sql"),
+        outputs=("docs/spec/30.crud/db_crud.gen.csv",),
+        depends_on=("generate_queries",),
+        check_supported=True,
+        safe_to_run_in_ci=True,
+        examples=("uv run app-docs generate", "uv run python -m tools.generate_db_crud --check"),
+    ),
+    ToolSpec(
+        name="generate_external_crud",
+        command="uv run python -m tools.generate_external_crud",
+        category="docs",
+        summary="functions.py の integration port 呼び出しから外部サービス CRUD 表を生成する。",
+        inputs=("src/app/apis/*/*/functions.py", "src/app/integrations"),
+        outputs=("docs/spec/30.crud/*_crud.gen.csv",),
+        depends_on=(),
+        check_supported=True,
+        safe_to_run_in_ci=True,
+        examples=(
+            "uv run app-docs generate",
+            "uv run python -m tools.generate_external_crud --check",
+        ),
+    ),
+    ToolSpec(
+        name="generate_db_er_diagram",
+        command="uv run python -m tools.generate_db_er_diagram",
+        category="docs",
+        summary="DDL から ER 図を生成する。",
+        inputs=("src/db/ddl.sql",),
+        outputs=("docs/spec/20.db/er.gen.md",),
+        depends_on=(),
+        check_supported=True,
+        safe_to_run_in_ci=True,
+        examples=(
+            "uv run app-docs generate",
+            "uv run python -m tools.generate_db_er_diagram --check",
+        ),
+    ),
+    ToolSpec(
+        name="check_api_status_samples",
+        command="uv run python -m tools.check_api_status_samples",
+        category="lint",
+        summary="router の declared status と samples/OpenAPI example の整合を検査する。",
+        inputs=(
+            "src/app/apis/*/*/router.py",
+            "src/app/apis/*/*/samples.py",
+            "app.main:create_app().openapi()",
+        ),
+        outputs=("stdout",),
+        depends_on=("generate_openapi_if_specs",),
+        check_supported=True,
+        safe_to_run_in_ci=True,
+        examples=("uv run app-archlint all", "uv run python -m tools.check_api_status_samples"),
+    ),
+    ToolSpec(
+        name="check_api_mermaid_sequences",
+        command="uv run python -m tools.check_api_mermaid_sequences",
+        category="lint",
+        summary="生成済み sequence Mermaid と router/functions の整合を検査する。",
+        inputs=("docs/spec/40.apis/*/*/sequence_gen.md", "src/app/apis/*/*/router.py"),
+        outputs=("stdout",),
+        depends_on=("generate_api_sequences",),
+        check_supported=True,
+        safe_to_run_in_ci=True,
+        examples=("uv run app-archlint all", "uv run python -m tools.check_api_mermaid_sequences"),
+    ),
+    ToolSpec(
+        name="check_api_sequence_success_responses",
+        command="uv run python -m tools.check_api_sequence_success_responses",
+        category="lint",
+        summary="sequence 仕様の成功応答と router の status code を検査する。",
+        inputs=("docs/spec/40.apis/*/*/sequence_gen.md", "src/app/apis/*/*/router.py"),
+        outputs=("stdout",),
+        depends_on=("generate_api_sequences",),
+        check_supported=True,
+        safe_to_run_in_ci=True,
+        examples=(
+            "uv run app-archlint all",
+            "uv run python -m tools.check_api_sequence_success_responses",
+        ),
+    ),
+    ToolSpec(
+        name="check_api_router_unit_test_factors",
+        command="uv run python -m tools.check_api_router_unit_test_factors",
+        category="lint",
+        summary="router の分岐と unit-test_gen.md の要因仕様の整合を検査する。",
+        inputs=("src/app/apis/*/*/router.py", "docs/spec/40.apis/*/*/unit-test_gen.md"),
+        outputs=("stdout",),
+        depends_on=("generate_api_unit_test_factors",),
+        check_supported=True,
+        safe_to_run_in_ci=True,
+        examples=(
+            "uv run app-archlint all",
+            "uv run python -m tools.check_api_router_unit_test_factors",
+        ),
+    ),
+)
+
+
+def all_tool_specs() -> tuple[ToolSpec, ...]:
+    return TOOL_SPECS
+
+
+def specs_by_category(category: str) -> tuple[ToolSpec, ...]:
+    return tuple(spec for spec in TOOL_SPECS if spec.category == category)
+
+
+def spec_by_name(name: str) -> ToolSpec:
+    for spec in TOOL_SPECS:
+        if spec.name == name:
+            return spec
+    raise KeyError(name)

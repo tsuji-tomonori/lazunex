@@ -111,7 +111,7 @@
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM project_cognito_client_events WHERE aggregate_id = $project_cognito_client_id), 1)
+COALESCE((SELECT MAX(event_seq) + 1 FROM project_cognito_client_events WHERE aggregate_id = @project_cognito_client_id), 1)
 ```
 
 ### DB `audit_events` 作成
@@ -221,7 +221,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM project_cognito_client_events WHERE agg
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM provisioning_operation_events WHERE aggregate_id = $operation_id), 1)
+COALESCE((SELECT MAX(event_seq) + 1 FROM provisioning_operation_events WHERE aggregate_id = @operation_id), 1)
 ```
 
 ### DB `provisioning_step_events` 作成
@@ -248,7 +248,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM provisioning_operation_events WHERE agg
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM provisioning_step_events WHERE aggregate_id = $operation_step_id), 1)
+COALESCE((SELECT MAX(event_seq) + 1 FROM provisioning_step_events WHERE aggregate_id = @operation_step_id), 1)
 ```
 
 ### 外部リソース `DescribeUserPoolClientInput`

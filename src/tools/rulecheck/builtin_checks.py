@@ -64,9 +64,15 @@ def _operation_dirs(context: CheckContext) -> list[Path]:
     if not root.exists():
         return []
     dirs: set[Path] = set()
-    for marker in ("router.py", "functions.py", "contract.py", "queries.py"):
+    for marker in (
+        "router.py",
+        "functions.py",
+        "contract.py",
+        "queries.py",
+        "generated/queries.py",
+    ):
         for path in root.glob(f"*/*/{marker}"):
-            dirs.add(path.parent)
+            dirs.add(path.parent.parent if marker.startswith("generated/") else path.parent)
     return sorted(dirs)
 
 
@@ -401,6 +407,30 @@ def forbid_generated_subdir_queries(item: RuleItem, context: CheckContext) -> li
     )
 
 
+def generated_queries_layout(item: RuleItem, context: CheckContext) -> list[CheckResult]:
+    issues: list[CheckResult] = []
+    for op_dir in _operation_dirs(context):
+        if not (op_dir / "sql").exists():
+            continue
+        for path in (
+            op_dir / "generated" / "__init__.py",
+            op_dir / "generated" / "queries.py",
+            op_dir / "queries.py",
+        ):
+            if not path.exists():
+                issues.append(
+                    _fail(
+                        "generated_queries_layout",
+                        item,
+                        "operation generated query wrapper path is missing",
+                        path=path,
+                    )
+                )
+    if issues:
+        return issues
+    return _pass("generated_queries_layout", item, "operation generated query wrappers exist")
+
+
 def operation_sql_dir_files(item: RuleItem, context: CheckContext) -> list[CheckResult]:
     operations = _operation_dirs(context)
     issues: list[CheckResult] = []
@@ -437,14 +467,14 @@ def operation_sql_dir_files(item: RuleItem, context: CheckContext) -> list[Check
 def queries_generated_marker(item: RuleItem, context: CheckContext) -> list[CheckResult]:
     issues: list[CheckResult] = []
     for op_dir in _operation_dirs(context):
-        path = op_dir / "queries.py"
+        path = op_dir / "generated" / "queries.py"
         if not path.exists():
             continue
         text = _read(path)
         for needle in (
             "This file is generated from SQL files in the sibling sql directory.",
             "Do not edit generated models by hand.",
-            'SQL_DIR = Path(__file__).with_name("sql")',
+            'SQL_DIR = Path(__file__).parents[1] / "sql"',
         ):
             if needle not in text:
                 issues.append(
@@ -455,10 +485,20 @@ def queries_generated_marker(item: RuleItem, context: CheckContext) -> list[Chec
                         path=path,
                     )
                 )
+        shim_path = op_dir / "queries.py"
+        if shim_path.exists() and "from .generated.queries import *" not in _read(shim_path):
+            issues.append(
+                _fail(
+                    "queries_generated_marker",
+                    item,
+                    "queries.py compatibility shim must re-export generated queries",
+                    path=shim_path,
+                )
+            )
     if issues:
         return issues
     return _pass(
-        "queries_generated_marker", item, "operation queries.py files contain generated markers"
+        "queries_generated_marker", item, "operation generated queries contain generated markers"
     )
 
 
@@ -1822,6 +1862,7 @@ REGISTRY: dict[str, Checker] = {
     "api_domain_layout": api_domain_layout,
     "api_operation_required_files": api_operation_required_files,
     "forbid_generated_subdir_queries": forbid_generated_subdir_queries,
+    "generated_queries_layout": generated_queries_layout,
     "operation_sql_dir_files": operation_sql_dir_files,
     "queries_generated_marker": queries_generated_marker,
     "router_import_api_functions_alias": router_import_api_functions_alias,

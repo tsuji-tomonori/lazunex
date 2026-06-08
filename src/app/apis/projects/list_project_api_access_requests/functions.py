@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.apis.api_access_requests.common import AccessRequestDerivedState, AuthMode
 from app.apis.common import IdentityGroup, raise_missing_runtime_dependency
 from app.apis.deps import build_caller_identity
-from app.apis.projects.list_project_api_access_requests import queries
+from app.apis.projects.list_project_api_access_requests.generated import queries
 from app.apis.projects.list_project_api_access_requests.schemas import (
     AccessRequestReviewResponse,
     ListProjectApiAccessRequestsQuery,

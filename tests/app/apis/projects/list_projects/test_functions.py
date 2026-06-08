@@ -6,7 +6,8 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.common import IdentityGroup
-from app.apis.projects.list_projects import functions, queries
+from app.apis.projects.list_projects import functions
+from app.apis.projects.list_projects.generated import queries
 from app.apis.projects.list_projects.schemas import ListProjectsQuery, ProjectListItemResponse
 from app.apis.sequence_types import CallerIdentity, SequencePage
 

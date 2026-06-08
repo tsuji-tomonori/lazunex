@@ -6,7 +6,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
-from tools.generate_db_crud import CrudMatrix, write_crud_csv
+from tools.generate_db_crud import CrudMatrix, render_csv, write_crud_csv
+from tools.generation_io import check_outputs, write_outputs
 
 ServiceName = Literal["api_gateway", "cognito", "secrets_manager"]
 
@@ -120,7 +121,22 @@ def generate_service(api_root: Path, output_dir: Path, service_name: ServiceName
 
 
 def generate(api_root: Path, output_dir: Path, service_names: list[ServiceName]) -> list[Path]:
-    return [generate_service(api_root, output_dir, service_name) for service_name in service_names]
+    rendered = render_outputs(api_root, output_dir, service_names)
+    write_outputs(rendered)
+    return list(rendered)
+
+
+def render_outputs(
+    api_root: Path,
+    output_dir: Path,
+    service_names: list[ServiceName],
+) -> dict[Path, str]:
+    rendered: dict[Path, str] = {}
+    for service_name in service_names:
+        config = SERVICE_CONFIGS[service_name]
+        matrix = collect_service_crud(api_root, config)
+        rendered[output_dir / config.output_name] = render_csv(matrix, config.resources)
+    return rendered
 
 
 def service_names_for_arg(value: str) -> list[ServiceName]:
@@ -143,15 +159,21 @@ def build_arg_parser() -> argparse.ArgumentParser:
         type=service_names_for_arg,
         default=service_names_for_arg("all"),
     )
+    parser.add_argument("--check", action="store_true")
     return parser
 
 
-def main() -> None:
-    args = build_arg_parser().parse_args()
-    output_paths = generate(args.api_root, args.output_dir, args.service)
+def main(argv: list[str] | None = None) -> int:
+    args = build_arg_parser().parse_args(argv)
+    rendered = render_outputs(args.api_root, args.output_dir, args.service)
+    if args.check:
+        return check_outputs(rendered)
+    write_outputs(rendered)
+    output_paths = list(rendered)
     for output_path in output_paths:
         print(f"Generated {output_path.as_posix()}.")
+    return 0
 
 
 if __name__ == "__main__":  # pragma: no cover
-    main()
+    raise SystemExit(main())

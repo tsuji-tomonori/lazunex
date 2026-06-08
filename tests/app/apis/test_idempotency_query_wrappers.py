@@ -9,12 +9,18 @@ import pytest
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.apis.api_access_requests.approve_api_access_request import queries as approve_queries
-from app.apis.api_access_requests.reject_api_access_request import queries as reject_queries
-from app.apis.apis.publish_api import queries as publish_queries
-from app.apis.projects.create_api_access_request import queries as create_access_queries
-from app.apis.projects.create_project import queries as create_project_queries
-from app.apis.projects.update_project_public_client import queries as update_public_queries
+from app.apis.api_access_requests.approve_api_access_request.generated import (
+    queries as approve_queries,
+)
+from app.apis.api_access_requests.reject_api_access_request.generated import (
+    queries as reject_queries,
+)
+from app.apis.apis.publish_api.generated import queries as publish_queries
+from app.apis.projects.create_api_access_request.generated import queries as create_access_queries
+from app.apis.projects.create_project.generated import queries as create_project_queries
+from app.apis.projects.update_project_public_client.generated import (
+    queries as update_public_queries,
+)
 
 pytestmark = pytest.mark.anyio
 

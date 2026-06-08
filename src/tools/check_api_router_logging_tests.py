@@ -116,9 +116,7 @@ def _is_event_subscript(node: ast.AST, key: str | None) -> bool:
     return isinstance(slice_node, ast.Constant) and slice_node.value == key
 
 
-def _router_error_contract(
-    root: Path, api_root: Path, api_ref: str
-) -> MessageDefinition | None:
+def _router_error_contract(root: Path, api_root: Path, api_ref: str) -> MessageDefinition | None:
     catalogs = build_api_catalogs(root=root, api_root=api_root, include_http_defaults=True)
     for catalog in catalogs:
         current_ref = f"{catalog.meta.domain}/{catalog.meta.api}"
@@ -131,9 +129,7 @@ def _router_error_contract(
     return None
 
 
-def _test_file_issues(
-    test_path: Path, contract: MessageDefinition
-) -> list[RouterLoggingTestIssue]:
+def _test_file_issues(test_path: Path, contract: MessageDefinition) -> list[RouterLoggingTestIssue]:
     text = test_path.read_text(encoding="utf-8")
     tree = ast.parse(text, filename=str(test_path))
     issues: list[RouterLoggingTestIssue] = []

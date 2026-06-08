@@ -21,7 +21,7 @@ from app.apis.projects.common import (
     validate_refresh_token_validity,
     validate_retry_grace_period_seconds,
 )
-from app.apis.projects.create_project import queries
+from app.apis.projects.create_project.generated import queries
 from app.apis.projects.create_project.schemas import (
     CreatedApiKeyResponse,
     CreatedCognitoClientsResponse,

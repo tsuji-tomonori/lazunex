@@ -8,7 +8,8 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apis.apis.common import ApiVisibility, ScopeConfigObserved
-from app.apis.apis.get_api import functions, queries
+from app.apis.apis.get_api import functions
+from app.apis.apis.get_api.generated import queries
 from app.apis.apis.get_api.samples import GET_API_RESPONSE_SAMPLE
 from app.apis.apis.get_api.schemas import GetApiResponse
 from app.apis.exceptions import ApiFunctionError

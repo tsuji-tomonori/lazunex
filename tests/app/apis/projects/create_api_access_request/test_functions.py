@@ -12,7 +12,8 @@ from apis.helpers import record_async_call
 from app.apis.api_access_requests.common import AuthMode
 from app.apis.common import IdentityGroup
 from app.apis.projects.common import ProjectCognitoClientType
-from app.apis.projects.create_api_access_request import functions, queries
+from app.apis.projects.create_api_access_request import functions
+from app.apis.projects.create_api_access_request.generated import queries
 from app.apis.projects.create_api_access_request.samples import (
     CREATE_API_ACCESS_REQUEST_REQUEST_SAMPLE,
 )

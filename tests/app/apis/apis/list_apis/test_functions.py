@@ -5,7 +5,8 @@ from typing import cast
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.apis.apis.list_apis import functions, queries
+from app.apis.apis.list_apis import functions
+from app.apis.apis.list_apis.generated import queries
 from app.apis.apis.list_apis.schemas import ApiListItemResponse, ListApisQuery
 from app.apis.common import IdentityGroup
 from app.apis.sequence_types import CallerIdentity, SequencePage

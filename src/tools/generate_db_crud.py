@@ -10,6 +10,7 @@ import sqlglot
 from sqlglot import exp
 
 from tools.generate_db_table_specs import parse_tables, table_name
+from tools.generation_io import check_outputs, write_outputs
 
 CRUD_ORDER = ("C", "R", "U", "D")
 
@@ -167,9 +168,15 @@ def write_crud_csv(matrix: CrudMatrix, tables: list[str], output_path: Path) -> 
 
 
 def generate(api_sql_dir: Path, ddl_path: Path, output_path: Path) -> Path:
+    rendered = render_output(api_sql_dir, ddl_path, output_path)
+    write_outputs(rendered)
+    return output_path
+
+
+def render_output(api_sql_dir: Path, ddl_path: Path, output_path: Path) -> dict[Path, str]:
     tables = read_tables_from_ddl(ddl_path)
     matrix = collect_crud(api_sql_dir, tables)
-    return write_crud_csv(matrix, tables, output_path)
+    return {output_path: render_csv(matrix, tables)}
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -177,14 +184,19 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--api-sql-dir", type=Path, default=Path("src/app/apis"))
     parser.add_argument("--ddl", type=Path, default=Path("src/db/ddl.sql"))
     parser.add_argument("--output", type=Path, default=Path("docs/spec/30.crud/db_crud.gen.csv"))
+    parser.add_argument("--check", action="store_true")
     return parser
 
 
-def main() -> None:
-    args = build_arg_parser().parse_args()
-    output_path = generate(args.api_sql_dir, args.ddl, args.output)
-    print(f"Generated {output_path.as_posix()}.")
+def main(argv: list[str] | None = None) -> int:
+    args = build_arg_parser().parse_args(argv)
+    rendered = render_output(args.api_sql_dir, args.ddl, args.output)
+    if args.check:
+        return check_outputs(rendered)
+    write_outputs(rendered)
+    print(f"Generated {args.output.as_posix()}.")
+    return 0
 
 
 if __name__ == "__main__":  # pragma: no cover
-    main()
+    raise SystemExit(main())

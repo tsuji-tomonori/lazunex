@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.apis.common import IdentityGroup, raise_missing_runtime_dependency
 from app.apis.deps import build_caller_identity
 from app.apis.projects.common import ProjectDerivedState
-from app.apis.projects.list_projects import queries
+from app.apis.projects.list_projects.generated import queries
 from app.apis.projects.list_projects.schemas import (
     ListProjectsQuery,
     ListProjectsResponse,

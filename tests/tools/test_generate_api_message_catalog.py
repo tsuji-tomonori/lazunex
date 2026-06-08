@@ -115,10 +115,7 @@ MESSAGE_CATALOG = [
         "| `api.statusCode` | `integer \\| null` | "
         "テスト用のHTTP status code説明です。 |" in rendered
     )
-    assert (
-        "| `error.code` | `string \\| null` | "
-        "テスト用のerror code説明です。 |" in rendered
-    )
+    assert "| `error.code` | `string \\| null` | テスト用のerror code説明です。 |" in rendered
 
 
 def test_generate_api_message_catalog_main_writes_and_checks_docs(tmp_path: Path) -> None:
@@ -244,8 +241,7 @@ async def has_project_list_permission(caller) -> bool:
     assert "呼び出し元が Project 一覧を参照できない場合。" in rendered
     assert "RUNBOOK-authorization-forbidden" in rendered
     assert (
-        "| `resource` | `ErrorResource` | "
-        "ログに出力するAPI固有のErrorResourceです。 |" in rendered
+        "| `resource` | `ErrorResource` | ログに出力するAPI固有のErrorResourceです。 |" in rendered
     )
     assert (
         "| `resource.derivedState` | `string \\| null` | "
