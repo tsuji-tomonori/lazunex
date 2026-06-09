@@ -31,7 +31,7 @@ collector:
 md:
   evidence_row:
     viewpoint: 未承認API拒否確認
-    timing: 承認API呼び出し後
+    timing: レビューAPI呼び出し後
     evidence: ${api.id} Runtime APIレスポンス
     collection: GET ${api.defaults.invokeUrl}
     ok_condition: ${api.id} が401または403を返す。

@@ -6,10 +6,10 @@
 
 | 種別 | ID | 名称 | 用途 | 主な参照値 |
 |---|---|---|---|---|
-| Project | `project_A` | Project A | 利用申請元Project | projectId, projectApiKey |
-| API | `API_A` | API A | 承認または却下の対象API | apiId, apiStageId, invokeUrl |
-| API | `API_B` | API B | 未承認で呼び出せないことを確認するAPI | invokeUrl |
-| API | `API_C` | API C | 未承認で呼び出せないことを確認するAPI | invokeUrl |
+| Project | `project_A` | Project A | 利用申請元Project | projectId, projectApiKey, publicClientId, confidentialClientId |
+| API | `API_A` | API A | 承認対象API | apiId, apiStageId, invokeUrl, scopeFullName |
+| API | `API_B` | API B | 未承認確認用API | apiId, apiStageId, invokeUrl |
+| API | `API_C` | API C | 未承認確認用API | apiId, apiStageId, invokeUrl |
 
 ## 2. 処理概要
 
@@ -23,9 +23,12 @@ project_Aを作成する。
 |---|---|---|
 | P1 | Cognito管理API用tokenを取得できる。 | - |
 | P2 | API_A, API_B, API_C は公開済み、またはsandbox事前データとして参照できる。 | - |
-| P3 | reviewerがAPI_Aの審査者である。 | - |
-| P4 | project_A用のテストデータをcase.id suffixで一意に生成する。 | - |
-| P5 | secret値、API key値、client secret値の実値をMarkdownやログに出さない。 | - |
+| P3 | project_A用のテストデータをcase.id suffixで一意に生成する。 | - |
+| P4 | secret値、API key値、client secret値の実値をMarkdownやログに出さない。 | - |
+| P5 | `${project_api_key}` はplaceholderとして扱い、実値を記録しない。 | - |
+| P6 | `${runtime_access_token}` はplaceholderとして扱い、実値を記録しない。 | - |
+| P7 | projectCode は case.id を含めて一意にする。 | - |
+| P8 | ${project.defaults.ownerPrincipalId} がCognito上に存在する。 | - |
 
 ### API呼び出し手順
 
@@ -35,7 +38,7 @@ project_Aを作成する。
 | Step 2 | `POST /apis` | `${apiId}` と `${apiStageId}` を後続stepへ渡す。 | 仕様どおりのHTTP status/body | - |
 | Step 3 | `GET /apis` | 公開済みAPIが一覧に現れ、pagination/filterとsecret非表示を確認する。 | 仕様どおりのHTTP status/body | - |
 | Step 4 | `GET /apis/${apiId}` | POST /apisで得たAPI詳細、stage、scope、reviewer情報との一致を確認する。 | 仕様どおりのHTTP status/body | - |
-| Step 5 | `POST /projects` | `${projectId}` と `${project_api_key}` を後続stepへ渡す。 | 仕様どおりのHTTP status/body | projectId, projectApiKey, publicClientId, confidentialClientId |
+| Step 5 | `POST /projects` | project_Aを作成し、projectId、API key、Cognito client IDを取得する。 | 仕様どおりのHTTP status/body | ${project.id}.projectId, ${project.id}.projectApiKey, ${project.id}.publicClientId, ${project.id}.confidentialClientId |
 | Step 6 | `GET /projects` | 作成Projectが一覧に現れ、caller権限範囲とsecret非表示を確認する。 | 仕様どおりのHTTP status/body | - |
 | Step 7 | `GET /projects/${projectId}` | Project詳細、client構成、public client設定、secret非表示を確認する。 | 仕様どおりのHTTP status/body | - |
 
@@ -57,7 +60,7 @@ project_Aを作成する。
 
 | No | 観点 | タイミング | 残すエビデンス | 取得方法 | OK条件 | 保存名 |
 |---|---|---|---|---|---|---|
-| E1 | Project作成確認 | Project作成API後 | Project一覧レスポンス | `GET /projects?keyword=${project_A.defaults.projectCode}` | project_AがACTIVEで返る | `TC007_E_project_search_project_A.json` |
+| E1 | Project作成確認 | Project作成API呼び出し後 | GET /projects のレスポンス | `GET /projects?keyword=${project.defaults.projectCode}` | project_A が検索結果に表示され、derivedState=ACTIVEである。 | `TC007_E_project_search_project_A.json` |
 
 ### 後続確認
 

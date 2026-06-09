@@ -6,10 +6,10 @@
 
 | 種別 | ID | 名称 | 用途 | 主な参照値 |
 |---|---|---|---|---|
-| Project | `project_A` | Project A | 利用申請元Project | projectId, projectApiKey |
-| API | `API_A` | API A | 承認または却下の対象API | apiId, apiStageId, invokeUrl |
-| API | `API_B` | API B | 未承認で呼び出せないことを確認するAPI | invokeUrl |
-| API | `API_C` | API C | 未承認で呼び出せないことを確認するAPI | invokeUrl |
+| Project | `project_A` | Project A | 利用申請元Project | projectId, projectApiKey, publicClientId, confidentialClientId |
+| API | `API_A` | API A | 承認対象API | apiId, apiStageId, invokeUrl, scopeFullName |
+| API | `API_B` | API B | 未承認確認用API | apiId, apiStageId, invokeUrl |
+| API | `API_C` | API C | 未承認確認用API | apiId, apiStageId, invokeUrl |
 
 ## 2. 処理概要
 
@@ -23,9 +23,10 @@
 |---|---|---|
 | P1 | Cognito管理API用tokenを取得できる。 | - |
 | P2 | API_A, API_B, API_C は公開済み、またはsandbox事前データとして参照できる。 | - |
-| P3 | reviewerがAPI_Aの審査者である。 | - |
-| P4 | project_A用のテストデータをcase.id suffixで一意に生成する。 | - |
-| P5 | secret値、API key値、client secret値の実値をMarkdownやログに出さない。 | - |
+| P3 | project_A用のテストデータをcase.id suffixで一意に生成する。 | - |
+| P4 | secret値、API key値、client secret値の実値をMarkdownやログに出さない。 | - |
+| P5 | `${project_api_key}` はplaceholderとして扱い、実値を記録しない。 | - |
+| P6 | `${runtime_access_token}` はplaceholderとして扱い、実値を記録しない。 | - |
 
 ### API呼び出し手順
 

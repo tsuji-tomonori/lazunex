@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
+
+import yaml
 
 from tools.e2e_models import CASES, FLOW_ID, E2eCase, element_label, markdown_escape
 from tools.generation_io import check_outputs, write_outputs
@@ -70,36 +74,152 @@ STEP_LABELS = {
 }
 
 
-TARGET_ROWS = (
-    ("Project", "project_A", "Project A", "利用申請元Project", "projectId, projectApiKey"),
-    ("API", "API_A", "API A", "承認または却下の対象API", "apiId, apiStageId, invokeUrl"),
-    ("API", "API_B", "API B", "未承認で呼び出せないことを確認するAPI", "invokeUrl"),
-    ("API", "API_C", "API C", "未承認で呼び出せないことを確認するAPI", "invokeUrl"),
-)
+STEP_MANUAL_IDS = {
+    "post_projects": "create_project",
+    "patch_project_public_client": "update_project_public_client",
+    "post_api_access_requests": "create_access_request",
+    "approve_api_access_request": "approve_access_request",
+    "reject_api_access_request": "reject_access_request",
+    "invoke_runtime_api": "invoke_api",
+}
+
+STEP_OPERATION_KEYS = {
+    "post_projects": ("project", "create"),
+    "patch_project_public_client": ("project", "update"),
+    "post_api_access_requests": ("access_request", "apply"),
+    "approve_api_access_request": ("review", "approve"),
+    "reject_api_access_request": ("review", "reject"),
+}
 
 
-def render_targets() -> list[str]:
-    lines = ["| 種別 | ID | 名称 | 用途 | 主な参照値 |", "|---|---|---|---|---|"]
-    lines.extend(
-        f"| {kind} | `{target_id}` | {title} | {usage} | {variables} |"
-        for kind, target_id, title, usage, variables in TARGET_ROWS
+@dataclass(frozen=True)
+class ScenarioCatalog:
+    targets: Mapping[str, Mapping[str, object]]
+    operations: Mapping[tuple[str, str], Mapping[str, object]]
+    steps: Mapping[str, Mapping[str, object]]
+    evidences: Mapping[str, Mapping[str, object]]
+    bindings: Mapping[tuple[str, str, str], tuple[str, ...]]
+
+
+def as_mapping(value: object) -> Mapping[str, object]:
+    return cast(Mapping[str, object], value) if isinstance(value, dict) else {}
+
+
+def as_sequence(value: object) -> Sequence[object]:
+    return cast(Sequence[object], value) if isinstance(value, list | tuple) else ()
+
+
+def load_yaml(path: Path) -> Mapping[str, object]:
+    loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+    return as_mapping(loaded)
+
+
+def load_scenario_catalog(root: Path = Path("docs/spec/50.e2e")) -> ScenarioCatalog:
+    flow_root = root / FLOW_ID
+    targets: dict[str, Mapping[str, object]] = {}
+    for path in sorted((flow_root / "targets").glob("**/*.target.manual.yaml")):
+        content = load_yaml(path)
+        target = as_mapping(content.get("target"))
+        target_id = target.get("id")
+        if isinstance(target_id, str):
+            targets[target_id] = content
+
+    operations: dict[tuple[str, str], Mapping[str, object]] = {}
+    for path in sorted((flow_root / "operations").glob("**/*.operation.manual.yaml")):
+        content = load_yaml(path)
+        operation = as_mapping(content.get("operation"))
+        factor_id = operation.get("factor_id")
+        operation_id = operation.get("id")
+        if isinstance(factor_id, str) and isinstance(operation_id, str):
+            operations[(factor_id, operation_id)] = content
+
+    steps: dict[str, Mapping[str, object]] = {}
+    for path in sorted((flow_root / "steps").glob("**/*.step.manual.yaml")):
+        content = load_yaml(path)
+        step = as_mapping(content.get("step"))
+        step_id = step.get("id")
+        if isinstance(step_id, str):
+            steps[step_id] = content
+
+    evidences: dict[str, Mapping[str, object]] = {}
+    for path in sorted((flow_root / "evidences").glob("**/*.evidence.manual.yaml")):
+        content = load_yaml(path)
+        evidence = as_mapping(content.get("evidence"))
+        evidence_id = evidence.get("id")
+        if isinstance(evidence_id, str):
+            evidences[evidence_id] = content
+
+    bindings: dict[tuple[str, str, str], tuple[str, ...]] = {}
+    for path in sorted((flow_root / "bindings").glob("*.bindings.manual.yaml")):
+        content = load_yaml(path)
+        factor_id = content.get("factor_id")
+        if not isinstance(factor_id, str):
+            continue
+        for item in as_sequence(content.get("bindings")):
+            binding = as_mapping(item)
+            when = as_mapping(binding.get("when"))
+            operation = when.get("operation")
+            result = when.get("result")
+            if not isinstance(operation, str) or not isinstance(result, str):
+                continue
+            evidence_ids: list[str] = []
+            for evidence_ref in as_sequence(binding.get("evidences")):
+                ref = as_mapping(evidence_ref).get("ref")
+                if isinstance(ref, str):
+                    evidence_ids.append(Path(ref).name.split(".")[0])
+            bindings[(factor_id, operation, result)] = tuple(evidence_ids)
+    return ScenarioCatalog(targets, operations, steps, evidences, bindings)
+
+
+def scalar_text(value: object, default: str = "-") -> str:
+    return value if isinstance(value, str) else default
+
+
+def target_row(catalog: ScenarioCatalog, target_id: str) -> tuple[str, str, str, str, str]:
+    content = catalog.targets.get(target_id, {})
+    target = as_mapping(content.get("target"))
+    md = as_mapping(content.get("md"))
+    target_section = as_mapping(md.get("target_section"))
+    variables = ", ".join(str(value) for value in as_sequence(target_section.get("show_variables")))
+    return (
+        scalar_text(target_section.get("resource_type"), scalar_text(target.get("type"), "Target")),
+        target_id,
+        scalar_text(target.get("title"), target_id),
+        scalar_text(target_section.get("usage")),
+        variables or "-",
     )
+
+
+def render_targets(catalog: ScenarioCatalog) -> list[str]:
+    lines = ["| 種別 | ID | 名称 | 用途 | 主な参照値 |", "|---|---|---|---|---|"]
+    for target_id in ("project_A", "API_A", "API_B", "API_C"):
+        kind, row_id, title, usage, variables = target_row(catalog, target_id)
+        lines.append(f"| {kind} | `{row_id}` | {title} | {usage} | {variables} |")
     return lines
 
 
-def render_overview(case: E2eCase) -> str:
+def expand_label(template: str) -> str:
+    return (
+        template.replace("${project.id}", "project_A")
+        .replace("${api.id}", "API_A")
+        .replace("${foreach.api.id}", "API_B/API_C")
+    )
+
+
+def render_overview(case: E2eCase, catalog: ScenarioCatalog) -> str:
     labels: list[str] = []
-    overview_by_step = {
-        "post_projects": "project_Aを作成する",
-        "patch_project_public_client": "project_Aのpublic client redirect URLを更新する",
-        "post_api_access_requests": "project_AからAPI_Aへ利用申請する",
-        "approve_api_access_request": "API_Aの利用申請を承認する",
-        "reject_api_access_request": "API_Aの利用申請を却下する",
-        "invoke_runtime_api": "API_Aは呼び出せる、API_B/API_Cは呼び出せないことを確認する",
-    }
     for step in case.scenario_steps:
-        if step in overview_by_step:
-            labels.append(overview_by_step[step])
+        if step == "invoke_runtime_api":
+            labels.append("API_Aは呼び出せる、API_B/API_Cは呼び出せないことを確認する")
+            continue
+        operation_key = STEP_OPERATION_KEYS.get(step)
+        if operation_key is None:
+            continue
+        operation = catalog.operations.get(operation_key, {})
+        md = as_mapping(operation.get("md"))
+        overview_label = md.get("overview_label")
+        if isinstance(overview_label, str):
+            labels.append(expand_label(overview_label))
     if not labels:
         labels.append(case.purpose)
     return " → ".join(labels) + "。"
@@ -112,30 +232,47 @@ def render_selected_factors(case: E2eCase) -> list[str]:
     return lines
 
 
-def render_prerequisites(case: E2eCase) -> list[str]:
+def render_prerequisites(case: E2eCase, catalog: ScenarioCatalog) -> list[str]:
     prerequisites = [
         "Cognito管理API用tokenを取得できる。",
         "API_A, API_B, API_C は公開済み、またはsandbox事前データとして参照できる。",
-        "reviewerがAPI_Aの審査者である。",
         "project_A用のテストデータをcase.id suffixで一意に生成する。",
         "secret値、API key値、client secret値の実値をMarkdownやログに出さない。",
+        "`${project_api_key}` はplaceholderとして扱い、実値を記録しない。",
+        "`${runtime_access_token}` はplaceholderとして扱い、実値を記録しない。",
     ]
-    if "invoke_runtime_api" in case.scenario_steps:
-        prerequisites.append("Runtime API用tokenとproject_AのAPI keyを取得できる。")
+    seen = set(prerequisites)
+    for step in case.scenario_steps:
+        manual_id = STEP_MANUAL_IDS.get(step)
+        if manual_id is None:
+            continue
+        step_doc = catalog.steps.get(manual_id, {})
+        for item in as_sequence(step_doc.get("prerequisites")):
+            text = as_mapping(item).get("text")
+            if isinstance(text, str):
+                expanded = expand_label(text)
+                if expanded not in seen:
+                    prerequisites.append(expanded)
+                    seen.add(expanded)
     lines = ["| No | 前提 | 補足 |", "|---|---|---|"]
     lines.extend(f"| P{index} | {text} | - |" for index, text in enumerate(prerequisites, start=1))
     return lines
 
 
-def render_api_steps(case: E2eCase) -> list[str]:
+def render_api_steps(case: E2eCase, catalog: ScenarioCatalog) -> list[str]:
     lines = ["| Step | API | 目的 | 期待 | Capture |", "|---|---|---|---|---|"]
     for index, step_id in enumerate(case.scenario_steps, start=1):
-        endpoint, ok_condition = STEP_LABELS[step_id]
-        capture = {
-            "post_projects": "projectId, projectApiKey, publicClientId, confidentialClientId",
-            "post_api_access_requests": "accessRequestId",
-            "approve_api_access_request": "subscriptionId, operationId",
-        }.get(step_id, "-")
+        fallback_endpoint, fallback_condition = STEP_LABELS[step_id]
+        manual_id = STEP_MANUAL_IDS.get(step_id)
+        step_doc = catalog.steps.get(manual_id or "", {})
+        step = as_mapping(step_doc.get("step"))
+        md = as_mapping(step_doc.get("md"))
+        detail_section = as_mapping(md.get("detail_section"))
+        endpoint = scalar_text(step.get("endpoint"), fallback_endpoint)
+        ok_condition = expand_label(
+            scalar_text(detail_section.get("description"), fallback_condition)
+        )
+        capture = ", ".join(str(key) for key in as_mapping(step_doc.get("capture"))) or "-"
         lines.append(
             f"| Step {index} | `{endpoint}` | {markdown_escape(ok_condition)} | "
             f"仕様どおりのHTTP status/body | {capture} |"
@@ -143,81 +280,71 @@ def render_api_steps(case: E2eCase) -> list[str]:
     return lines
 
 
-def evidence_rows(case: E2eCase) -> list[tuple[str, str, str, str, str, str]]:
+def evidence_row(
+    catalog: ScenarioCatalog,
+    evidence_id: str,
+    case: E2eCase,
+    *,
+    api_id: str = "API_A",
+) -> tuple[str, str, str, str, str, str]:
+    content = catalog.evidences[evidence_id]
+    md = as_mapping(content.get("md"))
+    row = as_mapping(md.get("evidence_row"))
+    save_as = (
+        scalar_text(row.get("save_as"))
+        .replace("${api.id}", api_id)
+        .replace("${foreach.api.id}", api_id)
+    )
+    return (
+        scalar_text(row.get("viewpoint")),
+        scalar_text(row.get("timing")),
+        expand_label(scalar_text(row.get("evidence")).replace("${api.id}", api_id)),
+        expand_label(
+            scalar_text(row.get("collection")).replace(
+                "${api.defaults.invokeUrl}",
+                f"${{{api_id}.invokeUrl}}",
+            )
+        ),
+        expand_label(scalar_text(row.get("ok_condition")).replace("${api.id}", api_id)),
+        expand_label(save_as)
+        .replace("${case.id}", case.case_id)
+        .replace("${project.id}", "project_A")
+        .replace("${api.id}", api_id)
+        .replace("${foreach.api.id}", api_id),
+    )
+
+
+def binding_evidence_ids(case: E2eCase, catalog: ScenarioCatalog) -> list[str]:
+    ids: list[str] = []
+    operation_results = [
+        ("project", "create", "success", "post_projects"),
+        ("project", "update", "success", "patch_project_public_client"),
+        ("access_request", "apply", "success", "post_api_access_requests"),
+        ("review", "approve", "success", "approve_api_access_request"),
+        ("review", "reject", "success", "reject_api_access_request"),
+    ]
+    for factor, operation, result, step in operation_results:
+        if step in case.scenario_steps:
+            ids.extend(catalog.bindings.get((factor, operation, result), ()))
+    return ids
+
+
+def evidence_rows(
+    case: E2eCase,
+    catalog: ScenarioCatalog,
+) -> list[tuple[str, str, str, str, str, str]]:
     rows: list[tuple[str, str, str, str, str, str]] = []
-    if "post_projects" in case.scenario_steps:
-        rows.append(
-            (
-                "Project作成確認",
-                "Project作成API後",
-                "Project一覧レスポンス",
-                "GET /projects?keyword=${project_A.defaults.projectCode}",
-                "project_AがACTIVEで返る",
-                f"{case.case_id}_E_project_search_project_A.json",
+    for evidence_id in binding_evidence_ids(case, catalog):
+        if evidence_id == "current_api_callable":
+            rows.append(evidence_row(catalog, evidence_id, case, api_id="API_A"))
+        elif evidence_id == "other_api_not_callable":
+            include_current = "reject_api_access_request" in case.scenario_steps
+            api_ids = ("API_A", "API_B", "API_C") if include_current else ("API_B", "API_C")
+            rows.extend(
+                evidence_row(catalog, evidence_id, case, api_id=api_id) for api_id in api_ids
             )
-        )
-    if "post_api_access_requests" in case.scenario_steps:
-        rows.append(
-            (
-                "利用申請確認",
-                "利用申請API後",
-                "利用申請一覧レスポンス",
-                "GET /projects/{projectId}/api-access-requests",
-                "API_Aの申請がPENDINGで表示される",
-                f"{case.case_id}_E_access_request_pending_project_A_API_A.json",
-            )
-        )
-    if "approve_api_access_request" in case.scenario_steps:
-        rows.append(
-            (
-                "承認結果確認",
-                "承認API後",
-                "利用申請一覧レスポンス",
-                "GET /projects/{projectId}/api-access-requests",
-                "API_Aの申請がAPPROVEDで表示される",
-                f"{case.case_id}_E_access_request_approved_project_A_API_A.json",
-            )
-        )
-    if "reject_api_access_request" in case.scenario_steps:
-        rows.append(
-            (
-                "却下結果確認",
-                "却下API後",
-                "利用申請一覧レスポンス",
-                "GET /projects/{projectId}/api-access-requests",
-                "API_Aの申請がREJECTEDで表示される",
-                f"{case.case_id}_E_access_request_rejected_project_A_API_A.json",
-            )
-        )
-    if "invoke_runtime_api" in case.scenario_steps:
-        rows.extend(
-            [
-                (
-                    "承認済みAPI実行確認",
-                    "承認API後",
-                    "API_A Runtime APIレスポンス",
-                    "GET ${API_A.invokeUrl}",
-                    "2xx",
-                    f"{case.case_id}_E_runtime_project_A_API_A_allowed.json",
-                ),
-                (
-                    "未承認API拒否確認",
-                    "承認API後",
-                    "API_B Runtime APIレスポンス",
-                    "GET ${API_B.invokeUrl}",
-                    "401または403",
-                    f"{case.case_id}_E_runtime_project_A_API_B_denied.json",
-                ),
-                (
-                    "未承認API拒否確認",
-                    "承認API後",
-                    "API_C Runtime APIレスポンス",
-                    "GET ${API_C.invokeUrl}",
-                    "401または403",
-                    f"{case.case_id}_E_runtime_project_A_API_C_denied.json",
-                ),
-            ]
-        )
+        else:
+            rows.append(evidence_row(catalog, evidence_id, case))
     if not rows:
         rows.append(
             (
@@ -232,12 +359,12 @@ def evidence_rows(case: E2eCase) -> list[tuple[str, str, str, str, str, str]]:
     return rows
 
 
-def render_evidences(case: E2eCase) -> list[str]:
+def render_evidences(case: E2eCase, catalog: ScenarioCatalog) -> list[str]:
     lines = [
         "| No | 観点 | タイミング | 残すエビデンス | 取得方法 | OK条件 | 保存名 |",
         "|---|---|---|---|---|---|---|",
     ]
-    for index, row in enumerate(evidence_rows(case), start=1):
+    for index, row in enumerate(evidence_rows(case, catalog), start=1):
         viewpoint, timing, evidence, collection, ok_condition, save_as = row
         lines.append(
             f"| E{index} | {viewpoint} | {timing} | {evidence} | `{collection}` | "
@@ -246,7 +373,7 @@ def render_evidences(case: E2eCase) -> list[str]:
     return lines
 
 
-def render_scenario_markdown(case: E2eCase) -> str:
+def render_scenario_markdown(case: E2eCase, catalog: ScenarioCatalog) -> str:
     lines = [
         GENERATED_COMMENT,
         "",
@@ -254,21 +381,21 @@ def render_scenario_markdown(case: E2eCase) -> str:
         "",
         "## 1. 対象",
         "",
-        *render_targets(),
+        *render_targets(catalog),
         "",
         "## 2. 処理概要",
         "",
-        render_overview(case),
+        render_overview(case, catalog),
         "",
         "## 3. 処理詳細",
         "",
         "### 前提条件",
         "",
-        *render_prerequisites(case),
+        *render_prerequisites(case, catalog),
         "",
         "### API呼び出し手順",
         "",
-        *render_api_steps(case),
+        *render_api_steps(case, catalog),
         "",
         "### 選択要因",
         "",
@@ -276,7 +403,7 @@ def render_scenario_markdown(case: E2eCase) -> str:
         "",
         "## 4. エビデンス",
         "",
-        *render_evidences(case),
+        *render_evidences(case, catalog),
         "",
         "### 後続確認",
         "",
@@ -286,9 +413,14 @@ def render_scenario_markdown(case: E2eCase) -> str:
     return "\n".join(lines)
 
 
-def rendered_outputs(output_root: Path = Path("docs/spec/50.e2e")) -> Mapping[Path, str]:
+def rendered_outputs(
+    output_root: Path = Path("docs/spec/50.e2e"),
+    *,
+    spec_root: Path = Path("docs/spec/50.e2e"),
+) -> Mapping[Path, str]:
     cases_root = output_root / FLOW_ID / "cases"
-    return {cases_root / case.filename: render_scenario_markdown(case) for case in CASES}
+    catalog = load_scenario_catalog(spec_root)
+    return {cases_root / case.filename: render_scenario_markdown(case, catalog) for case in CASES}
 
 
 def generate(*, check: bool = False, output_root: Path = Path("docs/spec/50.e2e")) -> int:

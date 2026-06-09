@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
+from typing import cast
 
 from tools.check_e2e_specs import check_specs
 from tools.e2e_models import CASES, FACTORS, FLOW_STEPS
 from tools.generate_e2e_case_list import rendered_outputs as case_list_outputs
+from tools.generate_e2e_scenarios import load_scenario_catalog
 from tools.generate_e2e_scenarios import rendered_outputs as scenario_outputs
 from tools.generation_io import write_outputs
 
@@ -79,6 +82,20 @@ def test_e2e_scenarios_keep_secret_placeholders(tmp_path: Path) -> None:
     assert "GET /projects/{projectId}/api-access-requests" in content
     assert "API呼び出し手順" in content
     assert "API_B Runtime APIレスポンス" in content
+    catalog = load_scenario_catalog()
+    assert catalog.bindings[("review", "reject", "success")] == (
+        "access_request_rejected",
+        "other_api_not_callable",
+    )
+    project_a_md = cast(Mapping[str, object], catalog.targets["project_A"]["md"])
+    target_section = cast(Mapping[str, object], project_a_md["target_section"])
+    assert target_section["usage"] == "利用申請元Project"
+
+    reject_content = rendered[
+        tmp_path / "api_access_lifecycle/cases/TC002_reject_request_and_no_subscription.gen.md"
+    ]
+    assert "API_A Runtime APIレスポンス" in reject_content
+    assert "TC002_E_runtime_project_A_API_C_denied.json" in reject_content
 
 
 def test_check_e2e_specs_detects_complete_rendered_tree(tmp_path: Path) -> None:
