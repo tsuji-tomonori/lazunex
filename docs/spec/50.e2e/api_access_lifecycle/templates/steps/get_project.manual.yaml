@@ -1,0 +1,11 @@
+schema_version: 1
+template:
+  id: get_project
+  operation_id: getProject
+  method: GET
+  path: /projects/${projectId}
+request:
+  headers:
+    Authorization: Bearer ${tokens.project_owner_management_token}
+captures:
+  project: $

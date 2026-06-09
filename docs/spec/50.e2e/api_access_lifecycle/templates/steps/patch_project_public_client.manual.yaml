@@ -1,0 +1,17 @@
+schema_version: 1
+template:
+  id: patch_project_public_client
+  operation_id: updateProjectPublicClient
+  method: PATCH
+  path: /projects/${projectId}/public-client
+request:
+  headers:
+    Authorization: Bearer ${tokens.project_owner_management_token}
+    Idempotency-Key: ${case.case_id}-update-public-client
+    Content-Type: application/json
+  body:
+    from_sample:
+      module: app.apis.projects.update_project_public_client.samples
+      object: UPDATE_PROJECT_PUBLIC_CLIENT_REQUEST_SAMPLE
+captures:
+  publicClientId: $.publicClient.clientId

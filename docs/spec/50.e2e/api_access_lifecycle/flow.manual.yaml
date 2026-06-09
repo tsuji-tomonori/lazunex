@@ -6,6 +6,11 @@ flow:
   description: API公開、Project作成、利用申請、審査、subscriptions確認、Runtime API呼び出しまでのE2Eフロー。
 
 steps:
+  - id: S000
+    operation_id: healthCheck
+    method: GET
+    path: /health
+    template: get_health
   - id: S001
     operation_id: publishApi
     method: POST
@@ -35,6 +40,21 @@ steps:
       - projectApiKey
       - publicClientId
       - confidentialClientId
+  - id: S011
+    operation_id: listProjects
+    method: GET
+    path: /projects
+    template: get_projects
+  - id: S012
+    operation_id: getProject
+    method: GET
+    path: /projects/${projectId}
+    template: get_project
+  - id: S013
+    operation_id: updateProjectPublicClient
+    method: PATCH
+    path: /projects/${projectId}/public-client
+    template: patch_project_public_client
   - id: S020
     operation_id: createApiAccessRequest
     method: POST
@@ -42,6 +62,11 @@ steps:
     template: post_api_access_requests
     captures:
       - accessRequestId
+  - id: S021
+    operation_id: listProjectApiAccessRequests
+    method: GET
+    path: /projects/${projectId}/api-access-requests
+    template: get_project_api_access_requests
   - id: S030
     operation_id: approveApiAccessRequest
     method: POST

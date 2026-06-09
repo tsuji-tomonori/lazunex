@@ -15,12 +15,19 @@
 
 | Factor | Element |
 |---|---|
+| `F000` | 成功: appが応答可能 |
 | `F001` | reviewer以外 |
 | `F002` | 有効なmanagement token |
-| `F010` | 成功 |
-| `F020` | 成功 |
-| `F030` | 新規成功 |
-| `F040` | approve |
+| `F010` | 成功: catalog + stage + scope |
+| `F011` | 成功: 一覧に公開APIが現れる |
+| `F012` | 成功: 公開API詳細を取得 |
+| `F020` | 成功: project + API key + clients |
+| `F021` | 成功: 作成Projectが一覧に現れる |
+| `F022` | 成功: Project詳細を取得 |
+| `F023` | 成功: public client設定更新 + 承認済みscope保持 |
+| `F030` | 成功: PENDING申請作成 |
+| `F031` | 成功: PENDING申請が一覧に現れる |
+| `F040` | 失敗: reviewer以外 |
 
 ## 3. 事前条件
 
@@ -31,7 +38,23 @@
 
 ## 4. API呼び出し手順
 
-### Step 1: POST /apis
+### Step 1: GET /health
+
+Request:
+
+```http
+GET /health
+Authorization: Bearer ${management_or_runtime_token}
+Idempotency-Key: ${case_id}-get_health
+Content-Type: application/json
+```
+
+OK条件:
+
+- HTTP 200とstatus okを確認し、以降の管理API E2Eを開始できる状態にする。
+- secret値、API key値、client secret値の実値をMarkdownやログに出さない。
+
+### Step 2: POST /apis
 
 Request:
 
@@ -47,7 +70,39 @@ OK条件:
 - `${apiId}` と `${apiStageId}` を後続stepへ渡す。
 - secret値、API key値、client secret値の実値をMarkdownやログに出さない。
 
-### Step 2: POST /projects
+### Step 3: GET /apis
+
+Request:
+
+```http
+GET /apis
+Authorization: Bearer ${management_or_runtime_token}
+Idempotency-Key: ${case_id}-get_apis
+Content-Type: application/json
+```
+
+OK条件:
+
+- 公開済みAPIが一覧に現れ、pagination/filterとsecret非表示を確認する。
+- secret値、API key値、client secret値の実値をMarkdownやログに出さない。
+
+### Step 4: GET /apis/${apiId}
+
+Request:
+
+```http
+GET /apis/${apiId}
+Authorization: Bearer ${management_or_runtime_token}
+Idempotency-Key: ${case_id}-get_api
+Content-Type: application/json
+```
+
+OK条件:
+
+- POST /apisで得たAPI詳細、stage、scope、reviewer情報との一致を確認する。
+- secret値、API key値、client secret値の実値をMarkdownやログに出さない。
+
+### Step 5: POST /projects
 
 Request:
 
@@ -63,7 +118,55 @@ OK条件:
 - `${projectId}` と `${project_api_key}` を後続stepへ渡す。
 - secret値、API key値、client secret値の実値をMarkdownやログに出さない。
 
-### Step 3: POST /projects/${projectId}/api-access-requests
+### Step 6: GET /projects
+
+Request:
+
+```http
+GET /projects
+Authorization: Bearer ${management_or_runtime_token}
+Idempotency-Key: ${case_id}-get_projects
+Content-Type: application/json
+```
+
+OK条件:
+
+- 作成Projectが一覧に現れ、caller権限範囲とsecret非表示を確認する。
+- secret値、API key値、client secret値の実値をMarkdownやログに出さない。
+
+### Step 7: GET /projects/${projectId}
+
+Request:
+
+```http
+GET /projects/${projectId}
+Authorization: Bearer ${management_or_runtime_token}
+Idempotency-Key: ${case_id}-get_project
+Content-Type: application/json
+```
+
+OK条件:
+
+- Project詳細、client構成、public client設定、secret非表示を確認する。
+- secret値、API key値、client secret値の実値をMarkdownやログに出さない。
+
+### Step 8: PATCH /projects/${projectId}/public-client
+
+Request:
+
+```http
+PATCH /projects/${projectId}/public-client
+Authorization: Bearer ${management_or_runtime_token}
+Idempotency-Key: ${case_id}-patch_project_public_client
+Content-Type: application/json
+```
+
+OK条件:
+
+- public client設定更新後も既存AllowedOAuthScopesを保持する。
+- secret値、API key値、client secret値の実値をMarkdownやログに出さない。
+
+### Step 9: POST /projects/${projectId}/api-access-requests
 
 Request:
 
@@ -79,7 +182,23 @@ OK条件:
 - `${accessRequestId}` を審査stepへ渡す。
 - secret値、API key値、client secret値の実値をMarkdownやログに出さない。
 
-### Step 4: POST /api-access-requests/${accessRequestId}/approve
+### Step 10: GET /projects/${projectId}/api-access-requests
+
+Request:
+
+```http
+GET /projects/${projectId}/api-access-requests
+Authorization: Bearer ${management_or_runtime_token}
+Idempotency-Key: ${case_id}-get_project_api_access_requests
+Content-Type: application/json
+```
+
+OK条件:
+
+- PENDING申請がProject単位の一覧に現れることを確認する。
+- secret値、API key値、client secret値の実値をMarkdownやログに出さない。
+
+### Step 11: POST /api-access-requests/${accessRequestId}/approve
 
 Request:
 

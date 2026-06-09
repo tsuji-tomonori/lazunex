@@ -1,0 +1,11 @@
+schema_version: 1
+template:
+  id: get_apis
+  operation_id: listApis
+  method: GET
+  path: /apis
+request:
+  headers:
+    Authorization: Bearer ${tokens.provider_management_token}
+captures:
+  apis: $.items

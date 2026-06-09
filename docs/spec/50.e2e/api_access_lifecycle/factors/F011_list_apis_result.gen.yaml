@@ -2,31 +2,31 @@
 schema_version: 1
 
 factor:
-  id: F020
-  slug: create_project_result
-  title: "POST /projects Project作成結果"
+  id: F011
+  slug: list_apis_result
+  title: "GET /apis API一覧取得結果"
   category: api_result
-  order: 20
-  owner_step: post_projects
+  order: 11
+  owner_step: get_apis
   generated_from:
     - type: e2e_flow
       path: docs/spec/50.e2e/api_access_lifecycle/flow.manual.yaml
 
 elements:
   - id: success
-    label: "成功: project + API key + clients"
+    label: "成功: 一覧に公開APIが現れる"
     default: true
     terminal: false
     execution_tier: smoke_sandbox
     expected:
-      summary: "HTTP 201、projectId/API key/Cognito clientsを返却、Usage Plan/API key/client secret hashを保存、secret実値は後続placeholderにのみ渡す。"
-  - id: duplicate_project_code
-    label: "duplicate projectCode"
+      summary: "HTTP 200、itemsに公開済みapiId/apiCode/scopeが含まれる、pagination/filterが仕様どおり、secret値を含まない。"
+  - id: filter_no_match
+    label: "失敗相当: filter不一致"
     default: false
     terminal: true
-    execution_tier: sandbox
+    execution_tier: local_fake
     expected:
-      summary: "POST /projectsがHTTP 409となり利用申請以降を実行しない。"
+      summary: "HTTP 200かつitems空配列を返し、後続getApiは既知apiIdを使って継続する。"
 
 constraints:
   requires:

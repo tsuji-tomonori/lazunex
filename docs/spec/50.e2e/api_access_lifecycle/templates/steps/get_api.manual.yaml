@@ -1,0 +1,11 @@
+schema_version: 1
+template:
+  id: get_api
+  operation_id: getApi
+  method: GET
+  path: /apis/${apiId}
+request:
+  headers:
+    Authorization: Bearer ${tokens.provider_management_token}
+captures:
+  api: $

@@ -37,7 +37,7 @@ elements:
 
 constraints:
   requires:
-    - F040.approve
+    - F040.success
 
 pruning:
   after_terminal: true

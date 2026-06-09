@@ -14,14 +14,42 @@ GENERATED_COMMENT = (
 
 
 STEP_LABELS = {
+    "get_health": (
+        "GET /health",
+        "HTTP 200とstatus okを確認し、以降の管理API E2Eを開始できる状態にする。",
+    ),
     "post_apis": ("POST /apis", "`${apiId}` と `${apiStageId}` を後続stepへ渡す。"),
+    "get_apis": (
+        "GET /apis",
+        "公開済みAPIが一覧に現れ、pagination/filterとsecret非表示を確認する。",
+    ),
+    "get_api": (
+        "GET /apis/${apiId}",
+        "POST /apisで得たAPI詳細、stage、scope、reviewer情報との一致を確認する。",
+    ),
     "post_projects": (
         "POST /projects",
         "`${projectId}` と `${project_api_key}` を後続stepへ渡す。",
     ),
+    "get_projects": (
+        "GET /projects",
+        "作成Projectが一覧に現れ、caller権限範囲とsecret非表示を確認する。",
+    ),
+    "get_project": (
+        "GET /projects/${projectId}",
+        "Project詳細、client構成、public client設定、secret非表示を確認する。",
+    ),
+    "patch_project_public_client": (
+        "PATCH /projects/${projectId}/public-client",
+        "public client設定更新後も既存AllowedOAuthScopesを保持する。",
+    ),
     "post_api_access_requests": (
         "POST /projects/${projectId}/api-access-requests",
         "`${accessRequestId}` を審査stepへ渡す。",
+    ),
+    "get_project_api_access_requests": (
+        "GET /projects/${projectId}/api-access-requests",
+        "PENDING申請がProject単位の一覧に現れることを確認する。",
     ),
     "approve_api_access_request": (
         "POST /api-access-requests/${accessRequestId}/approve",

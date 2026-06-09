@@ -39,7 +39,7 @@ def render_case_list_markdown() -> str:
     for step in FLOW_STEPS:
         endpoint = f"{step.method} {step.path}" if step.method != "GET" else f"GET {step.path}"
         lines.append(
-            f"| `{step.step_id}` | `{step.operation}` | `{markdown_escape(endpoint)} | "
+            f"| `{step.step_id}` | `{step.operation}` | `{markdown_escape(endpoint)}` | "
             f"`{step.template}` |"
         )
     lines.extend(["", "## 1. 要因ごとの要素", ""])
@@ -66,7 +66,8 @@ def render_case_list_markdown() -> str:
             "| Rule ID | 条件 | 結果 | 理由 |",
             "|---|---|---|---|",
             "| `P001` | `terminal=true` | 後続要因をN/A化 | unit-testと同じprefix terminal方式 |",
-            "| `P002` | `review_decision=reject` | approve provisioningとRuntime成功を除外 | "
+            "| `P002` | `reject_api_access_request_result=success` | "
+            "approve provisioningとRuntime成功を除外 | "
             "rejectはAWS変更しない |",
             "| `P003` | approve失敗 | Runtime API呼び出しを除外 | subscription/scopeが存在しない |",
             "| `P004` | terminal step/status/reasonが同一 | 等価ケースを統合 | "

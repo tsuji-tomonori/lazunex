@@ -4,7 +4,7 @@ import argparse
 from collections.abc import Sequence
 from pathlib import Path
 
-from tools.e2e_models import CASES, FACTORS, FLOW_ID
+from tools.e2e_models import CASES, FACTORS, FLOW_ID, FLOW_STEPS
 
 
 def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
@@ -21,6 +21,10 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
         for factor in FACTORS
     )
     required_paths.extend(flow_root / "cases" / case.filename for case in CASES)
+    required_paths.extend(
+        flow_root / "templates" / "steps" / f"{step.template}.manual.yaml"
+        for step in FLOW_STEPS
+    )
 
     for path in required_paths:
         if not path.exists():

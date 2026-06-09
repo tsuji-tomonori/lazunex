@@ -1,0 +1,11 @@
+schema_version: 1
+template:
+  id: get_project_api_access_requests
+  operation_id: listProjectApiAccessRequests
+  method: GET
+  path: /projects/${projectId}/api-access-requests
+request:
+  headers:
+    Authorization: Bearer ${tokens.project_owner_management_token}
+captures:
+  accessRequests: $.items
