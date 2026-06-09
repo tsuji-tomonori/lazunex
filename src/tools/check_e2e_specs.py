@@ -16,6 +16,7 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
         flow_root / "pruned-cases_gen.csv",
         flow_root / "factors" / "effective_factors.gen.yaml",
         flow_root / "generated" / "effective_factor_matrix.gen.yaml",
+        flow_root / "generated" / "effective_variants.gen.yaml",
         flow_root / "generated" / "effective_step_bindings.gen.yaml",
         flow_root / "generated" / "effective_cases.gen.yaml",
     ]

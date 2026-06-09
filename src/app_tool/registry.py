@@ -160,6 +160,7 @@ TOOL_SPECS: tuple[ToolSpec, ...] = (
         outputs=(
             "docs/spec/50.e2e/*/factors/*.gen.yaml",
             "docs/spec/50.e2e/*/generated/effective_factor_matrix.gen.yaml",
+            "docs/spec/50.e2e/*/generated/effective_variants.gen.yaml",
             "docs/spec/50.e2e/*/generated/effective_step_bindings.gen.yaml",
             "docs/spec/50.e2e/*/generated/effective_cases.gen.yaml",
         ),

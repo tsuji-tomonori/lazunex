@@ -60,6 +60,13 @@ class E2eFactorData:
 
 
 @dataclass(frozen=True)
+class E2eTarget:
+    target_id: str
+    title: str
+    tags: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class E2eCase:
     case_id: str
     slug: str
@@ -196,6 +203,41 @@ FACTOR_DATA: dict[str, tuple[E2eFactorData, ...]] = {
     "F061": (E2eFactorData("subscriptions_default", "標準subscriptions確認", ("read_model",)),),
     "F070": (E2eFactorData("runtime_default", "標準Runtime呼び出し", ("runtime",)),),
 }
+
+
+PROJECT_TARGETS: tuple[E2eTarget, ...] = (
+    E2eTarget(
+        "project_A",
+        "Project A",
+        ("normal_project", "public_client_enabled", "confidential_client_enabled"),
+    ),
+    E2eTarget(
+        "project_B",
+        "Project B",
+        ("normal_project", "public_client_enabled", "confidential_client_enabled"),
+    ),
+    E2eTarget(
+        "project_C",
+        "Project C",
+        ("normal_project", "public_client_enabled", "confidential_client_enabled"),
+    ),
+)
+
+API_TARGETS: tuple[E2eTarget, ...] = (
+    E2eTarget("API_A", "API A", ("published_api", "runtime_callable")),
+    E2eTarget("API_B", "API B", ("published_api", "runtime_callable")),
+    E2eTarget("API_C", "API C", ("published_api", "runtime_callable")),
+)
+
+PROJECT_OPERATION_DATA: tuple[E2eFactorData, ...] = (
+    E2eFactorData("create_default", "標準Project作成データ", ("valid_project_create",)),
+    E2eFactorData(
+        "update_redirect_url",
+        "callback URL更新データ",
+        ("valid_project_update", "redirect_url_update"),
+    ),
+    E2eFactorData("invalid_project_code", "不正Project code", ("invalid_project_create",)),
+)
 
 
 def data_for_factor(factor_id: str) -> tuple[E2eFactorData, ...]:

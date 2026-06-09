@@ -156,3 +156,41 @@ cases:
       - approve_api_access_request_result.success@approve_both
       - approve_provisioning_result.apigw_success_cognito_success@default
       - list_project_subscriptions_result.success@subscriptions_default
+target_cases:
+  - id: TC_TARGET_001
+    title: project_A creates API_A request and approves it
+    selected_variants:
+      - project.project_A.create.success@create_default
+      - access_request.project_A.API_A.apply.success@both_auth_mode
+      - review.project_A.API_A.approve.success@approve_both
+    runtime_assertions:
+      - project: project_A
+        api: API_A
+        expected: allowed
+      - project: project_A
+        api: API_B
+        expected: denied
+      - project: project_A
+        api: API_C
+        expected: denied
+  - id: TC_TARGET_002
+    title: project_A creates API_A request and rejects it
+    selected_variants:
+      - project.project_A.create.success@create_default
+      - access_request.project_A.API_A.apply.success@both_auth_mode
+      - review.project_A.API_A.reject.success@reject_default
+    runtime_assertions:
+      - project: project_A
+        api: API_A
+        expected: denied
+      - project: project_A
+        api: API_B
+        expected: denied
+      - project: project_A
+        api: API_C
+        expected: denied
+  - id: TC_TARGET_003
+    title: project_A updates public client redirect URL
+    selected_variants:
+      - project.project_A.create.success@create_default
+      - project.project_A.update.success@update_redirect_url

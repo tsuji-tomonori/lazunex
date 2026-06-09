@@ -5,10 +5,15 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 from tools.e2e_models import (
+    API_TARGETS,
     CASES,
     FACTORS,
     FLOW_ID,
+    PROJECT_OPERATION_DATA,
+    PROJECT_TARGETS,
     E2eFactor,
+    E2eFactorData,
+    E2eTarget,
     binding_expectations,
     binding_steps,
     data_for_factor,
@@ -171,6 +176,233 @@ def render_effective_step_bindings_yaml(factors: Sequence[E2eFactor]) -> str:
     return "\n".join(lines)
 
 
+def render_tags(tags: Sequence[str], *, indent: str) -> list[str]:
+    if not tags:
+        return []
+    return [f"{indent}tags:", *(f"{indent}  - {tag}" for tag in tags)]
+
+
+def render_target_yaml(targets: Sequence[E2eTarget], *, indent: str) -> list[str]:
+    lines: list[str] = []
+    for target in targets:
+        lines.extend(
+            [
+                f"{indent}- id: {target.target_id}",
+                f"{indent}  title: {yaml_quote(target.title)}",
+            ]
+        )
+        lines.extend(render_tags(target.tags, indent=f"{indent}  "))
+    return lines
+
+
+def target_variant_id(
+    factor: str,
+    project: E2eTarget,
+    api: E2eTarget | None,
+    operation: str,
+    element: str,
+    data: E2eFactorData,
+) -> str:
+    parts = [factor, project.target_id]
+    if api is not None:
+        parts.append(api.target_id)
+    parts.extend([operation, element])
+    return f"{'.'.join(parts)}@{data.data_id}"
+
+
+def render_effective_target_variants_yaml() -> str:
+    lines: list[str] = [
+        GENERATED_COMMENT,
+        "schema_version: 1",
+        f"flow: {FLOW_ID}",
+        "targets:",
+        "  projects:",
+        *render_target_yaml(PROJECT_TARGETS, indent="    "),
+        "  apis:",
+        *render_target_yaml(API_TARGETS, indent="    "),
+        "variant_groups:",
+        "  project:",
+        "    variants:",
+    ]
+    project_create_data = PROJECT_OPERATION_DATA[0]
+    project_update_data = PROJECT_OPERATION_DATA[1]
+    project_failure_data = PROJECT_OPERATION_DATA[2]
+    for project in PROJECT_TARGETS:
+        create_success_id = target_variant_id(
+            "project", project, None, "create", "success", project_create_data
+        )
+        update_success_id = target_variant_id(
+            "project", project, None, "update", "success", project_update_data
+        )
+        create_failure_id = target_variant_id(
+            "project",
+            project,
+            None,
+            "create",
+            "duplicate_project_code",
+            project_failure_data,
+        )
+        lines.extend(
+            [
+                f"      - id: {create_success_id}",
+                f"        project: {project.target_id}",
+                "        operation: create",
+                "        result: success",
+                "        data: create_default",
+                "        source_factor: F020",
+                "        source_element: success",
+                "        continue_flow: true",
+                "        steps:",
+                "          - post_projects",
+                "        expectations:",
+                "          - project.project_search_hit",
+                f"      - id: {update_success_id}",
+                f"        project: {project.target_id}",
+                "        operation: update",
+                "        result: success",
+                "        data: update_redirect_url",
+                "        source_factor: F023",
+                "        source_element: success",
+                "        continue_flow: true",
+                "        steps:",
+                "          - patch_project_public_client",
+                "        expectations:",
+                "          - project.redirect_url_updated",
+                f"      - id: {create_failure_id}",
+                f"        project: {project.target_id}",
+                "        operation: create",
+                "        result: failure",
+                "        data: invalid_project_code",
+                "        source_factor: F020",
+                "        source_element: duplicate_project_code",
+                "        continue_flow: false",
+                "        steps:",
+                "          - post_projects",
+                "        expectations:",
+                "          - project.operation_failed",
+                "          - common.no_later_steps",
+            ]
+        )
+    lines.extend(["  access_request:", "    variants:"])
+    for project in PROJECT_TARGETS:
+        for api in API_TARGETS:
+            for data in data_for_factor("F030"):
+                for element in ("success", "duplicate_pending", "already_subscribed"):
+                    access_request_id = target_variant_id(
+                        "access_request", project, api, "apply", element, data
+                    )
+                    lines.extend(
+                        [
+                            f"      - id: {access_request_id}",
+                            f"        project: {project.target_id}",
+                            f"        api: {api.target_id}",
+                            "        operation: apply",
+                            f"        result: {'success' if element == 'success' else 'failure'}",
+                            f"        data: {data.data_id}",
+                            "        source_factor: F030",
+                            f"        source_element: {element}",
+                            f"        continue_flow: {str(element == 'success').lower()}",
+                            "        steps:",
+                        ]
+                    )
+                    steps = ("post_api_access_requests",)
+                    if element == "duplicate_pending":
+                        steps = ("setup_pending_access_request", "post_api_access_requests")
+                    elif element == "already_subscribed":
+                        steps = ("setup_active_subscription", "post_api_access_requests")
+                    lines.extend(f"          - {step}" for step in steps)
+                    lines.extend(
+                        [
+                            "        expectations:",
+                            f"          - access_request.{element}",
+                        ]
+                    )
+                    if element != "success":
+                        lines.append("          - common.no_later_steps")
+    lines.extend(["  review:", "    variants:"])
+    for project in PROJECT_TARGETS:
+        for api in API_TARGETS:
+            for data in data_for_factor("F040"):
+                for element in ("success", "non_reviewer", "not_pending"):
+                    approve_id = target_variant_id(
+                        "review", project, api, "approve", element, data
+                    )
+                    lines.extend(
+                        [
+                            f"      - id: {approve_id}",
+                            f"        project: {project.target_id}",
+                            f"        api: {api.target_id}",
+                            "        operation: approve",
+                            f"        result: {'success' if element == 'success' else 'failure'}",
+                            f"        data: {data.data_id}",
+                            "        source_factor: F040",
+                            f"        source_element: {element}",
+                            f"        continue_flow: {str(element == 'success').lower()}",
+                            "        steps:",
+                        ]
+                    )
+                    steps = ("approve_api_access_request",)
+                    if element == "not_pending":
+                        steps = ("setup_reviewed_access_request", "approve_api_access_request")
+                    lines.extend(f"          - {step}" for step in steps)
+                    lines.extend(
+                        [
+                            "        expectations:",
+                            f"          - review.approve_{element}",
+                        ]
+                    )
+                    if element == "success":
+                        lines.extend(
+                            [
+                                "          - runtime.current_api_callable",
+                                "          - runtime.other_apis_not_callable",
+                            ]
+                        )
+                    else:
+                        lines.append("          - runtime.all_apis_not_callable")
+            for data in data_for_factor("F041"):
+                for element in ("success", "non_reviewer"):
+                    reject_id = target_variant_id(
+                        "review", project, api, "reject", element, data
+                    )
+                    lines.extend(
+                        [
+                            f"      - id: {reject_id}",
+                            f"        project: {project.target_id}",
+                            f"        api: {api.target_id}",
+                            "        operation: reject",
+                            f"        result: {'success' if element == 'success' else 'failure'}",
+                            f"        data: {data.data_id}",
+                            "        source_factor: F041",
+                            f"        source_element: {element}",
+                            f"        continue_flow: {str(element == 'success').lower()}",
+                            "        steps:",
+                            "          - reject_api_access_request",
+                            "        expectations:",
+                            f"          - review.reject_{element}",
+                            "          - runtime.all_apis_not_callable",
+                        ]
+                    )
+                    if element != "success":
+                        lines.append("          - common.no_later_steps")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def target_case_runtime_assertions(project: E2eTarget, allowed_api: E2eTarget | None) -> list[str]:
+    lines = ["    runtime_assertions:"]
+    for api in API_TARGETS:
+        result = "allowed" if allowed_api == api else "denied"
+        lines.extend(
+            [
+                f"      - project: {project.target_id}",
+                f"        api: {api.target_id}",
+                f"        expected: {result}",
+            ]
+        )
+    return lines
+
+
 def render_effective_cases_yaml() -> str:
     lines: list[str] = [
         GENERATED_COMMENT,
@@ -194,6 +426,52 @@ def render_effective_cases_yaml() -> str:
             f"      - {selected_variant_id(factor_id, element_id)}"
             for factor_id, element_id in case.selected
         )
+    project = PROJECT_TARGETS[0]
+    api = API_TARGETS[0]
+    create_data = PROJECT_OPERATION_DATA[0]
+    update_data = PROJECT_OPERATION_DATA[1]
+    access_data = data_for_factor("F030")[0]
+    approve_data = data_for_factor("F040")[0]
+    reject_data = data_for_factor("F041")[0]
+    project_create = target_variant_id(
+        "project", project, None, "create", "success", create_data
+    )
+    project_update = target_variant_id(
+        "project", project, None, "update", "success", update_data
+    )
+    access_success = target_variant_id(
+        "access_request", project, api, "apply", "success", access_data
+    )
+    approve_success = target_variant_id(
+        "review", project, api, "approve", "success", approve_data
+    )
+    reject_success = target_variant_id(
+        "review", project, api, "reject", "success", reject_data
+    )
+    lines.extend(
+        [
+            "target_cases:",
+            "  - id: TC_TARGET_001",
+            "    title: project_A creates API_A request and approves it",
+            "    selected_variants:",
+            f"      - {project_create}",
+            f"      - {access_success}",
+            f"      - {approve_success}",
+            *target_case_runtime_assertions(project, api),
+            "  - id: TC_TARGET_002",
+            "    title: project_A creates API_A request and rejects it",
+            "    selected_variants:",
+            f"      - {project_create}",
+            f"      - {access_success}",
+            f"      - {reject_success}",
+            *target_case_runtime_assertions(project, None),
+            "  - id: TC_TARGET_003",
+            "    title: project_A updates public client redirect URL",
+            "    selected_variants:",
+            f"      - {project_create}",
+            f"      - {project_update}",
+        ]
+    )
     lines.append("")
     return "\n".join(lines)
 
@@ -210,6 +488,9 @@ def rendered_outputs(output_root: Path = Path("docs/spec/50.e2e")) -> Mapping[Pa
     )
     rendered[flow_root / "generated" / "effective_factor_matrix.gen.yaml"] = (
         render_effective_factor_matrix_yaml(FACTORS)
+    )
+    rendered[flow_root / "generated" / "effective_variants.gen.yaml"] = (
+        render_effective_target_variants_yaml()
     )
     rendered[flow_root / "generated" / "effective_step_bindings.gen.yaml"] = (
         render_effective_step_bindings_yaml(FACTORS)

@@ -38,13 +38,14 @@ def test_e2e_factor_yaml_outputs_include_effective_factors(tmp_path: Path) -> No
 
     assert tmp_path / "api_access_lifecycle/factors/effective_factors.gen.yaml" in rendered
     assert tmp_path / "api_access_lifecycle/generated/effective_factor_matrix.gen.yaml" in rendered
+    assert tmp_path / "api_access_lifecycle/generated/effective_variants.gen.yaml" in rendered
     assert tmp_path / "api_access_lifecycle/generated/effective_step_bindings.gen.yaml" in rendered
     assert tmp_path / "api_access_lifecycle/generated/effective_cases.gen.yaml" in rendered
     expected_factor_files = {
         f"{factor.factor_id}_{factor.slug}.gen.yaml" for factor in FACTORS
     }
     assert expected_factor_files.issubset({path.name for path in rendered})
-    assert len(rendered) == len(FACTORS) + 4
+    assert len(rendered) == len(FACTORS) + 5
     assert "terminal: true" in rendered[
         tmp_path / "api_access_lifecycle/factors/F040_approve_api_access_request_result.gen.yaml"
     ]
@@ -53,12 +54,20 @@ def test_e2e_factor_yaml_outputs_include_effective_factors(tmp_path: Path) -> No
     ]
     assert "access_request_result.success@both_auth_mode" in matrix
     assert "access_request_result.duplicate_pending@public_pkce_auth_mode" in matrix
+    variants = rendered[
+        tmp_path / "api_access_lifecycle/generated/effective_variants.gen.yaml"
+    ]
+    assert "project.project_A.create.success@create_default" in variants
+    assert "access_request.project_A.API_A.apply.success@both_auth_mode" in variants
+    assert "review.project_A.API_A.approve.success@approve_both" in variants
     bindings = rendered[
         tmp_path / "api_access_lifecycle/generated/effective_step_bindings.gen.yaml"
     ]
     assert "setup_pending_access_request" in bindings
     cases = rendered[tmp_path / "api_access_lifecycle/generated/effective_cases.gen.yaml"]
     assert "selected_variants:" in cases
+    assert "TC_TARGET_001" in cases
+    assert "runtime_assertions:" in cases
 
 
 def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
