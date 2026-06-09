@@ -1,0 +1,32 @@
+schema_version: 1
+
+step:
+  id: create_access_request
+  title: 利用申請APIを呼び出す
+  phase: exercise
+  operation_id: createApiAccessRequest
+  endpoint: POST /projects/{projectId}/api-access-requests
+
+md:
+  detail_section:
+    include: true
+    heading: 利用申請APIを呼び出す
+    description: ${project.id}から${api.id}に対する利用申請を作成する。
+
+prerequisites:
+  - id: project_created
+    text: ${project.id} が作成済みで、derivedState=ACTIVEである。
+  - id: api_published
+    text: ${api.id} が公開済みで、apiId/apiStageIdを参照できる。
+  - id: no_existing_pending_request
+    text: 同一Project/API stageにPENDING申請が存在しない。
+
+request:
+  source: data.request
+
+expect:
+  response:
+    status: ${result.expected_status}
+
+capture:
+  accessRequestId[${project.id},${api.id}]: $.accessRequestId

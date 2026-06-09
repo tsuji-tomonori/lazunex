@@ -1,0 +1,11 @@
+schema_version: 1
+
+data:
+  id: update_redirect_url
+  title: callback URL更新データ
+  request:
+    body:
+      callbackUrls:
+        - https://example.com/e2e/${case.id}/callback
+      logoutUrls:
+        - https://example.com/e2e/${case.id}/logout

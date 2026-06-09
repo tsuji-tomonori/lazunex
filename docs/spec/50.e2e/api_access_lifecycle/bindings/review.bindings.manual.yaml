@@ -1,0 +1,27 @@
+schema_version: 1
+
+factor_id: review
+
+bindings:
+  - id: review_approve_success
+    when:
+      operation: approve
+      result: success
+    steps:
+      - ref: steps/review/approve_access_request.step.manual.yaml
+    evidences:
+      - ref: evidences/review/access_request_approved.evidence.manual.yaml
+      - ref: evidences/runtime/current_api_callable.evidence.manual.yaml
+      - ref: evidences/runtime/other_api_not_callable.evidence.manual.yaml
+
+  - id: review_reject_success
+    when:
+      operation: reject
+      result: success
+    steps:
+      - ref: steps/review/reject_access_request.step.manual.yaml
+    evidences:
+      - ref: evidences/review/access_request_rejected.evidence.manual.yaml
+      - ref: evidences/runtime/other_api_not_callable.evidence.manual.yaml
+        bind:
+          include_current_api: true

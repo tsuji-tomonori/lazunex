@@ -1,0 +1,7 @@
+schema_version: 1
+
+result:
+  id: approve_success
+  title: 承認成功
+  expected_status: 200
+  continue_flow: true

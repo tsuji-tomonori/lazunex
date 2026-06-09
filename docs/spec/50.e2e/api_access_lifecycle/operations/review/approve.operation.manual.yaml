@@ -1,0 +1,10 @@
+schema_version: 1
+
+operation:
+  id: approve
+  factor_id: review
+  title: 承認
+
+md:
+  overview_label: ${api.id}の利用申請を承認する
+  detail_heading: 承認APIを呼び出す

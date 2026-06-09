@@ -1,0 +1,9 @@
+schema_version: 1
+
+data:
+  id: reject_default
+  title: 標準却下
+  request:
+    body:
+      decision: REJECTED
+      reason: e2e rejected by test case

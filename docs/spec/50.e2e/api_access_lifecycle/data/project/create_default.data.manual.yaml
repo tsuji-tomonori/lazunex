@@ -1,0 +1,11 @@
+schema_version: 1
+
+data:
+  id: create_default
+  title: 標準Project作成データ
+  request:
+    body:
+      projectCode: ${project.defaults.projectCode}
+      name: ${project.defaults.name}
+      ownerPrincipalId: ${project.defaults.ownerPrincipalId}
+      departmentCode: ${project.defaults.departmentCode}

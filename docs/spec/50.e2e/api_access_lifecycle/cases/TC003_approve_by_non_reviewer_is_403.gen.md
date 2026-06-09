@@ -2,18 +2,50 @@
 
 # TC003 approve by non reviewer is 403
 
-## 1. ケース概要
+## 1. 対象
 
-| 項目 | 内容 |
-|---|---|
-| Flow | `api_access_lifecycle` |
-| Tier | `sandbox` |
-| 目的 | reviewer以外の主体によるapproveが拒否されることを確認する。 |
-| 終了条件 | approve_api_access_request |
+| 種別 | ID | 名称 | 用途 | 主な参照値 |
+|---|---|---|---|---|
+| Project | `project_A` | Project A | 利用申請元Project | projectId, projectApiKey |
+| API | `API_A` | API A | 承認または却下の対象API | apiId, apiStageId, invokeUrl |
+| API | `API_B` | API B | 未承認で呼び出せないことを確認するAPI | invokeUrl |
+| API | `API_C` | API C | 未承認で呼び出せないことを確認するAPI | invokeUrl |
 
-## 2. 選択要因
+## 2. 処理概要
 
-| Factor | Element |
+project_Aを作成する → project_Aのpublic client redirect URLを更新する → project_AからAPI_Aへ利用申請する → API_Aの利用申請を承認する。
+
+## 3. 処理詳細
+
+### 前提条件
+
+| No | 前提 | 補足 |
+|---|---|---|
+| P1 | Cognito管理API用tokenを取得できる。 | - |
+| P2 | API_A, API_B, API_C は公開済み、またはsandbox事前データとして参照できる。 | - |
+| P3 | reviewerがAPI_Aの審査者である。 | - |
+| P4 | project_A用のテストデータをcase.id suffixで一意に生成する。 | - |
+| P5 | secret値、API key値、client secret値の実値をMarkdownやログに出さない。 | - |
+
+### API呼び出し手順
+
+| Step | API | 目的 | 期待 | Capture |
+|---|---|---|---|---|
+| Step 1 | `GET /health` | HTTP 200とstatus okを確認し、以降の管理API E2Eを開始できる状態にする。 | 仕様どおりのHTTP status/body | - |
+| Step 2 | `POST /apis` | `${apiId}` と `${apiStageId}` を後続stepへ渡す。 | 仕様どおりのHTTP status/body | - |
+| Step 3 | `GET /apis` | 公開済みAPIが一覧に現れ、pagination/filterとsecret非表示を確認する。 | 仕様どおりのHTTP status/body | - |
+| Step 4 | `GET /apis/${apiId}` | POST /apisで得たAPI詳細、stage、scope、reviewer情報との一致を確認する。 | 仕様どおりのHTTP status/body | - |
+| Step 5 | `POST /projects` | `${projectId}` と `${project_api_key}` を後続stepへ渡す。 | 仕様どおりのHTTP status/body | projectId, projectApiKey, publicClientId, confidentialClientId |
+| Step 6 | `GET /projects` | 作成Projectが一覧に現れ、caller権限範囲とsecret非表示を確認する。 | 仕様どおりのHTTP status/body | - |
+| Step 7 | `GET /projects/${projectId}` | Project詳細、client構成、public client設定、secret非表示を確認する。 | 仕様どおりのHTTP status/body | - |
+| Step 8 | `PATCH /projects/${projectId}/public-client` | public client設定更新後も既存AllowedOAuthScopesを保持する。 | 仕様どおりのHTTP status/body | - |
+| Step 9 | `POST /projects/${projectId}/api-access-requests` | `${accessRequestId}` を審査stepへ渡す。 | 仕様どおりのHTTP status/body | accessRequestId |
+| Step 10 | `GET /projects/${projectId}/api-access-requests` | PENDING申請がProject単位の一覧に現れることを確認する。 | 仕様どおりのHTTP status/body | - |
+| Step 11 | `POST /api-access-requests/${accessRequestId}/approve` | subscription、Usage Plan stage、Cognito scopeの反映結果を確認する。 | 仕様どおりのHTTP status/body | subscriptionId, operationId |
+
+### 選択要因
+
+| 要因 | 要素 |
 |---|---|
 | `F000` | 成功: appが応答可能 |
 | `F001` | reviewer以外 |
@@ -29,196 +61,15 @@
 | `F031` | 成功: PENDING申請が一覧に現れる |
 | `F040` | 失敗: reviewer以外 |
 
-## 3. 事前条件
+## 4. エビデンス
 
-- Cognito管理API用tokenを取得できる。
-- Runtime対象のAPI Gateway REST APIがsandbox環境に存在する。
-- テストデータの `apiCode` と `projectCode` はケースIDを含めて一意にする。
-- `${project_api_key}`、`${confidential_client_secret}`、`${runtime_access_token}` はplaceholderとして扱う。
+| No | 観点 | タイミング | 残すエビデンス | 取得方法 | OK条件 | 保存名 |
+|---|---|---|---|---|---|---|
+| E1 | Project作成確認 | Project作成API後 | Project一覧レスポンス | `GET /projects?keyword=${project_A.defaults.projectCode}` | project_AがACTIVEで返る | `TC003_E_project_search_project_A.json` |
+| E2 | 利用申請確認 | 利用申請API後 | 利用申請一覧レスポンス | `GET /projects/{projectId}/api-access-requests` | API_Aの申請がPENDINGで表示される | `TC003_E_access_request_pending_project_A_API_A.json` |
+| E3 | 承認結果確認 | 承認API後 | 利用申請一覧レスポンス | `GET /projects/{projectId}/api-access-requests` | API_Aの申請がAPPROVEDで表示される | `TC003_E_access_request_approved_project_A_API_A.json` |
 
-## 4. API呼び出し手順
-
-### Step 1: GET /health
-
-Request:
-
-```http
-GET /health
-Authorization: Bearer ${management_or_runtime_token}
-Idempotency-Key: ${case_id}-get_health
-Content-Type: application/json
-```
-
-OK条件:
-
-- HTTP 200とstatus okを確認し、以降の管理API E2Eを開始できる状態にする。
-- secret値、API key値、client secret値の実値をMarkdownやログに出さない。
-
-### Step 2: POST /apis
-
-Request:
-
-```http
-POST /apis
-Authorization: Bearer ${management_or_runtime_token}
-Idempotency-Key: ${case_id}-post_apis
-Content-Type: application/json
-```
-
-OK条件:
-
-- `${apiId}` と `${apiStageId}` を後続stepへ渡す。
-- secret値、API key値、client secret値の実値をMarkdownやログに出さない。
-
-### Step 3: GET /apis
-
-Request:
-
-```http
-GET /apis
-Authorization: Bearer ${management_or_runtime_token}
-Idempotency-Key: ${case_id}-get_apis
-Content-Type: application/json
-```
-
-OK条件:
-
-- 公開済みAPIが一覧に現れ、pagination/filterとsecret非表示を確認する。
-- secret値、API key値、client secret値の実値をMarkdownやログに出さない。
-
-### Step 4: GET /apis/${apiId}
-
-Request:
-
-```http
-GET /apis/${apiId}
-Authorization: Bearer ${management_or_runtime_token}
-Idempotency-Key: ${case_id}-get_api
-Content-Type: application/json
-```
-
-OK条件:
-
-- POST /apisで得たAPI詳細、stage、scope、reviewer情報との一致を確認する。
-- secret値、API key値、client secret値の実値をMarkdownやログに出さない。
-
-### Step 5: POST /projects
-
-Request:
-
-```http
-POST /projects
-Authorization: Bearer ${management_or_runtime_token}
-Idempotency-Key: ${case_id}-post_projects
-Content-Type: application/json
-```
-
-OK条件:
-
-- `${projectId}` と `${project_api_key}` を後続stepへ渡す。
-- secret値、API key値、client secret値の実値をMarkdownやログに出さない。
-
-### Step 6: GET /projects
-
-Request:
-
-```http
-GET /projects
-Authorization: Bearer ${management_or_runtime_token}
-Idempotency-Key: ${case_id}-get_projects
-Content-Type: application/json
-```
-
-OK条件:
-
-- 作成Projectが一覧に現れ、caller権限範囲とsecret非表示を確認する。
-- secret値、API key値、client secret値の実値をMarkdownやログに出さない。
-
-### Step 7: GET /projects/${projectId}
-
-Request:
-
-```http
-GET /projects/${projectId}
-Authorization: Bearer ${management_or_runtime_token}
-Idempotency-Key: ${case_id}-get_project
-Content-Type: application/json
-```
-
-OK条件:
-
-- Project詳細、client構成、public client設定、secret非表示を確認する。
-- secret値、API key値、client secret値の実値をMarkdownやログに出さない。
-
-### Step 8: PATCH /projects/${projectId}/public-client
-
-Request:
-
-```http
-PATCH /projects/${projectId}/public-client
-Authorization: Bearer ${management_or_runtime_token}
-Idempotency-Key: ${case_id}-patch_project_public_client
-Content-Type: application/json
-```
-
-OK条件:
-
-- public client設定更新後も既存AllowedOAuthScopesを保持する。
-- secret値、API key値、client secret値の実値をMarkdownやログに出さない。
-
-### Step 9: POST /projects/${projectId}/api-access-requests
-
-Request:
-
-```http
-POST /projects/${projectId}/api-access-requests
-Authorization: Bearer ${management_or_runtime_token}
-Idempotency-Key: ${case_id}-post_api_access_requests
-Content-Type: application/json
-```
-
-OK条件:
-
-- `${accessRequestId}` を審査stepへ渡す。
-- secret値、API key値、client secret値の実値をMarkdownやログに出さない。
-
-### Step 10: GET /projects/${projectId}/api-access-requests
-
-Request:
-
-```http
-GET /projects/${projectId}/api-access-requests
-Authorization: Bearer ${management_or_runtime_token}
-Idempotency-Key: ${case_id}-get_project_api_access_requests
-Content-Type: application/json
-```
-
-OK条件:
-
-- PENDING申請がProject単位の一覧に現れることを確認する。
-- secret値、API key値、client secret値の実値をMarkdownやログに出さない。
-
-### Step 11: POST /api-access-requests/${accessRequestId}/approve
-
-Request:
-
-```http
-POST /api-access-requests/${accessRequestId}/approve
-Authorization: Bearer ${management_or_runtime_token}
-Idempotency-Key: ${case_id}-approve_api_access_request
-Content-Type: application/json
-```
-
-OK条件:
-
-- subscription、Usage Plan stage、Cognito scopeの反映結果を確認する。
-- secret値、API key値、client secret値の実値をMarkdownやログに出さない。
-
-## 5. 後続確認
+### 後続確認
 
 - approveがHTTP 403を返す。
 - subscriptionが作成されず後続Runtime API呼び出しを実行しない。
-
-## 6. クリーンアップ
-
-- sandboxで作成したAPI catalog、project、Cognito client、Usage Plan、API keyはcleanup手順に従って削除または隔離する。

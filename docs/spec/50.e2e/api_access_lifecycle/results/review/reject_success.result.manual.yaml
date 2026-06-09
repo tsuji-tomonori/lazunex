@@ -1,0 +1,7 @@
+schema_version: 1
+
+result:
+  id: reject_success
+  title: 却下成功
+  expected_status: 200
+  continue_flow: true

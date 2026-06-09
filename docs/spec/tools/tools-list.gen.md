@@ -13,8 +13,7 @@
 | `generate_api_detail_design` | router/functions/schemas/SQL/queries から API 詳細設計を生成する。 |
 | `generate_api_unit_test_factors` | router AST から API unit test 要因・ケース仕様を生成する。 |
 | `generate_api_message_catalog` | operational log call と message catalog から API message 仕様を生成する。 |
-| `generate_e2e_factor_yaml` | E2E flow と API contract/samples/unit-test factors から E2E 要因YAMLを生成する。 |
-| `generate_e2e_case_list` | E2E要因YAMLから枝刈り済みケース一覧を生成する。 |
+| `generate_e2e_case_list` | 手動管理のE2E要因YAMLから枝刈り済みケース一覧を生成する。 |
 | `generate_e2e_scenarios` | E2Eケース一覧とstep templateからテストケースごとのシナリオMarkdownを生成する。 |
 | `generate_db_crud` | API 配下 SQL と DDL から DB CRUD 表を生成する。 |
 | `generate_external_crud` | functions.py の integration port 呼び出しから外部サービス CRUD 表を生成する。 |

@@ -1,0 +1,38 @@
+schema_version: 1
+
+evidence:
+  id: access_request_rejected
+  title: 利用申請一覧で却下として確認できる
+  category: state_confirmation
+
+applies_to:
+  factor: review
+  operation: reject
+  result: success
+
+timing:
+  after_step: reject_access_request
+
+collector:
+  step:
+    id: collect_access_request_rejected
+    operation_id: listProjectApiAccessRequests
+    method: GET
+    endpoint: /projects/{projectId}/api-access-requests
+    expect:
+      status: 200
+      body:
+        items:
+          contains:
+            accessRequestId: ${accessRequestId[${project.id},${api.id}]}
+            apiId: ${api.apiId}
+            derivedState: REJECTED
+
+md:
+  evidence_row:
+    viewpoint: 却下結果確認
+    timing: 却下API呼び出し後
+    evidence: GET /projects/{projectId}/api-access-requests のレスポンス
+    collection: GET /projects/{projectId}/api-access-requests
+    ok_condition: ${project.id} × ${api.id} の利用申請がREJECTEDで表示される。
+    save_as: ${case.id}_E_access_request_rejected_${project.id}_${api.id}.json

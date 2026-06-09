@@ -1,0 +1,22 @@
+schema_version: 1
+
+factor_id: project
+
+bindings:
+  - id: project_create_success
+    when:
+      operation: create
+      result: success
+    steps:
+      - ref: steps/project/create_project.step.manual.yaml
+    evidences:
+      - ref: evidences/project/project_search_hit.evidence.manual.yaml
+
+  - id: project_update_success
+    when:
+      operation: update
+      result: success
+    steps:
+      - ref: steps/project/update_project_public_client.step.manual.yaml
+    evidences:
+      - ref: evidences/project/redirect_url_updated.evidence.manual.yaml

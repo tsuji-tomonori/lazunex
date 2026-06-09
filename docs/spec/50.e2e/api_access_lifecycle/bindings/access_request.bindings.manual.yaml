@@ -1,0 +1,13 @@
+schema_version: 1
+
+factor_id: access_request
+
+bindings:
+  - id: access_request_apply_success
+    when:
+      operation: apply
+      result: success
+    steps:
+      - ref: steps/access_request/create_access_request.step.manual.yaml
+    evidences:
+      - ref: evidences/access_request/access_request_listed.evidence.manual.yaml

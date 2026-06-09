@@ -14,6 +14,38 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
         flow_root / "flow.manual.yaml",
         flow_root / "case-list_gen.md",
         flow_root / "pruned-cases_gen.csv",
+        flow_root / "targets" / "projects" / "project_A.target.manual.yaml",
+        flow_root / "targets" / "projects" / "project_B.target.manual.yaml",
+        flow_root / "targets" / "projects" / "project_C.target.manual.yaml",
+        flow_root / "targets" / "apis" / "API_A.target.manual.yaml",
+        flow_root / "targets" / "apis" / "API_B.target.manual.yaml",
+        flow_root / "targets" / "apis" / "API_C.target.manual.yaml",
+        flow_root / "factors" / "project.factor.manual.yaml",
+        flow_root / "factors" / "access_request.factor.manual.yaml",
+        flow_root / "factors" / "review.factor.manual.yaml",
+        flow_root / "operations" / "project" / "create.operation.manual.yaml",
+        flow_root / "operations" / "project" / "update.operation.manual.yaml",
+        flow_root / "operations" / "access_request" / "apply.operation.manual.yaml",
+        flow_root / "operations" / "review" / "approve.operation.manual.yaml",
+        flow_root / "operations" / "review" / "reject.operation.manual.yaml",
+        flow_root / "steps" / "project" / "create_project.step.manual.yaml",
+        flow_root / "steps" / "access_request" / "create_access_request.step.manual.yaml",
+        flow_root / "steps" / "review" / "approve_access_request.step.manual.yaml",
+        flow_root / "steps" / "review" / "reject_access_request.step.manual.yaml",
+        flow_root / "steps" / "runtime" / "invoke_api.step.manual.yaml",
+        flow_root / "evidences" / "project" / "project_search_hit.evidence.manual.yaml",
+        flow_root / "evidences" / "access_request" / "access_request_listed.evidence.manual.yaml",
+        flow_root / "evidences" / "review" / "access_request_approved.evidence.manual.yaml",
+        flow_root / "evidences" / "review" / "access_request_rejected.evidence.manual.yaml",
+        flow_root / "evidences" / "runtime" / "current_api_callable.evidence.manual.yaml",
+        flow_root / "evidences" / "runtime" / "other_api_not_callable.evidence.manual.yaml",
+        flow_root / "bindings" / "project.bindings.manual.yaml",
+        flow_root / "bindings" / "access_request.bindings.manual.yaml",
+        flow_root / "bindings" / "review.bindings.manual.yaml",
+        flow_root / "bindings" / "runtime.bindings.manual.yaml",
+        flow_root / "rules" / "renderer.manual.yaml",
+        flow_root / "rules" / "matrix.manual.yaml",
+        flow_root / "rules" / "pruning.manual.yaml",
         flow_root / "factors" / "effective_factors.manual.yaml",
         flow_root / "generated" / "effective_factor_matrix.manual.yaml",
         flow_root / "generated" / "effective_variants.manual.yaml",
@@ -56,10 +88,18 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
         scenario_path = flow_root / "cases" / case.filename
         if scenario_path.exists():
             scenario = scenario_path.read_text(encoding="utf-8")
-            if "${project_api_key}" not in scenario:
+            if "post_projects" in case.scenario_steps and "${project_api_key}" not in scenario:
                 errors.append(f"{case.case_id}: scenario does not keep project_api_key placeholder")
             if case.case_id not in scenario:
                 errors.append(f"{case.case_id}: scenario title does not include case id")
+            for heading in (
+                "## 1. 対象",
+                "## 2. 処理概要",
+                "## 3. 処理詳細",
+                "## 4. エビデンス",
+            ):
+                if heading not in scenario:
+                    errors.append(f"{case.case_id}: scenario missing heading {heading}")
     return errors
 
 

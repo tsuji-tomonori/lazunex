@@ -1,0 +1,14 @@
+schema_version: 1
+
+step:
+  id: get_project
+  title: Project詳細取得APIを呼び出す
+  phase: verify
+  operation_id: getProject
+  endpoint: GET /projects/{projectId}
+
+md:
+  detail_section:
+    include: false
+    heading: Project詳細取得APIを呼び出す
+    description: Project詳細とpublic client設定を確認する。

@@ -1,0 +1,30 @@
+schema_version: 1
+
+step:
+  id: approve_access_request
+  title: 承認APIを呼び出す
+  phase: exercise
+  operation_id: approveApiAccessRequest
+  endpoint: POST /api-access-requests/{accessRequestId}/approve
+
+md:
+  detail_section:
+    include: true
+    heading: 承認APIを呼び出す
+    description: ${project.id} × ${api.id} の利用申請を承認する。
+
+prerequisites:
+  - id: access_request_pending
+    text: accessRequestId[${project.id},${api.id}] がPENDINGである。
+  - id: reviewer_permission
+    text: 呼び出し元が ${api.id} のreviewerである。
+
+request:
+  source: data.request
+
+expect:
+  response:
+    status: ${result.expected_status}
+
+capture:
+  subscriptionId[${project.id},${api.id}]: $.subscriptionId

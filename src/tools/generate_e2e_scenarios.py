@@ -70,36 +70,178 @@ STEP_LABELS = {
 }
 
 
+TARGET_ROWS = (
+    ("Project", "project_A", "Project A", "利用申請元Project", "projectId, projectApiKey"),
+    ("API", "API_A", "API A", "承認または却下の対象API", "apiId, apiStageId, invokeUrl"),
+    ("API", "API_B", "API B", "未承認で呼び出せないことを確認するAPI", "invokeUrl"),
+    ("API", "API_C", "API C", "未承認で呼び出せないことを確認するAPI", "invokeUrl"),
+)
+
+
+def render_targets() -> list[str]:
+    lines = ["| 種別 | ID | 名称 | 用途 | 主な参照値 |", "|---|---|---|---|---|"]
+    lines.extend(
+        f"| {kind} | `{target_id}` | {title} | {usage} | {variables} |"
+        for kind, target_id, title, usage, variables in TARGET_ROWS
+    )
+    return lines
+
+
+def render_overview(case: E2eCase) -> str:
+    labels: list[str] = []
+    overview_by_step = {
+        "post_projects": "project_Aを作成する",
+        "patch_project_public_client": "project_Aのpublic client redirect URLを更新する",
+        "post_api_access_requests": "project_AからAPI_Aへ利用申請する",
+        "approve_api_access_request": "API_Aの利用申請を承認する",
+        "reject_api_access_request": "API_Aの利用申請を却下する",
+        "invoke_runtime_api": "API_Aは呼び出せる、API_B/API_Cは呼び出せないことを確認する",
+    }
+    for step in case.scenario_steps:
+        if step in overview_by_step:
+            labels.append(overview_by_step[step])
+    if not labels:
+        labels.append(case.purpose)
+    return " → ".join(labels) + "。"
+
+
 def render_selected_factors(case: E2eCase) -> list[str]:
-    lines = ["| Factor | Element |", "|---|---|"]
+    lines = ["| 要因 | 要素 |", "|---|---|"]
     for factor_id, element_id in case.selected:
         lines.append(f"| `{factor_id}` | {markdown_escape(element_label(factor_id, element_id))} |")
     return lines
 
 
-def render_steps(case: E2eCase) -> list[str]:
-    lines: list[str] = []
+def render_prerequisites(case: E2eCase) -> list[str]:
+    prerequisites = [
+        "Cognito管理API用tokenを取得できる。",
+        "API_A, API_B, API_C は公開済み、またはsandbox事前データとして参照できる。",
+        "reviewerがAPI_Aの審査者である。",
+        "project_A用のテストデータをcase.id suffixで一意に生成する。",
+        "secret値、API key値、client secret値の実値をMarkdownやログに出さない。",
+    ]
+    if "invoke_runtime_api" in case.scenario_steps:
+        prerequisites.append("Runtime API用tokenとproject_AのAPI keyを取得できる。")
+    lines = ["| No | 前提 | 補足 |", "|---|---|---|"]
+    lines.extend(f"| P{index} | {text} | - |" for index, text in enumerate(prerequisites, start=1))
+    return lines
+
+
+def render_api_steps(case: E2eCase) -> list[str]:
+    lines = ["| Step | API | 目的 | 期待 | Capture |", "|---|---|---|---|---|"]
     for index, step_id in enumerate(case.scenario_steps, start=1):
         endpoint, ok_condition = STEP_LABELS[step_id]
-        lines.extend(
+        capture = {
+            "post_projects": "projectId, projectApiKey, publicClientId, confidentialClientId",
+            "post_api_access_requests": "accessRequestId",
+            "approve_api_access_request": "subscriptionId, operationId",
+        }.get(step_id, "-")
+        lines.append(
+            f"| Step {index} | `{endpoint}` | {markdown_escape(ok_condition)} | "
+            f"仕様どおりのHTTP status/body | {capture} |"
+        )
+    return lines
+
+
+def evidence_rows(case: E2eCase) -> list[tuple[str, str, str, str, str, str]]:
+    rows: list[tuple[str, str, str, str, str, str]] = []
+    if "post_projects" in case.scenario_steps:
+        rows.append(
+            (
+                "Project作成確認",
+                "Project作成API後",
+                "Project一覧レスポンス",
+                "GET /projects?keyword=${project_A.defaults.projectCode}",
+                "project_AがACTIVEで返る",
+                f"{case.case_id}_E_project_search_project_A.json",
+            )
+        )
+    if "post_api_access_requests" in case.scenario_steps:
+        rows.append(
+            (
+                "利用申請確認",
+                "利用申請API後",
+                "利用申請一覧レスポンス",
+                "GET /projects/{projectId}/api-access-requests",
+                "API_Aの申請がPENDINGで表示される",
+                f"{case.case_id}_E_access_request_pending_project_A_API_A.json",
+            )
+        )
+    if "approve_api_access_request" in case.scenario_steps:
+        rows.append(
+            (
+                "承認結果確認",
+                "承認API後",
+                "利用申請一覧レスポンス",
+                "GET /projects/{projectId}/api-access-requests",
+                "API_Aの申請がAPPROVEDで表示される",
+                f"{case.case_id}_E_access_request_approved_project_A_API_A.json",
+            )
+        )
+    if "reject_api_access_request" in case.scenario_steps:
+        rows.append(
+            (
+                "却下結果確認",
+                "却下API後",
+                "利用申請一覧レスポンス",
+                "GET /projects/{projectId}/api-access-requests",
+                "API_Aの申請がREJECTEDで表示される",
+                f"{case.case_id}_E_access_request_rejected_project_A_API_A.json",
+            )
+        )
+    if "invoke_runtime_api" in case.scenario_steps:
+        rows.extend(
             [
-                f"### Step {index}: {endpoint}",
-                "",
-                "Request:",
-                "",
-                "```http",
-                f"{endpoint}",
-                "Authorization: Bearer ${management_or_runtime_token}",
-                f"Idempotency-Key: ${{case_id}}-{step_id}",
-                "Content-Type: application/json",
-                "```",
-                "",
-                "OK条件:",
-                "",
-                f"- {ok_condition}",
-                "- secret値、API key値、client secret値の実値をMarkdownやログに出さない。",
-                "",
+                (
+                    "承認済みAPI実行確認",
+                    "承認API後",
+                    "API_A Runtime APIレスポンス",
+                    "GET ${API_A.invokeUrl}",
+                    "2xx",
+                    f"{case.case_id}_E_runtime_project_A_API_A_allowed.json",
+                ),
+                (
+                    "未承認API拒否確認",
+                    "承認API後",
+                    "API_B Runtime APIレスポンス",
+                    "GET ${API_B.invokeUrl}",
+                    "401または403",
+                    f"{case.case_id}_E_runtime_project_A_API_B_denied.json",
+                ),
+                (
+                    "未承認API拒否確認",
+                    "承認API後",
+                    "API_C Runtime APIレスポンス",
+                    "GET ${API_C.invokeUrl}",
+                    "401または403",
+                    f"{case.case_id}_E_runtime_project_A_API_C_denied.json",
+                ),
             ]
+        )
+    if not rows:
+        rows.append(
+            (
+                "終了条件確認",
+                "最終Step後",
+                "APIレスポンス",
+                "対象APIレスポンスを保存",
+                case.purpose,
+                f"{case.case_id}_E_terminal_response.json",
+            )
+        )
+    return rows
+
+
+def render_evidences(case: E2eCase) -> list[str]:
+    lines = [
+        "| No | 観点 | タイミング | 残すエビデンス | 取得方法 | OK条件 | 保存名 |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    for index, row in enumerate(evidence_rows(case), start=1):
+        viewpoint, timing, evidence, collection, ok_condition, save_as = row
+        lines.append(
+            f"| E{index} | {viewpoint} | {timing} | {evidence} | `{collection}` | "
+            f"{markdown_escape(ok_condition)} | `{save_as}` |"
         )
     return lines
 
@@ -110,44 +252,37 @@ def render_scenario_markdown(case: E2eCase) -> str:
         "",
         f"# {case.case_id} {case.slug.replace('_', ' ')}",
         "",
-        "## 1. ケース概要",
+        "## 1. 対象",
         "",
-        "| 項目 | 内容 |",
-        "|---|---|",
-        f"| Flow | `{FLOW_ID}` |",
-        f"| Tier | `{case.tier}` |",
-        f"| 目的 | {markdown_escape(case.purpose)} |",
-        f"| 終了条件 | {markdown_escape(case.terminal_step)} |",
+        *render_targets(),
         "",
-        "## 2. 選択要因",
+        "## 2. 処理概要",
+        "",
+        render_overview(case),
+        "",
+        "## 3. 処理詳細",
+        "",
+        "### 前提条件",
+        "",
+        *render_prerequisites(case),
+        "",
+        "### API呼び出し手順",
+        "",
+        *render_api_steps(case),
+        "",
+        "### 選択要因",
         "",
         *render_selected_factors(case),
         "",
-        "## 3. 事前条件",
+        "## 4. エビデンス",
         "",
-        "- Cognito管理API用tokenを取得できる。",
-        "- Runtime対象のAPI Gateway REST APIがsandbox環境に存在する。",
-        "- テストデータの `apiCode` と `projectCode` はケースIDを含めて一意にする。",
-        "- `${project_api_key}`、`${confidential_client_secret}`、"
-        "`${runtime_access_token}` はplaceholderとして扱う。",
+        *render_evidences(case),
         "",
-        "## 4. API呼び出し手順",
-        "",
-        *render_steps(case),
-        "## 5. 後続確認",
+        "### 後続確認",
         "",
     ]
     lines.extend(f"- {expected}" for expected in case.expected)
-    lines.extend(
-        [
-            "",
-            "## 6. クリーンアップ",
-            "",
-            "- sandboxで作成したAPI catalog、project、Cognito client、Usage Plan、API keyは"
-            "cleanup手順に従って削除または隔離する。",
-            "",
-        ]
-    )
+    lines.append("")
     return "\n".join(lines)
 
 

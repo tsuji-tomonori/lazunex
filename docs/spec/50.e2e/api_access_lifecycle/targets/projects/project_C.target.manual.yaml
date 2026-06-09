@@ -1,0 +1,24 @@
+schema_version: 1
+
+target:
+  type: project
+  id: project_C
+  title: Project C
+  display_name: project_C
+  description: E2Eで利用する標準Project C
+
+md:
+  target_section:
+    resource_type: Project
+    usage: 別Project分離確認用
+    show_variables:
+      - projectId
+      - projectApiKey
+      - publicClientId
+      - confidentialClientId
+
+defaults:
+  projectCode: e2e-${case.id}-project-c
+  name: E2E Project C
+  ownerPrincipalId: ${actors.project_owner_C}
+  departmentCode: E2E-C

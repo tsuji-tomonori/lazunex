@@ -1,0 +1,24 @@
+schema_version: 1
+
+target:
+  type: api
+  id: API_A
+  title: API A
+  display_name: API_A
+  description: 承認対象として利用するAPI A
+
+md:
+  target_section:
+    resource_type: API
+    usage: 承認対象API
+    show_variables:
+      - apiId
+      - apiStageId
+      - invokeUrl
+      - scopeFullName
+
+defaults:
+  apiCode: e2e-api-a
+  name: E2E API A
+  stageName: prod
+  invokeUrl: ${env.API_A_invoke_url}

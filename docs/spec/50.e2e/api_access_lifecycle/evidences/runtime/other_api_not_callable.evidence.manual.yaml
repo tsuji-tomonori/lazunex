@@ -1,0 +1,38 @@
+schema_version: 1
+
+evidence:
+  id: other_api_not_callable
+  title: 未承認APIが呼び出せない
+  category: runtime_authorization
+
+applies_to:
+  factor: review
+  operation: approve
+  result: success
+
+targets:
+  api:
+    foreach: targets/apis
+    exclude_current: true
+
+timing:
+  after_step: approve_access_request
+
+collector:
+  step:
+    id: invoke_other_api_denied
+    ref: steps/runtime/invoke_api.step.manual.yaml
+    expect:
+      status:
+        one_of:
+          - 401
+          - 403
+
+md:
+  evidence_row:
+    viewpoint: 未承認API拒否確認
+    timing: 承認API呼び出し後
+    evidence: ${api.id} Runtime APIレスポンス
+    collection: GET ${api.defaults.invokeUrl}
+    ok_condition: ${api.id} が401または403を返す。
+    save_as: ${case.id}_E_runtime_${project.id}_${api.id}_denied.json

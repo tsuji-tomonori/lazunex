@@ -1,0 +1,27 @@
+schema_version: 1
+
+step:
+  id: invoke_api
+  title: Runtime APIを呼び出す
+  phase: verify
+  operation_id: invokeRuntimeApi
+  endpoint: GET ${api.invokeUrl}
+
+md:
+  detail_section:
+    include: true
+    heading: Runtime APIを呼び出す
+    description: ${project.id} のAPI keyとruntime tokenで ${api.id} の認可結果を確認する。
+
+prerequisites:
+  - id: runtime_credentials_ready
+    text: ${project.id} 用のAPI keyとruntime tokenを取得済みである。
+
+request:
+  headers:
+    Authorization: Bearer ${runtime_access_token}
+    x-api-key: ${project.projectApiKey}
+
+expect:
+  response:
+    status: ${evidence.expected_status}

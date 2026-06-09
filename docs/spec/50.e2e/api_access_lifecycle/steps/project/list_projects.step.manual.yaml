@@ -1,0 +1,14 @@
+schema_version: 1
+
+step:
+  id: list_projects
+  title: Project一覧取得APIを呼び出す
+  phase: verify
+  operation_id: listProjects
+  endpoint: GET /projects
+
+md:
+  detail_section:
+    include: false
+    heading: Project一覧取得APIを呼び出す
+    description: Project作成結果を一覧APIで確認する。

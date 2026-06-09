@@ -1,0 +1,40 @@
+schema_version: 1
+
+evidence:
+  id: project_search_hit
+  title: プロジェクト検索でヒットする
+  category: state_confirmation
+
+applies_to:
+  factor: project
+  operation: create
+  result: success
+
+timing:
+  after_step: create_project
+
+collector:
+  step:
+    id: collect_project_search
+    operation_id: listProjects
+    method: GET
+    endpoint: /projects
+    request:
+      query:
+        keyword: ${project.defaults.projectCode}
+    expect:
+      status: 200
+      body:
+        items:
+          contains:
+            projectCode: ${project.defaults.projectCode}
+            derivedState: ACTIVE
+
+md:
+  evidence_row:
+    viewpoint: Project作成確認
+    timing: Project作成API呼び出し後
+    evidence: GET /projects のレスポンス
+    collection: GET /projects?keyword=${project.defaults.projectCode}
+    ok_condition: ${project.id} が検索結果に表示され、derivedState=ACTIVEである。
+    save_as: ${case.id}_E_project_search_${project.id}.json

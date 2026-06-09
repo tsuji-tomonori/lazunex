@@ -1,0 +1,30 @@
+schema_version: 1
+
+variant_generation:
+  dimensions:
+    project:
+      targets: all
+      operations: all
+      results: all
+      data: compatible
+    access_request:
+      projects: all
+      apis: all
+      operations: all
+      results: all
+      data: compatible
+    review:
+      projects: all
+      apis: all
+      operations: all
+      results: all
+      data: compatible
+
+case_generation:
+  goals:
+    - id: review_result_cases
+      goal_factor: review
+    - id: project_operation_cases
+      goal_factor: project
+    - id: access_request_cases
+      goal_factor: access_request

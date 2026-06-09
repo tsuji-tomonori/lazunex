@@ -67,8 +67,18 @@ def test_e2e_scenarios_keep_secret_placeholders(tmp_path: Path) -> None:
 
     assert "${project_api_key}" in content
     assert "${runtime_access_token}" in content
-    assert "GET /projects/${projectId}/api-access-requests" in content
+    assert "## 1. 対象" in content
+    assert "## 2. 処理概要" in content
+    assert "## 3. 処理詳細" in content
+    assert "## 4. エビデンス" in content
+    assert "| Project | `project_A` | Project A | 利用申請元Project |" in content
+    assert (
+        "project_Aを作成する → project_Aのpublic client redirect URLを更新する → "
+        "project_AからAPI_Aへ利用申請する"
+    ) in content
+    assert "GET /projects/{projectId}/api-access-requests" in content
     assert "API呼び出し手順" in content
+    assert "API_B Runtime APIレスポンス" in content
 
 
 def test_check_e2e_specs_detects_complete_rendered_tree(tmp_path: Path) -> None:
@@ -87,7 +97,42 @@ def test_check_e2e_specs_detects_complete_rendered_tree(tmp_path: Path) -> None:
 
     fixture_root = Path("docs/spec/50.e2e/api_access_lifecycle")
     for source in [
+        fixture_root / "targets" / "projects" / "project_A.target.manual.yaml",
+        fixture_root / "targets" / "projects" / "project_B.target.manual.yaml",
+        fixture_root / "targets" / "projects" / "project_C.target.manual.yaml",
+        fixture_root / "targets" / "apis" / "API_A.target.manual.yaml",
+        fixture_root / "targets" / "apis" / "API_B.target.manual.yaml",
+        fixture_root / "targets" / "apis" / "API_C.target.manual.yaml",
+        fixture_root / "factors" / "project.factor.manual.yaml",
+        fixture_root / "factors" / "access_request.factor.manual.yaml",
+        fixture_root / "factors" / "review.factor.manual.yaml",
         fixture_root / "factors" / "effective_factors.manual.yaml",
+        fixture_root / "operations" / "project" / "create.operation.manual.yaml",
+        fixture_root / "operations" / "project" / "update.operation.manual.yaml",
+        fixture_root / "operations" / "access_request" / "apply.operation.manual.yaml",
+        fixture_root / "operations" / "review" / "approve.operation.manual.yaml",
+        fixture_root / "operations" / "review" / "reject.operation.manual.yaml",
+        fixture_root / "steps" / "project" / "create_project.step.manual.yaml",
+        fixture_root / "steps" / "access_request" / "create_access_request.step.manual.yaml",
+        fixture_root / "steps" / "review" / "approve_access_request.step.manual.yaml",
+        fixture_root / "steps" / "review" / "reject_access_request.step.manual.yaml",
+        fixture_root / "steps" / "runtime" / "invoke_api.step.manual.yaml",
+        fixture_root / "evidences" / "project" / "project_search_hit.evidence.manual.yaml",
+        fixture_root
+        / "evidences"
+        / "access_request"
+        / "access_request_listed.evidence.manual.yaml",
+        fixture_root / "evidences" / "review" / "access_request_approved.evidence.manual.yaml",
+        fixture_root / "evidences" / "review" / "access_request_rejected.evidence.manual.yaml",
+        fixture_root / "evidences" / "runtime" / "current_api_callable.evidence.manual.yaml",
+        fixture_root / "evidences" / "runtime" / "other_api_not_callable.evidence.manual.yaml",
+        fixture_root / "bindings" / "project.bindings.manual.yaml",
+        fixture_root / "bindings" / "access_request.bindings.manual.yaml",
+        fixture_root / "bindings" / "review.bindings.manual.yaml",
+        fixture_root / "bindings" / "runtime.bindings.manual.yaml",
+        fixture_root / "rules" / "renderer.manual.yaml",
+        fixture_root / "rules" / "matrix.manual.yaml",
+        fixture_root / "rules" / "pruning.manual.yaml",
         fixture_root / "generated" / "effective_factor_matrix.manual.yaml",
         fixture_root / "generated" / "effective_variants.manual.yaml",
         fixture_root / "generated" / "effective_step_bindings.manual.yaml",

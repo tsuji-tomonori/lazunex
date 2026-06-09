@@ -1,0 +1,23 @@
+schema_version: 1
+
+case_markdown:
+  output_dir: cases
+  filename: ${case.id}_${case.slug}.gen.md
+  sections:
+    - id: targets
+      title: 対象
+    - id: overview
+      title: 処理概要
+      format: arrow_sequence
+    - id: details
+      title: 処理詳細
+    - id: evidences
+      title: エビデンス
+
+evidence_numbering:
+  prefix: E
+  start: 1
+
+step_numbering:
+  prefix: Step
+  start: 1

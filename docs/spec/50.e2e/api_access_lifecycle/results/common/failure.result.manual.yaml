@@ -1,0 +1,7 @@
+schema_version: 1
+
+result:
+  id: failure
+  title: 失敗
+  expected_status: 400
+  continue_flow: false

@@ -1,0 +1,10 @@
+schema_version: 1
+
+operation:
+  id: create
+  factor_id: project
+  title: 作成
+
+md:
+  overview_label: ${project.id}を作成する
+  detail_heading: Project作成APIを呼び出す

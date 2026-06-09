@@ -1,0 +1,24 @@
+schema_version: 1
+
+target:
+  type: project
+  id: project_A
+  title: Project A
+  display_name: project_A
+  description: E2Eで利用する標準Project A
+
+md:
+  target_section:
+    resource_type: Project
+    usage: 利用申請元Project
+    show_variables:
+      - projectId
+      - projectApiKey
+      - publicClientId
+      - confidentialClientId
+
+defaults:
+  projectCode: e2e-${case.id}-project-a
+  name: E2E Project A
+  ownerPrincipalId: ${actors.project_owner_A}
+  departmentCode: E2E-A

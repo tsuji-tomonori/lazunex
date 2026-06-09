@@ -1,0 +1,10 @@
+schema_version: 1
+
+data:
+  id: public_pkce_auth_mode
+  title: requestedAuthMode=PUBLIC_PKCE
+  request:
+    body:
+      apiId: ${api.apiId}
+      apiStageId: ${api.apiStageId}
+      requestedAuthMode: PUBLIC_PKCE

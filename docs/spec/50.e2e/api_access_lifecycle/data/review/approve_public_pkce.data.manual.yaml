@@ -1,0 +1,9 @@
+schema_version: 1
+
+data:
+  id: approve_public_pkce
+  title: PUBLIC_PKCE承認
+  request:
+    body:
+      decision: APPROVED
+      approvedAuthMode: PUBLIC_PKCE

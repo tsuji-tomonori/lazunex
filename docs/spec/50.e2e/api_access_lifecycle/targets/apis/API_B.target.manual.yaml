@@ -1,0 +1,23 @@
+schema_version: 1
+
+target:
+  type: api
+  id: API_B
+  title: API B
+  display_name: API_B
+  description: 未承認で呼び出せないことを確認するAPI B
+
+md:
+  target_section:
+    resource_type: API
+    usage: 未承認確認用API
+    show_variables:
+      - apiId
+      - apiStageId
+      - invokeUrl
+
+defaults:
+  apiCode: e2e-api-b
+  name: E2E API B
+  stageName: prod
+  invokeUrl: ${env.API_B_invoke_url}

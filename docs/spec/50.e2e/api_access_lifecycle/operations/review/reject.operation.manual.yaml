@@ -1,0 +1,10 @@
+schema_version: 1
+
+operation:
+  id: reject
+  factor_id: review
+  title: 却下
+
+md:
+  overview_label: ${api.id}の利用申請を却下する
+  detail_heading: 却下APIを呼び出す
