@@ -1,0 +1,18 @@
+schema_version: 1
+template:
+  id: approve_api_access_request
+  operation_id: approveApiAccessRequest
+  method: POST
+  path: /api-access-requests/${accessRequestId}/approve
+request:
+  headers:
+    Authorization: Bearer ${tokens.reviewer_management_token}
+    Idempotency-Key: ${case.case_id}-approve
+    Content-Type: application/json
+  body:
+    from_sample:
+      module: app.apis.api_access_requests.approve_api_access_request.samples
+      object: APPROVE_API_ACCESS_REQUEST_REQUEST_SAMPLE
+captures:
+  subscriptionId: $.subscriptionId
+  operationId: $.operationId

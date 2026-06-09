@@ -28,6 +28,9 @@
 | `generate_api_detail_design` | required | required | required | required |
 | `generate_api_unit_test_factors` | required | required | required | required |
 | `generate_api_message_catalog` | required | required | required | required |
+| `generate_e2e_factor_yaml` | required | required | required | required |
+| `generate_e2e_case_list` | required | required | required | required |
+| `generate_e2e_scenarios` | required | required | required | required |
 | `generate_db_crud` | required | required | required | required |
 | `generate_external_crud` | required | required | required | required |
 | `generate_db_er_diagram` | required | required | required | required |
@@ -36,3 +39,4 @@
 | `check_api_mermaid_sequences` | required | required | required | required |
 | `check_api_sequence_success_responses` | required | required | required | required |
 | `check_api_router_unit_test_factors` | required | required | required | required |
+| `check_e2e_specs` | required | required | required | required |

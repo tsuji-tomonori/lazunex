@@ -1,0 +1,20 @@
+schema_version: 1
+template:
+  id: post_projects
+  operation_id: createProject
+  method: POST
+  path: /projects
+request:
+  headers:
+    Authorization: Bearer ${tokens.project_owner_management_token}
+    Idempotency-Key: ${case.case_id}-create-project
+    Content-Type: application/json
+  body:
+    from_sample:
+      module: app.apis.projects.create_project.samples
+      object: CREATE_PROJECT_REQUEST_SAMPLE
+captures:
+  projectId: $.projectId
+  projectApiKey: $.apiKey.value
+  publicClientId: $.publicClient.clientId
+  confidentialClientId: $.confidentialClient.clientId

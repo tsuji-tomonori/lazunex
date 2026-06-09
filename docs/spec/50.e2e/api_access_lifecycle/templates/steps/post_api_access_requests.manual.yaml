@@ -1,0 +1,17 @@
+schema_version: 1
+template:
+  id: post_api_access_requests
+  operation_id: createApiAccessRequest
+  method: POST
+  path: /projects/${projectId}/api-access-requests
+request:
+  headers:
+    Authorization: Bearer ${tokens.project_owner_management_token}
+    Idempotency-Key: ${case.case_id}-create-access-request
+    Content-Type: application/json
+  body:
+    from_sample:
+      module: app.apis.projects.create_api_access_request.samples
+      object: CREATE_API_ACCESS_REQUEST_REQUEST_SAMPLE
+captures:
+  accessRequestId: $.accessRequestId

@@ -22,6 +22,13 @@ flowchart TD
   generate_api_unit_test_factors[generate_api_unit_test_factors]
   generate_api_sequences --> generate_api_unit_test_factors
   generate_api_message_catalog[generate_api_message_catalog]
+  generate_e2e_factor_yaml[generate_e2e_factor_yaml]
+  generate_api_unit_test_factors --> generate_e2e_factor_yaml
+  generate_openapi_if_specs --> generate_e2e_factor_yaml
+  generate_e2e_case_list[generate_e2e_case_list]
+  generate_e2e_factor_yaml --> generate_e2e_case_list
+  generate_e2e_scenarios[generate_e2e_scenarios]
+  generate_e2e_case_list --> generate_e2e_scenarios
   generate_db_crud[generate_db_crud]
   generate_queries --> generate_db_crud
   generate_external_crud[generate_external_crud]
@@ -35,4 +42,6 @@ flowchart TD
   generate_api_sequences --> check_api_sequence_success_responses
   check_api_router_unit_test_factors[check_api_router_unit_test_factors]
   generate_api_unit_test_factors --> check_api_router_unit_test_factors
+  check_e2e_specs[check_e2e_specs]
+  generate_e2e_scenarios --> check_e2e_specs
 ```

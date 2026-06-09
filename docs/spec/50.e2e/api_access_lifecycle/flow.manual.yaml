@@ -1,0 +1,78 @@
+schema_version: 1
+
+flow:
+  id: api_access_lifecycle
+  title: API access lifecycle
+  description: API公開、Project作成、利用申請、審査、subscriptions確認、Runtime API呼び出しまでのE2Eフロー。
+
+steps:
+  - id: S001
+    operation_id: publishApi
+    method: POST
+    path: /apis
+    template: post_apis
+    captures:
+      - apiId
+      - apiStageId
+      - scopeFullName
+  - id: S002
+    operation_id: listApis
+    method: GET
+    path: /apis
+    template: get_apis
+  - id: S003
+    operation_id: getApi
+    method: GET
+    path: /apis/${apiId}
+    template: get_api
+  - id: S010
+    operation_id: createProject
+    method: POST
+    path: /projects
+    template: post_projects
+    captures:
+      - projectId
+      - projectApiKey
+      - publicClientId
+      - confidentialClientId
+  - id: S020
+    operation_id: createApiAccessRequest
+    method: POST
+    path: /projects/${projectId}/api-access-requests
+    template: post_api_access_requests
+    captures:
+      - accessRequestId
+  - id: S030
+    operation_id: approveApiAccessRequest
+    method: POST
+    path: /api-access-requests/${accessRequestId}/approve
+    template: approve_api_access_request
+    captures:
+      - subscriptionId
+      - operationId
+  - id: S031
+    operation_id: rejectApiAccessRequest
+    method: POST
+    path: /api-access-requests/${accessRequestId}/reject
+    template: reject_api_access_request
+  - id: S040
+    operation_id: listProjectSubscriptions
+    method: GET
+    path: /projects/${projectId}/subscriptions
+    template: get_project_subscriptions
+  - id: S050
+    operation_id: invokeRuntimeApi
+    method: GET
+    path: ${runtime_invoke_url}
+    template: invoke_runtime_api
+
+case_policy:
+  generation_source: generated/effective factor YAML
+  pruning:
+    terminal_elements_skip_later_steps: true
+    dedupe_by_terminal_step_status_reason: true
+  tiers:
+    - smoke_sandbox
+    - sandbox
+    - local_fake
+    - doc_only

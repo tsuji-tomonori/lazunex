@@ -1,0 +1,12 @@
+schema_version: 1
+template:
+  id: invoke_runtime_api
+  operation_id: invokeRuntimeApi
+  method: GET
+  path: ${runtime_invoke_url}
+request:
+  headers:
+    Authorization: Bearer ${runtime_access_token}
+    X-API-Key: ${project_api_key}
+captures:
+  runtimeStatus: $.status

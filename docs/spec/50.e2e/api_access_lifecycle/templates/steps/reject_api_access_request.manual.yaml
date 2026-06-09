@@ -1,0 +1,16 @@
+schema_version: 1
+template:
+  id: reject_api_access_request
+  operation_id: rejectApiAccessRequest
+  method: POST
+  path: /api-access-requests/${accessRequestId}/reject
+request:
+  headers:
+    Authorization: Bearer ${tokens.reviewer_management_token}
+    Idempotency-Key: ${case.case_id}-reject
+    Content-Type: application/json
+  body:
+    from_sample:
+      module: app.apis.api_access_requests.reject_api_access_request.samples
+      object: REJECT_API_ACCESS_REQUEST_REQUEST_SAMPLE
+captures: {}
