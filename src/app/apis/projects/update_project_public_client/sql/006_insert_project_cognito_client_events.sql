@@ -15,9 +15,12 @@ INSERT INTO project_cognito_client_events (
     @event_id,
     @project_cognito_client_id,
     COALESCE((
-        SELECT MAX(event_seq) + 1
-        FROM project_cognito_client_events
-        WHERE aggregate_id = @project_cognito_client_id
+        SELECT next_event_seq
+        FROM (
+            SELECT MAX(event_seq) + 1 AS next_event_seq
+            FROM project_cognito_client_events
+            WHERE aggregate_id = @project_cognito_client_id
+        ) AS event_seq_source
     ), 1),
     @event_name,
     @actor_principal_id,

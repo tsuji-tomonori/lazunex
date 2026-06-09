@@ -1,0 +1,54 @@
+{
+  "restApis": {
+    "abc123def4": {
+      "stages": {
+        "prod": {
+          "stageName": "prod",
+          "deploymentId": "mock-deployment-0"
+        }
+      },
+      "resources": [
+        {
+          "id": "mock-resource-root",
+          "path": "/",
+          "resourceMethods": {
+            "GET": {}
+          }
+        },
+        {
+          "id": "mock-resource-invoices",
+          "path": "/invoices",
+          "resourceMethods": {
+            "GET": {},
+            "POST": {}
+          }
+        }
+      ],
+      "methods": {
+        "mock-resource-root": {
+          "GET": {
+            "httpMethod": "GET",
+            "apiKeyRequired": false,
+            "authorizationType": "NONE",
+            "authorizationScopes": []
+          }
+        },
+        "mock-resource-invoices": {
+          "GET": {
+            "httpMethod": "GET",
+            "apiKeyRequired": false,
+            "authorizationType": "NONE",
+            "authorizationScopes": []
+          },
+          "POST": {
+            "httpMethod": "POST",
+            "apiKeyRequired": false,
+            "authorizationType": "NONE",
+            "authorizationScopes": []
+          }
+        }
+      },
+      "deployments": []
+    }
+  }
+}

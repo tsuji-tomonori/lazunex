@@ -1,0 +1,14 @@
+{
+  "resourceServers": {
+    "api-hub": {
+      "Identifier": "api-hub",
+      "Name": "Lazunex API Hub",
+      "Scopes": [
+        {
+          "ScopeName": "api:existing:invoke",
+          "ScopeDescription": "Existing local API scope"
+        }
+      ]
+    }
+  }
+}

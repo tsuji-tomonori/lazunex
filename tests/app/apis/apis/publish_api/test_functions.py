@@ -184,6 +184,7 @@ async def test_publish_api_db_sequence(monkeypatch: pytest.MonkeyPatch) -> None:
         "insert_idempotency_records",
         "insert_apis",
         "insert_api_gateway_stages",
+        "update_apis_default_api_stage",
         "insert_api_cognito_scopes",
         "insert_api_documents",
         "insert_api_reviewers",

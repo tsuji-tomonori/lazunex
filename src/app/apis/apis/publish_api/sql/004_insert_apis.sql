@@ -23,7 +23,7 @@ INSERT INTO apis (
     @provider_contact,
     @owner_principal_id,
     @visibility,
-    @api_stage_id,
+    NULL,
     @now,
     @actor_principal_id,
     @now,

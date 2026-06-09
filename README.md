@@ -84,3 +84,68 @@ is reserved for a future HTTPS mock override. In `ENV_NAME=prod` or
 ```bash
 docker compose up --build
 ```
+
+DBを初期状態から作り直す場合は、MySQL volume を削除してから起動します。
+`src/db/ddl.sql` は `db` コンテナの初回起動時に投入されます。
+
+```bash
+docker compose down -v
+docker compose up --build -d
+curl -s http://localhost:8000/health
+```
+
+主要管理APIをまとめて確認する場合は、ローカル smoke を実行します。外部AWSには接続せず、
+`app` からの API Gateway / Cognito / Secrets Manager 呼び出しは `aws-mock:8080`
+へ送られます。
+
+```bash
+local/smoke/local_smoke.sh
+```
+
+ローカルでは Cognito JWT の代わりに、既存の開発用 caller header で呼び出し元を表します。
+
+```http
+X-Principal-Id: local-admin
+X-Groups: hub-admin
+X-Scopes: api-hub/local
+Idempotency-Key: local-create-project-001
+```
+
+Project作成の最小例です。
+
+```bash
+curl -s -X POST http://localhost:8000/projects \
+  -H 'Content-Type: application/json' \
+  -H 'X-Principal-Id: local-admin' \
+  -H 'X-Groups: hub-admin' \
+  -H 'Idempotency-Key: local-create-project-001' \
+  -d '{
+    "projectCode": "payment-frontend",
+    "name": "Payment Frontend",
+    "description": "決済画面プロジェクト",
+    "ownerPrincipalId": "user-12345",
+    "departmentCode": "FIN",
+    "usagePlan": {
+      "defaultRateLimit": 100,
+      "defaultBurstLimit": 200,
+      "defaultQuotaLimit": 100000,
+      "defaultQuotaPeriod": "MONTH"
+    },
+    "publicClient": {
+      "callbackUrls": ["https://payment.example.internal/callback"],
+      "logoutUrls": ["https://payment.example.internal/logout"],
+      "accessTokenValidity": 15,
+      "accessTokenUnit": "minutes",
+      "idTokenValidity": 15,
+      "idTokenUnit": "minutes",
+      "refreshTokenValidity": 1,
+      "refreshTokenUnit": "days",
+      "refreshTokenRotationEnabled": true,
+      "retryGracePeriodSeconds": 10
+    },
+    "confidentialClient": {
+      "accessTokenValidity": 15,
+      "accessTokenUnit": "minutes"
+    }
+  }'
+```
