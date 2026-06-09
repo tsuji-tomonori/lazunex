@@ -4,6 +4,8 @@ import argparse
 from collections.abc import Sequence
 from pathlib import Path
 
+import yaml
+
 from tools.e2e_models import CASES, FACTORS, FLOW_ID, FLOW_STEPS
 
 
@@ -65,6 +67,12 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
     for path in required_paths:
         if not path.exists():
             errors.append(f"missing: {path.as_posix()}")
+            continue
+        if path.suffix == ".yaml":
+            try:
+                yaml.safe_load(path.read_text(encoding="utf-8"))
+            except yaml.YAMLError as exc:
+                errors.append(f"invalid yaml: {path.as_posix()}: {exc}")
 
     case_list_path = flow_root / "case-list_gen.md"
     if case_list_path.exists():

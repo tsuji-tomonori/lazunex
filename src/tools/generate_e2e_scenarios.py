@@ -8,7 +8,7 @@ from typing import cast
 
 import yaml
 
-from tools.e2e_models import CASES, FLOW_ID, E2eCase, element_label, markdown_escape
+from tools.e2e_models import CASES, FLOW_ID, element_label, markdown_escape
 from tools.generation_io import check_outputs, write_outputs
 
 GENERATED_COMMENT = (
@@ -71,6 +71,18 @@ STEP_LABELS = {
         "Runtime API call",
         "`${runtime_access_token}` と `${project_api_key}` の組み合わせで認可結果を確認する。",
     ),
+    "setup_pending_access_request": (
+        "setup pending access request",
+        "重複申請確認のため、同一Project/API stageのPENDING申請を事前に用意する。",
+    ),
+    "setup_active_subscription": (
+        "setup active subscription",
+        "契約済み確認のため、同一Project/API stageのACTIVE subscriptionを事前に用意する。",
+    ),
+    "setup_reviewed_access_request": (
+        "setup reviewed access request",
+        "not pending確認のため、レビュー済みの利用申請を事前に用意する。",
+    ),
 }
 
 
@@ -93,12 +105,37 @@ STEP_OPERATION_KEYS = {
 
 
 @dataclass(frozen=True)
+class ScenarioCase:
+    case_id: str
+    slug: str
+    kind: str
+    tier: str
+    purpose: str
+    terminal_step: str
+    selected: tuple[tuple[str, str], ...]
+    scenario_steps: tuple[str, ...]
+    expected: tuple[str, ...]
+
+    @property
+    def filename(self) -> str:
+        return f"{self.case_id}_{self.slug}.gen.md"
+
+
+@dataclass(frozen=True)
+class VariantSpec:
+    factor_id: str
+    element: str
+    steps: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class ScenarioCatalog:
     targets: Mapping[str, Mapping[str, object]]
     operations: Mapping[tuple[str, str], Mapping[str, object]]
     steps: Mapping[str, Mapping[str, object]]
     evidences: Mapping[str, Mapping[str, object]]
     bindings: Mapping[tuple[str, str, str], tuple[str, ...]]
+    cases: tuple[ScenarioCase, ...]
 
 
 def as_mapping(value: object) -> Mapping[str, object]:
@@ -168,7 +205,78 @@ def load_scenario_catalog(root: Path = Path("docs/spec/50.e2e")) -> ScenarioCata
                 if isinstance(ref, str):
                     evidence_ids.append(Path(ref).name.split(".")[0])
             bindings[(factor_id, operation, result)] = tuple(evidence_ids)
-    return ScenarioCatalog(targets, operations, steps, evidences, bindings)
+    variant_index = load_variant_index(
+        flow_root / "generated" / "effective_factor_matrix.manual.yaml"
+    )
+    cases = load_effective_cases(
+        flow_root / "generated" / "effective_cases.manual.yaml",
+        variant_index,
+    )
+    return ScenarioCatalog(targets, operations, steps, evidences, bindings, cases)
+
+
+def load_variant_index(path: Path) -> Mapping[str, VariantSpec]:
+    content = load_yaml(path)
+    factors = as_mapping(content.get("factors"))
+    variants: dict[str, VariantSpec] = {}
+    for factor_group in factors.values():
+        for variant_obj in as_sequence(as_mapping(factor_group).get("variants")):
+            variant = as_mapping(variant_obj)
+            variant_id = variant.get("id")
+            factor_id = variant.get("factor_id")
+            element = variant.get("element")
+            if not all(isinstance(value, str) for value in (variant_id, factor_id, element)):
+                continue
+            steps = tuple(
+                step for step in as_sequence(variant.get("steps")) if isinstance(step, str)
+            )
+            variants[str(variant_id)] = VariantSpec(str(factor_id), str(element), steps)
+    return variants
+
+
+def load_effective_cases(
+    path: Path,
+    variant_index: Mapping[str, VariantSpec],
+) -> tuple[ScenarioCase, ...]:
+    content = load_yaml(path)
+    legacy_cases = {case.case_id: case for case in CASES}
+    cases: list[ScenarioCase] = []
+    for case_obj in as_sequence(content.get("cases")):
+        case_data = as_mapping(case_obj)
+        case_id = scalar_text(case_data.get("id"))
+        legacy = legacy_cases.get(case_id)
+        selected_variants = tuple(
+            value
+            for value in as_sequence(case_data.get("selected_variants"))
+            if isinstance(value, str)
+        )
+        selected: list[tuple[str, str]] = []
+        scenario_steps: list[str] = []
+        for variant_id in selected_variants:
+            variant = variant_index.get(variant_id)
+            if variant is None:
+                continue
+            selected.append((variant.factor_id, variant.element))
+            for step in variant.steps:
+                if step != "management_api" and step not in scenario_steps:
+                    scenario_steps.append(step)
+        cases.append(
+            ScenarioCase(
+                case_id=case_id,
+                slug=scalar_text(case_data.get("slug"), legacy.slug if legacy else "case"),
+                kind=scalar_text(case_data.get("kind"), legacy.kind if legacy else "case"),
+                tier=scalar_text(case_data.get("tier"), legacy.tier if legacy else "manual"),
+                purpose=legacy.purpose if legacy else case_id,
+                terminal_step=scalar_text(
+                    case_data.get("terminal_step"),
+                    legacy.terminal_step if legacy else "-",
+                ),
+                selected=tuple(selected),
+                scenario_steps=tuple(scenario_steps),
+                expected=legacy.expected if legacy else (),
+            )
+        )
+    return tuple(cases)
 
 
 def scalar_text(value: object, default: str = "-") -> str:
@@ -206,7 +314,7 @@ def expand_label(template: str) -> str:
     )
 
 
-def render_overview(case: E2eCase, catalog: ScenarioCatalog) -> str:
+def render_overview(case: ScenarioCase, catalog: ScenarioCatalog) -> str:
     labels: list[str] = []
     for step in case.scenario_steps:
         if step == "invoke_runtime_api":
@@ -225,14 +333,14 @@ def render_overview(case: E2eCase, catalog: ScenarioCatalog) -> str:
     return " → ".join(labels) + "。"
 
 
-def render_selected_factors(case: E2eCase) -> list[str]:
+def render_selected_factors(case: ScenarioCase) -> list[str]:
     lines = ["| 要因 | 要素 |", "|---|---|"]
     for factor_id, element_id in case.selected:
         lines.append(f"| `{factor_id}` | {markdown_escape(element_label(factor_id, element_id))} |")
     return lines
 
 
-def render_prerequisites(case: E2eCase, catalog: ScenarioCatalog) -> list[str]:
+def render_prerequisites(case: ScenarioCase, catalog: ScenarioCatalog) -> list[str]:
     prerequisites = [
         "Cognito管理API用tokenを取得できる。",
         "API_A, API_B, API_C は公開済み、またはsandbox事前データとして参照できる。",
@@ -259,7 +367,7 @@ def render_prerequisites(case: E2eCase, catalog: ScenarioCatalog) -> list[str]:
     return lines
 
 
-def render_api_steps(case: E2eCase, catalog: ScenarioCatalog) -> list[str]:
+def render_api_steps(case: ScenarioCase, catalog: ScenarioCatalog) -> list[str]:
     lines = ["| Step | API | 目的 | 期待 | Capture |", "|---|---|---|---|---|"]
     for index, step_id in enumerate(case.scenario_steps, start=1):
         fallback_endpoint, fallback_condition = STEP_LABELS[step_id]
@@ -283,7 +391,7 @@ def render_api_steps(case: E2eCase, catalog: ScenarioCatalog) -> list[str]:
 def evidence_row(
     catalog: ScenarioCatalog,
     evidence_id: str,
-    case: E2eCase,
+    case: ScenarioCase,
     *,
     api_id: str = "API_A",
 ) -> tuple[str, str, str, str, str, str]:
@@ -314,7 +422,7 @@ def evidence_row(
     )
 
 
-def binding_evidence_ids(case: E2eCase, catalog: ScenarioCatalog) -> list[str]:
+def binding_evidence_ids(case: ScenarioCase, catalog: ScenarioCatalog) -> list[str]:
     ids: list[str] = []
     operation_results = [
         ("project", "create", "success", "post_projects"),
@@ -330,7 +438,7 @@ def binding_evidence_ids(case: E2eCase, catalog: ScenarioCatalog) -> list[str]:
 
 
 def evidence_rows(
-    case: E2eCase,
+    case: ScenarioCase,
     catalog: ScenarioCatalog,
 ) -> list[tuple[str, str, str, str, str, str]]:
     rows: list[tuple[str, str, str, str, str, str]] = []
@@ -359,7 +467,7 @@ def evidence_rows(
     return rows
 
 
-def render_evidences(case: E2eCase, catalog: ScenarioCatalog) -> list[str]:
+def render_evidences(case: ScenarioCase, catalog: ScenarioCatalog) -> list[str]:
     lines = [
         "| No | 観点 | タイミング | 残すエビデンス | 取得方法 | OK条件 | 保存名 |",
         "|---|---|---|---|---|---|---|",
@@ -373,7 +481,7 @@ def render_evidences(case: E2eCase, catalog: ScenarioCatalog) -> list[str]:
     return lines
 
 
-def render_scenario_markdown(case: E2eCase, catalog: ScenarioCatalog) -> str:
+def render_scenario_markdown(case: ScenarioCase, catalog: ScenarioCatalog) -> str:
     lines = [
         GENERATED_COMMENT,
         "",
@@ -420,7 +528,10 @@ def rendered_outputs(
 ) -> Mapping[Path, str]:
     cases_root = output_root / FLOW_ID / "cases"
     catalog = load_scenario_catalog(spec_root)
-    return {cases_root / case.filename: render_scenario_markdown(case, catalog) for case in CASES}
+    return {
+        cases_root / case.filename: render_scenario_markdown(case, catalog)
+        for case in catalog.cases
+    }
 
 
 def generate(*, check: bool = False, output_root: Path = Path("docs/spec/50.e2e")) -> int:

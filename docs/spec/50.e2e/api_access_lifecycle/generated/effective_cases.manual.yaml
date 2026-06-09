@@ -6,7 +6,7 @@ cases:
     slug: happy_approve_and_runtime_success
     kind: happy
     tier: smoke_sandbox
-    terminal_step: -
+    terminal_step: "-"
     scenario: cases/TC001_happy_approve_and_runtime_success.gen.md
     selected_variants:
       - health_check_result.success@default
@@ -138,7 +138,7 @@ cases:
     slug: public_client_update_keeps_approved_scope
     kind: branch
     tier: sandbox
-    terminal_step: -
+    terminal_step: "-"
     scenario: cases/TC008_public_client_update_keeps_approved_scope.gen.md
     selected_variants:
       - health_check_result.success@default
