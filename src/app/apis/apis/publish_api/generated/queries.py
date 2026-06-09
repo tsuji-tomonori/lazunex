@@ -100,7 +100,6 @@ class InsertApisParams(BaseModel):
     provider_contact: str
     owner_principal_id: str
     visibility: str
-    api_stage_id: UUID
     now: datetime
     actor_principal_id: str
 
@@ -510,4 +509,24 @@ async def select_api_gateway_stages_by_unique_key(
         SQL_DIR / "019_select_api_gateway_stages_by_unique_key.sql",
         params,
         SelectApiGatewayStagesByUniqueKeyRow,
+    )
+
+
+class UpdateApisDefaultApiStageParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    api_stage_id: UUID
+    now: datetime
+    actor_principal_id: str
+    api_id: UUID
+
+
+async def update_apis_default_api_stage(
+    session: AsyncSession,
+    params: UpdateApisDefaultApiStageParams,
+) -> None:
+    """API Gateway stage追加後に、API catalogの既定stageを設定する。"""
+    await execute_sql(
+        session,
+        SQL_DIR / "020_update_apis_default_api_stage.sql",
+        params,
     )

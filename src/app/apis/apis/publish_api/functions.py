@@ -370,7 +370,6 @@ async def save_api_catalog_metadata(
                 provider_contact=request.provider_contact,
                 owner_principal_id=request.owner_principal_id,
                 visibility=request.visibility,
-                api_stage_id=api_stage_id,
                 now=now,
                 actor_principal_id=caller.principal_id,
             ),
@@ -390,6 +389,15 @@ async def save_api_catalog_metadata(
                 authorizer_id=request.apigw.authorizer_id or "",
                 api_key_required_observed=True,
                 scope_config_observed=request.apigw.scope_attachment_mode,
+                now=now,
+                actor_principal_id=caller.principal_id,
+            ),
+        )
+        await queries.update_apis_default_api_stage(
+            session,
+            queries.UpdateApisDefaultApiStageParams(
+                api_id=api_id,
+                api_stage_id=api_stage_id,
                 now=now,
                 actor_principal_id=caller.principal_id,
             ),
