@@ -17,14 +17,12 @@ elements:
     label: "成功: Project詳細を取得"
     default: true
     terminal: false
-    execution_tier: smoke_sandbox
     expected:
       summary: "HTTP 200、projectId/client構成/公開client設定を取得、API key値とclient secret値は再表示しない。"
   - id: not_found
     label: "失敗: projectId不明"
     default: false
     terminal: true
-    execution_tier: sandbox
     expected:
       summary: "HTTP 404を返し、public client更新と利用申請以降を実行しない。"
 

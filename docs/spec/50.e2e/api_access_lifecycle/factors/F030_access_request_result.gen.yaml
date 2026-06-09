@@ -17,21 +17,18 @@ elements:
     label: "成功: PENDING申請作成"
     default: true
     terminal: false
-    execution_tier: smoke_sandbox
     expected:
       summary: "HTTP 201、PENDINGのaccessRequestIdを返却、authMode/apiStageId/reviewer候補を保存、audit/access_request eventを記録する。"
   - id: duplicate_pending
     label: "重複pending"
     default: false
     terminal: true
-    execution_tier: sandbox
     expected:
       summary: "2回目の申請がHTTP 409となり既存pending requestを保持する。"
   - id: already_subscribed
     label: "既存subscriptionあり"
     default: false
     terminal: true
-    execution_tier: sandbox
     expected:
       summary: "申請または承認がHTTP 409となり二重subscriptionを作成しない。"
 

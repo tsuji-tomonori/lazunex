@@ -29,8 +29,6 @@ class E2eApiFactorDefinition:
     failure_expected: str
     order: int
     requires: tuple[str, ...] = ()
-    success_tier: str = "smoke_sandbox"
-    failure_tier: str = "sandbox"
 
 
 @dataclass(frozen=True)
@@ -40,7 +38,6 @@ class E2eFactorElement:
     expected: str
     default: bool = False
     terminal: bool = False
-    tier: str = "sandbox"
 
 
 @dataclass(frozen=True)
@@ -142,14 +139,12 @@ def api_factor(definition: E2eApiFactorDefinition) -> E2eFactor:
                 definition.success_label,
                 definition.success_expected,
                 default=True,
-                tier=definition.success_tier,
             ),
             E2eFactorElement(
                 definition.failure_element_id,
                 definition.failure_label,
                 definition.failure_expected,
                 terminal=True,
-                tier=definition.failure_tier,
             ),
         ),
         requires=definition.requires,
@@ -169,7 +164,6 @@ FACTORS: tuple[E2eFactor, ...] = (
             "失敗: app疎通不可",
             "HTTP 5xxまたは応答なしとして扱い、管理APIフローを開始しない。",
             0,
-            failure_tier="local_fake",
         )
     ),
     E2eFactor(
@@ -185,7 +179,6 @@ FACTORS: tuple[E2eFactor, ...] = (
                 "provider + project owner + reviewer",
                 "API公開、Project作成、審査をそれぞれ権限のある主体で実行する。",
                 default=True,
-                tier="smoke_sandbox",
             ),
             E2eFactorElement(
                 "non_reviewer",
@@ -208,14 +201,12 @@ FACTORS: tuple[E2eFactor, ...] = (
                 "有効なmanagement token",
                 "管理API呼び出しが認証を通過する。",
                 default=True,
-                tier="smoke_sandbox",
             ),
             E2eFactorElement(
                 "missing",
                 "Authorizationなし",
                 "最初の管理APIでHTTP 401となり後続stepを実行しない。",
                 terminal=True,
-                tier="local_fake",
             ),
         ),
     ),
@@ -233,7 +224,6 @@ FACTORS: tuple[E2eFactor, ...] = (
                 "HTTP 201、apiId/apiStageId/scopeFullName返却、API catalog保存、"
                 "Cognito scope作成、audit/provisioning記録を確認する。",
                 default=True,
-                tier="smoke_sandbox",
             ),
             E2eFactorElement(
                 "duplicate_api_code",
@@ -270,7 +260,6 @@ FACTORS: tuple[E2eFactor, ...] = (
             "HTTP 200かつitems空配列を返し、後続getApiは既知apiIdを使って継続する。",
             11,
             requires=("F010.success",),
-            failure_tier="local_fake",
         )
     ),
     api_factor(
@@ -304,7 +293,6 @@ FACTORS: tuple[E2eFactor, ...] = (
                 "Usage Plan/API key/client secret hashを保存、"
                 "secret実値は後続placeholderにのみ渡す。",
                 default=True,
-                tier="smoke_sandbox",
             ),
             E2eFactorElement(
                 "duplicate_project_code",
@@ -329,7 +317,6 @@ FACTORS: tuple[E2eFactor, ...] = (
             "HTTP 200かつitems空配列を返し、後続getProjectは既知projectIdを使って継続する。",
             21,
             requires=("F020.success",),
-            failure_tier="local_fake",
         )
     ),
     api_factor(
@@ -378,7 +365,6 @@ FACTORS: tuple[E2eFactor, ...] = (
                 "HTTP 201、PENDINGのaccessRequestIdを返却、authMode/apiStageId/"
                 "reviewer候補を保存、audit/access_request eventを記録する。",
                 default=True,
-                tier="smoke_sandbox",
             ),
             E2eFactorElement(
                 "duplicate_pending",
@@ -426,7 +412,6 @@ FACTORS: tuple[E2eFactor, ...] = (
                 "Usage Plan stageとCognito scopeを反映、"
                 "audit/provisioning eventを記録する。",
                 default=True,
-                tier="smoke_sandbox",
             ),
             E2eFactorElement(
                 "non_reviewer",
@@ -473,7 +458,6 @@ FACTORS: tuple[E2eFactor, ...] = (
                 "APIGW成功 + Cognito成功",
                 "Usage Plan stageとCognito scopeの両方が反映される。",
                 default=True,
-                tier="smoke_sandbox",
             ),
             E2eFactorElement(
                 "apigw_success_cognito_failed",
@@ -485,7 +469,6 @@ FACTORS: tuple[E2eFactor, ...] = (
                 "retry_after_partial_failure",
                 "partial failure後のretry",
                 "既存Usage Plan stageを再利用しCognito scope付与から再開する。",
-                tier="sandbox",
             ),
         ),
         requires=("F040.success",),
@@ -504,7 +487,6 @@ FACTORS: tuple[E2eFactor, ...] = (
             "HTTP 200かつitemsに対象apiIdが現れず、Runtime API呼び出しを実行しない。",
             61,
             requires=("F040.success", "F050.apigw_success_cognito_success"),
-            failure_tier="smoke_sandbox",
         )
     ),
     E2eFactor(
@@ -520,19 +502,16 @@ FACTORS: tuple[E2eFactor, ...] = (
                 "正常token + API key",
                 "Runtime APIが期待する2xxを返す。",
                 default=True,
-                tier="smoke_sandbox",
             ),
             E2eFactorElement(
                 "scope_missing",
                 "scopeなしtoken",
                 "Runtime APIが認可エラーを返す。",
-                tier="smoke_sandbox",
             ),
             E2eFactorElement(
                 "api_key_missing",
                 "API keyなし",
                 "Runtime APIが認可エラーを返す。",
-                tier="smoke_sandbox",
             ),
         ),
         requires=("F061.success",),

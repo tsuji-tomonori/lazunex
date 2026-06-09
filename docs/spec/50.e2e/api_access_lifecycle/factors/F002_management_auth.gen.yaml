@@ -17,14 +17,12 @@ elements:
     label: "有効なmanagement token"
     default: true
     terminal: false
-    execution_tier: smoke_sandbox
     expected:
       summary: "管理API呼び出しが認証を通過する。"
   - id: missing
     label: "Authorizationなし"
     default: false
     terminal: true
-    execution_tier: local_fake
     expected:
       summary: "最初の管理APIでHTTP 401となり後続stepを実行しない。"
 

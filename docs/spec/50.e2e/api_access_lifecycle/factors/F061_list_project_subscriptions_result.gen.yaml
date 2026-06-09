@@ -17,14 +17,12 @@ elements:
     label: "成功: 承認済みsubscriptionが一覧に現れる"
     default: true
     terminal: false
-    execution_tier: smoke_sandbox
     expected:
       summary: "HTTP 200、itemsにapiId/apiStageId/subscriptionId/scopeFullName/derivedState ACTIVEが含まれる。"
   - id: none_after_reject
     label: "失敗相当: 却下後subscriptionなし"
     default: false
     terminal: true
-    execution_tier: smoke_sandbox
     expected:
       summary: "HTTP 200かつitemsに対象apiIdが現れず、Runtime API呼び出しを実行しない。"
 

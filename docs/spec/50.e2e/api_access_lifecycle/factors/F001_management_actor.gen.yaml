@@ -17,14 +17,12 @@ elements:
     label: "provider + project owner + reviewer"
     default: true
     terminal: false
-    execution_tier: smoke_sandbox
     expected:
       summary: "API公開、Project作成、審査をそれぞれ権限のある主体で実行する。"
   - id: non_reviewer
     label: "reviewer以外"
     default: false
     terminal: true
-    execution_tier: sandbox
     expected:
       summary: "approve/rejectでHTTP 403となりsubscriptionを作成しない。"
 

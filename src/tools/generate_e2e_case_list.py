@@ -45,15 +45,14 @@ def render_case_list_markdown() -> str:
             [
                 f"### {factor.factor_id} {factor.title}",
                 "",
-                "| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |",
-                "|---|---:|---:|---|---|",
+                "| 要素ID | 既定要素 | 終端要素 | 期待観点 |",
+                "|---|---:|---:|---|",
             ]
         )
         for element in factor.elements:
             lines.append(
                 f"| `{element.element_id}` | {str(element.default).lower()} | "
-                f"{str(element.terminal).lower()} | `{element.tier}` | "
-                f"{markdown_escape(element.expected)} |"
+                f"{str(element.terminal).lower()} | {markdown_escape(element.expected)} |"
             )
         lines.append("")
     lines.extend(

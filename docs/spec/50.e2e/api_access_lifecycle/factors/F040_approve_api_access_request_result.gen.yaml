@@ -17,21 +17,18 @@ elements:
     label: "成功: APPROVED + subscription + 外部反映"
     default: true
     terminal: false
-    execution_tier: smoke_sandbox
     expected:
       summary: "HTTP 200、APPROVED review/subscriptionを保存し、Usage Plan stageとCognito scopeを反映、audit/provisioning eventを記録する。"
   - id: non_reviewer
     label: "失敗: reviewer以外"
     default: false
     terminal: true
-    execution_tier: sandbox
     expected:
       summary: "HTTP 403を返し、subscription作成、Usage Plan/Cognito反映、Runtime API呼び出しを実行しない。"
   - id: not_pending
     label: "失敗: PENDINGではない"
     default: false
     terminal: true
-    execution_tier: sandbox
     expected:
       summary: "HTTP 409を返し、二重review/subscriptionを作成しない。"
 

@@ -17,14 +17,12 @@ elements:
     label: "成功: REJECTED + 外部反映なし"
     default: true
     terminal: false
-    execution_tier: smoke_sandbox
     expected:
       summary: "HTTP 200、REJECTED reviewを保存し、subscription/Usage Plan/Cognito scopeを作成しない。"
   - id: non_reviewer
     label: "失敗: reviewer以外"
     default: false
     terminal: true
-    execution_tier: sandbox
     expected:
       summary: "HTTP 403を返し、review状態と外部反映を変更しない。"
 

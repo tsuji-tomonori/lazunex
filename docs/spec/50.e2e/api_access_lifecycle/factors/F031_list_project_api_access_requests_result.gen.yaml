@@ -17,14 +17,12 @@ elements:
     label: "成功: PENDING申請が一覧に現れる"
     default: true
     terminal: false
-    execution_tier: smoke_sandbox
     expected:
       summary: "HTTP 200、itemsにaccessRequestId/apiId/requestedAuthMode/stateが含まれ、Project単位に絞られる。"
   - id: unauthorized_project
     label: "失敗: Project権限なし"
     default: false
     terminal: true
-    execution_tier: sandbox
     expected:
       summary: "HTTP 403を返し、審査API以降を実行しない。"
 

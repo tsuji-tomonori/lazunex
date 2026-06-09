@@ -17,14 +17,12 @@ elements:
     label: "成功: 一覧に公開APIが現れる"
     default: true
     terminal: false
-    execution_tier: smoke_sandbox
     expected:
       summary: "HTTP 200、itemsに公開済みapiId/apiCode/scopeが含まれる、pagination/filterが仕様どおり、secret値を含まない。"
   - id: filter_no_match
     label: "失敗相当: filter不一致"
     default: false
     terminal: true
-    execution_tier: local_fake
     expected:
       summary: "HTTP 200かつitems空配列を返し、後続getApiは既知apiIdを使って継続する。"
 

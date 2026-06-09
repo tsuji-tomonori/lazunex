@@ -17,14 +17,12 @@ elements:
     label: "成功: project + API key + clients"
     default: true
     terminal: false
-    execution_tier: smoke_sandbox
     expected:
       summary: "HTTP 201、projectId/API key/Cognito clientsを返却、Usage Plan/API key/client secret hashを保存、secret実値は後続placeholderにのみ渡す。"
   - id: duplicate_project_code
     label: "duplicate projectCode"
     default: false
     terminal: true
-    execution_tier: sandbox
     expected:
       summary: "POST /projectsがHTTP 409となり利用申請以降を実行しない。"
 

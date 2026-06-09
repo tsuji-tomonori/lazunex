@@ -17,14 +17,12 @@ elements:
     label: "成功: 公開API詳細を取得"
     default: true
     terminal: false
-    execution_tier: smoke_sandbox
     expected:
       summary: "HTTP 200、apiId/apiStageId/scopeFullNameがPOST /apisの返却値と一致し、登録済みreviewer/stage情報を確認できる。"
   - id: not_found
     label: "失敗: apiId不明"
     default: false
     terminal: true
-    execution_tier: sandbox
     expected:
       summary: "HTTP 404を返し、Project作成以降のAPI間状態遷移を実行しない。"
 

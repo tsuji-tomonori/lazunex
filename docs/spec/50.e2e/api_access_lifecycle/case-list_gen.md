@@ -25,128 +25,128 @@
 
 ### F000 GET /health ヘルスチェック結果
 
-| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
-|---|---:|---:|---|---|
-| `success` | true | false | `smoke_sandbox` | HTTP 200とstatus okを返し、管理API E2Eの前提となるアプリ疎通を確認する。 |
-| `unavailable` | false | true | `local_fake` | HTTP 5xxまたは応答なしとして扱い、管理APIフローを開始しない。 |
+| 要素ID | 既定要素 | 終端要素 | 期待観点 |
+|---|---:|---:|---|
+| `success` | true | false | HTTP 200とstatus okを返し、管理API E2Eの前提となるアプリ疎通を確認する。 |
+| `unavailable` | false | true | HTTP 5xxまたは応答なしとして扱い、管理APIフローを開始しない。 |
 
 ### F001 管理API呼び出し主体
 
-| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
-|---|---:|---:|---|---|
-| `provider_owner_reviewer` | true | false | `smoke_sandbox` | API公開、Project作成、審査をそれぞれ権限のある主体で実行する。 |
-| `non_reviewer` | false | true | `sandbox` | approve/rejectでHTTP 403となりsubscriptionを作成しない。 |
+| 要素ID | 既定要素 | 終端要素 | 期待観点 |
+|---|---:|---:|---|
+| `provider_owner_reviewer` | true | false | API公開、Project作成、審査をそれぞれ権限のある主体で実行する。 |
+| `non_reviewer` | false | true | approve/rejectでHTTP 403となりsubscriptionを作成しない。 |
 
 ### F002 管理API認証
 
-| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
-|---|---:|---:|---|---|
-| `valid` | true | false | `smoke_sandbox` | 管理API呼び出しが認証を通過する。 |
-| `missing` | false | true | `local_fake` | 最初の管理APIでHTTP 401となり後続stepを実行しない。 |
+| 要素ID | 既定要素 | 終端要素 | 期待観点 |
+|---|---:|---:|---|
+| `valid` | true | false | 管理API呼び出しが認証を通過する。 |
+| `missing` | false | true | 最初の管理APIでHTTP 401となり後続stepを実行しない。 |
 
 ### F010 POST /apis API公開結果
 
-| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
-|---|---:|---:|---|---|
-| `success` | true | false | `smoke_sandbox` | HTTP 201、apiId/apiStageId/scopeFullName返却、API catalog保存、Cognito scope作成、audit/provisioning記録を確認する。 |
-| `duplicate_api_code` | false | true | `sandbox` | POST /apisがHTTP 409となりProject作成以降を実行しない。 |
-| `apigw_stage_invalid` | false | true | `sandbox` | API Gateway stage登録確認が失敗しHTTP 400/502を返し、catalog/scopeを作成しない。 |
-| `cognito_scope_failed` | false | true | `sandbox` | Cognito scope作成失敗でHTTP 502/503を返し、provisioning operation failedを記録する。 |
+| 要素ID | 既定要素 | 終端要素 | 期待観点 |
+|---|---:|---:|---|
+| `success` | true | false | HTTP 201、apiId/apiStageId/scopeFullName返却、API catalog保存、Cognito scope作成、audit/provisioning記録を確認する。 |
+| `duplicate_api_code` | false | true | POST /apisがHTTP 409となりProject作成以降を実行しない。 |
+| `apigw_stage_invalid` | false | true | API Gateway stage登録確認が失敗しHTTP 400/502を返し、catalog/scopeを作成しない。 |
+| `cognito_scope_failed` | false | true | Cognito scope作成失敗でHTTP 502/503を返し、provisioning operation failedを記録する。 |
 
 ### F011 GET /apis API一覧取得結果
 
-| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
-|---|---:|---:|---|---|
-| `success` | true | false | `smoke_sandbox` | HTTP 200、itemsに公開済みapiId/apiCode/scopeが含まれる、pagination/filterが仕様どおり、secret値を含まない。 |
-| `filter_no_match` | false | true | `local_fake` | HTTP 200かつitems空配列を返し、後続getApiは既知apiIdを使って継続する。 |
+| 要素ID | 既定要素 | 終端要素 | 期待観点 |
+|---|---:|---:|---|
+| `success` | true | false | HTTP 200、itemsに公開済みapiId/apiCode/scopeが含まれる、pagination/filterが仕様どおり、secret値を含まない。 |
+| `filter_no_match` | false | true | HTTP 200かつitems空配列を返し、後続getApiは既知apiIdを使って継続する。 |
 
 ### F012 GET /apis/{apiId} API詳細取得結果
 
-| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
-|---|---:|---:|---|---|
-| `success` | true | false | `smoke_sandbox` | HTTP 200、apiId/apiStageId/scopeFullNameがPOST /apisの返却値と一致し、登録済みreviewer/stage情報を確認できる。 |
-| `not_found` | false | true | `sandbox` | HTTP 404を返し、Project作成以降のAPI間状態遷移を実行しない。 |
+| 要素ID | 既定要素 | 終端要素 | 期待観点 |
+|---|---:|---:|---|
+| `success` | true | false | HTTP 200、apiId/apiStageId/scopeFullNameがPOST /apisの返却値と一致し、登録済みreviewer/stage情報を確認できる。 |
+| `not_found` | false | true | HTTP 404を返し、Project作成以降のAPI間状態遷移を実行しない。 |
 
 ### F020 POST /projects Project作成結果
 
-| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
-|---|---:|---:|---|---|
-| `success` | true | false | `smoke_sandbox` | HTTP 201、projectId/API key/Cognito clientsを返却、Usage Plan/API key/client secret hashを保存、secret実値は後続placeholderにのみ渡す。 |
-| `duplicate_project_code` | false | true | `sandbox` | POST /projectsがHTTP 409となり利用申請以降を実行しない。 |
+| 要素ID | 既定要素 | 終端要素 | 期待観点 |
+|---|---:|---:|---|
+| `success` | true | false | HTTP 201、projectId/API key/Cognito clientsを返却、Usage Plan/API key/client secret hashを保存、secret実値は後続placeholderにのみ渡す。 |
+| `duplicate_project_code` | false | true | POST /projectsがHTTP 409となり利用申請以降を実行しない。 |
 
 ### F021 GET /projects Project一覧取得結果
 
-| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
-|---|---:|---:|---|---|
-| `success` | true | false | `smoke_sandbox` | HTTP 200、itemsにprojectId/projectCodeが含まれる、callerの権限範囲に絞られる、secret/API key実値を含まない。 |
-| `filter_no_match` | false | true | `local_fake` | HTTP 200かつitems空配列を返し、後続getProjectは既知projectIdを使って継続する。 |
+| 要素ID | 既定要素 | 終端要素 | 期待観点 |
+|---|---:|---:|---|
+| `success` | true | false | HTTP 200、itemsにprojectId/projectCodeが含まれる、callerの権限範囲に絞られる、secret/API key実値を含まない。 |
+| `filter_no_match` | false | true | HTTP 200かつitems空配列を返し、後続getProjectは既知projectIdを使って継続する。 |
 
 ### F022 GET /projects/{projectId} Project詳細取得結果
 
-| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
-|---|---:|---:|---|---|
-| `success` | true | false | `smoke_sandbox` | HTTP 200、projectId/client構成/公開client設定を取得、API key値とclient secret値は再表示しない。 |
-| `not_found` | false | true | `sandbox` | HTTP 404を返し、public client更新と利用申請以降を実行しない。 |
+| 要素ID | 既定要素 | 終端要素 | 期待観点 |
+|---|---:|---:|---|
+| `success` | true | false | HTTP 200、projectId/client構成/公開client設定を取得、API key値とclient secret値は再表示しない。 |
+| `not_found` | false | true | HTTP 404を返し、public client更新と利用申請以降を実行しない。 |
 
 ### F023 PATCH /projects/{projectId}/public-client 更新結果
 
-| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
-|---|---:|---:|---|---|
-| `success` | true | false | `smoke_sandbox` | HTTP 200、callback/logout/token設定が更新され、既存AllowedOAuthScopesと承認済みscopeを消さない。 |
-| `invalid_redirect_uri` | false | true | `sandbox` | HTTP 400/409を返し、既存public client設定と承認済みscopeを変更しない。 |
+| 要素ID | 既定要素 | 終端要素 | 期待観点 |
+|---|---:|---:|---|
+| `success` | true | false | HTTP 200、callback/logout/token設定が更新され、既存AllowedOAuthScopesと承認済みscopeを消さない。 |
+| `invalid_redirect_uri` | false | true | HTTP 400/409を返し、既存public client設定と承認済みscopeを変更しない。 |
 
 ### F030 POST /projects/{projectId}/api-access-requests 利用申請作成結果
 
-| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
-|---|---:|---:|---|---|
-| `success` | true | false | `smoke_sandbox` | HTTP 201、PENDINGのaccessRequestIdを返却、authMode/apiStageId/reviewer候補を保存、audit/access_request eventを記録する。 |
-| `duplicate_pending` | false | true | `sandbox` | 2回目の申請がHTTP 409となり既存pending requestを保持する。 |
-| `already_subscribed` | false | true | `sandbox` | 申請または承認がHTTP 409となり二重subscriptionを作成しない。 |
+| 要素ID | 既定要素 | 終端要素 | 期待観点 |
+|---|---:|---:|---|
+| `success` | true | false | HTTP 201、PENDINGのaccessRequestIdを返却、authMode/apiStageId/reviewer候補を保存、audit/access_request eventを記録する。 |
+| `duplicate_pending` | false | true | 2回目の申請がHTTP 409となり既存pending requestを保持する。 |
+| `already_subscribed` | false | true | 申請または承認がHTTP 409となり二重subscriptionを作成しない。 |
 
 ### F031 GET /projects/{projectId}/api-access-requests 利用申請一覧取得結果
 
-| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
-|---|---:|---:|---|---|
-| `success` | true | false | `smoke_sandbox` | HTTP 200、itemsにaccessRequestId/apiId/requestedAuthMode/stateが含まれ、Project単位に絞られる。 |
-| `unauthorized_project` | false | true | `sandbox` | HTTP 403を返し、審査API以降を実行しない。 |
+| 要素ID | 既定要素 | 終端要素 | 期待観点 |
+|---|---:|---:|---|
+| `success` | true | false | HTTP 200、itemsにaccessRequestId/apiId/requestedAuthMode/stateが含まれ、Project単位に絞られる。 |
+| `unauthorized_project` | false | true | HTTP 403を返し、審査API以降を実行しない。 |
 
 ### F040 POST /api-access-requests/{accessRequestId}/approve 承認結果
 
-| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
-|---|---:|---:|---|---|
-| `success` | true | false | `smoke_sandbox` | HTTP 200、APPROVED review/subscriptionを保存し、Usage Plan stageとCognito scopeを反映、audit/provisioning eventを記録する。 |
-| `non_reviewer` | false | true | `sandbox` | HTTP 403を返し、subscription作成、Usage Plan/Cognito反映、Runtime API呼び出しを実行しない。 |
-| `not_pending` | false | true | `sandbox` | HTTP 409を返し、二重review/subscriptionを作成しない。 |
+| 要素ID | 既定要素 | 終端要素 | 期待観点 |
+|---|---:|---:|---|
+| `success` | true | false | HTTP 200、APPROVED review/subscriptionを保存し、Usage Plan stageとCognito scopeを反映、audit/provisioning eventを記録する。 |
+| `non_reviewer` | false | true | HTTP 403を返し、subscription作成、Usage Plan/Cognito反映、Runtime API呼び出しを実行しない。 |
+| `not_pending` | false | true | HTTP 409を返し、二重review/subscriptionを作成しない。 |
 
 ### F041 POST /api-access-requests/{accessRequestId}/reject 却下結果
 
-| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
-|---|---:|---:|---|---|
-| `success` | true | false | `smoke_sandbox` | HTTP 200、REJECTED reviewを保存し、subscription/Usage Plan/Cognito scopeを作成しない。 |
-| `non_reviewer` | false | true | `sandbox` | HTTP 403を返し、review状態と外部反映を変更しない。 |
+| 要素ID | 既定要素 | 終端要素 | 期待観点 |
+|---|---:|---:|---|
+| `success` | true | false | HTTP 200、REJECTED reviewを保存し、subscription/Usage Plan/Cognito scopeを作成しない。 |
+| `non_reviewer` | false | true | HTTP 403を返し、review状態と外部反映を変更しない。 |
 
 ### F050 承認時provisioning
 
-| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
-|---|---:|---:|---|---|
-| `apigw_success_cognito_success` | true | false | `smoke_sandbox` | Usage Plan stageとCognito scopeの両方が反映される。 |
-| `apigw_success_cognito_failed` | false | true | `sandbox` | HTTP 502/503とoperation failedを観測しretry可能なstepを残す。 |
-| `retry_after_partial_failure` | false | false | `sandbox` | 既存Usage Plan stageを再利用しCognito scope付与から再開する。 |
+| 要素ID | 既定要素 | 終端要素 | 期待観点 |
+|---|---:|---:|---|
+| `apigw_success_cognito_success` | true | false | Usage Plan stageとCognito scopeの両方が反映される。 |
+| `apigw_success_cognito_failed` | false | true | HTTP 502/503とoperation failedを観測しretry可能なstepを残す。 |
+| `retry_after_partial_failure` | false | false | 既存Usage Plan stageを再利用しCognito scope付与から再開する。 |
 
 ### F061 GET /projects/{projectId}/subscriptions Subscription一覧取得結果
 
-| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
-|---|---:|---:|---|---|
-| `success` | true | false | `smoke_sandbox` | HTTP 200、itemsにapiId/apiStageId/subscriptionId/scopeFullName/derivedState ACTIVEが含まれる。 |
-| `none_after_reject` | false | true | `smoke_sandbox` | HTTP 200かつitemsに対象apiIdが現れず、Runtime API呼び出しを実行しない。 |
+| 要素ID | 既定要素 | 終端要素 | 期待観点 |
+|---|---:|---:|---|
+| `success` | true | false | HTTP 200、itemsにapiId/apiStageId/subscriptionId/scopeFullName/derivedState ACTIVEが含まれる。 |
+| `none_after_reject` | false | true | HTTP 200かつitemsに対象apiIdが現れず、Runtime API呼び出しを実行しない。 |
 
 ### F070 Runtime credentials
 
-| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
-|---|---:|---:|---|---|
-| `valid_token_valid_api_key` | true | false | `smoke_sandbox` | Runtime APIが期待する2xxを返す。 |
-| `scope_missing` | false | false | `smoke_sandbox` | Runtime APIが認可エラーを返す。 |
-| `api_key_missing` | false | false | `smoke_sandbox` | Runtime APIが認可エラーを返す。 |
+| 要素ID | 既定要素 | 終端要素 | 期待観点 |
+|---|---:|---:|---|
+| `valid_token_valid_api_key` | true | false | Runtime APIが期待する2xxを返す。 |
+| `scope_missing` | false | false | Runtime APIが認可エラーを返す。 |
+| `api_key_missing` | false | false | Runtime APIが認可エラーを返す。 |
 
 ## 2. 枝刈り規則
 

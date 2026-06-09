@@ -53,7 +53,7 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
 
     assert "## 0. 対象フロー" in content
     assert "## 3. 生成ケース一覧" in content
-    assert "| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |" in content
+    assert "| 要素ID | 既定要素 | 終端要素 | 期待観点 |" in content
     assert "| ケースID | F000 | F001 | F002 | F010 |" in content
     assert "主な要因" not in content
     for step in FLOW_STEPS:

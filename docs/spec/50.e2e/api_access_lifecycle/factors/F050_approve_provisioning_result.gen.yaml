@@ -17,21 +17,18 @@ elements:
     label: "APIGW成功 + Cognito成功"
     default: true
     terminal: false
-    execution_tier: smoke_sandbox
     expected:
       summary: "Usage Plan stageとCognito scopeの両方が反映される。"
   - id: apigw_success_cognito_failed
     label: "APIGW成功 + Cognito失敗"
     default: false
     terminal: true
-    execution_tier: sandbox
     expected:
       summary: "HTTP 502/503とoperation failedを観測しretry可能なstepを残す。"
   - id: retry_after_partial_failure
     label: "partial failure後のretry"
     default: false
     terminal: false
-    execution_tier: sandbox
     expected:
       summary: "既存Usage Plan stageを再利用しCognito scope付与から再開する。"
 

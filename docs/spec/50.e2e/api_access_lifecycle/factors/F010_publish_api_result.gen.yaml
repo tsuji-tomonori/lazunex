@@ -17,28 +17,24 @@ elements:
     label: "成功: catalog + stage + scope"
     default: true
     terminal: false
-    execution_tier: smoke_sandbox
     expected:
       summary: "HTTP 201、apiId/apiStageId/scopeFullName返却、API catalog保存、Cognito scope作成、audit/provisioning記録を確認する。"
   - id: duplicate_api_code
     label: "失敗: duplicate apiCode"
     default: false
     terminal: true
-    execution_tier: sandbox
     expected:
       summary: "POST /apisがHTTP 409となりProject作成以降を実行しない。"
   - id: apigw_stage_invalid
     label: "失敗: APIGW設定不備"
     default: false
     terminal: true
-    execution_tier: sandbox
     expected:
       summary: "API Gateway stage登録確認が失敗しHTTP 400/502を返し、catalog/scopeを作成しない。"
   - id: cognito_scope_failed
     label: "失敗: Cognito scope作成失敗"
     default: false
     terminal: true
-    execution_tier: sandbox
     expected:
       summary: "Cognito scope作成失敗でHTTP 502/503を返し、provisioning operation failedを記録する。"
 

@@ -17,14 +17,12 @@ elements:
     label: "成功: public client設定更新 + 承認済みscope保持"
     default: true
     terminal: false
-    execution_tier: smoke_sandbox
     expected:
       summary: "HTTP 200、callback/logout/token設定が更新され、既存AllowedOAuthScopesと承認済みscopeを消さない。"
   - id: invalid_redirect_uri
     label: "失敗: redirect URI不正"
     default: false
     terminal: true
-    execution_tier: sandbox
     expected:
       summary: "HTTP 400/409を返し、既存public client設定と承認済みscopeを変更しない。"
 

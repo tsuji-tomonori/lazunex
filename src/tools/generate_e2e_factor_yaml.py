@@ -43,7 +43,6 @@ def render_factor_yaml(factor: E2eFactor) -> str:
                 f"    label: {yaml_quote(element.label)}",
                 f"    default: {str(element.default).lower()}",
                 f"    terminal: {str(element.terminal).lower()}",
-                f"    execution_tier: {element.tier}",
                 "    expected:",
                 f"      summary: {yaml_quote(element.expected)}",
             ]
