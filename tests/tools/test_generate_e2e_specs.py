@@ -5,7 +5,6 @@ from pathlib import Path
 from tools.check_e2e_specs import check_specs
 from tools.e2e_models import CASES, FACTORS, FLOW_STEPS
 from tools.generate_e2e_case_list import rendered_outputs as case_list_outputs
-from tools.generate_e2e_factor_yaml import rendered_outputs as factor_outputs
 from tools.generate_e2e_scenarios import rendered_outputs as scenario_outputs
 from tools.generation_io import write_outputs
 
@@ -31,43 +30,6 @@ def test_e2e_flow_steps_cover_generated_api_list() -> None:
     }
 
     assert documented_endpoints <= flow_endpoints
-
-
-def test_e2e_factor_yaml_outputs_include_effective_factors(tmp_path: Path) -> None:
-    rendered = factor_outputs(tmp_path)
-
-    assert tmp_path / "api_access_lifecycle/factors/effective_factors.gen.yaml" in rendered
-    assert tmp_path / "api_access_lifecycle/generated/effective_factor_matrix.gen.yaml" in rendered
-    assert tmp_path / "api_access_lifecycle/generated/effective_variants.gen.yaml" in rendered
-    assert tmp_path / "api_access_lifecycle/generated/effective_step_bindings.gen.yaml" in rendered
-    assert tmp_path / "api_access_lifecycle/generated/effective_cases.gen.yaml" in rendered
-    expected_factor_files = {
-        f"{factor.factor_id}_{factor.slug}.gen.yaml" for factor in FACTORS
-    }
-    assert expected_factor_files.issubset({path.name for path in rendered})
-    assert len(rendered) == len(FACTORS) + 5
-    assert "terminal: true" in rendered[
-        tmp_path / "api_access_lifecycle/factors/F040_approve_api_access_request_result.gen.yaml"
-    ]
-    matrix = rendered[
-        tmp_path / "api_access_lifecycle/generated/effective_factor_matrix.gen.yaml"
-    ]
-    assert "access_request_result.success@both_auth_mode" in matrix
-    assert "access_request_result.duplicate_pending@public_pkce_auth_mode" in matrix
-    variants = rendered[
-        tmp_path / "api_access_lifecycle/generated/effective_variants.gen.yaml"
-    ]
-    assert "project.project_A.create.success@create_default" in variants
-    assert "access_request.project_A.API_A.apply.success@both_auth_mode" in variants
-    assert "review.project_A.API_A.approve.success@approve_both" in variants
-    bindings = rendered[
-        tmp_path / "api_access_lifecycle/generated/effective_step_bindings.gen.yaml"
-    ]
-    assert "setup_pending_access_request" in bindings
-    cases = rendered[tmp_path / "api_access_lifecycle/generated/effective_cases.gen.yaml"]
-    assert "selected_variants:" in cases
-    assert "TC_TARGET_001" in cases
-    assert "runtime_assertions:" in cases
 
 
 def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
@@ -120,8 +82,23 @@ def test_check_e2e_specs_detects_complete_rendered_tree(tmp_path: Path) -> None:
             "schema_version: 1\n",
             encoding="utf-8",
         )
-    write_outputs(factor_outputs(tmp_path))
     write_outputs(case_list_outputs(tmp_path))
     write_outputs(scenario_outputs(tmp_path))
+
+    fixture_root = Path("docs/spec/50.e2e/api_access_lifecycle")
+    for source in [
+        fixture_root / "factors" / "effective_factors.manual.yaml",
+        fixture_root / "generated" / "effective_factor_matrix.manual.yaml",
+        fixture_root / "generated" / "effective_variants.manual.yaml",
+        fixture_root / "generated" / "effective_step_bindings.manual.yaml",
+        fixture_root / "generated" / "effective_cases.manual.yaml",
+        *[
+            fixture_root / "factors" / f"{factor.factor_id}_{factor.slug}.manual.yaml"
+            for factor in FACTORS
+        ],
+    ]:
+        target = flow_root / source.relative_to(fixture_root)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
 
     assert check_specs(tmp_path) == []

@@ -28,7 +28,6 @@
 | `generate_api_detail_design` | required | required | required | required |
 | `generate_api_unit_test_factors` | required | required | required | required |
 | `generate_api_message_catalog` | required | required | required | required |
-| `generate_e2e_factor_yaml` | required | required | required | required |
 | `generate_e2e_case_list` | required | required | required | required |
 | `generate_e2e_scenarios` | required | required | required | required |
 | `generate_db_crud` | required | required | required | required |

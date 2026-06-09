@@ -14,14 +14,14 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
         flow_root / "flow.manual.yaml",
         flow_root / "case-list_gen.md",
         flow_root / "pruned-cases_gen.csv",
-        flow_root / "factors" / "effective_factors.gen.yaml",
-        flow_root / "generated" / "effective_factor_matrix.gen.yaml",
-        flow_root / "generated" / "effective_variants.gen.yaml",
-        flow_root / "generated" / "effective_step_bindings.gen.yaml",
-        flow_root / "generated" / "effective_cases.gen.yaml",
+        flow_root / "factors" / "effective_factors.manual.yaml",
+        flow_root / "generated" / "effective_factor_matrix.manual.yaml",
+        flow_root / "generated" / "effective_variants.manual.yaml",
+        flow_root / "generated" / "effective_step_bindings.manual.yaml",
+        flow_root / "generated" / "effective_cases.manual.yaml",
     ]
     required_paths.extend(
-        flow_root / "factors" / f"{factor.factor_id}_{factor.slug}.gen.yaml"
+        flow_root / "factors" / f"{factor.factor_id}_{factor.slug}.manual.yaml"
         for factor in FACTORS
     )
     required_paths.extend(flow_root / "cases" / case.filename for case in CASES)
