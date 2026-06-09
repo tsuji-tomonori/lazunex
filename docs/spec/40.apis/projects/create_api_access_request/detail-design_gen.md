@@ -67,7 +67,7 @@
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | 自動生成: uuid4() |
 | `aggregate_id` | イベント対象の利用申請ID。 | `access_request_id` | DB: api_access_requests.accessRequestId |
-| `event_seq` | 利用申請ごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: access_request_events.aggregate_id |
+| `event_seq` | 利用申請ごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: access_request_events.next_event_seq, DB: access_request_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | 固定値: 'ACCESS_REQUEST_CREATED' |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | 認証主体: caller.principalId |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | HTTP request context.actorType |
@@ -82,7 +82,7 @@
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM access_request_events WHERE aggregate_id = @access_request_id), 1)
+COALESCE((SELECT next_event_seq FROM (SELECT MAX(event_seq) + 1 AS next_event_seq FROM access_request_events WHERE aggregate_id = @access_request_id) AS event_seq_source), 1)
 ```
 
 ### DB `audit_events` 作成

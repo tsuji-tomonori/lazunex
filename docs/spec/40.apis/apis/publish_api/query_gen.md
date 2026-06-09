@@ -136,7 +136,6 @@ _なし_
 | <code>apis</code> | <code>provider_contact</code> | <code>provider_contact</code> | API提供者の問い合わせ先。 | <code>VARCHAR(320)</code> | no |
 | <code>apis</code> | <code>owner_principal_id</code> | <code>owner_principal_id</code> | APIオーナーのprincipal。 | <code>VARCHAR(256)</code> | no |
 | <code>apis</code> | <code>visibility</code> | <code>visibility</code> | 公開範囲。INTERNALまたはRESTRICTED。 | <code>VARCHAR(20)</code> | no |
-| <code>apis</code> | <code>default_api_stage_id</code> | <code>api_stage_id</code> | 既定のAPI stage ID。 | <code>CHAR(36)</code> | yes |
 | <code>apis</code> | <code>created_at</code> | <code>now</code> | 作成日時。 | <code>DATETIME(6)</code> | no |
 | <code>apis</code> | <code>updated_at</code> | <code>now</code> | 更新日時。 | <code>DATETIME(6)</code> | no |
 | <code>apis</code> | <code>created_by</code> | <code>actor_principal_id</code> | 作成者のprincipal。 | <code>VARCHAR(256)</code> | no |
@@ -742,3 +741,36 @@ API Gateway stageの重複登録を防ぐため、既存stageを取得する。
   - `AND aws_region = @aws_region`
   - `AND apigw_rest_api_id = @apigw_rest_api_id`
   - `AND apigw_stage_name = @apigw_stage_name`
+
+
+## 020_update_apis_default_api_stage.sql
+
+### SQL種別
+
+`UPDATE`
+
+### SQLの概要
+
+API Gateway stage追加後に、API catalogの既定stageを設定する。
+
+### 利用するテーブル
+
+- `apis`
+
+### 引数
+
+| DDLテーブル | DDL項目 | SQL項目 | 日本語名 | 型 | nullable |
+| --- | --- | --- | --- | --- | --- |
+| <code>apis</code> | <code>default_api_stage_id</code> | <code>api_stage_id</code> | 既定のAPI stage ID。 | <code>CHAR(36)</code> | yes |
+| <code>apis</code> | <code>updated_at</code> | <code>now</code> | 更新日時。 | <code>DATETIME(6)</code> | no |
+| <code>apis</code> | <code>updated_by</code> | <code>actor_principal_id</code> | 更新者のprincipal。 | <code>VARCHAR(256)</code> | no |
+| <code>apis</code> | <code>api_id</code> | <code>api_id</code> | Lazunex内API ID。 | <code>CHAR(36)</code> | no |
+
+### 戻り値
+
+_なし_
+
+### 条件
+
+- `WHERE`
+  - `api_id = @api_id`

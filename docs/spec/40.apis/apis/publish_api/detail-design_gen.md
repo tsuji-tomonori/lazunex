@@ -87,7 +87,7 @@
 | `provider_contact` | API提供者の問い合わせ先。 | `provider_contact` | request.body.providerContact |
 | `owner_principal_id` | APIオーナーのprincipal。 | `owner_principal_id` | request.body.ownerPrincipalId |
 | `visibility` | 公開範囲。INTERNALまたはRESTRICTED。 | `visibility` | request.body.visibility |
-| `default_api_stage_id` | 既定のAPI stage ID。 | `api_stage_id` | 自動生成: uuid4() |
+| `default_api_stage_id` | 既定のAPI stage ID。 | `NULL` | SQL式: NULL |
 | `created_at` | 作成日時。 | `now` | 処理時刻 _now() |
 | `created_by` | 作成者のprincipal。 | `actor_principal_id` | 認証主体: caller.principalId |
 | `updated_at` | 更新日時。 | `now` | 処理時刻 _now() |
@@ -187,7 +187,7 @@
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | 自動生成: uuid4() |
 | `aggregate_id` | イベント対象のAPI ID。 | `api_id` | DB: apis.apiId |
-| `event_seq` | APIごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: api_events.aggregate_id |
+| `event_seq` | APIごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: api_events.next_event_seq, DB: api_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | 固定値: 'API_PUBLISHED' |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | 認証主体: caller.principalId |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | HTTP request context.actorType |
@@ -202,7 +202,7 @@
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM api_events WHERE aggregate_id = @api_id), 1)
+COALESCE((SELECT next_event_seq FROM (SELECT MAX(event_seq) + 1 AS next_event_seq FROM api_events WHERE aggregate_id = @api_id) AS event_seq_source), 1)
 ```
 
 ### DB `audit_events` 作成
@@ -276,7 +276,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM api_events WHERE aggregate_id = @api_id
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | 自動生成: uuid4() |
 | `aggregate_id` | イベント対象のAPI stage ID。 | `api_stage_id` | DB: apis.apiStageId |
-| `event_seq` | API stageごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: api_stage_events.aggregate_id |
+| `event_seq` | API stageごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: api_stage_events.next_event_seq, DB: api_stage_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | 固定値: 'API_STAGE_PUBLISHED' |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | 認証主体: caller.principalId |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | HTTP request context.actorType |
@@ -291,7 +291,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM api_events WHERE aggregate_id = @api_id
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM api_stage_events WHERE aggregate_id = @api_stage_id), 1)
+COALESCE((SELECT next_event_seq FROM (SELECT MAX(event_seq) + 1 AS next_event_seq FROM api_stage_events WHERE aggregate_id = @api_stage_id) AS event_seq_source), 1)
 ```
 
 ### DB `api_scope_events` 作成
@@ -303,7 +303,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM api_stage_events WHERE aggregate_id = @
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | 自動生成: uuid4() |
 | `aggregate_id` | イベント対象のAPI scope ID。 | `api_scope_id` | DB: apis.apiScopeId |
-| `event_seq` | API scopeごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: api_scope_events.aggregate_id |
+| `event_seq` | API scopeごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: api_scope_events.next_event_seq, DB: api_scope_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | 固定値: 'API_SCOPE_CREATED' |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | 認証主体: caller.principalId |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | HTTP request context.actorType |
@@ -318,7 +318,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM api_stage_events WHERE aggregate_id = @
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM api_scope_events WHERE aggregate_id = @api_scope_id), 1)
+COALESCE((SELECT next_event_seq FROM (SELECT MAX(event_seq) + 1 AS next_event_seq FROM api_scope_events WHERE aggregate_id = @api_scope_id) AS event_seq_source), 1)
 ```
 
 ### DB `api_reviewer_events` 作成
@@ -330,7 +330,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM api_scope_events WHERE aggregate_id = @
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | 自動生成: uuid4() |
 | `aggregate_id` | イベント対象のAPI reviewer ID。 | `api_reviewer_id` | DB: apis.apiReviewerIds の各要素 |
-| `event_seq` | API reviewerごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: api_reviewer_events.aggregate_id |
+| `event_seq` | API reviewerごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: api_reviewer_events.next_event_seq, DB: api_reviewer_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | 固定値: 'API_REVIEWER_CREATED' |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | 認証主体: caller.principalId |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | HTTP request context.actorType |
@@ -345,7 +345,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM api_scope_events WHERE aggregate_id = @
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM api_reviewer_events WHERE aggregate_id = @api_reviewer_id), 1)
+COALESCE((SELECT next_event_seq FROM (SELECT MAX(event_seq) + 1 AS next_event_seq FROM api_reviewer_events WHERE aggregate_id = @api_reviewer_id) AS event_seq_source), 1)
 ```
 
 ### DB `provisioning_operation_events` 作成
@@ -357,7 +357,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM api_reviewer_events WHERE aggregate_id 
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | 自動生成: uuid4() |
 | `aggregate_id` | イベント対象のAWS反映operation ID。 | `operation_id` | operation.operation_id |
-| `event_seq` | AWS反映operationごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: provisioning_operation_events.aggregate_id |
+| `event_seq` | AWS反映operationごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: provisioning_operation_events.next_event_seq, DB: provisioning_operation_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | 固定値: 'PROVISIONING_OPERATION_SUCCEEDED' |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | 認証主体: caller.principalId |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | HTTP request context.actorType |
@@ -372,7 +372,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM api_reviewer_events WHERE aggregate_id 
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM provisioning_operation_events WHERE aggregate_id = @operation_id), 1)
+COALESCE((SELECT next_event_seq FROM (SELECT MAX(event_seq) + 1 AS next_event_seq FROM provisioning_operation_events WHERE aggregate_id = @operation_id) AS event_seq_source), 1)
 ```
 
 ### DB `provisioning_step_events` 作成
@@ -384,7 +384,7 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM provisioning_operation_events WHERE agg
 | --- | --- | --- | --- |
 | `event_id` | イベントID。 | `event_id` | InsertProvisioningStepEventsParams.event_id |
 | `aggregate_id` | イベント対象のAWS反映step ID。 | `operation_step_id` | InsertProvisioningStepEventsParams.operation_step_id |
-| `event_seq` | AWS反映stepごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: provisioning_step_events.aggregate_id |
+| `event_seq` | AWS反映stepごとのイベント連番。 | `※1` | ※1 SQL式: 取得元 DB: provisioning_step_events.next_event_seq, DB: provisioning_step_events.aggregate_id |
 | `event_name` | イベント名。 | `event_name` | InsertProvisioningStepEventsParams.event_name |
 | `actor_principal_id` | イベントを発生させた主体のprincipal。 | `actor_principal_id` | InsertProvisioningStepEventsParams.actor_principal_id |
 | `actor_type` | イベント発生主体種別。USER、SYSTEM、CI。 | `actor_type` | InsertProvisioningStepEventsParams.actor_type |
@@ -399,8 +399,20 @@ COALESCE((SELECT MAX(event_seq) + 1 FROM provisioning_operation_events WHERE agg
 - ※1
 
 ```sql
-COALESCE((SELECT MAX(event_seq) + 1 FROM provisioning_step_events WHERE aggregate_id = @operation_step_id), 1)
+COALESCE((SELECT next_event_seq FROM (SELECT MAX(event_seq) + 1 AS next_event_seq FROM provisioning_step_events WHERE aggregate_id = @operation_step_id) AS event_seq_source), 1)
 ```
+
+### DB `apis` 更新
+
+- SQL: `020_update_apis_default_api_stage.sql`
+- 目的: API Gateway stage追加後に、API catalogの既定stageを設定する。
+
+| カラム | カラム説明 | パラメータ/SQL式 | 値の取得元 |
+| --- | --- | --- | --- |
+| `default_api_stage_id` | 既定のAPI stage ID。 | `api_stage_id` | 自動生成: uuid4() |
+| `updated_at` | 更新日時。 | `now` | 処理時刻 _now() |
+| `updated_by` | 更新者のprincipal。 | `actor_principal_id` | 認証主体: caller.principalId |
+| `row_version` | 楽観ロック用の行バージョン。 | `row_version + 1` | SQL式: row_version + 1 |
 
 ### 外部リソース `GetStageInput`
 

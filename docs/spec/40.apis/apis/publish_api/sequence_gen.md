@@ -58,6 +58,7 @@ sequenceDiagram
       API->>R_identity: Cognito Resource Server に custom scope を追加する。
       API->>DB: 公開対象APIのcatalog metadataを保持するため、API catalogを追加する。<br/>SQL 004_insert_apis.sql<br/>テーブル apis
       API->>DB: 公開対象のAPI Gateway stageをLazunex上で参照するため、API Gateway stageを追加する。<br/>SQL 005_insert_api_gateway_stages.sql<br/>テーブル api_gateway_stages
+      API->>DB: API Gateway stage追加後に、API catalogの既定stageを設定する。<br/>SQL 020_update_apis_default_api_stage.sql<br/>テーブル apis
       API->>DB: API実行認可に使うcustom scopeを管理するため、API Cognito scopeを追加する。<br/>SQL 006_insert_api_cognito_scopes.sql<br/>テーブル api_cognito_scopes
       API->>DB: 公開APIのOpenAPI documentを保持するため、API documentを追加する。<br/>SQL 007_insert_api_documents.sql<br/>テーブル api_documents
       API->>DB: 利用申請の審査担当を管理するため、API reviewerを追加する。<br/>SQL 008_insert_api_reviewers.sql<br/>テーブル api_reviewers
