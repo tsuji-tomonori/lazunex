@@ -4,7 +4,17 @@ import argparse
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
-from tools.e2e_models import FACTORS, FLOW_ID, E2eFactor
+from tools.e2e_models import (
+    CASES,
+    FACTORS,
+    FLOW_ID,
+    E2eFactor,
+    binding_expectations,
+    binding_steps,
+    data_for_factor,
+    selected_variant_id,
+    variant_id,
+)
 from tools.generation_io import check_outputs, write_outputs
 
 GENERATED_COMMENT = (
@@ -91,6 +101,103 @@ def render_effective_factors_yaml(factors: Sequence[E2eFactor]) -> str:
     return "\n".join(lines)
 
 
+def render_effective_factor_matrix_yaml(factors: Sequence[E2eFactor]) -> str:
+    lines: list[str] = [
+        GENERATED_COMMENT,
+        "schema_version: 1",
+        f"flow: {FLOW_ID}",
+        "factors:",
+    ]
+    for factor in factors:
+        lines.append(f"  {factor.slug}:")
+        lines.append("    variants:")
+        for element in factor.elements:
+            for data in data_for_factor(factor.factor_id):
+                lines.extend(
+                    [
+                        f"      - id: {variant_id(factor, element, data)}",
+                        f"        factor: {factor.slug}",
+                        f"        factor_id: {factor.factor_id}",
+                        f"        element: {element.element_id}",
+                        f"        data: {data.data_id}",
+                        f"        continue_flow: {str(not element.terminal).lower()}",
+                    ]
+                )
+                if data.tags:
+                    lines.append("        data_tags:")
+                    lines.extend(f"          - {tag}" for tag in data.tags)
+                lines.append("        steps:")
+                lines.extend(f"          - {step}" for step in binding_steps(factor, element))
+                lines.append("        expectations:")
+                lines.extend(
+                    f"          - {expectation}"
+                    for expectation in binding_expectations(factor, element)
+                )
+    lines.append("")
+    return "\n".join(lines)
+
+
+def render_effective_step_bindings_yaml(factors: Sequence[E2eFactor]) -> str:
+    lines: list[str] = [
+        GENERATED_COMMENT,
+        "schema_version: 1",
+        f"flow: {FLOW_ID}",
+        "bindings:",
+    ]
+    for factor in factors:
+        for element in factor.elements:
+            for data in data_for_factor(factor.factor_id):
+                binding_id = f"{factor.slug}.{element.element_id}@{data.data_id}"
+                lines.extend(
+                    [
+                        f"  - id: {binding_id}",
+                        "    when:",
+                        f"      factor: {factor.slug}",
+                        f"      element: {element.element_id}",
+                        f"      data: {data.data_id}",
+                        "    steps:",
+                    ]
+                )
+                lines.extend(
+                    f"      - id: {step}"
+                    for step in binding_steps(factor, element)
+                )
+                lines.append("    expectations:")
+                lines.extend(
+                    f"      - id: {expectation}"
+                    for expectation in binding_expectations(factor, element)
+                )
+    lines.append("")
+    return "\n".join(lines)
+
+
+def render_effective_cases_yaml() -> str:
+    lines: list[str] = [
+        GENERATED_COMMENT,
+        "schema_version: 1",
+        f"flow: {FLOW_ID}",
+        "cases:",
+    ]
+    for case in CASES:
+        lines.extend(
+            [
+                f"  - id: {case.case_id}",
+                f"    slug: {case.slug}",
+                f"    kind: {case.kind}",
+                f"    tier: {case.tier}",
+                f"    terminal_step: {case.terminal_step}",
+                f"    scenario: cases/{case.filename}",
+                "    selected_variants:",
+            ]
+        )
+        lines.extend(
+            f"      - {selected_variant_id(factor_id, element_id)}"
+            for factor_id, element_id in case.selected
+        )
+    lines.append("")
+    return "\n".join(lines)
+
+
 def rendered_outputs(output_root: Path = Path("docs/spec/50.e2e")) -> Mapping[Path, str]:
     flow_root = output_root / FLOW_ID
     rendered: dict[Path, str] = {}
@@ -100,6 +207,15 @@ def rendered_outputs(output_root: Path = Path("docs/spec/50.e2e")) -> Mapping[Pa
         ] = render_factor_yaml(factor)
     rendered[flow_root / "factors" / "effective_factors.gen.yaml"] = (
         render_effective_factors_yaml(FACTORS)
+    )
+    rendered[flow_root / "generated" / "effective_factor_matrix.gen.yaml"] = (
+        render_effective_factor_matrix_yaml(FACTORS)
+    )
+    rendered[flow_root / "generated" / "effective_step_bindings.gen.yaml"] = (
+        render_effective_step_bindings_yaml(FACTORS)
+    )
+    rendered[flow_root / "generated" / "effective_cases.gen.yaml"] = (
+        render_effective_cases_yaml()
     )
     return rendered
 

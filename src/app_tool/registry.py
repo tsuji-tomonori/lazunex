@@ -157,7 +157,12 @@ TOOL_SPECS: tuple[ToolSpec, ...] = (
             "src/app/apis/*/*/samples.py",
             "docs/spec/40.apis/*/*/unit-test_gen.md",
         ),
-        outputs=("docs/spec/50.e2e/*/factors/*.gen.yaml",),
+        outputs=(
+            "docs/spec/50.e2e/*/factors/*.gen.yaml",
+            "docs/spec/50.e2e/*/generated/effective_factor_matrix.gen.yaml",
+            "docs/spec/50.e2e/*/generated/effective_step_bindings.gen.yaml",
+            "docs/spec/50.e2e/*/generated/effective_cases.gen.yaml",
+        ),
         depends_on=("generate_api_unit_test_factors", "generate_openapi_if_specs"),
         check_supported=True,
         safe_to_run_in_ci=True,

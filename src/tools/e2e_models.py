@@ -53,6 +53,13 @@ class E2eFactor:
 
 
 @dataclass(frozen=True)
+class E2eFactorData:
+    data_id: str
+    title: str
+    tags: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class E2eCase:
     case_id: str
     slug: str
@@ -149,6 +156,50 @@ def api_factor(definition: E2eApiFactorDefinition) -> E2eFactor:
         ),
         requires=definition.requires,
     )
+
+
+DEFAULT_DATA = E2eFactorData("default", "標準データ", ("default",))
+
+
+FACTOR_DATA: dict[str, tuple[E2eFactorData, ...]] = {
+    "F030": (
+        E2eFactorData(
+            "both_auth_mode",
+            "requestedAuthMode=BOTH",
+            ("valid_request", "auth_mode_both"),
+        ),
+        E2eFactorData(
+            "public_pkce_auth_mode",
+            "requestedAuthMode=PUBLIC_PKCE",
+            ("valid_request", "auth_mode_public_pkce"),
+        ),
+        E2eFactorData(
+            "client_credentials_auth_mode",
+            "requestedAuthMode=CLIENT_CREDENTIALS",
+            ("valid_request", "auth_mode_client_credentials"),
+        ),
+    ),
+    "F040": (
+        E2eFactorData("approve_both", "BOTH承認", ("review_request", "auth_mode_both")),
+        E2eFactorData(
+            "approve_public_pkce",
+            "PUBLIC_PKCE承認",
+            ("review_request", "auth_mode_public_pkce"),
+        ),
+        E2eFactorData(
+            "approve_client_credentials",
+            "CLIENT_CREDENTIALS承認",
+            ("review_request", "auth_mode_client_credentials"),
+        ),
+    ),
+    "F041": (E2eFactorData("reject_default", "標準却下", ("review_request", "reject")),),
+    "F061": (E2eFactorData("subscriptions_default", "標準subscriptions確認", ("read_model",)),),
+    "F070": (E2eFactorData("runtime_default", "標準Runtime呼び出し", ("runtime",)),),
+}
+
+
+def data_for_factor(factor_id: str) -> tuple[E2eFactorData, ...]:
+    return FACTOR_DATA.get(factor_id, (DEFAULT_DATA,))
 
 
 FACTORS: tuple[E2eFactor, ...] = (
@@ -822,6 +873,35 @@ def markdown_escape(value: str) -> str:
 
 def factor_by_id() -> dict[str, E2eFactor]:
     return {factor.factor_id: factor for factor in FACTORS}
+
+
+def variant_id(factor: E2eFactor, element: E2eFactorElement, data: E2eFactorData) -> str:
+    return f"{factor.slug}.{element.element_id}@{data.data_id}"
+
+
+def binding_steps(factor: E2eFactor, element: E2eFactorElement) -> tuple[str, ...]:
+    if factor.factor_id == "F030" and element.element_id == "duplicate_pending":
+        return ("setup_pending_access_request", factor.owner_step)
+    if factor.factor_id == "F030" and element.element_id == "already_subscribed":
+        return ("setup_active_subscription", factor.owner_step)
+    if factor.factor_id == "F040" and element.element_id == "not_pending":
+        return ("setup_reviewed_access_request", factor.owner_step)
+    return (factor.owner_step,)
+
+
+def binding_expectations(factor: E2eFactor, element: E2eFactorElement) -> tuple[str, ...]:
+    expectations = [f"{factor.slug}.{element.element_id}"]
+    if element.terminal:
+        expectations.append("common.no_later_steps")
+    return tuple(expectations)
+
+
+def selected_variant_id(factor_id: str, element_id: str) -> str:
+    factor = factor_by_id()[factor_id]
+    for element in factor.elements:
+        if element.element_id == element_id:
+            return variant_id(factor, element, data_for_factor(factor_id)[0])
+    raise KeyError(f"{factor_id}.{element_id}")
 
 
 def element_label(factor_id: str, element_id: str) -> str:
