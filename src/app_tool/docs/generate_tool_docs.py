@@ -19,6 +19,28 @@ def md_join(values: Iterable[str]) -> str:
     return "<br>".join(f"`{item}`" for item in items)
 
 
+def md_escape(value: str) -> str:
+    return value.replace("|", "\\|")
+
+
+def tool_dir(spec: ToolSpec, output_dir: Path) -> Path:
+    return output_dir / spec.name
+
+
+def render_tools_list(specs: tuple[ToolSpec, ...]) -> str:
+    lines = [
+        GENERATED_COMMENT,
+        "",
+        "# Tools 一覧",
+        "",
+        "| Tool名 | 日本語の説明 |",
+        "| :--- | :--- |",
+    ]
+    for spec in specs:
+        lines.append(f"| `{spec.name}` | {md_escape(spec.summary)} |")
+    return "\n".join(lines) + "\n"
+
+
 def render_usage(specs: tuple[ToolSpec, ...]) -> str:
     lines = [
         GENERATED_COMMENT,
@@ -127,14 +149,107 @@ def render_testcase_spec(specs: tuple[ToolSpec, ...]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def render_basic_design(spec: ToolSpec) -> str:
+    lines = [
+        GENERATED_COMMENT,
+        "",
+        f"# `{spec.name}` 基本設計",
+        "",
+        "## Tool名",
+        "",
+        f"`{spec.name}`",
+        "",
+        "## 日本語の説明",
+        "",
+        spec.summary,
+        "",
+        "## I/O",
+        "",
+        "| 種別 | 内容 |",
+        "| :--- | :--- |",
+        f"| 入力 | {md_join(spec.inputs)} |",
+        f"| 出力 | {md_join(spec.outputs)} |",
+        f"| check mode | {'対応' if spec.check_supported else '未対応'} |",
+        f"| CI実行 | {'安全' if spec.safe_to_run_in_ci else '要個別判断'} |",
+        "",
+        "## 処理フロー",
+        "",
+        "1. 入力パス、設定、または repository state を読み取る。",
+        "2. `ToolSpec` の責務に従って検査または生成対象を解析する。",
+        "3. 出力ファイルまたは `stdout` に結果を反映する。",
+        "4. `--check` 対応 tool は差分がある場合に non-zero exit を返す。",
+        "",
+        "## 依存関係",
+        "",
+        md_join(spec.depends_on),
+        "",
+        "## 使い方",
+        "",
+        "```bash",
+        spec.command,
+        "```",
+        "",
+    ]
+    if spec.examples:
+        lines.extend(["### 実行例", ""])
+        for example in spec.examples:
+            lines.extend(["```bash", example, "```", ""])
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_unit_test_spec(spec: ToolSpec) -> str:
+    check_expectation = (
+        "`--check` 実行時に生成済み成果物との差分を検出する。"
+        if spec.check_supported
+        else "check mode 未対応であることを明示し、通常実行の成功を確認する。"
+    )
+    lines = [
+        GENERATED_COMMENT,
+        "",
+        f"# `{spec.name}` unit-test仕様",
+        "",
+        "## 対象",
+        "",
+        f"`{spec.name}` の入力解析、生成/検査結果、check mode、冪等性を確認する。",
+        "",
+        "## テストケース",
+        "",
+        "| Case | 観点 | 期待結果 |",
+        "| :--- | :--- | :--- |",
+        (
+            f"| UT001 | 正常系 | `{spec.command}` 相当の実行で期待する"
+            "成果物または検査結果が得られる。 |"
+        ),
+        f"| UT002 | 入力 | 必須入力 {md_join(spec.inputs)} がテスト fixture から参照される。 |",
+        f"| UT003 | 出力 | 期待出力 {md_join(spec.outputs)} の内容または通知を検証する。 |",
+        f"| UT004 | check mode | {check_expectation} |",
+        "| UT005 | 冪等性 | 同じ入力で再実行しても余分な差分を作らない。 |",
+        "| UT006 | エラー | 不正または不足した入力を検出し、原因が分かる失敗を返す。 |",
+        "",
+        "## 推奨検証コマンド",
+        "",
+        "```bash",
+        "uv run pytest tests/tools",
+        "```",
+        "",
+    ]
+    return "\n".join(lines)
+
+
 def rendered_outputs(output_dir: Path = TOOLS_DOCS_DIR) -> dict[Path, str]:
     specs = all_tool_specs()
-    return {
+    outputs = {
+        output_dir / "tools-list.gen.md": render_tools_list(specs),
         output_dir / "usage.gen.md": render_usage(specs),
         output_dir / "artifacts.gen.md": render_artifacts(specs),
         output_dir / "execution-flow.gen.md": render_execution_flow(specs),
         output_dir / "testcase-spec.gen.md": render_testcase_spec(specs),
     }
+    for spec in specs:
+        spec_dir = tool_dir(spec, output_dir)
+        outputs[spec_dir / "basic-design_gen.md"] = render_basic_design(spec)
+        outputs[spec_dir / "unit-test-spec_gen.md"] = render_unit_test_spec(spec)
+    return outputs
 
 
 def changed_outputs(rendered: dict[Path, str]) -> list[Path]:
