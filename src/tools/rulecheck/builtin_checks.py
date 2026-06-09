@@ -1304,16 +1304,80 @@ def tools_existing_checks(item: RuleItem, context: CheckContext) -> list[CheckRe
 class Threshold:
     pattern: str
     max_value: int
+    function_kind: str | None = None
 
 
 def _thresholds(context: CheckContext, key: str) -> list[Threshold]:
     entries = context.config.get("metrics", {}).get(key, [])
-    return [Threshold(str(entry["glob"]), int(entry["max"])) for entry in entries]
+    return [
+        Threshold(
+            str(entry["glob"]),
+            int(entry["max"]),
+            str(entry["function_kind"]) if "function_kind" in entry else None,
+        )
+        for entry in entries
+    ]
+
+
+def _metric_exclude_globs(context: CheckContext) -> tuple[str, ...]:
+    metrics = context.config.get("metrics", {})
+    return tuple(str(pattern) for pattern in metrics.get("exclude_globs", ()))
+
+
+def _is_metric_excluded(rel: Path, context: CheckContext) -> bool:
+    value = rel.as_posix()
+    return any(_matches_metric_pattern(value, pattern) for pattern in _metric_exclude_globs(context))
+
+
+def _matches_metric_pattern(value: str, pattern: str) -> bool:
+    if fnmatch.fnmatch(value, pattern):
+        return True
+    if pattern.endswith("/**/*.py"):
+        direct_pattern = pattern.removesuffix("/**/*.py") + "/*.py"
+        if fnmatch.fnmatch(value, direct_pattern):
+            return True
+    if "/**/" in pattern:
+        return fnmatch.fnmatch(value, pattern.replace("/**/", "/"))
+    return False
+
+
+def _glob_metric_paths(root: Path, pattern: str) -> list[Path]:
+    patterns = [pattern]
+    if "/**/" in pattern:
+        patterns.append(pattern.replace("/**/", "/"))
+    paths: set[Path] = set()
+    for candidate_pattern in patterns:
+        paths.update(root.glob(candidate_pattern))
+    return sorted(paths)
 
 
 def _effective_threshold(rel: Path, thresholds: list[Threshold]) -> int | None:
     value = rel.as_posix()
-    matches = [threshold for threshold in thresholds if fnmatch.fnmatch(value, threshold.pattern)]
+    matches = [
+        threshold
+        for threshold in thresholds
+        if threshold.function_kind is None and _matches_metric_pattern(value, threshold.pattern)
+    ]
+    if not matches:
+        return None
+    return min(threshold.max_value for threshold in matches)
+
+
+def _effective_function_threshold(
+    rel: Path,
+    fn: ast.FunctionDef | ast.AsyncFunctionDef,
+    thresholds: list[Threshold],
+) -> int | None:
+    value = rel.as_posix()
+    matches = [
+        threshold
+        for threshold in thresholds
+        if _matches_metric_pattern(value, threshold.pattern)
+        and (
+            threshold.function_kind is None
+            or threshold.function_kind == _function_kind(rel, fn)
+        )
+    ]
     if not matches:
         return None
     return min(threshold.max_value for threshold in matches)
@@ -1323,35 +1387,63 @@ def _metric_python_files(context: CheckContext, key: str) -> list[tuple[Path, in
     thresholds = _thresholds(context, key)
     paths: dict[Path, int] = {}
     for threshold in thresholds:
-        for path in context.repo_root.glob(threshold.pattern):
+        for path in _glob_metric_paths(context.repo_root, threshold.pattern):
             if path.is_file() and "__pycache__" not in path.parts:
                 rel = _rel(path, context.repo_root)
+                if _is_metric_excluded(rel, context):
+                    continue
                 effective = _effective_threshold(rel, thresholds)
-                if effective is not None:
+                if effective is not None or threshold.function_kind is not None:
+                    effective = effective if effective is not None else threshold.max_value
                     paths[path] = effective
     return sorted(paths.items())
+
+
+def _metric_function_thresholds(
+    context: CheckContext,
+    key: str,
+) -> list[tuple[Path, ast.FunctionDef | ast.AsyncFunctionDef, int]]:
+    thresholds = _thresholds(context, key)
+    functions: list[tuple[Path, ast.FunctionDef | ast.AsyncFunctionDef, int]] = []
+    seen: set[tuple[Path, int]] = set()
+    for threshold in thresholds:
+        for path in _glob_metric_paths(context.repo_root, threshold.pattern):
+            if not path.is_file() or "__pycache__" in path.parts:
+                continue
+            rel = _rel(path, context.repo_root)
+            if _is_metric_excluded(rel, context):
+                continue
+            tree = _parse_python(path)
+            if tree is None:
+                continue
+            for fn in _all_functions(tree):
+                key_tuple = path, fn.lineno
+                if key_tuple in seen:
+                    continue
+                max_value = _effective_function_threshold(rel, fn, thresholds)
+                if max_value is None:
+                    continue
+                seen.add(key_tuple)
+                functions.append((path, fn, max_value))
+    return sorted(functions, key=lambda item: (item[0].as_posix(), item[1].lineno))
 
 
 def python_complexity(item: RuleItem, context: CheckContext) -> list[CheckResult]:
     issues: list[CheckResult] = []
     checked = 0
-    for path, max_value in _metric_python_files(context, "cyclomatic_complexity"):
-        tree = _parse_python(path)
-        if tree is None:
-            continue
-        for fn in _all_functions(tree):
-            checked += 1
-            value = _cyclomatic_complexity(fn)
-            if value > max_value:
-                issues.append(
-                    _fail(
-                        "python_complexity",
-                        item,
-                        f"cyclomatic complexity {value} > {max_value}",
-                        path=path,
-                        line=fn.lineno,
-                    )
+    for path, fn, max_value in _metric_function_thresholds(context, "cyclomatic_complexity"):
+        checked += 1
+        value = _cyclomatic_complexity(fn)
+        if value > max_value:
+            issues.append(
+                _fail(
+                    "python_complexity",
+                    item,
+                    f"cyclomatic complexity {value} > {max_value}",
+                    path=path,
+                    line=fn.lineno,
                 )
+            )
     if issues:
         return issues
     return _pass("python_complexity", item, f"checked {checked} functions")
@@ -1360,23 +1452,19 @@ def python_complexity(item: RuleItem, context: CheckContext) -> list[CheckResult
 def control_nesting_depth(item: RuleItem, context: CheckContext) -> list[CheckResult]:
     issues: list[CheckResult] = []
     checked = 0
-    for path, max_value in _metric_python_files(context, "control_nesting_depth"):
-        tree = _parse_python(path)
-        if tree is None:
-            continue
-        for fn in _all_functions(tree):
-            checked += 1
-            value = _max_control_depth(fn)
-            if value > max_value:
-                issues.append(
-                    _fail(
-                        "control_nesting_depth",
-                        item,
-                        f"control nesting depth {value} > {max_value}",
-                        path=path,
-                        line=fn.lineno,
-                    )
+    for path, fn, max_value in _metric_function_thresholds(context, "control_nesting_depth"):
+        checked += 1
+        value = _max_control_depth(fn)
+        if value > max_value:
+            issues.append(
+                _fail(
+                    "control_nesting_depth",
+                    item,
+                    f"control nesting depth {value} > {max_value}",
+                    path=path,
+                    line=fn.lineno,
                 )
+            )
     if issues:
         return issues
     return _pass("control_nesting_depth", item, f"checked {checked} functions")
@@ -1385,25 +1473,21 @@ def control_nesting_depth(item: RuleItem, context: CheckContext) -> list[CheckRe
 def function_logical_lines(item: RuleItem, context: CheckContext) -> list[CheckResult]:
     issues: list[CheckResult] = []
     checked = 0
-    for path, max_value in _metric_python_files(context, "function_logical_lines"):
+    for path, fn, max_value in _metric_function_thresholds(context, "function_logical_lines"):
         lines = _read(path).splitlines()
-        tree = _parse_python(path)
-        if tree is None:
-            continue
-        for fn in _all_functions(tree):
-            checked += 1
-            end = getattr(fn, "end_lineno", fn.lineno)
-            value = _logical_lines(lines[fn.lineno - 1 : end])
-            if value > max_value:
-                issues.append(
-                    _fail(
-                        "function_logical_lines",
-                        item,
-                        f"function logical lines {value} > {max_value}",
-                        path=path,
-                        line=fn.lineno,
-                    )
+        checked += 1
+        end = getattr(fn, "end_lineno", fn.lineno)
+        value = _logical_lines(lines[fn.lineno - 1 : end])
+        if value > max_value:
+            issues.append(
+                _fail(
+                    "function_logical_lines",
+                    item,
+                    f"function logical lines {value} > {max_value}",
+                    path=path,
+                    line=fn.lineno,
                 )
+            )
     if issues:
         return issues
     return _pass("function_logical_lines", item, f"checked {checked} functions")
@@ -1432,64 +1516,149 @@ def file_logical_lines(item: RuleItem, context: CheckContext) -> list[CheckResul
 def function_argument_count(item: RuleItem, context: CheckContext) -> list[CheckResult]:
     issues: list[CheckResult] = []
     checked = 0
-    for path, max_value in _metric_python_files(context, "function_argument_count"):
-        tree = _parse_python(path)
-        if tree is None:
-            continue
-        for fn in _all_functions(tree):
-            checked += 1
-            args = [*fn.args.posonlyargs, *fn.args.args, *fn.args.kwonlyargs]
-            count = len([arg for arg in args if arg.arg not in {"self", "cls"}])
-            if count > max_value:
-                issues.append(
-                    _fail(
-                        "function_argument_count",
-                        item,
-                        f"function arguments {count} > {max_value}",
-                        path=path,
-                        line=fn.lineno,
-                    )
+    for path, fn, max_value in _metric_function_thresholds(context, "function_argument_count"):
+        checked += 1
+        count = _function_argument_count(fn)
+        if count > max_value:
+            issues.append(
+                _fail(
+                    "function_argument_count",
+                    item,
+                    f"function arguments {count} > {max_value}",
+                    path=path,
+                    line=fn.lineno,
                 )
+            )
     if issues:
         return issues
     return _pass("function_argument_count", item, f"checked {checked} functions")
 
 
+def endpoint_business_argument_count(item: RuleItem, context: CheckContext) -> list[CheckResult]:
+    issues: list[CheckResult] = []
+    checked = 0
+    for path, fn, max_value in _metric_function_thresholds(
+        context, "endpoint_business_argument_count"
+    ):
+        checked += 1
+        count = _endpoint_business_argument_count(fn)
+        if count > max_value:
+            issues.append(
+                _fail(
+                    "endpoint_business_argument_count",
+                    item,
+                    f"endpoint business arguments {count} > {max_value}",
+                    path=path,
+                    line=fn.lineno,
+                )
+            )
+    if issues:
+        return issues
+    return _pass("endpoint_business_argument_count", item, f"checked {checked} endpoints")
+
+
 def return_count(item: RuleItem, context: CheckContext) -> list[CheckResult]:
     issues: list[CheckResult] = []
     checked = 0
-    for path, max_value in _metric_python_files(context, "return_count"):
-        tree = _parse_python(path)
-        if tree is None:
-            continue
-        for fn in _all_functions(tree):
-            checked += 1
-            count = sum(1 for node in ast.walk(fn) if isinstance(node, ast.Return))
-            if count > max_value:
-                issues.append(
-                    _fail(
-                        "return_count",
-                        item,
-                        f"return statements {count} > {max_value}",
-                        path=path,
-                        line=fn.lineno,
-                    )
+    for path, fn, max_value in _metric_function_thresholds(context, "return_count"):
+        checked += 1
+        count = sum(1 for node in ast.walk(fn) if isinstance(node, ast.Return))
+        if count > max_value:
+            issues.append(
+                _fail(
+                    "return_count",
+                    item,
+                    f"return statements {count} > {max_value}",
+                    path=path,
+                    line=fn.lineno,
                 )
+            )
     if issues:
         return issues
     return _pass("return_count", item, f"checked {checked} functions")
 
 
+def try_body_statement_count(item: RuleItem, context: CheckContext) -> list[CheckResult]:
+    issues: list[CheckResult] = []
+    checked = 0
+    for path, fn, max_value in _metric_function_thresholds(context, "try_body_statement_count"):
+        for node in ast.walk(fn):
+            if not isinstance(node, ast.Try):
+                continue
+            checked += 1
+            count = len(node.body)
+            if count > max_value:
+                issues.append(
+                    _fail(
+                        "try_body_statement_count",
+                        item,
+                        f"try body statements {count} > {max_value}",
+                        path=path,
+                        line=node.lineno,
+                    )
+                )
+    if issues:
+        return issues
+    return _pass("try_body_statement_count", item, f"checked {checked} try blocks")
+
+
+def local_variable_count(item: RuleItem, context: CheckContext) -> list[CheckResult]:
+    issues: list[CheckResult] = []
+    checked = 0
+    for path, fn, max_value in _metric_function_thresholds(context, "local_variable_count"):
+        checked += 1
+        count = len(_local_variable_names(fn))
+        if count > max_value:
+            issues.append(
+                _fail(
+                    "local_variable_count",
+                    item,
+                    f"local variables {count} > {max_value}",
+                    path=path,
+                    line=fn.lineno,
+                )
+            )
+    if issues:
+        return issues
+    return _pass("local_variable_count", item, f"checked {checked} functions")
+
+
+def branch_count(item: RuleItem, context: CheckContext) -> list[CheckResult]:
+    issues: list[CheckResult] = []
+    checked = 0
+    for path, fn, max_value in _metric_function_thresholds(context, "branch_count"):
+        checked += 1
+        count = _branch_count(fn)
+        if count > max_value:
+            issues.append(
+                _fail(
+                    "branch_count",
+                    item,
+                    f"branches {count} > {max_value}",
+                    path=path,
+                    line=fn.lineno,
+                )
+            )
+    if issues:
+        return issues
+    return _pass("branch_count", item, f"checked {checked} functions")
+
+
 def condition_complexity(item: RuleItem, context: CheckContext) -> list[CheckResult]:
-    settings = context.config.get("metrics", {}).get("condition_complexity", {})
-    bool_max = int(settings.get("bool_ops_max", 2))
-    compare_max = int(settings.get("comparison_ops_max", 2))
-    depth_max = int(settings.get("ast_depth_max", 5))
+    settings = cast(
+        dict[str, Any],
+        context.config.get("metrics", {}).get("condition_complexity", {}),
+    )
     forbid_mixed = bool(settings.get("forbid_mixed_and_or", True))
     forbid_nested_ternary = bool(settings.get("forbid_nested_ternary", True))
     issues: list[CheckResult] = []
     checked = 0
     for path, _ in _metric_python_files(context, "cyclomatic_complexity"):
+        rel = _rel(path, context.repo_root)
+        condition_settings = _condition_settings_for_path(rel, settings)
+        bool_max = _int_setting(condition_settings, settings, "bool_ops_max", 2)
+        compare_max = _int_setting(condition_settings, settings, "comparison_ops_max", 2)
+        depth_max = _int_setting(condition_settings, settings, "ast_depth_max", 5)
         tree = _parse_python(path)
         if tree is None:
             continue
@@ -1850,6 +2019,110 @@ def _has_mixed_and_or(node: ast.AST) -> bool:
     return ast.And in ops and ast.Or in ops
 
 
+def _function_kind(rel: Path, fn: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
+    value = rel.as_posix()
+    if value.endswith("/router.py") and _is_router_endpoint(fn):
+        return "endpoint"
+    if fn.name == "main" or fn.name.startswith("cmd_"):
+        return "cli_adapter"
+    if fn.name.startswith("_"):
+        return "private"
+    return "public"
+
+
+def _is_router_endpoint(fn: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+    for decorator in fn.decorator_list:
+        call = decorator if isinstance(decorator, ast.Call) else None
+        function = call.func if call is not None else decorator
+        if not isinstance(function, ast.Attribute):
+            continue
+        if not isinstance(function.value, ast.Name) or function.value.id != "router":
+            continue
+        if function.attr in {"delete", "get", "patch", "post", "put"}:
+            return True
+    return False
+
+
+def _function_argument_count(fn: ast.FunctionDef | ast.AsyncFunctionDef) -> int:
+    args = [*fn.args.posonlyargs, *fn.args.args, *fn.args.kwonlyargs]
+    return len([arg for arg in args if arg.arg not in {"self", "cls"}])
+
+
+def _endpoint_business_argument_count(fn: ast.FunctionDef | ast.AsyncFunctionDef) -> int:
+    args = [*fn.args.posonlyargs, *fn.args.args, *fn.args.kwonlyargs]
+    return len(
+        [
+            arg
+            for arg in args
+            if arg.arg not in {"self", "cls"} and not _is_fastapi_dependency_arg(arg)
+        ]
+    )
+
+
+def _is_fastapi_dependency_arg(arg: ast.arg) -> bool:
+    annotation = arg.annotation
+    if annotation is None:
+        return False
+    return "Depends(" in ast.unparse(annotation)
+
+
+def _local_variable_names(fn: ast.FunctionDef | ast.AsyncFunctionDef) -> set[str]:
+    arg_names = {arg.arg for arg in [*fn.args.posonlyargs, *fn.args.args, *fn.args.kwonlyargs]}
+    names: set[str] = set()
+    for node in ast.walk(fn):
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
+            if node.id not in arg_names:
+                names.add(node.id)
+        elif isinstance(node, ast.ExceptHandler) and node.name is not None:
+            names.add(node.name)
+    return names
+
+
+def _branch_count(fn: ast.FunctionDef | ast.AsyncFunctionDef) -> int:
+    count = 0
+    for node in ast.walk(fn):
+        if isinstance(node, (ast.If, ast.For, ast.AsyncFor, ast.While)):
+            count += 1
+        elif isinstance(node, ast.Try):
+            count += len(node.handlers)
+        elif isinstance(node, ast.Match):
+            count += len(node.cases)
+    return count
+
+
+def _condition_settings_for_path(rel: Path, settings: object) -> dict[str, object]:
+    if not isinstance(settings, dict):
+        return {}
+    value = rel.as_posix()
+    raw_entries = cast(dict[str, Any], settings).get("thresholds", ())
+    entries = cast(Iterable[dict[str, Any]], raw_entries)
+    matches = [
+        entry
+        for entry in entries
+        if "glob" in entry and _matches_metric_pattern(value, str(entry["glob"]))
+    ]
+    if not matches:
+        return {}
+    result: dict[str, object] = {}
+    for key in ("bool_ops_max", "comparison_ops_max", "ast_depth_max"):
+        values = [int(entry[key]) for entry in matches if key in entry]
+        if values:
+            result[key] = min(values)
+    return result
+
+
+def _int_setting(
+    primary: dict[str, object],
+    fallback: dict[str, Any],
+    key: str,
+    default: int,
+) -> int:
+    value = primary.get(key)
+    if value is None:
+        value = fallback.get(key, default)
+    return int(cast(int | str, value))
+
+
 REGISTRY: dict[str, Checker] = {
     "rule_has_checker_tag": rule_has_checker_tag,
     "normative_no_ambiguous_words": normative_no_ambiguous_words,
@@ -1892,6 +2165,10 @@ REGISTRY: dict[str, Checker] = {
     "function_logical_lines": function_logical_lines,
     "file_logical_lines": file_logical_lines,
     "function_argument_count": function_argument_count,
+    "endpoint_business_argument_count": endpoint_business_argument_count,
     "return_count": return_count,
+    "try_body_statement_count": try_body_statement_count,
+    "local_variable_count": local_variable_count,
+    "branch_count": branch_count,
     "condition_complexity": condition_complexity,
 }

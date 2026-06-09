@@ -28,39 +28,68 @@
     "check_operational_logging.py"
   ],
   "metrics": {
+    "exclude_globs": [
+      "src/app/**/generated/*.py",
+      "src/app/**/generated/**/*.py",
+      "tests/generated/**/*.py"
+    ],
     "cyclomatic_complexity": [
-      {"glob": "src/app/apis/**/router.py", "max": 17},
-      {"glob": "src/app/**/*.py", "max": 17},
-      {"glob": "src/tools/**/*.py", "max": 21}
+      {"glob": "src/app/apis/**/router.py", "max": 10, "function_kind": "endpoint"},
+      {"glob": "src/app/**/*.py", "max": 10},
+      {"glob": "src/tools/**/*.py", "max": 12}
     ],
     "control_nesting_depth": [
-      {"glob": "src/app/apis/**/router.py", "max": 5},
-      {"glob": "src/app/**/*.py", "max": 5},
-      {"glob": "src/tools/**/*.py", "max": 5}
+      {"glob": "src/app/apis/**/router.py", "max": 3, "function_kind": "endpoint"},
+      {"glob": "src/app/**/*.py", "max": 3},
+      {"glob": "src/tools/**/*.py", "max": 4}
     ],
     "function_logical_lines": [
-      {"glob": "src/app/apis/**/router.py", "max": 450},
-      {"glob": "src/app/**/*.py", "max": 450},
-      {"glob": "src/tools/**/*.py", "max": 160}
+      {"glob": "src/app/apis/**/router.py", "max": 120, "function_kind": "endpoint"},
+      {"glob": "src/app/**/*.py", "max": 100},
+      {"glob": "src/tools/**/*.py", "max": 120}
     ],
     "file_logical_lines": [
-      {"glob": "src/app/apis/**/router.py", "max": 550},
-      {"glob": "src/app/**/*.py", "max": 800},
-      {"glob": "src/tools/**/*.py", "max": 1700}
+      {"glob": "src/app/apis/**/router.py", "max": 260},
+      {"glob": "src/app/**/*.py", "max": 600},
+      {"glob": "src/tools/**/*.py", "max": 1000}
     ],
     "function_argument_count": [
-      {"glob": "src/app/apis/**/router.py", "max": 20},
-      {"glob": "src/app/**/*.py", "max": 20},
-      {"glob": "src/tools/**/*.py", "max": 12}
+      {"glob": "src/app/apis/**/router.py", "max": 8, "function_kind": "endpoint"},
+      {"glob": "src/app/**/*.py", "max": 5, "function_kind": "public"},
+      {"glob": "src/app/**/*.py", "max": 5, "function_kind": "private"},
+      {"glob": "src/tools/**/*.py", "max": 6, "function_kind": "public"},
+      {"glob": "src/tools/**/*.py", "max": 6, "function_kind": "private"},
+      {"glob": "src/tools/**/*.py", "max": 8, "function_kind": "cli_adapter"}
+    ],
+    "endpoint_business_argument_count": [
+      {"glob": "src/app/apis/**/router.py", "max": 3, "function_kind": "endpoint"}
     ],
     "return_count": [
-      {"glob": "src/app/**/*.py", "max": 12},
-      {"glob": "src/tools/**/*.py", "max": 12}
+      {"glob": "src/app/apis/**/router.py", "max": 6, "function_kind": "endpoint"},
+      {"glob": "src/app/**/*.py", "max": 6},
+      {"glob": "src/tools/**/*.py", "max": 8}
+    ],
+    "try_body_statement_count": [
+      {"glob": "src/app/apis/**/router.py", "max": 5, "function_kind": "endpoint"}
+    ],
+    "local_variable_count": [
+      {"glob": "src/app/**/*.py", "max": 10},
+      {"glob": "src/tools/**/*.py", "max": 15}
+    ],
+    "branch_count": [
+      {"glob": "src/app/apis/**/router.py", "max": 4, "function_kind": "endpoint"},
+      {"glob": "src/app/**/*.py", "max": 8},
+      {"glob": "src/tools/**/*.py", "max": 10}
     ],
     "condition_complexity": {
       "bool_ops_max": 3,
-      "comparison_ops_max": 4,
-      "ast_depth_max": 9,
+      "comparison_ops_max": 3,
+      "ast_depth_max": 7,
+      "thresholds": [
+        {"glob": "src/app/apis/**/router.py", "bool_ops_max": 1},
+        {"glob": "src/app/**/*.py", "bool_ops_max": 3},
+        {"glob": "src/tools/**/*.py", "bool_ops_max": 3}
+      ],
       "forbid_mixed_and_or": false,
       "forbid_nested_ternary": true
     }
