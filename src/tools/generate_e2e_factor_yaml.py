@@ -11,13 +11,14 @@ from tools.e2e_models import (
     FLOW_ID,
     PROJECT_OPERATION_DATA,
     PROJECT_TARGETS,
+    TARGET_CASES,
     E2eFactor,
-    E2eFactorData,
     E2eTarget,
     binding_expectations,
     binding_steps,
     data_for_factor,
     selected_variant_id,
+    target_variant_id,
     variant_id,
 )
 from tools.generation_io import check_outputs, write_outputs
@@ -193,21 +194,6 @@ def render_target_yaml(targets: Sequence[E2eTarget], *, indent: str) -> list[str
         )
         lines.extend(render_tags(target.tags, indent=f"{indent}  "))
     return lines
-
-
-def target_variant_id(
-    factor: str,
-    project: E2eTarget,
-    api: E2eTarget | None,
-    operation: str,
-    element: str,
-    data: E2eFactorData,
-) -> str:
-    parts = [factor, project.target_id]
-    if api is not None:
-        parts.append(api.target_id)
-    parts.extend([operation, element])
-    return f"{'.'.join(parts)}@{data.data_id}"
 
 
 def render_effective_target_variants_yaml() -> str:
@@ -389,20 +375,6 @@ def render_effective_target_variants_yaml() -> str:
     return "\n".join(lines)
 
 
-def target_case_runtime_assertions(project: E2eTarget, allowed_api: E2eTarget | None) -> list[str]:
-    lines = ["    runtime_assertions:"]
-    for api in API_TARGETS:
-        result = "allowed" if allowed_api == api else "denied"
-        lines.extend(
-            [
-                f"      - project: {project.target_id}",
-                f"        api: {api.target_id}",
-                f"        expected: {result}",
-            ]
-        )
-    return lines
-
-
 def render_effective_cases_yaml() -> str:
     lines: list[str] = [
         GENERATED_COMMENT,
@@ -426,52 +398,26 @@ def render_effective_cases_yaml() -> str:
             f"      - {selected_variant_id(factor_id, element_id)}"
             for factor_id, element_id in case.selected
         )
-    project = PROJECT_TARGETS[0]
-    api = API_TARGETS[0]
-    create_data = PROJECT_OPERATION_DATA[0]
-    update_data = PROJECT_OPERATION_DATA[1]
-    access_data = data_for_factor("F030")[0]
-    approve_data = data_for_factor("F040")[0]
-    reject_data = data_for_factor("F041")[0]
-    project_create = target_variant_id(
-        "project", project, None, "create", "success", create_data
-    )
-    project_update = target_variant_id(
-        "project", project, None, "update", "success", update_data
-    )
-    access_success = target_variant_id(
-        "access_request", project, api, "apply", "success", access_data
-    )
-    approve_success = target_variant_id(
-        "review", project, api, "approve", "success", approve_data
-    )
-    reject_success = target_variant_id(
-        "review", project, api, "reject", "success", reject_data
-    )
-    lines.extend(
-        [
-            "target_cases:",
-            "  - id: TC_TARGET_001",
-            "    title: project_A creates API_A request and approves it",
-            "    selected_variants:",
-            f"      - {project_create}",
-            f"      - {access_success}",
-            f"      - {approve_success}",
-            *target_case_runtime_assertions(project, api),
-            "  - id: TC_TARGET_002",
-            "    title: project_A creates API_A request and rejects it",
-            "    selected_variants:",
-            f"      - {project_create}",
-            f"      - {access_success}",
-            f"      - {reject_success}",
-            *target_case_runtime_assertions(project, None),
-            "  - id: TC_TARGET_003",
-            "    title: project_A updates public client redirect URL",
-            "    selected_variants:",
-            f"      - {project_create}",
-            f"      - {project_update}",
-        ]
-    )
+    lines.append("target_cases:")
+    for target_case in TARGET_CASES:
+        lines.extend(
+            [
+                f"  - id: {target_case.case_id}",
+                f"    title: {target_case.title}",
+                "    selected_variants:",
+            ]
+        )
+        lines.extend(f"      - {variant}" for variant in target_case.selected_variants)
+        if target_case.runtime_assertions:
+            lines.append("    runtime_assertions:")
+            for assertion in target_case.runtime_assertions:
+                lines.extend(
+                    [
+                        f"      - project: {assertion.project_id}",
+                        f"        api: {assertion.api_id}",
+                        f"        expected: {assertion.expected}",
+                    ]
+                )
     lines.append("")
     return "\n".join(lines)
 

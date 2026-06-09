@@ -6,7 +6,16 @@ import io
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
-from tools.e2e_models import CASES, FACTORS, FLOW_ID, FLOW_STEPS, element_label, markdown_escape
+from tools.e2e_models import (
+    CASES,
+    FACTORS,
+    FLOW_ID,
+    FLOW_STEPS,
+    TARGET_CASES,
+    E2eTargetCase,
+    element_label,
+    markdown_escape,
+)
 from tools.generation_io import check_outputs, write_outputs
 
 GENERATED_COMMENT = (
@@ -20,6 +29,58 @@ def selected_elements_by_factor(case_id: str) -> dict[str, str]:
         if case.case_id == case_id:
             return dict(case.selected)
     raise KeyError(case_id)
+
+
+def target_case_projects(target_case: E2eTargetCase) -> str:
+    projects = sorted({assertion.project_id for assertion in target_case.runtime_assertions})
+    if projects:
+        return "<br>".join(f"`{project}`" for project in projects)
+    variants = " ".join(target_case.selected_variants)
+    for project in ("project_A", "project_B", "project_C"):
+        if project in variants:
+            return f"`{project}`"
+    return "-"
+
+
+def target_case_apis(target_case: E2eTargetCase) -> str:
+    apis = sorted(
+        {
+            assertion.api_id
+            for assertion in target_case.runtime_assertions
+            if assertion.expected == "allowed"
+        }
+    )
+    if apis:
+        return "<br>".join(f"`{api}`" for api in apis)
+    variants = " ".join(target_case.selected_variants)
+    matched_apis = [api for api in ("API_A", "API_B", "API_C") if api in variants]
+    return "<br>".join(f"`{api}`" for api in matched_apis) if matched_apis else "-"
+
+
+def render_target_case_rows() -> list[str]:
+    lines = [
+        "## 4. 対象別生成ケース一覧",
+        "",
+        "| ケースID | 目的 | Project | API | 選択Variant | Runtime期待 |",
+        "|---|---|---|---|---|---|",
+    ]
+    for target_case in TARGET_CASES:
+        variants = "<br>".join(f"`{variant}`" for variant in target_case.selected_variants)
+        runtime_assertions = (
+            "<br>".join(
+                f"`{assertion.project_id}` / `{assertion.api_id}`: `{assertion.expected}`"
+                for assertion in target_case.runtime_assertions
+            )
+            if target_case.runtime_assertions
+            else "-"
+        )
+        lines.append(
+            f"| `{target_case.case_id}` | {markdown_escape(target_case.title)} | "
+            f"{target_case_projects(target_case)} | {target_case_apis(target_case)} | "
+            f"{variants} | {runtime_assertions} |"
+        )
+    lines.append("")
+    return lines
 
 
 def render_case_list_markdown() -> str:
@@ -94,7 +155,7 @@ def render_case_list_markdown() -> str:
             f"{markdown_escape(case.terminal_step)} | "
             f"[`cases/{case.filename}`](cases/{case.filename}) |"
         )
-    lines.append("")
+    lines.extend(["", *render_target_case_rows()])
     return "\n".join(lines)
 
 

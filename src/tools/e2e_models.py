@@ -67,6 +67,21 @@ class E2eTarget:
 
 
 @dataclass(frozen=True)
+class E2eRuntimeAssertion:
+    project_id: str
+    api_id: str
+    expected: str
+
+
+@dataclass(frozen=True)
+class E2eTargetCase:
+    case_id: str
+    title: str
+    selected_variants: tuple[str, ...]
+    runtime_assertions: tuple[E2eRuntimeAssertion, ...] = ()
+
+
+@dataclass(frozen=True)
 class E2eCase:
     case_id: str
     slug: str
@@ -242,6 +257,82 @@ PROJECT_OPERATION_DATA: tuple[E2eFactorData, ...] = (
 
 def data_for_factor(factor_id: str) -> tuple[E2eFactorData, ...]:
     return FACTOR_DATA.get(factor_id, (DEFAULT_DATA,))
+
+
+def target_variant_id(
+    factor: str,
+    project: E2eTarget,
+    api: E2eTarget | None,
+    operation: str,
+    element: str,
+    data: E2eFactorData,
+) -> str:
+    parts = [factor, project.target_id]
+    if api is not None:
+        parts.append(api.target_id)
+    parts.extend([operation, element])
+    return f"{'.'.join(parts)}@{data.data_id}"
+
+
+def target_case_runtime_assertions(
+    project: E2eTarget,
+    allowed_api: E2eTarget | None,
+) -> tuple[E2eRuntimeAssertion, ...]:
+    return tuple(
+        E2eRuntimeAssertion(
+            project.target_id,
+            api.target_id,
+            "allowed" if allowed_api == api else "denied",
+        )
+        for api in API_TARGETS
+    )
+
+
+def build_target_cases() -> tuple[E2eTargetCase, ...]:
+    project = PROJECT_TARGETS[0]
+    api = API_TARGETS[0]
+    create_data = PROJECT_OPERATION_DATA[0]
+    update_data = PROJECT_OPERATION_DATA[1]
+    access_data = data_for_factor("F030")[0]
+    approve_data = data_for_factor("F040")[0]
+    reject_data = data_for_factor("F041")[0]
+    project_create = target_variant_id(
+        "project", project, None, "create", "success", create_data
+    )
+    project_update = target_variant_id(
+        "project", project, None, "update", "success", update_data
+    )
+    access_success = target_variant_id(
+        "access_request", project, api, "apply", "success", access_data
+    )
+    approve_success = target_variant_id(
+        "review", project, api, "approve", "success", approve_data
+    )
+    reject_success = target_variant_id(
+        "review", project, api, "reject", "success", reject_data
+    )
+    return (
+        E2eTargetCase(
+            "TC_TARGET_001",
+            "project_AでAPI_A利用申請を作成し承認する",
+            (project_create, access_success, approve_success),
+            target_case_runtime_assertions(project, api),
+        ),
+        E2eTargetCase(
+            "TC_TARGET_002",
+            "project_AでAPI_A利用申請を作成し却下する",
+            (project_create, access_success, reject_success),
+            target_case_runtime_assertions(project, None),
+        ),
+        E2eTargetCase(
+            "TC_TARGET_003",
+            "project_Aのpublic client redirect URLを更新する",
+            (project_create, project_update),
+        ),
+    )
+
+
+TARGET_CASES = build_target_cases()
 
 
 FACTORS: tuple[E2eFactor, ...] = (

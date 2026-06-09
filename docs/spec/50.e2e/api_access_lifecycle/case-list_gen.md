@@ -169,3 +169,11 @@
 | `TC006` | 成功: appが応答可能 | provider + project owner + reviewer | 有効なmanagement token | 成功: catalog + stage + scope | 成功: 一覧に公開APIが現れる | 失敗: apiId不明 | - | - | - | - | - | - | - | - | - | - | - | `negative` | `local_fake` | get_api | [`cases/TC006_get_api_unknown_id_is_404.gen.md`](cases/TC006_get_api_unknown_id_is_404.gen.md) |
 | `TC007` | 成功: appが応答可能 | provider + project owner + reviewer | 有効なmanagement token | 成功: catalog + stage + scope | 成功: 一覧に公開APIが現れる | 成功: 公開API詳細を取得 | 成功: project + API key + clients | 成功: 作成Projectが一覧に現れる | 失敗: projectId不明 | - | - | - | - | - | - | - | - | `negative` | `local_fake` | get_project | [`cases/TC007_get_project_unknown_id_is_404.gen.md`](cases/TC007_get_project_unknown_id_is_404.gen.md) |
 | `TC008` | 成功: appが応答可能 | provider + project owner + reviewer | 有効なmanagement token | 成功: catalog + stage + scope | 成功: 一覧に公開APIが現れる | 成功: 公開API詳細を取得 | 成功: project + API key + clients | 成功: 作成Projectが一覧に現れる | 成功: Project詳細を取得 | 成功: public client設定更新 + 承認済みscope保持 | 成功: PENDING申請作成 | 成功: PENDING申請が一覧に現れる | 成功: APPROVED + subscription + 外部反映 | - | APIGW成功 + Cognito成功 | 成功: 承認済みsubscriptionが一覧に現れる | - | `branch` | `sandbox` | - | [`cases/TC008_public_client_update_keeps_approved_scope.gen.md`](cases/TC008_public_client_update_keeps_approved_scope.gen.md) |
+
+## 4. 対象別生成ケース一覧
+
+| ケースID | 目的 | Project | API | 選択Variant | Runtime期待 |
+|---|---|---|---|---|---|
+| `TC_TARGET_001` | project_AでAPI_A利用申請を作成し承認する | `project_A` | `API_A` | `project.project_A.create.success@create_default`<br>`access_request.project_A.API_A.apply.success@both_auth_mode`<br>`review.project_A.API_A.approve.success@approve_both` | `project_A` / `API_A`: `allowed`<br>`project_A` / `API_B`: `denied`<br>`project_A` / `API_C`: `denied` |
+| `TC_TARGET_002` | project_AでAPI_A利用申請を作成し却下する | `project_A` | `API_A` | `project.project_A.create.success@create_default`<br>`access_request.project_A.API_A.apply.success@both_auth_mode`<br>`review.project_A.API_A.reject.success@reject_default` | `project_A` / `API_A`: `denied`<br>`project_A` / `API_B`: `denied`<br>`project_A` / `API_C`: `denied` |
+| `TC_TARGET_003` | project_Aのpublic client redirect URLを更新する | `project_A` | - | `project.project_A.create.success@create_default`<br>`project.project_A.update.success@update_redirect_url` | - |

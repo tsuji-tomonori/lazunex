@@ -158,7 +158,7 @@ cases:
       - list_project_subscriptions_result.success@subscriptions_default
 target_cases:
   - id: TC_TARGET_001
-    title: project_A creates API_A request and approves it
+    title: project_AでAPI_A利用申請を作成し承認する
     selected_variants:
       - project.project_A.create.success@create_default
       - access_request.project_A.API_A.apply.success@both_auth_mode
@@ -174,7 +174,7 @@ target_cases:
         api: API_C
         expected: denied
   - id: TC_TARGET_002
-    title: project_A creates API_A request and rejects it
+    title: project_AでAPI_A利用申請を作成し却下する
     selected_variants:
       - project.project_A.create.success@create_default
       - access_request.project_A.API_A.apply.success@both_auth_mode
@@ -190,7 +190,7 @@ target_cases:
         api: API_C
         expected: denied
   - id: TC_TARGET_003
-    title: project_A updates public client redirect URL
+    title: project_Aのpublic client redirect URLを更新する
     selected_variants:
       - project.project_A.create.success@create_default
       - project.project_A.update.success@update_redirect_url
