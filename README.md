@@ -38,9 +38,12 @@ uv run app-docs generate-tools --check
 ```
 
 - `docs/spec/tools/usage.gen.md`
+- `docs/spec/tools/tools-list.gen.md`
 - `docs/spec/tools/artifacts.gen.md`
 - `docs/spec/tools/execution-flow.gen.md`
 - `docs/spec/tools/testcase-spec.gen.md`
+- `docs/spec/tools/<tool-name>/basic-design_gen.md`
+- `docs/spec/tools/<tool-name>/unit-test-spec_gen.md`
 
 ## Coding Rule Check
 
