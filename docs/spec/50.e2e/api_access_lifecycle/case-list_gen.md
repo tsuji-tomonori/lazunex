@@ -25,28 +25,28 @@
 
 ### F000 GET /health ヘルスチェック結果
 
-| Element | Default | Terminal | Tier | Expected |
+| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
 |---|---:|---:|---|---|
 | `success` | true | false | `smoke_sandbox` | HTTP 200とstatus okを返し、管理API E2Eの前提となるアプリ疎通を確認する。 |
 | `unavailable` | false | true | `local_fake` | HTTP 5xxまたは応答なしとして扱い、管理APIフローを開始しない。 |
 
 ### F001 管理API呼び出し主体
 
-| Element | Default | Terminal | Tier | Expected |
+| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
 |---|---:|---:|---|---|
 | `provider_owner_reviewer` | true | false | `smoke_sandbox` | API公開、Project作成、審査をそれぞれ権限のある主体で実行する。 |
 | `non_reviewer` | false | true | `sandbox` | approve/rejectでHTTP 403となりsubscriptionを作成しない。 |
 
 ### F002 管理API認証
 
-| Element | Default | Terminal | Tier | Expected |
+| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
 |---|---:|---:|---|---|
 | `valid` | true | false | `smoke_sandbox` | 管理API呼び出しが認証を通過する。 |
 | `missing` | false | true | `local_fake` | 最初の管理APIでHTTP 401となり後続stepを実行しない。 |
 
 ### F010 POST /apis API公開結果
 
-| Element | Default | Terminal | Tier | Expected |
+| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
 |---|---:|---:|---|---|
 | `success` | true | false | `smoke_sandbox` | HTTP 201、apiId/apiStageId/scopeFullName返却、API catalog保存、Cognito scope作成、audit/provisioning記録を確認する。 |
 | `duplicate_api_code` | false | true | `sandbox` | POST /apisがHTTP 409となりProject作成以降を実行しない。 |
@@ -55,49 +55,49 @@
 
 ### F011 GET /apis API一覧取得結果
 
-| Element | Default | Terminal | Tier | Expected |
+| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
 |---|---:|---:|---|---|
 | `success` | true | false | `smoke_sandbox` | HTTP 200、itemsに公開済みapiId/apiCode/scopeが含まれる、pagination/filterが仕様どおり、secret値を含まない。 |
 | `filter_no_match` | false | true | `local_fake` | HTTP 200かつitems空配列を返し、後続getApiは既知apiIdを使って継続する。 |
 
 ### F012 GET /apis/{apiId} API詳細取得結果
 
-| Element | Default | Terminal | Tier | Expected |
+| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
 |---|---:|---:|---|---|
 | `success` | true | false | `smoke_sandbox` | HTTP 200、apiId/apiStageId/scopeFullNameがPOST /apisの返却値と一致し、登録済みreviewer/stage情報を確認できる。 |
 | `not_found` | false | true | `sandbox` | HTTP 404を返し、Project作成以降のAPI間状態遷移を実行しない。 |
 
 ### F020 POST /projects Project作成結果
 
-| Element | Default | Terminal | Tier | Expected |
+| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
 |---|---:|---:|---|---|
 | `success` | true | false | `smoke_sandbox` | HTTP 201、projectId/API key/Cognito clientsを返却、Usage Plan/API key/client secret hashを保存、secret実値は後続placeholderにのみ渡す。 |
 | `duplicate_project_code` | false | true | `sandbox` | POST /projectsがHTTP 409となり利用申請以降を実行しない。 |
 
 ### F021 GET /projects Project一覧取得結果
 
-| Element | Default | Terminal | Tier | Expected |
+| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
 |---|---:|---:|---|---|
 | `success` | true | false | `smoke_sandbox` | HTTP 200、itemsにprojectId/projectCodeが含まれる、callerの権限範囲に絞られる、secret/API key実値を含まない。 |
 | `filter_no_match` | false | true | `local_fake` | HTTP 200かつitems空配列を返し、後続getProjectは既知projectIdを使って継続する。 |
 
 ### F022 GET /projects/{projectId} Project詳細取得結果
 
-| Element | Default | Terminal | Tier | Expected |
+| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
 |---|---:|---:|---|---|
 | `success` | true | false | `smoke_sandbox` | HTTP 200、projectId/client構成/公開client設定を取得、API key値とclient secret値は再表示しない。 |
 | `not_found` | false | true | `sandbox` | HTTP 404を返し、public client更新と利用申請以降を実行しない。 |
 
 ### F023 PATCH /projects/{projectId}/public-client 更新結果
 
-| Element | Default | Terminal | Tier | Expected |
+| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
 |---|---:|---:|---|---|
 | `success` | true | false | `smoke_sandbox` | HTTP 200、callback/logout/token設定が更新され、既存AllowedOAuthScopesと承認済みscopeを消さない。 |
 | `invalid_redirect_uri` | false | true | `sandbox` | HTTP 400/409を返し、既存public client設定と承認済みscopeを変更しない。 |
 
 ### F030 POST /projects/{projectId}/api-access-requests 利用申請作成結果
 
-| Element | Default | Terminal | Tier | Expected |
+| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
 |---|---:|---:|---|---|
 | `success` | true | false | `smoke_sandbox` | HTTP 201、PENDINGのaccessRequestIdを返却、authMode/apiStageId/reviewer候補を保存、audit/access_request eventを記録する。 |
 | `duplicate_pending` | false | true | `sandbox` | 2回目の申請がHTTP 409となり既存pending requestを保持する。 |
@@ -105,14 +105,14 @@
 
 ### F031 GET /projects/{projectId}/api-access-requests 利用申請一覧取得結果
 
-| Element | Default | Terminal | Tier | Expected |
+| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
 |---|---:|---:|---|---|
 | `success` | true | false | `smoke_sandbox` | HTTP 200、itemsにaccessRequestId/apiId/requestedAuthMode/stateが含まれ、Project単位に絞られる。 |
 | `unauthorized_project` | false | true | `sandbox` | HTTP 403を返し、審査API以降を実行しない。 |
 
 ### F040 POST /api-access-requests/{accessRequestId}/approve 承認結果
 
-| Element | Default | Terminal | Tier | Expected |
+| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
 |---|---:|---:|---|---|
 | `success` | true | false | `smoke_sandbox` | HTTP 200、APPROVED review/subscriptionを保存し、Usage Plan stageとCognito scopeを反映、audit/provisioning eventを記録する。 |
 | `non_reviewer` | false | true | `sandbox` | HTTP 403を返し、subscription作成、Usage Plan/Cognito反映、Runtime API呼び出しを実行しない。 |
@@ -120,14 +120,14 @@
 
 ### F041 POST /api-access-requests/{accessRequestId}/reject 却下結果
 
-| Element | Default | Terminal | Tier | Expected |
+| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
 |---|---:|---:|---|---|
 | `success` | true | false | `smoke_sandbox` | HTTP 200、REJECTED reviewを保存し、subscription/Usage Plan/Cognito scopeを作成しない。 |
 | `non_reviewer` | false | true | `sandbox` | HTTP 403を返し、review状態と外部反映を変更しない。 |
 
 ### F050 承認時provisioning
 
-| Element | Default | Terminal | Tier | Expected |
+| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
 |---|---:|---:|---|---|
 | `apigw_success_cognito_success` | true | false | `smoke_sandbox` | Usage Plan stageとCognito scopeの両方が反映される。 |
 | `apigw_success_cognito_failed` | false | true | `sandbox` | HTTP 502/503とoperation failedを観測しretry可能なstepを残す。 |
@@ -135,14 +135,14 @@
 
 ### F061 GET /projects/{projectId}/subscriptions Subscription一覧取得結果
 
-| Element | Default | Terminal | Tier | Expected |
+| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
 |---|---:|---:|---|---|
 | `success` | true | false | `smoke_sandbox` | HTTP 200、itemsにapiId/apiStageId/subscriptionId/scopeFullName/derivedState ACTIVEが含まれる。 |
 | `none_after_reject` | false | true | `smoke_sandbox` | HTTP 200かつitemsに対象apiIdが現れず、Runtime API呼び出しを実行しない。 |
 
 ### F070 Runtime credentials
 
-| Element | Default | Terminal | Tier | Expected |
+| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |
 |---|---:|---:|---|---|
 | `valid_token_valid_api_key` | true | false | `smoke_sandbox` | Runtime APIが期待する2xxを返す。 |
 | `scope_missing` | false | false | `smoke_sandbox` | Runtime APIが認可エラーを返す。 |
@@ -159,13 +159,13 @@
 
 ## 3. 生成ケース一覧
 
-| Case ID | Kind | Tier | Terminal Step | 主な要因 | Scenario |
-|---|---|---|---|---|---|
-| `TC001` | `happy` | `smoke_sandbox` | - | F000.成功: appが応答可能、F001.provider + project owner + reviewer、F002.有効なmanagement token、F010.成功: catalog + stage + scope、F011.成功: 一覧に公開APIが現れる、F012.成功: 公開API詳細を取得、F020.成功: project + API key + clients、F021.成功: 作成Projectが一覧に現れる、F022.成功: Project詳細を取得、F023.成功: public client設定更新 + 承認済みscope保持、F030.成功: PENDING申請作成、F031.成功: PENDING申請が一覧に現れる、F040.成功: APPROVED + subscription + 外部反映、F050.APIGW成功 + Cognito成功、F061.成功: 承認済みsubscriptionが一覧に現れる、F070.正常token + API key | [`cases/TC001_happy_approve_and_runtime_success.gen.md`](cases/TC001_happy_approve_and_runtime_success.gen.md) |
-| `TC002` | `branch` | `smoke_sandbox` | reject_api_access_request | F000.成功: appが応答可能、F001.provider + project owner + reviewer、F002.有効なmanagement token、F010.成功: catalog + stage + scope、F011.成功: 一覧に公開APIが現れる、F012.成功: 公開API詳細を取得、F020.成功: project + API key + clients、F021.成功: 作成Projectが一覧に現れる、F022.成功: Project詳細を取得、F023.成功: public client設定更新 + 承認済みscope保持、F030.成功: PENDING申請作成、F031.成功: PENDING申請が一覧に現れる、F041.成功: REJECTED + 外部反映なし、F061.失敗相当: 却下後subscriptionなし | [`cases/TC002_reject_request_and_no_subscription.gen.md`](cases/TC002_reject_request_and_no_subscription.gen.md) |
-| `TC003` | `negative` | `sandbox` | approve_api_access_request | F000.成功: appが応答可能、F001.reviewer以外、F002.有効なmanagement token、F010.成功: catalog + stage + scope、F011.成功: 一覧に公開APIが現れる、F012.成功: 公開API詳細を取得、F020.成功: project + API key + clients、F021.成功: 作成Projectが一覧に現れる、F022.成功: Project詳細を取得、F023.成功: public client設定更新 + 承認済みscope保持、F030.成功: PENDING申請作成、F031.成功: PENDING申請が一覧に現れる、F040.失敗: reviewer以外 | [`cases/TC003_approve_by_non_reviewer_is_403.gen.md`](cases/TC003_approve_by_non_reviewer_is_403.gen.md) |
-| `TC004` | `negative` | `sandbox` | post_api_access_requests | F000.成功: appが応答可能、F001.provider + project owner + reviewer、F002.有効なmanagement token、F010.成功: catalog + stage + scope、F011.成功: 一覧に公開APIが現れる、F012.成功: 公開API詳細を取得、F020.成功: project + API key + clients、F021.成功: 作成Projectが一覧に現れる、F022.成功: Project詳細を取得、F023.成功: public client設定更新 + 承認済みscope保持、F030.重複pending | [`cases/TC004_duplicate_access_request_is_409.gen.md`](cases/TC004_duplicate_access_request_is_409.gen.md) |
-| `TC005` | `negative` | `sandbox` | approve_api_access_request | F000.成功: appが応答可能、F001.provider + project owner + reviewer、F002.有効なmanagement token、F010.成功: catalog + stage + scope、F011.成功: 一覧に公開APIが現れる、F012.成功: 公開API詳細を取得、F020.成功: project + API key + clients、F021.成功: 作成Projectが一覧に現れる、F022.成功: Project詳細を取得、F023.成功: public client設定更新 + 承認済みscope保持、F030.成功: PENDING申請作成、F031.成功: PENDING申請が一覧に現れる、F040.成功: APPROVED + subscription + 外部反映、F050.APIGW成功 + Cognito失敗 | [`cases/TC005_approve_cognito_update_failed_is_retryable.gen.md`](cases/TC005_approve_cognito_update_failed_is_retryable.gen.md) |
-| `TC006` | `negative` | `local_fake` | get_api | F000.成功: appが応答可能、F001.provider + project owner + reviewer、F002.有効なmanagement token、F010.成功: catalog + stage + scope、F011.成功: 一覧に公開APIが現れる、F012.失敗: apiId不明 | [`cases/TC006_get_api_unknown_id_is_404.gen.md`](cases/TC006_get_api_unknown_id_is_404.gen.md) |
-| `TC007` | `negative` | `local_fake` | get_project | F000.成功: appが応答可能、F001.provider + project owner + reviewer、F002.有効なmanagement token、F010.成功: catalog + stage + scope、F011.成功: 一覧に公開APIが現れる、F012.成功: 公開API詳細を取得、F020.成功: project + API key + clients、F021.成功: 作成Projectが一覧に現れる、F022.失敗: projectId不明 | [`cases/TC007_get_project_unknown_id_is_404.gen.md`](cases/TC007_get_project_unknown_id_is_404.gen.md) |
-| `TC008` | `branch` | `sandbox` | - | F000.成功: appが応答可能、F001.provider + project owner + reviewer、F002.有効なmanagement token、F010.成功: catalog + stage + scope、F011.成功: 一覧に公開APIが現れる、F012.成功: 公開API詳細を取得、F020.成功: project + API key + clients、F021.成功: 作成Projectが一覧に現れる、F022.成功: Project詳細を取得、F023.成功: public client設定更新 + 承認済みscope保持、F030.成功: PENDING申請作成、F031.成功: PENDING申請が一覧に現れる、F040.成功: APPROVED + subscription + 外部反映、F050.APIGW成功 + Cognito成功、F061.成功: 承認済みsubscriptionが一覧に現れる | [`cases/TC008_public_client_update_keeps_approved_scope.gen.md`](cases/TC008_public_client_update_keeps_approved_scope.gen.md) |
+| ケースID | F000 | F001 | F002 | F010 | F011 | F012 | F020 | F021 | F022 | F023 | F030 | F031 | F040 | F041 | F050 | F061 | F070 | 種別 | Tier | 終了Step | シナリオ |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `TC001` | 成功: appが応答可能 | provider + project owner + reviewer | 有効なmanagement token | 成功: catalog + stage + scope | 成功: 一覧に公開APIが現れる | 成功: 公開API詳細を取得 | 成功: project + API key + clients | 成功: 作成Projectが一覧に現れる | 成功: Project詳細を取得 | 成功: public client設定更新 + 承認済みscope保持 | 成功: PENDING申請作成 | 成功: PENDING申請が一覧に現れる | 成功: APPROVED + subscription + 外部反映 | - | APIGW成功 + Cognito成功 | 成功: 承認済みsubscriptionが一覧に現れる | 正常token + API key | `happy` | `smoke_sandbox` | - | [`cases/TC001_happy_approve_and_runtime_success.gen.md`](cases/TC001_happy_approve_and_runtime_success.gen.md) |
+| `TC002` | 成功: appが応答可能 | provider + project owner + reviewer | 有効なmanagement token | 成功: catalog + stage + scope | 成功: 一覧に公開APIが現れる | 成功: 公開API詳細を取得 | 成功: project + API key + clients | 成功: 作成Projectが一覧に現れる | 成功: Project詳細を取得 | 成功: public client設定更新 + 承認済みscope保持 | 成功: PENDING申請作成 | 成功: PENDING申請が一覧に現れる | - | 成功: REJECTED + 外部反映なし | - | 失敗相当: 却下後subscriptionなし | - | `branch` | `smoke_sandbox` | reject_api_access_request | [`cases/TC002_reject_request_and_no_subscription.gen.md`](cases/TC002_reject_request_and_no_subscription.gen.md) |
+| `TC003` | 成功: appが応答可能 | reviewer以外 | 有効なmanagement token | 成功: catalog + stage + scope | 成功: 一覧に公開APIが現れる | 成功: 公開API詳細を取得 | 成功: project + API key + clients | 成功: 作成Projectが一覧に現れる | 成功: Project詳細を取得 | 成功: public client設定更新 + 承認済みscope保持 | 成功: PENDING申請作成 | 成功: PENDING申請が一覧に現れる | 失敗: reviewer以外 | - | - | - | - | `negative` | `sandbox` | approve_api_access_request | [`cases/TC003_approve_by_non_reviewer_is_403.gen.md`](cases/TC003_approve_by_non_reviewer_is_403.gen.md) |
+| `TC004` | 成功: appが応答可能 | provider + project owner + reviewer | 有効なmanagement token | 成功: catalog + stage + scope | 成功: 一覧に公開APIが現れる | 成功: 公開API詳細を取得 | 成功: project + API key + clients | 成功: 作成Projectが一覧に現れる | 成功: Project詳細を取得 | 成功: public client設定更新 + 承認済みscope保持 | 重複pending | - | - | - | - | - | - | `negative` | `sandbox` | post_api_access_requests | [`cases/TC004_duplicate_access_request_is_409.gen.md`](cases/TC004_duplicate_access_request_is_409.gen.md) |
+| `TC005` | 成功: appが応答可能 | provider + project owner + reviewer | 有効なmanagement token | 成功: catalog + stage + scope | 成功: 一覧に公開APIが現れる | 成功: 公開API詳細を取得 | 成功: project + API key + clients | 成功: 作成Projectが一覧に現れる | 成功: Project詳細を取得 | 成功: public client設定更新 + 承認済みscope保持 | 成功: PENDING申請作成 | 成功: PENDING申請が一覧に現れる | 成功: APPROVED + subscription + 外部反映 | - | APIGW成功 + Cognito失敗 | - | - | `negative` | `sandbox` | approve_api_access_request | [`cases/TC005_approve_cognito_update_failed_is_retryable.gen.md`](cases/TC005_approve_cognito_update_failed_is_retryable.gen.md) |
+| `TC006` | 成功: appが応答可能 | provider + project owner + reviewer | 有効なmanagement token | 成功: catalog + stage + scope | 成功: 一覧に公開APIが現れる | 失敗: apiId不明 | - | - | - | - | - | - | - | - | - | - | - | `negative` | `local_fake` | get_api | [`cases/TC006_get_api_unknown_id_is_404.gen.md`](cases/TC006_get_api_unknown_id_is_404.gen.md) |
+| `TC007` | 成功: appが応答可能 | provider + project owner + reviewer | 有効なmanagement token | 成功: catalog + stage + scope | 成功: 一覧に公開APIが現れる | 成功: 公開API詳細を取得 | 成功: project + API key + clients | 成功: 作成Projectが一覧に現れる | 失敗: projectId不明 | - | - | - | - | - | - | - | - | `negative` | `local_fake` | get_project | [`cases/TC007_get_project_unknown_id_is_404.gen.md`](cases/TC007_get_project_unknown_id_is_404.gen.md) |
+| `TC008` | 成功: appが応答可能 | provider + project owner + reviewer | 有効なmanagement token | 成功: catalog + stage + scope | 成功: 一覧に公開APIが現れる | 成功: 公開API詳細を取得 | 成功: project + API key + clients | 成功: 作成Projectが一覧に現れる | 成功: Project詳細を取得 | 成功: public client設定更新 + 承認済みscope保持 | 成功: PENDING申請作成 | 成功: PENDING申請が一覧に現れる | 成功: APPROVED + subscription + 外部反映 | - | APIGW成功 + Cognito成功 | 成功: 承認済みsubscriptionが一覧に現れる | - | `branch` | `sandbox` | - | [`cases/TC008_public_client_update_keeps_approved_scope.gen.md`](cases/TC008_public_client_update_keeps_approved_scope.gen.md) |

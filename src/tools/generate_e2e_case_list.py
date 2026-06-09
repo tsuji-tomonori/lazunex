@@ -15,13 +15,10 @@ GENERATED_COMMENT = (
 )
 
 
-def selected_summary(case_id: str) -> str:
+def selected_elements_by_factor(case_id: str) -> dict[str, str]:
     for case in CASES:
         if case.case_id == case_id:
-            return "、".join(
-                f"{factor_id}.{element_label(factor_id, element_id)}"
-                for factor_id, element_id in case.selected
-            )
+            return dict(case.selected)
     raise KeyError(case_id)
 
 
@@ -48,7 +45,7 @@ def render_case_list_markdown() -> str:
             [
                 f"### {factor.factor_id} {factor.title}",
                 "",
-                "| Element | Default | Terminal | Tier | Expected |",
+                "| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |",
                 "|---|---:|---:|---|---|",
             ]
         )
@@ -75,15 +72,27 @@ def render_case_list_markdown() -> str:
             "",
             "## 3. 生成ケース一覧",
             "",
-            "| Case ID | Kind | Tier | Terminal Step | 主な要因 | Scenario |",
-            "|---|---|---|---|---|---|",
+        ]
+    )
+    factor_columns = " | ".join(factor.factor_id for factor in FACTORS)
+    factor_alignments = "|".join("---" for _ in FACTORS)
+    lines.extend(
+        [
+            f"| ケースID | {factor_columns} | 種別 | Tier | 終了Step | シナリオ |",
+            f"|---|{factor_alignments}|---|---|---|---|",
         ]
     )
     for case in CASES:
+        selected = selected_elements_by_factor(case.case_id)
+        selected_columns = " | ".join(
+            markdown_escape(element_label(factor.factor_id, selected[factor.factor_id]))
+            if factor.factor_id in selected
+            else "-"
+            for factor in FACTORS
+        )
         lines.append(
-            f"| `{case.case_id}` | `{case.kind}` | `{case.tier}` | "
+            f"| `{case.case_id}` | {selected_columns} | `{case.kind}` | `{case.tier}` | "
             f"{markdown_escape(case.terminal_step)} | "
-            f"{markdown_escape(selected_summary(case.case_id))} | "
             f"[`cases/{case.filename}`](cases/{case.filename}) |"
         )
     lines.append("")

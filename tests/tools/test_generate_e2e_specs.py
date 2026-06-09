@@ -53,6 +53,9 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
 
     assert "## 0. 対象フロー" in content
     assert "## 3. 生成ケース一覧" in content
+    assert "| 要素ID | 既定要素 | 終端要素 | 実行Tier | 期待観点 |" in content
+    assert "| ケースID | F000 | F001 | F002 | F010 |" in content
+    assert "主な要因" not in content
     for step in FLOW_STEPS:
         assert f"`{step.operation}`" in content
         assert step.path in content
@@ -61,6 +64,7 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
     for case in CASES:
         assert f"cases/{case.filename}" in content
         assert case.case_id in rendered[tmp_path / "api_access_lifecycle/pruned-cases_gen.csv"]
+    assert "| `TC003` | 成功: appが応答可能 | reviewer以外 |" in content
 
 
 def test_e2e_scenarios_keep_secret_placeholders(tmp_path: Path) -> None:
