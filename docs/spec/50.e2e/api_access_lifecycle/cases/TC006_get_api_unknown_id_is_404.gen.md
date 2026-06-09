@@ -30,12 +30,12 @@
 
 ### API呼び出し手順
 
-| Step | API | 目的 | 期待 | Capture |
-|---|---|---|---|---|
-| Step 1 | `GET /health` | HTTP 200とstatus okを確認し、以降の管理API E2Eを開始できる状態にする。 | 仕様どおりのHTTP status/body | - |
-| Step 2 | `POST /apis` | `${apiId}` と `${apiStageId}` を後続stepへ渡す。 | 仕様どおりのHTTP status/body | - |
-| Step 3 | `GET /apis` | 公開済みAPIが一覧に現れ、pagination/filterとsecret非表示を確認する。 | 仕様どおりのHTTP status/body | - |
-| Step 4 | `GET /apis/${apiId}` | POST /apisで得たAPI詳細、stage、scope、reviewer情報との一致を確認する。 | 仕様どおりのHTTP status/body | - |
+| Step | API | Request | 目的 | 期待 | Capture |
+|---|---|---|---|---|---|
+| Step 1 | `GET /health` | 標準データ (`default`) | HTTP 200とstatus okを確認し、以降の管理API E2Eを開始できる状態にする。 | 仕様どおりのHTTP status/body | - |
+| Step 2 | `POST /apis` | 標準データ (`default`) | `${apiId}` と `${apiStageId}` を後続stepへ渡す。 | 仕様どおりのHTTP status/body | - |
+| Step 3 | `GET /apis` | 標準データ (`default`) | 公開済みAPIが一覧に現れ、pagination/filterとsecret非表示を確認する。 | 仕様どおりのHTTP status/body | - |
+| Step 4 | `GET /apis/${apiId}` | 標準データ (`default`) | POST /apisで得たAPI詳細、stage、scope、reviewer情報との一致を確認する。 | 仕様どおりのHTTP status/body | - |
 
 ### 選択要因
 

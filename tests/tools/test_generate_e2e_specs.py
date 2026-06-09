@@ -81,6 +81,9 @@ def test_e2e_scenarios_keep_secret_placeholders(tmp_path: Path) -> None:
     ) in content
     assert "GET /projects/{projectId}/api-access-requests" in content
     assert "API呼び出し手順" in content
+    assert "| Step | API | Request | 目的 | 期待 | Capture |" in content
+    assert "標準データ (`default`)" in content
+    assert "requestedAuthMode=BOTH (`both_auth_mode`)" in content
     assert "API_B Runtime APIレスポンス" in content
     catalog = load_scenario_catalog()
     assert catalog.bindings[("review", "reject", "success")] == (

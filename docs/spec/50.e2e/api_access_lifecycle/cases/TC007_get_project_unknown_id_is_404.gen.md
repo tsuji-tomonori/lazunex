@@ -32,15 +32,15 @@ project_Aを作成する。
 
 ### API呼び出し手順
 
-| Step | API | 目的 | 期待 | Capture |
-|---|---|---|---|---|
-| Step 1 | `GET /health` | HTTP 200とstatus okを確認し、以降の管理API E2Eを開始できる状態にする。 | 仕様どおりのHTTP status/body | - |
-| Step 2 | `POST /apis` | `${apiId}` と `${apiStageId}` を後続stepへ渡す。 | 仕様どおりのHTTP status/body | - |
-| Step 3 | `GET /apis` | 公開済みAPIが一覧に現れ、pagination/filterとsecret非表示を確認する。 | 仕様どおりのHTTP status/body | - |
-| Step 4 | `GET /apis/${apiId}` | POST /apisで得たAPI詳細、stage、scope、reviewer情報との一致を確認する。 | 仕様どおりのHTTP status/body | - |
-| Step 5 | `POST /projects` | project_Aを作成し、projectId、API key、Cognito client IDを取得する。 | 仕様どおりのHTTP status/body | ${project.id}.projectId, ${project.id}.projectApiKey, ${project.id}.publicClientId, ${project.id}.confidentialClientId |
-| Step 6 | `GET /projects` | 作成Projectが一覧に現れ、caller権限範囲とsecret非表示を確認する。 | 仕様どおりのHTTP status/body | - |
-| Step 7 | `GET /projects/${projectId}` | Project詳細、client構成、public client設定、secret非表示を確認する。 | 仕様どおりのHTTP status/body | - |
+| Step | API | Request | 目的 | 期待 | Capture |
+|---|---|---|---|---|---|
+| Step 1 | `GET /health` | 標準データ (`default`) | HTTP 200とstatus okを確認し、以降の管理API E2Eを開始できる状態にする。 | 仕様どおりのHTTP status/body | - |
+| Step 2 | `POST /apis` | 標準データ (`default`) | `${apiId}` と `${apiStageId}` を後続stepへ渡す。 | 仕様どおりのHTTP status/body | - |
+| Step 3 | `GET /apis` | 標準データ (`default`) | 公開済みAPIが一覧に現れ、pagination/filterとsecret非表示を確認する。 | 仕様どおりのHTTP status/body | - |
+| Step 4 | `GET /apis/${apiId}` | 標準データ (`default`) | POST /apisで得たAPI詳細、stage、scope、reviewer情報との一致を確認する。 | 仕様どおりのHTTP status/body | - |
+| Step 5 | `POST /projects` | 標準データ (`default`) | project_Aを作成し、projectId、API key、Cognito client IDを取得する。 | 仕様どおりのHTTP status/body | ${project.id}.projectId, ${project.id}.projectApiKey, ${project.id}.publicClientId, ${project.id}.confidentialClientId |
+| Step 6 | `GET /projects` | 標準データ (`default`) | 作成Projectが一覧に現れ、caller権限範囲とsecret非表示を確認する。 | 仕様どおりのHTTP status/body | - |
+| Step 7 | `GET /projects/${projectId}` | 標準データ (`default`) | Project詳細、client構成、public client設定、secret非表示を確認する。 | 仕様どおりのHTTP status/body | - |
 
 ### 選択要因
 

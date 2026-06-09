@@ -114,6 +114,7 @@ class ScenarioCase:
     terminal_step: str
     selected: tuple[tuple[str, str], ...]
     scenario_steps: tuple[str, ...]
+    step_data: Mapping[str, str]
     expected: tuple[str, ...]
 
     @property
@@ -125,6 +126,7 @@ class ScenarioCase:
 class VariantSpec:
     factor_id: str
     element: str
+    data: str
     steps: tuple[str, ...]
 
 
@@ -135,6 +137,7 @@ class ScenarioCatalog:
     steps: Mapping[str, Mapping[str, object]]
     evidences: Mapping[str, Mapping[str, object]]
     bindings: Mapping[tuple[str, str, str], tuple[str, ...]]
+    data_titles: Mapping[str, str]
     cases: tuple[ScenarioCase, ...]
 
 
@@ -186,6 +189,15 @@ def load_scenario_catalog(root: Path = Path("docs/spec/50.e2e")) -> ScenarioCata
         if isinstance(evidence_id, str):
             evidences[evidence_id] = content
 
+    data_titles: dict[str, str] = {"default": "標準データ"}
+    for path in sorted((flow_root / "data").glob("**/*.data.manual.yaml")):
+        content = load_yaml(path)
+        data = as_mapping(content.get("data"))
+        data_id = data.get("id")
+        title = data.get("title")
+        if isinstance(data_id, str) and isinstance(title, str):
+            data_titles[data_id] = title
+
     bindings: dict[tuple[str, str, str], tuple[str, ...]] = {}
     for path in sorted((flow_root / "bindings").glob("*.bindings.manual.yaml")):
         content = load_yaml(path)
@@ -212,7 +224,7 @@ def load_scenario_catalog(root: Path = Path("docs/spec/50.e2e")) -> ScenarioCata
         flow_root / "generated" / "effective_cases.manual.yaml",
         variant_index,
     )
-    return ScenarioCatalog(targets, operations, steps, evidences, bindings, cases)
+    return ScenarioCatalog(targets, operations, steps, evidences, bindings, data_titles, cases)
 
 
 def load_variant_index(path: Path) -> Mapping[str, VariantSpec]:
@@ -225,12 +237,13 @@ def load_variant_index(path: Path) -> Mapping[str, VariantSpec]:
             variant_id = variant.get("id")
             factor_id = variant.get("factor_id")
             element = variant.get("element")
-            if not all(isinstance(value, str) for value in (variant_id, factor_id, element)):
+            data = variant.get("data")
+            if not all(isinstance(value, str) for value in (variant_id, factor_id, element, data)):
                 continue
             steps = tuple(
                 step for step in as_sequence(variant.get("steps")) if isinstance(step, str)
             )
-            variants[str(variant_id)] = VariantSpec(str(factor_id), str(element), steps)
+            variants[str(variant_id)] = VariantSpec(str(factor_id), str(element), str(data), steps)
     return variants
 
 
@@ -252,6 +265,7 @@ def load_effective_cases(
         )
         selected: list[tuple[str, str]] = []
         scenario_steps: list[str] = []
+        step_data: dict[str, str] = {}
         for variant_id in selected_variants:
             variant = variant_index.get(variant_id)
             if variant is None:
@@ -260,6 +274,8 @@ def load_effective_cases(
             for step in variant.steps:
                 if step != "management_api" and step not in scenario_steps:
                     scenario_steps.append(step)
+                if step != "management_api":
+                    step_data.setdefault(step, variant.data)
         cases.append(
             ScenarioCase(
                 case_id=case_id,
@@ -273,6 +289,7 @@ def load_effective_cases(
                 ),
                 selected=tuple(selected),
                 scenario_steps=tuple(scenario_steps),
+                step_data=step_data,
                 expected=legacy.expected if legacy else (),
             )
         )
@@ -368,7 +385,10 @@ def render_prerequisites(case: ScenarioCase, catalog: ScenarioCatalog) -> list[s
 
 
 def render_api_steps(case: ScenarioCase, catalog: ScenarioCatalog) -> list[str]:
-    lines = ["| Step | API | 目的 | 期待 | Capture |", "|---|---|---|---|---|"]
+    lines = [
+        "| Step | API | Request | 目的 | 期待 | Capture |",
+        "|---|---|---|---|---|---|",
+    ]
     for index, step_id in enumerate(case.scenario_steps, start=1):
         fallback_endpoint, fallback_condition = STEP_LABELS[step_id]
         manual_id = STEP_MANUAL_IDS.get(step_id)
@@ -381,8 +401,12 @@ def render_api_steps(case: ScenarioCase, catalog: ScenarioCatalog) -> list[str]:
             scalar_text(detail_section.get("description"), fallback_condition)
         )
         capture = ", ".join(str(key) for key in as_mapping(step_doc.get("capture"))) or "-"
+        data_id = case.step_data.get(step_id)
+        data_title = catalog.data_titles.get(data_id or "", "-")
+        request = f"{data_title} (`{data_id}`)" if data_id else "-"
         lines.append(
-            f"| Step {index} | `{endpoint}` | {markdown_escape(ok_condition)} | "
+            f"| Step {index} | `{endpoint}` | {markdown_escape(request)} | "
+            f"{markdown_escape(ok_condition)} | "
             f"仕様どおりのHTTP status/body | {capture} |"
         )
     return lines
