@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import argparse
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import cast
 
 import yaml
 
@@ -81,6 +82,28 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
             link = f"cases/{case.filename}"
             if link not in case_list:
                 errors.append(f"case-list missing link: {link}")
+
+    flow_path = flow_root / "flow.manual.yaml"
+    if flow_path.exists():
+        flow = yaml.safe_load(flow_path.read_text(encoding="utf-8"))
+        dependencies: set[str] = set()
+        if isinstance(flow, Mapping):
+            flow_mapping = cast(Mapping[str, object], flow)
+            raw_dependencies = flow_mapping.get("dependencies", [])
+            if isinstance(raw_dependencies, list):
+                for dependency in cast(list[object], raw_dependencies):
+                    if isinstance(dependency, Mapping):
+                        dependency_mapping = cast(Mapping[str, object], dependency)
+                        dependency_id = dependency_mapping.get("id")
+                        if isinstance(dependency_id, str):
+                            dependencies.add(dependency_id)
+        for dependency_id in (
+            "access_request_requires_project",
+            "review_requires_access_request",
+            "project_update_requires_project_create",
+        ):
+            if dependency_id not in dependencies:
+                errors.append(f"flow missing dependency: {dependency_id}")
 
     factor_ids = {factor.factor_id for factor in FACTORS}
     factor_elements = {

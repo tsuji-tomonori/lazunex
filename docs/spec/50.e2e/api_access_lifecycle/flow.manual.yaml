@@ -91,6 +91,41 @@ steps:
     path: ${runtime_invoke_url}
     template: invoke_runtime_api
 
+sequence:
+  - factor: project
+  - factor: access_request
+  - factor: review
+
+dependencies:
+  - id: access_request_requires_project
+    from:
+      factor: access_request
+    requires:
+      factor: project
+      same_project: true
+      operation: create
+      result: success
+
+  - id: review_requires_access_request
+    from:
+      factor: review
+    requires:
+      factor: access_request
+      same_project: true
+      same_api: true
+      operation: apply
+      result: success
+
+  - id: project_update_requires_project_create
+    from:
+      factor: project
+      operation: update
+    requires:
+      factor: project
+      same_project: true
+      operation: create
+      result: success
+
 case_policy:
   generation_source: generated/effective factor YAML
   pruning:

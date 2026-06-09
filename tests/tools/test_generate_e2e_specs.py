@@ -104,7 +104,11 @@ def test_e2e_scenarios_keep_secret_placeholders(tmp_path: Path) -> None:
 def test_check_e2e_specs_detects_complete_rendered_tree(tmp_path: Path) -> None:
     flow_root = tmp_path / "api_access_lifecycle"
     flow_root.mkdir(parents=True)
-    (flow_root / "flow.manual.yaml").write_text("schema_version: 1\n", encoding="utf-8")
+    fixture_root = Path("docs/spec/50.e2e/api_access_lifecycle")
+    (flow_root / "flow.manual.yaml").write_text(
+        (fixture_root / "flow.manual.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
     templates_root = flow_root / "templates" / "steps"
     templates_root.mkdir(parents=True)
     for step in FLOW_STEPS:
@@ -115,7 +119,6 @@ def test_check_e2e_specs_detects_complete_rendered_tree(tmp_path: Path) -> None:
     write_outputs(case_list_outputs(tmp_path))
     write_outputs(scenario_outputs(tmp_path))
 
-    fixture_root = Path("docs/spec/50.e2e/api_access_lifecycle")
     for source in [
         fixture_root / "targets" / "projects" / "project_A.target.manual.yaml",
         fixture_root / "targets" / "projects" / "project_B.target.manual.yaml",
