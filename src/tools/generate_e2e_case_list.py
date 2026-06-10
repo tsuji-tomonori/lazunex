@@ -35,6 +35,20 @@ COMPONENT_ORDER = (
     "audit_recovery",
 )
 
+ELEMENT_KIND_LABELS = {
+    "invariant": "不変条件",
+    "action": "操作",
+    "state": "状態",
+    "data": "データ",
+}
+
+OPERATION_TYPE_LABELS = {
+    "command": "コマンド",
+    "query": "参照",
+    "side_effect": "副作用",
+    "evidence": "証跡確認",
+}
+
 
 def selected_elements_by_factor(case_id: str) -> dict[str, str]:
     for case in CASES:
@@ -74,7 +88,7 @@ def target_case_apis(target_case: E2eTargetCase) -> str:
 
 def render_target_case_rows() -> list[str]:
     lines = [
-        "## 5. 対象別生成ケース一覧",
+        "## 4. 対象別生成ケース一覧",
         "",
         "| ケースID | 目的 | Project | API | Goal Variant | Component Variant | Runtime期待 |",
         "|---|---|---|---|---|---|---|",
@@ -110,6 +124,12 @@ def scalar_text(value: object, default: str = "-") -> str:
     return value if isinstance(value, str) else default
 
 
+def bool_text(value: object) -> str:
+    if isinstance(value, bool):
+        return "はい" if value else "いいえ"
+    return "-"
+
+
 def load_yaml(path: Path) -> Mapping[str, object]:
     loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
     return as_mapping(loaded)
@@ -132,18 +152,21 @@ def render_component_sections(flow_root: Path) -> list[str]:
         for invariant in as_sequence(component_doc.get("business_invariants")):
             invariant_map = as_mapping(invariant)
             lines.append(
-                f"| invariant | `{scalar_text(invariant_map.get('id'))}` | - | "
+                f"| {ELEMENT_KIND_LABELS['invariant']} | "
+                f"`{scalar_text(invariant_map.get('id'))}` | - | "
                 f"{markdown_escape(scalar_text(invariant_map.get('text')))} |"
             )
         actions_doc = load_yaml(component_root / "actions.manual.yaml")
         for action in as_sequence(actions_doc.get("actions")):
             action_map = as_mapping(action)
+            operation_type = scalar_text(action_map.get("operation_type"))
             detail = (
-                f"type={scalar_text(action_map.get('operation_type'))}, "
-                f"default={scalar_text(action_map.get('default_result'))}"
+                f"操作種別={OPERATION_TYPE_LABELS.get(operation_type, operation_type)}, "
+                f"既定状態={scalar_text(action_map.get('default_result'))}"
             )
             lines.append(
-                f"| action | `{scalar_text(action_map.get('id'))}` | "
+                f"| {ELEMENT_KIND_LABELS['action']} | "
+                f"`{scalar_text(action_map.get('id'))}` | "
                 f"{markdown_escape(scalar_text(action_map.get('title')))} | "
                 f"{markdown_escape(detail)} |"
             )
@@ -151,9 +174,10 @@ def render_component_sections(flow_root: Path) -> list[str]:
         for state in as_sequence(states_doc.get("states")):
             state_map = as_mapping(state)
             continue_flow = state_map.get("continue_flow")
-            detail = f"continue_flow={str(continue_flow).lower()}"
+            detail = f"後続継続={bool_text(continue_flow)}"
             lines.append(
-                f"| state | `{scalar_text(state_map.get('id'))}` | "
+                f"| {ELEMENT_KIND_LABELS['state']} | "
+                f"`{scalar_text(state_map.get('id'))}` | "
                 f"{markdown_escape(scalar_text(state_map.get('title')))} | {detail} |"
             )
         data_doc = load_yaml(component_root / "data.manual.yaml")
@@ -163,32 +187,10 @@ def render_component_sections(flow_root: Path) -> list[str]:
                 str(tag) for tag in as_sequence(data_map.get("tags")) if isinstance(tag, str)
             )
             lines.append(
-                f"| data | `{scalar_text(data_map.get('id'))}` | "
+                f"| {ELEMENT_KIND_LABELS['data']} | "
+                f"`{scalar_text(data_map.get('id'))}` | "
                 f"{markdown_escape(scalar_text(data_map.get('title')))} | "
                 f"{markdown_escape(tags or '-')} |"
-            )
-        lines.append("")
-    return lines
-
-
-def render_legacy_factor_sections() -> list[str]:
-    lines = [
-        "## 2. 旧factor互換表",
-        "",
-    ]
-    for factor in FACTORS:
-        lines.extend(
-            [
-                f"### {factor.factor_id} {factor.title}",
-                "",
-                "| 要素ID | 既定要素 | 終端要素 | 期待観点 |",
-                "|---|---:|---:|---|",
-            ]
-        )
-        for element in factor.elements:
-            lines.append(
-                f"| `{element.element_id}` | {str(element.default).lower()} | "
-                f"{str(element.terminal).lower()} | {markdown_escape(element.expected)} |"
             )
         lines.append("")
     return lines
@@ -221,12 +223,11 @@ def render_case_list_markdown(root: Path = Path("docs/spec/50.e2e")) -> str:
         [
             "",
             *render_component_sections(source_flow_root),
-            *render_legacy_factor_sections(),
         ]
     )
     lines.extend(
         [
-            "## 3. 枝刈り規則",
+            "## 2. 枝刈り規則",
             "",
             "| Rule ID | 条件 | 結果 | 理由 |",
             "|---|---|---|---|",
@@ -238,7 +239,7 @@ def render_case_list_markdown(root: Path = Path("docs/spec/50.e2e")) -> str:
             "| `P004` | terminal step/status/reasonが同一 | 等価ケースを統合 | "
             "E2Eの重複実行を避ける |",
             "",
-            "## 4. 生成ケース一覧",
+            "## 3. 生成ケース一覧",
             "",
         ]
     )

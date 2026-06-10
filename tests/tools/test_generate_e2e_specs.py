@@ -41,20 +41,21 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
 
     assert "## 0. 対象フロー" in content
     assert "## 1. コンポーネントごとの要素" in content
-    assert "## 2. 旧factor互換表" in content
-    assert "## 4. 生成ケース一覧" in content
-    assert "## 5. 対象別生成ケース一覧" in content
+    assert "## 2. 枝刈り規則" in content
+    assert "## 3. 生成ケース一覧" in content
+    assert "## 4. 対象別生成ケース一覧" in content
+    assert "## 2. 旧factor互換表" not in content
     assert "### project_workspace Project Workspace" in content
     assert (
-        "| action | `create_project` | Projectを作成する | "
-        "type=command, default=provisioned |"
+        "| 操作 | `create_project` | Projectを作成する | "
+        "操作種別=コマンド, 既定状態=provisioned |"
     ) in content
-    assert "| state | `provisioned` | Project作成成功 | continue_flow=true |" in content
+    assert "| 状態 | `provisioned` | Project作成成功 | 後続継続=はい |" in content
     assert (
-        "| data | `project_default` | 標準Project | "
+        "| データ | `project_default` | 標準Project | "
         "valid_project, has_public_client, has_confidential_client |"
     ) in content
-    assert "| 要素ID | 既定要素 | 終端要素 | 期待観点 |" in content
+    assert "| 要素ID | 既定要素 | 終端要素 | 期待観点 |" not in content
     assert "| ケースID | F000 | F001 | F002 | F010 |" in content
     assert (
         "| ケースID | 目的 | Project | API | Goal Variant | Component Variant | Runtime期待 |"
@@ -64,8 +65,6 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
     for step in FLOW_STEPS:
         assert f"`{step.operation}`" in content
         assert step.path in content
-    for factor in FACTORS:
-        assert f"### {factor.factor_id} {factor.title}" in content
     for case in CASES:
         assert f"cases/{case.filename}" in content
         assert case.case_id in rendered[tmp_path / "api_access_lifecycle/pruned-cases_gen.csv"]

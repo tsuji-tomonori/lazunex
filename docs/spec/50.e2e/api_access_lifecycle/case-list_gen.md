@@ -27,241 +27,114 @@
 
 | 種別 | ID | タイトル | 補足 |
 |---|---|---|---|
-| invariant | `published_api_visible` | - | 公開成功後、API一覧と詳細で公開済みAPIを参照できる。 |
-| invariant | `api_scope_available` | - | 公開成功後、Runtime認可で使うcustom scopeが参照できる。 |
-| invariant | `reviewer_defined` | - | 審査対象APIには承認・却下を実行できるreviewerが定義されている。 |
-| action | `publish_api` | APIを公開する | type=command, default=published |
-| action | `browse_api` | 公開APIを探索する | type=query, default=found |
-| state | `published` | API公開成功 | continue_flow=true |
-| state | `publish_failed` | API公開失敗 | continue_flow=false |
-| state | `found` | API探索成功 | continue_flow=true |
-| state | `not_found` | API探索失敗 | continue_flow=false |
-| data | `api_default` | 標準API | valid_api, has_stage, has_scope, has_reviewer |
-| data | `api_unknown` | 未登録API | unknown_api |
+| 不変条件 | `published_api_visible` | - | 公開成功後、API一覧と詳細で公開済みAPIを参照できる。 |
+| 不変条件 | `api_scope_available` | - | 公開成功後、Runtime認可で使うcustom scopeが参照できる。 |
+| 不変条件 | `reviewer_defined` | - | 審査対象APIには承認・却下を実行できるreviewerが定義されている。 |
+| 操作 | `publish_api` | APIを公開する | 操作種別=コマンド, 既定状態=published |
+| 操作 | `browse_api` | 公開APIを探索する | 操作種別=参照, 既定状態=found |
+| 状態 | `published` | API公開成功 | 後続継続=はい |
+| 状態 | `publish_failed` | API公開失敗 | 後続継続=いいえ |
+| 状態 | `found` | API探索成功 | 後続継続=はい |
+| 状態 | `not_found` | API探索失敗 | 後続継続=いいえ |
+| データ | `api_default` | 標準API | valid_api, has_stage, has_scope, has_reviewer |
+| データ | `api_unknown` | 未登録API | unknown_api |
 
 ### project_workspace Project Workspace
 
 | 種別 | ID | タイトル | 補足 |
 |---|---|---|---|
-| invariant | `project_active_after_create` | - | 作成成功後、ProjectはACTIVEとして参照できる。 |
-| invariant | `secret_returned_once` | - | API key値とclient secret値は初回レスポンス以外で再表示しない。 |
-| invariant | `public_client_update_keeps_existing_scopes` | - | public client更新時、承認済みcustom scopeを消さない。 |
-| action | `create_project` | Projectを作成する | type=command, default=provisioned |
-| action | `update_public_client` | public app client設定を更新する | type=command, default=public_client_updated |
-| state | `provisioned` | Project作成成功 | continue_flow=true |
-| state | `provision_failed` | Project作成失敗 | continue_flow=false |
-| state | `public_client_updated` | public app client更新成功 | continue_flow=true |
-| state | `public_client_update_failed` | public app client更新失敗 | continue_flow=false |
-| data | `project_default` | 標準Project | valid_project, has_public_client, has_confidential_client |
-| data | `redirect_url_update` | callback URL更新 | valid_public_client_update |
+| 不変条件 | `project_active_after_create` | - | 作成成功後、ProjectはACTIVEとして参照できる。 |
+| 不変条件 | `secret_returned_once` | - | API key値とclient secret値は初回レスポンス以外で再表示しない。 |
+| 不変条件 | `public_client_update_keeps_existing_scopes` | - | public client更新時、承認済みcustom scopeを消さない。 |
+| 操作 | `create_project` | Projectを作成する | 操作種別=コマンド, 既定状態=provisioned |
+| 操作 | `update_public_client` | public app client設定を更新する | 操作種別=コマンド, 既定状態=public_client_updated |
+| 状態 | `provisioned` | Project作成成功 | 後続継続=はい |
+| 状態 | `provision_failed` | Project作成失敗 | 後続継続=いいえ |
+| 状態 | `public_client_updated` | public app client更新成功 | 後続継続=はい |
+| 状態 | `public_client_update_failed` | public app client更新失敗 | 後続継続=いいえ |
+| データ | `project_default` | 標準Project | valid_project, has_public_client, has_confidential_client |
+| データ | `redirect_url_update` | callback URL更新 | valid_public_client_update |
 
 ### access_request_workflow Access Request Workflow
 
 | 種別 | ID | タイトル | 補足 |
 |---|---|---|---|
-| invariant | `pending_request_visible` | - | 申請成功後、利用申請一覧にPENDINGとして表示される。 |
-| invariant | `duplicate_pending_rejected` | - | 同一Project/API stageにPENDING申請がある場合、重複申請は拒否される。 |
-| invariant | `active_subscription_rejected` | - | 既存active subscriptionがあるAPIには再申請できない。 |
-| action | `submit_request` | 利用申請する | type=command, default=submitted |
-| action | `list_requests` | Project単位の利用申請を確認する | type=query, default=listed |
-| state | `submitted` | 申請成功 | continue_flow=true |
-| state | `listed` | 申請一覧取得成功 | continue_flow=true |
-| state | `duplicate_pending_rejected` | 重複PENDING申請で失敗 | continue_flow=false |
-| state | `existing_subscription_rejected` | 既存subscriptionありで失敗 | continue_flow=false |
-| data | `request_both_auth` | public PKCEとclient credentialsの両方を申請する | valid_access_request, both_auth_mode |
-| data | `duplicate_pending_request` | 同一Project/API stageへの重複PENDING申請 | duplicate_pending |
+| 不変条件 | `pending_request_visible` | - | 申請成功後、利用申請一覧にPENDINGとして表示される。 |
+| 不変条件 | `duplicate_pending_rejected` | - | 同一Project/API stageにPENDING申請がある場合、重複申請は拒否される。 |
+| 不変条件 | `active_subscription_rejected` | - | 既存active subscriptionがあるAPIには再申請できない。 |
+| 操作 | `submit_request` | 利用申請する | 操作種別=コマンド, 既定状態=submitted |
+| 操作 | `list_requests` | Project単位の利用申請を確認する | 操作種別=参照, 既定状態=listed |
+| 状態 | `submitted` | 申請成功 | 後続継続=はい |
+| 状態 | `listed` | 申請一覧取得成功 | 後続継続=はい |
+| 状態 | `duplicate_pending_rejected` | 重複PENDING申請で失敗 | 後続継続=いいえ |
+| 状態 | `existing_subscription_rejected` | 既存subscriptionありで失敗 | 後続継続=いいえ |
+| データ | `request_both_auth` | public PKCEとclient credentialsの両方を申請する | valid_access_request, both_auth_mode |
+| データ | `duplicate_pending_request` | 同一Project/API stageへの重複PENDING申請 | duplicate_pending |
 
 ### review_decision Review Decision
 
 | 種別 | ID | タイトル | 補足 |
 |---|---|---|---|
-| invariant | `only_reviewer_can_decide` | - | reviewer以外は承認・却下できない。 |
-| invariant | `pending_request_only` | - | PENDING以外の申請は承認・却下できない。 |
-| invariant | `reject_does_not_provision` | - | 却下時はsubscription、Usage Plan stage、Cognito scopeを作成しない。 |
-| action | `approve_request` | 利用申請を承認する | type=command, default=approved |
-| action | `reject_request` | 利用申請を却下する | type=command, default=rejected |
-| state | `approved` | 承認成功 | continue_flow=true |
-| state | `rejected` | 却下成功 | continue_flow=true |
-| state | `forbidden` | reviewer以外の審査拒否 | continue_flow=false |
-| state | `not_pending` | PENDING以外の申請審査拒否 | continue_flow=false |
-| data | `approve_both` | BOTHとして承認する | valid_review, approve |
-| data | `reject_default` | 申請を却下する | valid_review, reject |
+| 不変条件 | `only_reviewer_can_decide` | - | reviewer以外は承認・却下できない。 |
+| 不変条件 | `pending_request_only` | - | PENDING以外の申請は承認・却下できない。 |
+| 不変条件 | `reject_does_not_provision` | - | 却下時はsubscription、Usage Plan stage、Cognito scopeを作成しない。 |
+| 操作 | `approve_request` | 利用申請を承認する | 操作種別=コマンド, 既定状態=approved |
+| 操作 | `reject_request` | 利用申請を却下する | 操作種別=コマンド, 既定状態=rejected |
+| 状態 | `approved` | 承認成功 | 後続継続=はい |
+| 状態 | `rejected` | 却下成功 | 後続継続=はい |
+| 状態 | `forbidden` | reviewer以外の審査拒否 | 後続継続=いいえ |
+| 状態 | `not_pending` | PENDING以外の申請審査拒否 | 後続継続=いいえ |
+| データ | `approve_both` | BOTHとして承認する | valid_review, approve |
+| データ | `reject_default` | 申請を却下する | valid_review, reject |
 
 ### entitlement_provisioning Entitlement Provisioning
 
 | 種別 | ID | タイトル | 補足 |
 |---|---|---|---|
-| invariant | `approved_subscription_active` | - | 承認成功後、subscriptionはACTIVEとして参照できる。 |
-| invariant | `usage_plan_stage_attached` | - | 承認済みAPI stageはProject Usage Planに紐づく。 |
-| invariant | `cognito_scope_attached` | - | approvedAuthModeに応じてCognito App Clientにcustom scopeを付与する。 |
-| invariant | `provisioning_failure_retryable` | - | AWS反映の部分失敗はoperation/stepの状態で追跡でき、再実行可能な証跡を残す。 |
-| action | `provision_entitlement` | 承認結果を利用権へ反映する | type=side_effect, default=provisioned |
-| action | `list_subscriptions` | Projectのsubscriptionを確認する | type=query, default=listed |
-| state | `provisioned` | 利用権反映成功 | continue_flow=true |
-| state | `listed` | subscription一覧取得成功 | continue_flow=true |
-| state | `partially_failed` | 利用権反映部分失敗 | continue_flow=false |
-| state | `not_provisioned` | 利用権未作成 | continue_flow=true |
-| data | `approved_both_entitlement` | BOTH承認の利用権 | approved, both_auth_mode |
-| data | `rejected_no_entitlement` | 却下後の利用権なし | rejected, no_entitlement |
+| 不変条件 | `approved_subscription_active` | - | 承認成功後、subscriptionはACTIVEとして参照できる。 |
+| 不変条件 | `usage_plan_stage_attached` | - | 承認済みAPI stageはProject Usage Planに紐づく。 |
+| 不変条件 | `cognito_scope_attached` | - | approvedAuthModeに応じてCognito App Clientにcustom scopeを付与する。 |
+| 不変条件 | `provisioning_failure_retryable` | - | AWS反映の部分失敗はoperation/stepの状態で追跡でき、再実行可能な証跡を残す。 |
+| 操作 | `provision_entitlement` | 承認結果を利用権へ反映する | 操作種別=副作用, 既定状態=provisioned |
+| 操作 | `list_subscriptions` | Projectのsubscriptionを確認する | 操作種別=参照, 既定状態=listed |
+| 状態 | `provisioned` | 利用権反映成功 | 後続継続=はい |
+| 状態 | `listed` | subscription一覧取得成功 | 後続継続=はい |
+| 状態 | `partially_failed` | 利用権反映部分失敗 | 後続継続=いいえ |
+| 状態 | `not_provisioned` | 利用権未作成 | 後続継続=はい |
+| データ | `approved_both_entitlement` | BOTH承認の利用権 | approved, both_auth_mode |
+| データ | `rejected_no_entitlement` | 却下後の利用権なし | rejected, no_entitlement |
 
 ### runtime_authorization Runtime Authorization
 
 | 種別 | ID | タイトル | 補足 |
 |---|---|---|---|
-| invariant | `approved_api_callable` | - | 承認済みAPIは、approvedAuthModeに合う認証情報で呼び出せる。 |
-| invariant | `unapproved_api_denied` | - | 未承認APIは、同じProjectの認証情報でも呼び出せない。 |
-| invariant | `rejected_api_denied` | - | 却下されたAPIはRuntimeから呼び出せない。 |
-| action | `invoke_runtime_api` | Runtime APIを呼び出す | type=query, default=allowed |
-| action | `invoke_unapproved_api` | 未承認Runtime APIを呼び出す | type=query, default=denied |
-| state | `allowed` | Runtime API呼び出し成功 | continue_flow=true |
-| state | `denied` | Runtime API呼び出し拒否 | continue_flow=true |
-| state | `credential_invalid` | Runtime認証情報不正 | continue_flow=false |
-| data | `approved_runtime_credential` | 承認済みAPI用Runtime認証情報 | approved_api, valid_runtime_credential |
-| data | `unapproved_runtime_credential` | 未承認API用Runtime認証情報 | unapproved_api, valid_runtime_credential |
+| 不変条件 | `approved_api_callable` | - | 承認済みAPIは、approvedAuthModeに合う認証情報で呼び出せる。 |
+| 不変条件 | `unapproved_api_denied` | - | 未承認APIは、同じProjectの認証情報でも呼び出せない。 |
+| 不変条件 | `rejected_api_denied` | - | 却下されたAPIはRuntimeから呼び出せない。 |
+| 操作 | `invoke_runtime_api` | Runtime APIを呼び出す | 操作種別=参照, 既定状態=allowed |
+| 操作 | `invoke_unapproved_api` | 未承認Runtime APIを呼び出す | 操作種別=参照, 既定状態=denied |
+| 状態 | `allowed` | Runtime API呼び出し成功 | 後続継続=はい |
+| 状態 | `denied` | Runtime API呼び出し拒否 | 後続継続=はい |
+| 状態 | `credential_invalid` | Runtime認証情報不正 | 後続継続=いいえ |
+| データ | `approved_runtime_credential` | 承認済みAPI用Runtime認証情報 | approved_api, valid_runtime_credential |
+| データ | `unapproved_runtime_credential` | 未承認API用Runtime認証情報 | unapproved_api, valid_runtime_credential |
 
 ### audit_recovery Audit / Idempotency / Recovery
 
 | 種別 | ID | タイトル | 補足 |
 |---|---|---|---|
-| invariant | `audit_event_recorded` | - | 状態遷移を伴う管理APIは監査イベントを残す。 |
-| invariant | `retry_does_not_duplicate` | - | 冪等キーまたは既存状態により、再試行で重複subscriptionや重複scopeを作らない。 |
-| invariant | `failure_traceable` | - | 失敗時はtraceId、operationId、外部API error_codeから原因を追跡できる。 |
-| action | `collect_audit` | 監査イベントを確認する | type=evidence, default=recorded |
-| action | `retry_after_failure` | 失敗後に再試行する | type=command, default=retryable |
-| state | `recorded` | 監査イベント記録済み | continue_flow=true |
-| state | `retryable` | 再試行可能 | continue_flow=true |
-| state | `trace_missing` | 追跡証跡不足 | continue_flow=false |
-| data | `audit_default` | 標準監査確認 | audit_event |
-| data | `provisioning_retry` | provisioning失敗後の再試行 | recovery, retry |
+| 不変条件 | `audit_event_recorded` | - | 状態遷移を伴う管理APIは監査イベントを残す。 |
+| 不変条件 | `retry_does_not_duplicate` | - | 冪等キーまたは既存状態により、再試行で重複subscriptionや重複scopeを作らない。 |
+| 不変条件 | `failure_traceable` | - | 失敗時はtraceId、operationId、外部API error_codeから原因を追跡できる。 |
+| 操作 | `collect_audit` | 監査イベントを確認する | 操作種別=証跡確認, 既定状態=recorded |
+| 操作 | `retry_after_failure` | 失敗後に再試行する | 操作種別=コマンド, 既定状態=retryable |
+| 状態 | `recorded` | 監査イベント記録済み | 後続継続=はい |
+| 状態 | `retryable` | 再試行可能 | 後続継続=はい |
+| 状態 | `trace_missing` | 追跡証跡不足 | 後続継続=いいえ |
+| データ | `audit_default` | 標準監査確認 | audit_event |
+| データ | `provisioning_retry` | provisioning失敗後の再試行 | recovery, retry |
 
-## 2. 旧factor互換表
-
-### F000 GET /health ヘルスチェック結果
-
-| 要素ID | 既定要素 | 終端要素 | 期待観点 |
-|---|---:|---:|---|
-| `success` | true | false | HTTP 200とstatus okを返し、管理API E2Eの前提となるアプリ疎通を確認する。 |
-| `unavailable` | false | true | HTTP 5xxまたは応答なしとして扱い、管理APIフローを開始しない。 |
-
-### F001 管理API呼び出し主体
-
-| 要素ID | 既定要素 | 終端要素 | 期待観点 |
-|---|---:|---:|---|
-| `provider_owner_reviewer` | true | false | API公開、Project作成、審査をそれぞれ権限のある主体で実行する。 |
-| `non_reviewer` | false | true | approve/rejectでHTTP 403となりsubscriptionを作成しない。 |
-
-### F002 管理API認証
-
-| 要素ID | 既定要素 | 終端要素 | 期待観点 |
-|---|---:|---:|---|
-| `valid` | true | false | 管理API呼び出しが認証を通過する。 |
-| `missing` | false | true | 最初の管理APIでHTTP 401となり後続stepを実行しない。 |
-
-### F010 POST /apis API公開結果
-
-| 要素ID | 既定要素 | 終端要素 | 期待観点 |
-|---|---:|---:|---|
-| `success` | true | false | HTTP 201、apiId/apiStageId/scopeFullName返却、API catalog保存、Cognito scope作成、audit/provisioning記録を確認する。 |
-| `duplicate_api_code` | false | true | POST /apisがHTTP 409となりProject作成以降を実行しない。 |
-| `apigw_stage_invalid` | false | true | API Gateway stage登録確認が失敗しHTTP 400/502を返し、catalog/scopeを作成しない。 |
-| `cognito_scope_failed` | false | true | Cognito scope作成失敗でHTTP 502/503を返し、provisioning operation failedを記録する。 |
-
-### F011 GET /apis API一覧取得結果
-
-| 要素ID | 既定要素 | 終端要素 | 期待観点 |
-|---|---:|---:|---|
-| `success` | true | false | HTTP 200、itemsに公開済みapiId/apiCode/scopeが含まれる、pagination/filterが仕様どおり、secret値を含まない。 |
-| `filter_no_match` | false | true | HTTP 200かつitems空配列を返し、後続getApiは既知apiIdを使って継続する。 |
-
-### F012 GET /apis/{apiId} API詳細取得結果
-
-| 要素ID | 既定要素 | 終端要素 | 期待観点 |
-|---|---:|---:|---|
-| `success` | true | false | HTTP 200、apiId/apiStageId/scopeFullNameがPOST /apisの返却値と一致し、登録済みreviewer/stage情報を確認できる。 |
-| `not_found` | false | true | HTTP 404を返し、Project作成以降のAPI間状態遷移を実行しない。 |
-
-### F020 POST /projects Project作成結果
-
-| 要素ID | 既定要素 | 終端要素 | 期待観点 |
-|---|---:|---:|---|
-| `success` | true | false | HTTP 201、projectId/API key/Cognito clientsを返却、Usage Plan/API key/client secret hashを保存、secret実値は後続placeholderにのみ渡す。 |
-| `duplicate_project_code` | false | true | POST /projectsがHTTP 409となり利用申請以降を実行しない。 |
-
-### F021 GET /projects Project一覧取得結果
-
-| 要素ID | 既定要素 | 終端要素 | 期待観点 |
-|---|---:|---:|---|
-| `success` | true | false | HTTP 200、itemsにprojectId/projectCodeが含まれる、callerの権限範囲に絞られる、secret/API key実値を含まない。 |
-| `filter_no_match` | false | true | HTTP 200かつitems空配列を返し、後続getProjectは既知projectIdを使って継続する。 |
-
-### F022 GET /projects/{projectId} Project詳細取得結果
-
-| 要素ID | 既定要素 | 終端要素 | 期待観点 |
-|---|---:|---:|---|
-| `success` | true | false | HTTP 200、projectId/client構成/公開client設定を取得、API key値とclient secret値は再表示しない。 |
-| `not_found` | false | true | HTTP 404を返し、public client更新と利用申請以降を実行しない。 |
-
-### F023 PATCH /projects/{projectId}/public-client 更新結果
-
-| 要素ID | 既定要素 | 終端要素 | 期待観点 |
-|---|---:|---:|---|
-| `success` | true | false | HTTP 200、callback/logout/token設定が更新され、既存AllowedOAuthScopesと承認済みscopeを消さない。 |
-| `invalid_redirect_uri` | false | true | HTTP 400/409を返し、既存public client設定と承認済みscopeを変更しない。 |
-
-### F030 POST /projects/{projectId}/api-access-requests 利用申請作成結果
-
-| 要素ID | 既定要素 | 終端要素 | 期待観点 |
-|---|---:|---:|---|
-| `success` | true | false | HTTP 201、PENDINGのaccessRequestIdを返却、authMode/apiStageId/reviewer候補を保存、audit/access_request eventを記録する。 |
-| `duplicate_pending` | false | true | 2回目の申請がHTTP 409となり既存pending requestを保持する。 |
-| `already_subscribed` | false | true | 申請または承認がHTTP 409となり二重subscriptionを作成しない。 |
-
-### F031 GET /projects/{projectId}/api-access-requests 利用申請一覧取得結果
-
-| 要素ID | 既定要素 | 終端要素 | 期待観点 |
-|---|---:|---:|---|
-| `success` | true | false | HTTP 200、itemsにaccessRequestId/apiId/requestedAuthMode/stateが含まれ、Project単位に絞られる。 |
-| `unauthorized_project` | false | true | HTTP 403を返し、審査API以降を実行しない。 |
-
-### F040 POST /api-access-requests/{accessRequestId}/approve 承認結果
-
-| 要素ID | 既定要素 | 終端要素 | 期待観点 |
-|---|---:|---:|---|
-| `success` | true | false | HTTP 200、APPROVED review/subscriptionを保存し、Usage Plan stageとCognito scopeを反映、audit/provisioning eventを記録する。 |
-| `non_reviewer` | false | true | HTTP 403を返し、subscription作成、Usage Plan/Cognito反映、Runtime API呼び出しを実行しない。 |
-| `not_pending` | false | true | HTTP 409を返し、二重review/subscriptionを作成しない。 |
-
-### F041 POST /api-access-requests/{accessRequestId}/reject 却下結果
-
-| 要素ID | 既定要素 | 終端要素 | 期待観点 |
-|---|---:|---:|---|
-| `success` | true | false | HTTP 200、REJECTED reviewを保存し、subscription/Usage Plan/Cognito scopeを作成しない。 |
-| `non_reviewer` | false | true | HTTP 403を返し、review状態と外部反映を変更しない。 |
-
-### F050 承認時provisioning
-
-| 要素ID | 既定要素 | 終端要素 | 期待観点 |
-|---|---:|---:|---|
-| `apigw_success_cognito_success` | true | false | Usage Plan stageとCognito scopeの両方が反映される。 |
-| `apigw_success_cognito_failed` | false | true | HTTP 502/503とoperation failedを観測しretry可能なstepを残す。 |
-| `retry_after_partial_failure` | false | false | 既存Usage Plan stageを再利用しCognito scope付与から再開する。 |
-
-### F061 GET /projects/{projectId}/subscriptions Subscription一覧取得結果
-
-| 要素ID | 既定要素 | 終端要素 | 期待観点 |
-|---|---:|---:|---|
-| `success` | true | false | HTTP 200、itemsにapiId/apiStageId/subscriptionId/scopeFullName/derivedState ACTIVEが含まれる。 |
-| `none_after_reject` | false | true | HTTP 200かつitemsに対象apiIdが現れず、Runtime API呼び出しを実行しない。 |
-
-### F070 Runtime credentials
-
-| 要素ID | 既定要素 | 終端要素 | 期待観点 |
-|---|---:|---:|---|
-| `valid_token_valid_api_key` | true | false | Runtime APIが期待する2xxを返す。 |
-| `scope_missing` | false | false | Runtime APIが認可エラーを返す。 |
-| `api_key_missing` | false | false | Runtime APIが認可エラーを返す。 |
-
-## 3. 枝刈り規則
+## 2. 枝刈り規則
 
 | Rule ID | 条件 | 結果 | 理由 |
 |---|---|---|---|
@@ -270,7 +143,7 @@
 | `P003` | approve失敗 | Runtime API呼び出しを除外 | subscription/scopeが存在しない |
 | `P004` | terminal step/status/reasonが同一 | 等価ケースを統合 | E2Eの重複実行を避ける |
 
-## 4. 生成ケース一覧
+## 3. 生成ケース一覧
 
 | ケースID | F000 | F001 | F002 | F010 | F011 | F012 | F020 | F021 | F022 | F023 | F030 | F031 | F040 | F041 | F050 | F061 | F070 | 種別 | Tier | 終了Step | シナリオ |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -283,7 +156,7 @@
 | `TC007` | 成功: appが応答可能 | provider + project owner + reviewer | 有効なmanagement token | 成功: catalog + stage + scope | 成功: 一覧に公開APIが現れる | 成功: 公開API詳細を取得 | 成功: project + API key + clients | 成功: 作成Projectが一覧に現れる | 失敗: projectId不明 | - | - | - | - | - | - | - | - | `negative` | `local_fake` | get_project | [`cases/TC007_get_project_unknown_id_is_404.gen.md`](cases/TC007_get_project_unknown_id_is_404.gen.md) |
 | `TC008` | 成功: appが応答可能 | provider + project owner + reviewer | 有効なmanagement token | 成功: catalog + stage + scope | 成功: 一覧に公開APIが現れる | 成功: 公開API詳細を取得 | 成功: project + API key + clients | 成功: 作成Projectが一覧に現れる | 成功: Project詳細を取得 | 成功: public client設定更新 + 承認済みscope保持 | 成功: PENDING申請作成 | 成功: PENDING申請が一覧に現れる | 成功: APPROVED + subscription + 外部反映 | - | APIGW成功 + Cognito成功 | 成功: 承認済みsubscriptionが一覧に現れる | - | `branch` | `sandbox` | - | [`cases/TC008_public_client_update_keeps_approved_scope.gen.md`](cases/TC008_public_client_update_keeps_approved_scope.gen.md) |
 
-## 5. 対象別生成ケース一覧
+## 4. 対象別生成ケース一覧
 
 | ケースID | 目的 | Project | API | Goal Variant | Component Variant | Runtime期待 |
 |---|---|---|---|---|---|---|
