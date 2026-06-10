@@ -1,0 +1,20 @@
+schema_version: 1
+
+step:
+  id: management_publish_api
+  title: API公開APIを呼び出す
+  phase: setup
+  operation_id: publishApi
+  endpoint: POST /apis
+
+request:
+  source: components/api_catalog/data.manual.yaml#api_default.request
+
+expect:
+  response:
+    status: ${result.expected_status}
+
+capture:
+  ${api.id}.apiId: $.apiId
+  ${api.id}.apiStageId: $.stages[0].apiStageId
+  ${api.id}.scopeFullName: $.scopes[0].scopeFullName

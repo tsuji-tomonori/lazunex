@@ -1,0 +1,26 @@
+schema_version: 1
+
+bindings:
+  - id: invoke_runtime_api_allowed
+    when:
+      action: invoke_runtime_api
+      state: allowed
+      data_tags:
+        include:
+          - approved_api
+    steps:
+      - ref: steps/runtime_api/invoke_runtime_api.step.manual.yaml
+    evidences:
+      - ref: current_api_callable
+
+  - id: invoke_unapproved_api_denied
+    when:
+      action: invoke_unapproved_api
+      state: denied
+      data_tags:
+        include:
+          - unapproved_api
+    steps:
+      - ref: steps/runtime_api/invoke_runtime_api.step.manual.yaml
+    evidences:
+      - ref: other_api_not_callable

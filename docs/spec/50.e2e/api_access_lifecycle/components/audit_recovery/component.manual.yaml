@@ -1,0 +1,26 @@
+schema_version: 1
+
+component:
+  id: audit_recovery
+  title: Audit / Idempotency / Recovery
+  purpose: >
+    管理API横断の監査イベント、冪等性、失敗復旧の証跡を確認し、
+    E2E失敗時に業務状態と外部反映状態を追跡できることを保証する。
+  aggregate:
+    - Audit Event
+    - Idempotency Record
+    - Provisioning Operation
+    - Provisioning Step
+
+business_invariants:
+  - id: audit_event_recorded
+    text: 状態遷移を伴う管理APIは監査イベントを残す。
+  - id: retry_does_not_duplicate
+    text: 冪等キーまたは既存状態により、再試行で重複subscriptionや重複scopeを作らない。
+  - id: failure_traceable
+    text: 失敗時はtraceId、operationId、外部API error_codeから原因を追跡できる。
+
+targets:
+  primary:
+    - project
+    - api

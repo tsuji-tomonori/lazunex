@@ -1,0 +1,25 @@
+schema_version: 1
+
+data_profiles:
+  - id: approve_both
+    title: BOTHとして承認する
+    tags:
+      - valid_review
+      - approve
+    request:
+      path:
+        accessRequestId: accessRequestId[${project.id},${api.id}]
+      body:
+        approvedAuthMode: BOTH
+        reviewComment: approve ${case.id}
+
+  - id: reject_default
+    title: 申請を却下する
+    tags:
+      - valid_review
+      - reject
+    request:
+      path:
+        accessRequestId: accessRequestId[${project.id},${api.id}]
+      body:
+        reviewComment: reject ${case.id}

@@ -1,0 +1,25 @@
+schema_version: 1
+
+component:
+  id: project_workspace
+  title: Project Workspace
+  purpose: >
+    API利用単位となるProjectを作成し、API key、Usage Plan、
+    public/confidential Cognito App Clientを払い出す。
+  aggregate:
+    - Project
+    - Project API Key
+    - Project Usage Plan
+    - Project Cognito Client
+
+business_invariants:
+  - id: project_active_after_create
+    text: 作成成功後、ProjectはACTIVEとして参照できる。
+  - id: secret_returned_once
+    text: API key値とclient secret値は初回レスポンス以外で再表示しない。
+  - id: public_client_update_keeps_existing_scopes
+    text: public client更新時、承認済みcustom scopeを消さない。
+
+targets:
+  primary:
+    - project

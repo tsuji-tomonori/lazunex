@@ -1,0 +1,20 @@
+schema_version: 1
+
+evidences:
+  - id: api_search_hit
+    title: API一覧で公開済みAPIが表示される
+    collector:
+      step: steps/management_api/list_apis.step.manual.yaml
+      bind:
+        keyword: ${api.defaults.apiCode}
+    ok_condition: ${api.id} が検索結果に表示され、stageとscopeを参照できる。
+    save_as: ${case.id}_E_api_search_${api.id}.json
+
+  - id: api_detail_matches_catalog
+    title: API詳細が公開入力と一致する
+    collector:
+      step: steps/management_api/get_api.step.manual.yaml
+      bind:
+        apiId: ${api.id}.apiId
+    ok_condition: API詳細にstage、scope、reviewerPrincipalIdsが含まれる。
+    save_as: ${case.id}_E_api_detail_${api.id}.json

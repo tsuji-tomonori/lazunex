@@ -1,0 +1,26 @@
+schema_version: 1
+
+data_profiles:
+  - id: request_both_auth
+    title: public PKCEとclient credentialsの両方を申請する
+    tags:
+      - valid_access_request
+      - both_auth_mode
+    request:
+      path:
+        projectId: ${project.id}.projectId
+      body:
+        apiId: ${api.id}.apiId
+        apiStageId: ${api.id}.apiStageId
+        requestedAuthMode: BOTH
+        reason: E2E access request ${case.id}
+
+  - id: duplicate_pending_request
+    title: 同一Project/API stageへの重複PENDING申請
+    tags:
+      - duplicate_pending
+    request:
+      body:
+        apiId: ${api.id}.apiId
+        apiStageId: ${api.id}.apiStageId
+        requestedAuthMode: BOTH

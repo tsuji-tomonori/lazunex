@@ -1,0 +1,22 @@
+schema_version: 1
+
+data_profiles:
+  - id: approved_runtime_credential
+    title: 承認済みAPI用Runtime認証情報
+    tags:
+      - approved_api
+      - valid_runtime_credential
+    request:
+      headers:
+        Authorization: Bearer ${runtime_access_token}
+        x-api-key: ${project.id}.projectApiKey
+
+  - id: unapproved_runtime_credential
+    title: 未承認API用Runtime認証情報
+    tags:
+      - unapproved_api
+      - valid_runtime_credential
+    request:
+      headers:
+        Authorization: Bearer ${runtime_access_token}
+        x-api-key: ${project.id}.projectApiKey

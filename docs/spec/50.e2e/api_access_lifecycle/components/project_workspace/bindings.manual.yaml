@@ -1,0 +1,27 @@
+schema_version: 1
+
+bindings:
+  - id: create_project_provisioned
+    when:
+      action: create_project
+      state: provisioned
+      data_tags:
+        include:
+          - valid_project
+    steps:
+      - ref: steps/management_api/create_project.step.manual.yaml
+    evidences:
+      - ref: project_search_hit
+      - ref: secret_not_redisplayed
+
+  - id: update_public_client_success
+    when:
+      action: update_public_client
+      state: public_client_updated
+      data_tags:
+        include:
+          - valid_public_client_update
+    steps:
+      - ref: steps/management_api/update_project_public_client.step.manual.yaml
+    evidences:
+      - ref: redirect_url_updated

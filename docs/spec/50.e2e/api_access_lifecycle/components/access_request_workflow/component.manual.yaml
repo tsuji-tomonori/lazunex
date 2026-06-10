@@ -1,0 +1,23 @@
+schema_version: 1
+
+component:
+  id: access_request_workflow
+  title: Access Request Workflow
+  purpose: >
+    Project owner/admin がProject単位でAPI利用を申請し、
+    申請履歴としてPENDING状態を確認できることを保証する。
+  aggregate:
+    - Access Request
+
+business_invariants:
+  - id: pending_request_visible
+    text: 申請成功後、利用申請一覧にPENDINGとして表示される。
+  - id: duplicate_pending_rejected
+    text: 同一Project/API stageにPENDING申請がある場合、重複申請は拒否される。
+  - id: active_subscription_rejected
+    text: 既存active subscriptionがあるAPIには再申請できない。
+
+targets:
+  primary:
+    - project
+    - api

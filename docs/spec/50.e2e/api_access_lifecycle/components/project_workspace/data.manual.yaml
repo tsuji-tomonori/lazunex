@@ -1,0 +1,29 @@
+schema_version: 1
+
+data_profiles:
+  - id: project_default
+    title: 標準Project
+    tags:
+      - valid_project
+      - has_public_client
+      - has_confidential_client
+    request:
+      body:
+        projectCode: ${project.defaults.projectCode}
+        name: ${project.defaults.name}
+        ownerPrincipalId: ${project.defaults.ownerPrincipalId}
+        departmentCode: ${project.defaults.departmentCode}
+
+  - id: redirect_url_update
+    title: callback URL更新
+    tags:
+      - valid_public_client_update
+    request:
+      path:
+        projectId: ${project.id}.projectId
+      body:
+        callbackUrls:
+          - https://example.com/${project.id}/callback
+          - https://example.com/${project.id}/callback-updated
+        logoutUrls:
+          - https://example.com/${project.id}/logout

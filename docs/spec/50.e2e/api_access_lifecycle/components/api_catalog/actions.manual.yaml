@@ -1,0 +1,17 @@
+schema_version: 1
+
+actions:
+  - id: publish_api
+    title: APIを公開する
+    operation_type: command
+    default_result: published
+    target: api
+
+  - id: browse_api
+    title: 公開APIを探索する
+    operation_type: query
+    default_result: found
+    target: api
+    requires:
+      state:
+        api: published

@@ -14,7 +14,7 @@ E2Eケース一覧とstep templateからテストケースごとのシナリオM
 
 | 種別 | 内容 |
 | :--- | :--- |
-| 入力 | `docs/spec/50.e2e/*/case-list_gen.md`<br>`docs/spec/50.e2e/*/targets/**/*.manual.yaml`<br>`docs/spec/50.e2e/*/operations/**/*.manual.yaml`<br>`docs/spec/50.e2e/*/steps/**/*.manual.yaml`<br>`docs/spec/50.e2e/*/evidences/**/*.manual.yaml`<br>`docs/spec/50.e2e/*/bindings/*.manual.yaml`<br>`docs/spec/50.e2e/*/rules/renderer.manual.yaml`<br>`docs/spec/50.e2e/*/templates/**/*.manual.yaml` |
+| 入力 | `docs/spec/50.e2e/*/case-list_gen.md`<br>`docs/spec/50.e2e/*/targets/**/*.manual.yaml`<br>`docs/spec/50.e2e/*/components/**/*.manual.yaml`<br>`docs/spec/50.e2e/*/operations/**/*.manual.yaml`<br>`docs/spec/50.e2e/*/steps/**/*.manual.yaml`<br>`docs/spec/50.e2e/*/evidences/**/*.manual.yaml`<br>`docs/spec/50.e2e/*/bindings/*.manual.yaml`<br>`docs/spec/50.e2e/*/rules/renderer.manual.yaml`<br>`docs/spec/50.e2e/*/templates/**/*.manual.yaml` |
 | 出力 | `docs/spec/50.e2e/*/cases/*.gen.md` |
 | check mode | 対応 |
 | CI実行 | 安全 |

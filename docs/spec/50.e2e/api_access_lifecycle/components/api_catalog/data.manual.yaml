@@ -1,0 +1,34 @@
+schema_version: 1
+
+data_profiles:
+  - id: api_default
+    title: 標準API
+    tags:
+      - valid_api
+      - has_stage
+      - has_scope
+      - has_reviewer
+    request:
+      body:
+        apiCode: ${api.defaults.apiCode}
+        name: ${api.defaults.name}
+        description: ${api.defaults.description}
+        providerPrincipalId: ${actors.provider_owner}
+        reviewerPrincipalIds:
+          - ${actors.reviewer}
+        stages:
+          - stageName: ${api.defaults.stageName}
+            apiGatewayRestApiId: ${api.defaults.apiGatewayRestApiId}
+            apiGatewayStageName: ${api.defaults.apiGatewayStageName}
+        scopes:
+          - scopeName: ${api.defaults.scopeName}
+            displayName: ${api.defaults.scopeDisplayName}
+            description: ${api.defaults.scopeDescription}
+
+  - id: api_unknown
+    title: 未登録API
+    tags:
+      - unknown_api
+    request:
+      path:
+        apiId: api_unknown

@@ -1,0 +1,17 @@
+schema_version: 1
+
+step:
+  id: runtime_invoke_runtime_api
+  title: Runtime APIを呼び出す
+  phase: evidence
+  operation_id: invokeRuntimeApi
+  endpoint: ${runtime_invoke_url}
+
+request:
+  headers:
+    Authorization: Bearer ${runtime_access_token}
+    x-api-key: ${project.id}.projectApiKey
+
+expect:
+  response:
+    status: ${runtime.expected_status}

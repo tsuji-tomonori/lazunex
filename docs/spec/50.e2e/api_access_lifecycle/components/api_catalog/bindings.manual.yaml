@@ -1,0 +1,28 @@
+schema_version: 1
+
+bindings:
+  - id: publish_api_published
+    when:
+      action: publish_api
+      state: published
+      data_tags:
+        include:
+          - valid_api
+    steps:
+      - ref: steps/management_api/publish_api.step.manual.yaml
+    evidences:
+      - ref: api_search_hit
+      - ref: api_detail_matches_catalog
+
+  - id: browse_api_found
+    when:
+      action: browse_api
+      state: found
+      data_tags:
+        include:
+          - valid_api
+    steps:
+      - ref: steps/management_api/list_apis.step.manual.yaml
+      - ref: steps/management_api/get_api.step.manual.yaml
+    evidences:
+      - ref: api_search_hit

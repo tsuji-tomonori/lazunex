@@ -1,0 +1,24 @@
+schema_version: 1
+
+component:
+  id: runtime_authorization
+  title: Runtime Authorization
+  purpose: >
+    Runtime API呼び出し時にCognito access tokenのcustom scopeと
+    API Gateway API key / Usage Planの組み合わせで利用可否を制御する。
+  aggregate:
+    - Runtime Credential
+    - Runtime API Invocation
+
+business_invariants:
+  - id: approved_api_callable
+    text: 承認済みAPIは、approvedAuthModeに合う認証情報で呼び出せる。
+  - id: unapproved_api_denied
+    text: 未承認APIは、同じProjectの認証情報でも呼び出せない。
+  - id: rejected_api_denied
+    text: 却下されたAPIはRuntimeから呼び出せない。
+
+targets:
+  primary:
+    - project
+    - api

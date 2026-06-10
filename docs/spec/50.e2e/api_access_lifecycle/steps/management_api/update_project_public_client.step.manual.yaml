@@ -1,0 +1,15 @@
+schema_version: 1
+
+step:
+  id: management_update_project_public_client
+  title: Project public client更新APIを呼び出す
+  phase: exercise
+  operation_id: updateProjectPublicClient
+  endpoint: PATCH /projects/${projectId}/public-client
+
+request:
+  source: components/project_workspace/data.manual.yaml#redirect_url_update.request
+
+expect:
+  response:
+    status: ${result.expected_status}

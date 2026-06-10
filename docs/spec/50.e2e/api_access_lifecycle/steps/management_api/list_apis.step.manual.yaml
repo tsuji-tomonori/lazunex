@@ -1,0 +1,16 @@
+schema_version: 1
+
+step:
+  id: management_list_apis
+  title: API一覧APIを呼び出す
+  phase: evidence
+  operation_id: listApis
+  endpoint: GET /apis
+
+request:
+  query:
+    keyword: ${api.defaults.apiCode}
+
+expect:
+  response:
+    status: 200

@@ -1,0 +1,15 @@
+schema_version: 1
+
+step:
+  id: management_reject_access_request
+  title: 利用申請却下APIを呼び出す
+  phase: exercise
+  operation_id: rejectApiAccessRequest
+  endpoint: POST /api-access-requests/${accessRequestId}/reject
+
+request:
+  source: components/review_decision/data.manual.yaml#reject_default.request
+
+expect:
+  response:
+    status: ${result.expected_status}

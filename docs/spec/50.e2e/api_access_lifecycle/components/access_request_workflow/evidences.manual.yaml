@@ -1,0 +1,16 @@
+schema_version: 1
+
+evidences:
+  - id: access_request_listed_pending
+    title: 利用申請一覧にPENDINGとして表示される
+    collector:
+      step: steps/management_api/list_access_requests.step.manual.yaml
+    ok_condition: ${project.id} x ${api.id} の申請がPENDINGで表示される。
+    save_as: ${case.id}_E_access_request_pending_${project.id}_${api.id}.json
+
+  - id: duplicate_request_rejected
+    title: 重複PENDING申請が拒否される
+    collector:
+      step: steps/management_api/create_access_request.step.manual.yaml
+    ok_condition: HTTP 409で同一Project/API stageのPENDING申請が存在する理由を返す。
+    save_as: ${case.id}_E_access_request_duplicate_${project.id}_${api.id}.json

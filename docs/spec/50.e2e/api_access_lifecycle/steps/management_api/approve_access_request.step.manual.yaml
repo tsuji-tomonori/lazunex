@@ -1,0 +1,19 @@
+schema_version: 1
+
+step:
+  id: management_approve_access_request
+  title: 利用申請承認APIを呼び出す
+  phase: exercise
+  operation_id: approveApiAccessRequest
+  endpoint: POST /api-access-requests/${accessRequestId}/approve
+
+request:
+  source: components/review_decision/data.manual.yaml#approve_both.request
+
+expect:
+  response:
+    status: ${result.expected_status}
+
+capture:
+  subscriptionId[${project.id},${api.id}]: $.subscriptionId
+  provisioningOperationId[${project.id},${api.id}]: $.operationId

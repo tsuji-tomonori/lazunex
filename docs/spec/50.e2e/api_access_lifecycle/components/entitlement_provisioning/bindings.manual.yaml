@@ -1,0 +1,36 @@
+schema_version: 1
+
+bindings:
+  - id: provision_entitlement_success
+    when:
+      action: provision_entitlement
+      state: provisioned
+      data_tags:
+        include:
+          - approved
+    steps:
+      - ref: steps/management_api/approve_access_request.step.manual.yaml
+      - ref: steps/management_api/list_subscriptions.step.manual.yaml
+    evidences:
+      - ref: subscription_active
+
+  - id: rejected_request_no_entitlement
+    when:
+      action: list_subscriptions
+      state: not_provisioned
+      data_tags:
+        include:
+          - no_entitlement
+    steps:
+      - ref: steps/management_api/list_subscriptions.step.manual.yaml
+    evidences:
+      - ref: no_subscription_after_reject
+
+  - id: provision_entitlement_partial_failure
+    when:
+      action: provision_entitlement
+      state: partially_failed
+    steps:
+      - ref: steps/management_api/approve_access_request.step.manual.yaml
+    evidences:
+      - ref: provisioning_operation_retryable

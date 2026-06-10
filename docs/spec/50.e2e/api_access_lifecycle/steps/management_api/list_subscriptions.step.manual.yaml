@@ -1,0 +1,16 @@
+schema_version: 1
+
+step:
+  id: management_list_subscriptions
+  title: Project subscription一覧APIを呼び出す
+  phase: evidence
+  operation_id: listProjectSubscriptions
+  endpoint: GET /projects/${projectId}/subscriptions
+
+request:
+  path:
+    projectId: ${project.id}.projectId
+
+expect:
+  response:
+    status: 200

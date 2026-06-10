@@ -1,0 +1,18 @@
+schema_version: 1
+
+step:
+  id: management_create_access_request
+  title: 利用申請APIを呼び出す
+  phase: exercise
+  operation_id: createApiAccessRequest
+  endpoint: POST /projects/${projectId}/api-access-requests
+
+request:
+  source: components/access_request_workflow/data.manual.yaml#request_both_auth.request
+
+expect:
+  response:
+    status: ${result.expected_status}
+
+capture:
+  accessRequestId[${project.id},${api.id}]: $.accessRequestId

@@ -1,0 +1,25 @@
+schema_version: 1
+
+evidences:
+  - id: project_search_hit
+    title: プロジェクト検索でヒットする
+    collector:
+      step: steps/management_api/list_projects.step.manual.yaml
+      bind:
+        keyword: ${project.defaults.projectCode}
+    ok_condition: ${project.id} が検索結果に表示され、derivedState=ACTIVEである。
+    save_as: ${case.id}_E_project_search_${project.id}.json
+
+  - id: redirect_url_updated
+    title: CognitoのリダイレクトURLが更新されている
+    collector:
+      step: steps/management_api/get_project.step.manual.yaml
+    ok_condition: callbackUrls に callback-updated が含まれる。
+    save_as: ${case.id}_E_project_redirect_url_${project.id}.json
+
+  - id: secret_not_redisplayed
+    title: secret値が再表示されない
+    collector:
+      step: steps/management_api/get_project.step.manual.yaml
+    ok_condition: API key値とclient secret値がレスポンスに含まれない。
+    save_as: ${case.id}_E_project_secret_mask_${project.id}.json

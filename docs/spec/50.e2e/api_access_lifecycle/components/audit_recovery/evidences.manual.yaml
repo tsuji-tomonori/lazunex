@@ -1,0 +1,18 @@
+schema_version: 1
+
+evidences:
+  - id: audit_events_recorded
+    title: 監査イベントが記録される
+    collector:
+      step: manual_log_query
+      bind:
+        traceId: ${traceId}
+    ok_condition: 状態遷移APIごとのevent_type、actor、target、traceIdを確認できる。
+    save_as: ${case.id}_E_audit_events.json
+
+  - id: retry_does_not_duplicate_entitlement
+    title: 再試行で利用権が重複しない
+    collector:
+      step: steps/management_api/list_subscriptions.step.manual.yaml
+    ok_condition: 同一Project/API stageのACTIVE subscriptionが1件だけ存在する。
+    save_as: ${case.id}_E_retry_no_duplicate_${project.id}_${api.id}.json

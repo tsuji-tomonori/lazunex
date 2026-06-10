@@ -1,0 +1,26 @@
+schema_version: 1
+
+bindings:
+  - id: approve_request_approved
+    when:
+      action: approve_request
+      state: approved
+      data_tags:
+        include:
+          - approve
+    steps:
+      - ref: steps/management_api/approve_access_request.step.manual.yaml
+    evidences:
+      - ref: access_request_approved
+
+  - id: reject_request_rejected
+    when:
+      action: reject_request
+      state: rejected
+      data_tags:
+        include:
+          - reject
+    steps:
+      - ref: steps/management_api/reject_access_request.step.manual.yaml
+    evidences:
+      - ref: access_request_rejected

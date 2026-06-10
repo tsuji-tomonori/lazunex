@@ -1,0 +1,16 @@
+schema_version: 1
+
+evidences:
+  - id: current_api_callable
+    title: 承認済みAPIを呼び出せる
+    collector:
+      step: steps/runtime_api/invoke_runtime_api.step.manual.yaml
+    ok_condition: 承認済みAPIが2xxを返す。
+    save_as: ${case.id}_E_runtime_${project.id}_${api.id}_allowed.json
+
+  - id: other_api_not_callable
+    title: 未承認APIを呼び出せない
+    collector:
+      step: steps/runtime_api/invoke_runtime_api.step.manual.yaml
+    ok_condition: 未承認APIが403または401を返す。
+    save_as: ${case.id}_E_runtime_${project.id}_${foreach.api.id}_denied.json

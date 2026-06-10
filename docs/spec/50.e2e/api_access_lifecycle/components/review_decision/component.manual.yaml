@@ -1,0 +1,23 @@
+schema_version: 1
+
+component:
+  id: review_decision
+  title: Review Decision
+  purpose: >
+    API reviewer がPENDING申請を承認または却下し、
+    申請の審査結果とコメントを監査可能な状態へ遷移させる。
+  aggregate:
+    - Access Request Review
+
+business_invariants:
+  - id: only_reviewer_can_decide
+    text: reviewer以外は承認・却下できない。
+  - id: pending_request_only
+    text: PENDING以外の申請は承認・却下できない。
+  - id: reject_does_not_provision
+    text: 却下時はsubscription、Usage Plan stage、Cognito scopeを作成しない。
+
+targets:
+  primary:
+    - project
+    - api

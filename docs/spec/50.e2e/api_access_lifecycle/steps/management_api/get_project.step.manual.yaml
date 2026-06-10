@@ -1,0 +1,16 @@
+schema_version: 1
+
+step:
+  id: management_get_project
+  title: Project詳細APIを呼び出す
+  phase: evidence
+  operation_id: getProject
+  endpoint: GET /projects/${projectId}
+
+request:
+  path:
+    projectId: ${project.id}.projectId
+
+expect:
+  response:
+    status: 200

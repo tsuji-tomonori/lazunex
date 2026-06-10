@@ -1,0 +1,17 @@
+schema_version: 1
+
+actions:
+  - id: create_project
+    title: Projectを作成する
+    operation_type: command
+    default_result: provisioned
+    target: project
+
+  - id: update_public_client
+    title: public app client設定を更新する
+    operation_type: command
+    default_result: public_client_updated
+    target: project
+    requires:
+      state:
+        project: provisioned

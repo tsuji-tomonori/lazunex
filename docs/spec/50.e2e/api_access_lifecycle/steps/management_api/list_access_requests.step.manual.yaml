@@ -1,0 +1,16 @@
+schema_version: 1
+
+step:
+  id: management_list_access_requests
+  title: Project利用申請一覧APIを呼び出す
+  phase: evidence
+  operation_id: listProjectApiAccessRequests
+  endpoint: GET /projects/${projectId}/api-access-requests
+
+request:
+  path:
+    projectId: ${project.id}.projectId
+
+expect:
+  response:
+    status: 200

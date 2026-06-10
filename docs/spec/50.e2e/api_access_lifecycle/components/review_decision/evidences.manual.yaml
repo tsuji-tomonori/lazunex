@@ -1,0 +1,16 @@
+schema_version: 1
+
+evidences:
+  - id: access_request_approved
+    title: 利用申請がAPPROVEDとして表示される
+    collector:
+      step: steps/management_api/list_access_requests.step.manual.yaml
+    ok_condition: 対象申請のstatusがAPPROVEDで、reviewCommentとreviewedAtが記録されている。
+    save_as: ${case.id}_E_access_request_approved_${project.id}_${api.id}.json
+
+  - id: access_request_rejected
+    title: 利用申請がREJECTEDとして表示される
+    collector:
+      step: steps/management_api/list_access_requests.step.manual.yaml
+    ok_condition: 対象申請のstatusがREJECTEDで、reviewCommentとreviewedAtが記録されている。
+    save_as: ${case.id}_E_access_request_rejected_${project.id}_${api.id}.json

@@ -1,0 +1,14 @@
+schema_version: 1
+
+states:
+  - id: allowed
+    title: Runtime API呼び出し成功
+    continue_flow: true
+
+  - id: denied
+    title: Runtime API呼び出し拒否
+    continue_flow: true
+
+  - id: credential_invalid
+    title: Runtime認証情報不正
+    continue_flow: false

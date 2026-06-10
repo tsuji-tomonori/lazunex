@@ -1,0 +1,24 @@
+schema_version: 1
+
+actions:
+  - id: submit_request
+    title: 利用申請する
+    operation_type: command
+    target:
+      - project
+      - api
+    default_result: submitted
+    requires:
+      component_states:
+        project_workspace:
+          state: provisioned
+        api_catalog:
+          state: published
+
+  - id: list_requests
+    title: Project単位の利用申請を確認する
+    operation_type: query
+    target:
+      - project
+      - api
+    default_result: listed

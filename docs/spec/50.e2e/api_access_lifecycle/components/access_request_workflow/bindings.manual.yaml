@@ -1,0 +1,26 @@
+schema_version: 1
+
+bindings:
+  - id: submit_request_submitted
+    when:
+      action: submit_request
+      state: submitted
+      data_tags:
+        include:
+          - valid_access_request
+    steps:
+      - ref: steps/management_api/create_access_request.step.manual.yaml
+    evidences:
+      - ref: access_request_listed_pending
+
+  - id: submit_request_duplicate_pending
+    when:
+      action: submit_request
+      state: duplicate_pending_rejected
+      data_tags:
+        include:
+          - duplicate_pending
+    steps:
+      - ref: steps/management_api/create_access_request.step.manual.yaml
+    evidences:
+      - ref: duplicate_request_rejected

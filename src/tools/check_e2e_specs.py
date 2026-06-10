@@ -9,6 +9,40 @@ import yaml
 
 from tools.e2e_models import CASES, FACTORS, FLOW_ID, FLOW_STEPS
 
+COMPONENT_IDS = (
+    "api_catalog",
+    "project_workspace",
+    "access_request_workflow",
+    "review_decision",
+    "entitlement_provisioning",
+    "runtime_authorization",
+    "audit_recovery",
+)
+
+COMPONENT_FILES = (
+    "component.manual.yaml",
+    "actions.manual.yaml",
+    "states.manual.yaml",
+    "data.manual.yaml",
+    "evidences.manual.yaml",
+    "bindings.manual.yaml",
+)
+
+MANAGEMENT_API_STEPS = (
+    "publish_api",
+    "list_apis",
+    "get_api",
+    "create_project",
+    "update_project_public_client",
+    "create_access_request",
+    "list_access_requests",
+    "approve_access_request",
+    "reject_access_request",
+    "list_projects",
+    "get_project",
+    "list_subscriptions",
+)
+
 
 def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
     flow_root = root / FLOW_ID
@@ -63,6 +97,18 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
     required_paths.extend(
         flow_root / "templates" / "steps" / f"{step.template}.manual.yaml"
         for step in FLOW_STEPS
+    )
+    required_paths.extend(
+        flow_root / "components" / component_id / filename
+        for component_id in COMPONENT_IDS
+        for filename in COMPONENT_FILES
+    )
+    required_paths.extend(
+        flow_root / "steps" / "management_api" / f"{step_id}.step.manual.yaml"
+        for step_id in MANAGEMENT_API_STEPS
+    )
+    required_paths.append(
+        flow_root / "steps" / "runtime_api" / "invoke_runtime_api.step.manual.yaml"
     )
 
     for path in required_paths:

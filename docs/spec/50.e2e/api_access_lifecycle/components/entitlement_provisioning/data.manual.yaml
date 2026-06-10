@@ -1,0 +1,26 @@
+schema_version: 1
+
+data_profiles:
+  - id: approved_both_entitlement
+    title: BOTH承認の利用権
+    tags:
+      - approved
+      - both_auth_mode
+    expected:
+      subscriptionStatus: ACTIVE
+      usagePlanStage: attached
+      cognitoScope:
+        publicClient: attached
+        confidentialClient: attached
+
+  - id: rejected_no_entitlement
+    title: 却下後の利用権なし
+    tags:
+      - rejected
+      - no_entitlement
+    expected:
+      subscriptionStatus: absent
+      usagePlanStage: absent
+      cognitoScope:
+        publicClient: absent
+        confidentialClient: absent

@@ -1,0 +1,21 @@
+schema_version: 1
+
+states:
+  - id: provisioned
+    title: 利用権反映成功
+    continue_flow: true
+    provides:
+      variables:
+        - subscriptionId[${project.id},${api.id}]
+
+  - id: listed
+    title: subscription一覧取得成功
+    continue_flow: true
+
+  - id: partially_failed
+    title: 利用権反映部分失敗
+    continue_flow: false
+
+  - id: not_provisioned
+    title: 利用権未作成
+    continue_flow: true

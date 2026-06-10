@@ -1,0 +1,23 @@
+schema_version: 1
+
+evidences:
+  - id: subscription_active
+    title: subscriptionがACTIVEとして表示される
+    collector:
+      step: steps/management_api/list_subscriptions.step.manual.yaml
+    ok_condition: ${project.id} x ${api.id} のsubscriptionがACTIVEで表示される。
+    save_as: ${case.id}_E_subscription_active_${project.id}_${api.id}.json
+
+  - id: no_subscription_after_reject
+    title: 却下後にsubscriptionが存在しない
+    collector:
+      step: steps/management_api/list_subscriptions.step.manual.yaml
+    ok_condition: ${project.id} x ${api.id} のsubscriptionが一覧に表示されない。
+    save_as: ${case.id}_E_subscription_absent_${project.id}_${api.id}.json
+
+  - id: provisioning_operation_retryable
+    title: provisioning operationが再実行可能な失敗証跡を持つ
+    collector:
+      step: steps/management_api/approve_access_request.step.manual.yaml
+    ok_condition: operationIdから失敗stepとerror_codeを追跡できる。
+    save_as: ${case.id}_E_provisioning_retryable_${project.id}_${api.id}.json

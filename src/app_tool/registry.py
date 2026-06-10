@@ -152,6 +152,7 @@ TOOL_SPECS: tuple[ToolSpec, ...] = (
         summary="手動管理のE2E要因YAMLから枝刈り済みケース一覧を生成する。",
         inputs=(
             "docs/spec/50.e2e/*/targets/**/*.manual.yaml",
+            "docs/spec/50.e2e/*/components/**/*.manual.yaml",
             "docs/spec/50.e2e/*/factors/*.manual.yaml",
             "docs/spec/50.e2e/*/operations/**/*.manual.yaml",
             "docs/spec/50.e2e/*/results/**/*.manual.yaml",
@@ -176,6 +177,7 @@ TOOL_SPECS: tuple[ToolSpec, ...] = (
         inputs=(
             "docs/spec/50.e2e/*/case-list_gen.md",
             "docs/spec/50.e2e/*/targets/**/*.manual.yaml",
+            "docs/spec/50.e2e/*/components/**/*.manual.yaml",
             "docs/spec/50.e2e/*/operations/**/*.manual.yaml",
             "docs/spec/50.e2e/*/steps/**/*.manual.yaml",
             "docs/spec/50.e2e/*/evidences/**/*.manual.yaml",

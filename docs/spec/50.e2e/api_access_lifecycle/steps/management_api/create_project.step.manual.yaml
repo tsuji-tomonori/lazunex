@@ -1,0 +1,21 @@
+schema_version: 1
+
+step:
+  id: management_create_project
+  title: Project作成APIを呼び出す
+  phase: exercise
+  operation_id: createProject
+  endpoint: POST /projects
+
+request:
+  source: components/project_workspace/data.manual.yaml#project_default.request
+
+expect:
+  response:
+    status: ${result.expected_status}
+
+capture:
+  ${project.id}.projectId: $.projectId
+  ${project.id}.projectApiKey: $.apiKey.apiKeyValue
+  ${project.id}.publicClientId: $.cognito.publicClient.appClientId
+  ${project.id}.confidentialClientId: $.cognito.confidentialClient.appClientId

@@ -1,0 +1,26 @@
+schema_version: 1
+
+actions:
+  - id: approve_request
+    title: 利用申請を承認する
+    operation_type: command
+    default_result: approved
+    target:
+      - project
+      - api
+    requires:
+      component_states:
+        access_request_workflow:
+          state: submitted
+
+  - id: reject_request
+    title: 利用申請を却下する
+    operation_type: command
+    default_result: rejected
+    target:
+      - project
+      - api
+    requires:
+      component_states:
+        access_request_workflow:
+          state: submitted

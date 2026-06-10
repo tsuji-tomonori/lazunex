@@ -1,0 +1,18 @@
+schema_version: 1
+
+actions:
+  - id: invoke_runtime_api
+    title: Runtime APIを呼び出す
+    operation_type: query
+    default_result: allowed
+    target:
+      - project
+      - api
+
+  - id: invoke_unapproved_api
+    title: 未承認Runtime APIを呼び出す
+    operation_type: query
+    default_result: denied
+    target:
+      - project
+      - api

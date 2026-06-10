@@ -1,0 +1,27 @@
+schema_version: 1
+
+bindings:
+  - id: collect_audit_recorded
+    when:
+      action: collect_audit
+      state: recorded
+      data_tags:
+        include:
+          - audit_event
+    steps:
+      - ref: manual_log_query
+    evidences:
+      - ref: audit_events_recorded
+
+  - id: retry_after_failure_retryable
+    when:
+      action: retry_after_failure
+      state: retryable
+      data_tags:
+        include:
+          - retry
+    steps:
+      - ref: steps/management_api/approve_access_request.step.manual.yaml
+      - ref: steps/management_api/list_subscriptions.step.manual.yaml
+    evidences:
+      - ref: retry_does_not_duplicate_entitlement

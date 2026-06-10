@@ -1,0 +1,28 @@
+schema_version: 1
+
+component:
+  id: entitlement_provisioning
+  title: Entitlement Provisioning
+  purpose: >
+    承認されたProject x APIの利用権を作成し、
+    Usage Plan stageとCognito App Client scopeへ反映する。
+  aggregate:
+    - Subscription
+    - Project Usage Plan API Stage
+    - Project Cognito Client Scope
+    - Provisioning Operation
+
+business_invariants:
+  - id: approved_subscription_active
+    text: 承認成功後、subscriptionはACTIVEとして参照できる。
+  - id: usage_plan_stage_attached
+    text: 承認済みAPI stageはProject Usage Planに紐づく。
+  - id: cognito_scope_attached
+    text: approvedAuthModeに応じてCognito App Clientにcustom scopeを付与する。
+  - id: provisioning_failure_retryable
+    text: AWS反映の部分失敗はoperation/stepの状態で追跡でき、再実行可能な証跡を残す。
+
+targets:
+  primary:
+    - project
+    - api

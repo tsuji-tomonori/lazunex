@@ -1,0 +1,25 @@
+schema_version: 1
+
+component:
+  id: api_catalog
+  title: API Catalog
+  purpose: >
+    Provider が公開したAPIを探索可能にし、stage、custom scope、reviewer、
+    公開状態を後続のProject利用申請へ渡せることを保証する。
+  aggregate:
+    - API
+    - API Stage
+    - API Scope
+    - API Reviewer
+
+business_invariants:
+  - id: published_api_visible
+    text: 公開成功後、API一覧と詳細で公開済みAPIを参照できる。
+  - id: api_scope_available
+    text: 公開成功後、Runtime認可で使うcustom scopeが参照できる。
+  - id: reviewer_defined
+    text: 審査対象APIには承認・却下を実行できるreviewerが定義されている。
+
+targets:
+  primary:
+    - api

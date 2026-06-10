@@ -119,7 +119,7 @@ def test_check_e2e_specs_detects_complete_rendered_tree(tmp_path: Path) -> None:
     write_outputs(case_list_outputs(tmp_path))
     write_outputs(scenario_outputs(tmp_path))
 
-    for source in [
+    sources = [
         fixture_root / "targets" / "projects" / "project_A.target.manual.yaml",
         fixture_root / "targets" / "projects" / "project_B.target.manual.yaml",
         fixture_root / "targets" / "projects" / "project_C.target.manual.yaml",
@@ -164,7 +164,12 @@ def test_check_e2e_specs_detects_complete_rendered_tree(tmp_path: Path) -> None:
             fixture_root / "factors" / f"{factor.factor_id}_{factor.slug}.manual.yaml"
             for factor in FACTORS
         ],
-    ]:
+    ]
+    sources.extend(sorted((fixture_root / "components").glob("**/*.manual.yaml")))
+    sources.extend(sorted((fixture_root / "steps" / "management_api").glob("*.manual.yaml")))
+    sources.extend(sorted((fixture_root / "steps" / "runtime_api").glob("*.manual.yaml")))
+
+    for source in sources:
         target = flow_root / source.relative_to(fixture_root)
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
