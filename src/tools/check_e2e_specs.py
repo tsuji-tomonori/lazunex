@@ -7,16 +7,16 @@ from typing import cast
 
 import yaml
 
-from tools.e2e_models import CASES, FACTORS, FLOW_ID, FLOW_STEPS
-
-COMPONENT_IDS = (
-    "api_catalog",
-    "project_workspace",
-    "access_request_workflow",
-    "review_decision",
-    "entitlement_provisioning",
-    "runtime_authorization",
-    "audit_recovery",
+from tools.e2e_models import (
+    API_TARGETS,
+    CASES,
+    COMPONENT_IDS,
+    FACTORS,
+    FLOW_ID,
+    FLOW_STEPS,
+    PROJECT_TARGETS,
+    TARGET_CASES,
+    build_component_variants,
 )
 
 COMPONENT_FILES = (
@@ -184,19 +184,65 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
                 if component_id not in component_dimensions:
                     errors.append(f"matrix missing component dimension: {component_id}")
             component_case_generation = as_mapping(matrix.get("component_case_generation"))
-            goal_ids = {
-                goal_mapping.get("id")
-                for goal in as_list(component_case_generation.get("goals"))
-                if isinstance(goal, Mapping)
-                for goal_mapping in [cast(Mapping[str, object], goal)]
+            strategies = {
+                strategy_mapping.get("id")
+                for strategy in as_list(component_case_generation.get("strategies"))
+                if isinstance(strategy, Mapping)
+                for strategy_mapping in [cast(Mapping[str, object], strategy)]
             }
-            for goal_id in (
-                "approved_api_runtime_access",
-                "rejected_api_runtime_denied",
-                "project_workspace_behaviors",
+            for strategy_id in (
+                "smoke",
+                "component_variant_coverage",
+                "interaction_coverage",
             ):
-                if goal_id not in goal_ids:
-                    errors.append(f"matrix missing component case goal: {goal_id}")
+                if strategy_id not in strategies:
+                    errors.append(f"matrix missing component case strategy: {strategy_id}")
+            assertion_types = {
+                assertion_mapping.get("type")
+                for assertion in as_list(matrix.get("coverage_assertions"))
+                if isinstance(assertion, Mapping)
+                for assertion_mapping in [cast(Mapping[str, object], assertion)]
+            }
+            for assertion_type in (
+                "every_variant_has_case",
+                "every_target_has_case",
+            ):
+                if assertion_type not in assertion_types:
+                    errors.append(f"matrix missing coverage assertion: {assertion_type}")
+
+    component_variants = build_component_variants()
+    variant_ids = {variant.variant_id for variant in component_variants}
+    covered_goal_variants = {target_case.goal_variant for target_case in TARGET_CASES}
+    missing_variants = sorted(variant_ids - covered_goal_variants)
+    for variant_id in missing_variants:
+        errors.append(f"component variant missing target case: {variant_id}")
+    unknown_goal_variants = sorted(covered_goal_variants - variant_ids)
+    for variant_id in unknown_goal_variants:
+        errors.append(f"target case has unknown component variant: {variant_id}")
+    covered_projects = {
+        project.target_id
+        for project in PROJECT_TARGETS
+        if any(f".{project.target_id}." in target_case.goal_variant for target_case in TARGET_CASES)
+    }
+    for project in PROJECT_TARGETS:
+        if project.target_id not in covered_projects:
+            errors.append(f"target project missing target case: {project.target_id}")
+    covered_apis = {
+        api.target_id
+        for api in API_TARGETS
+        if any(f".{api.target_id}." in target_case.goal_variant for target_case in TARGET_CASES)
+    }
+    for api in API_TARGETS:
+        if api.target_id not in covered_apis:
+            errors.append(f"target api missing target case: {api.target_id}")
+    runtime_states = {
+        target_case.goal_variant.split("@", maxsplit=1)[0].rsplit(".", maxsplit=1)[-1]
+        for target_case in TARGET_CASES
+        if target_case.goal_component == "runtime_authorization"
+    }
+    for state_id in ("allowed", "denied"):
+        if state_id not in runtime_states:
+            errors.append(f"runtime_authorization state missing target case: {state_id}")
 
     factor_ids = {factor.factor_id for factor in FACTORS}
     factor_elements = {

@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import cast
 
 from tools.check_e2e_specs import check_specs
-from tools.e2e_models import CASES, FACTORS, FLOW_STEPS
+from tools.e2e_models import CASES, FACTORS, FLOW_STEPS, TARGET_CASES
 from tools.generate_e2e_case_list import rendered_outputs as case_list_outputs
 from tools.generate_e2e_scenarios import load_scenario_catalog
 from tools.generate_e2e_scenarios import rendered_outputs as scenario_outputs
@@ -40,11 +40,13 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
     content = rendered[tmp_path / "api_access_lifecycle/case-list_gen.md"]
 
     assert "## 0. 対象フロー" in content
-    assert "## 1. コンポーネントごとの要素" in content
-    assert "## 2. 枝刈り規則" in content
-    assert "## 3. 生成ケース一覧" in content
-    assert "## 4. 対象別生成ケース一覧" in content
+    assert "## 1. Coverage summary" in content
+    assert "## 2. コンポーネントごとの要素" in content
+    assert "## 3. 枝刈り規則" in content
+    assert "## 4. 生成ケース一覧" in content
+    assert "## 5. 対象別生成ケース一覧" in content
     assert "## 2. 旧factor互換表" not in content
+    assert "| `runtime_authorization` | 108 | 108 | 108 | 100.0% |" in content
     assert "### project_workspace Project Workspace" in content
     assert (
         "| 操作 | `create_project` | Projectを作成する | "
@@ -58,9 +60,11 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
     assert "| 要素ID | 既定要素 | 終端要素 | 期待観点 |" not in content
     assert "| ケースID | F000 | F001 | F002 | F010 |" in content
     assert (
-        "| ケースID | 目的 | Project | API | Goal Variant | Component Variant | Runtime期待 |"
+        "| ケースID | Coverage Group | Goal Component | 目的 | Project | API | "
+        "Goal Variant | Component Variant | Runtime期待 |"
         in content
     )
+    assert len(TARGET_CASES) == 744
     assert "主な要因" not in content
     for step in FLOW_STEPS:
         assert f"`{step.operation}`" in content
@@ -70,6 +74,8 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
         assert case.case_id in rendered[tmp_path / "api_access_lifecycle/pruned-cases_gen.csv"]
     assert "| `TC003` | 成功: appが応答可能 | reviewer以外 |" in content
     assert "`TC_TARGET_001`" in content
+    assert "`TC_TARGET_744`" in content
+    assert "`component_variant`" in content
     assert (
         "`runtime_authorization.invoke_runtime_api.project_A.API_A.allowed"
         "@approved_runtime_credential`"

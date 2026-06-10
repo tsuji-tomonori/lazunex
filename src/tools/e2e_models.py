@@ -1,9 +1,23 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
+from pathlib import Path
+
+import yaml
 
 FLOW_ID = "api_access_lifecycle"
 FLOW_TITLE = "API access lifecycle"
+E2E_SPEC_ROOT = Path("docs/spec/50.e2e") / FLOW_ID
+COMPONENT_IDS = (
+    "api_catalog",
+    "project_workspace",
+    "access_request_workflow",
+    "review_decision",
+    "entitlement_provisioning",
+    "runtime_authorization",
+    "audit_recovery",
+)
 
 
 @dataclass(frozen=True)
@@ -77,9 +91,32 @@ class E2eRuntimeAssertion:
 class E2eTargetCase:
     case_id: str
     title: str
+    coverage_group: str
+    goal_component: str
     goal_variant: str
     selected_variants: tuple[str, ...]
     runtime_assertions: tuple[E2eRuntimeAssertion, ...] = ()
+
+
+@dataclass(frozen=True)
+class E2eComponentVariant:
+    component_id: str
+    action_id: str
+    project_id: str | None
+    api_id: str | None
+    state_id: str
+    data_id: str
+    continue_flow: bool
+
+    @property
+    def variant_id(self) -> str:
+        parts = [self.component_id, self.action_id]
+        if self.project_id is not None:
+            parts.append(self.project_id)
+        if self.api_id is not None:
+            parts.append(self.api_id)
+        parts.append(self.state_id)
+        return f"{'.'.join(parts)}@{self.data_id}"
 
 
 @dataclass(frozen=True)
@@ -292,6 +329,170 @@ def target_component_variant_id(
     return f"{'.'.join(parts)}@{data_id}"
 
 
+def as_mapping(value: object) -> Mapping[str, object]:
+    return value if isinstance(value, Mapping) else {}
+
+
+def as_sequence(value: object) -> tuple[object, ...]:
+    return tuple(value) if isinstance(value, list | tuple) else ()
+
+
+def scalar_text(value: object, default: str = "-") -> str:
+    return value if isinstance(value, str) else default
+
+
+def load_component_yaml(component_id: str, filename: str) -> Mapping[str, object]:
+    path = E2E_SPEC_ROOT / "components" / component_id / filename
+    return as_mapping(yaml.safe_load(path.read_text(encoding="utf-8")))
+
+
+def action_targets(action: Mapping[str, object]) -> tuple[tuple[str | None, str | None], ...]:
+    target = action.get("target")
+    target_ids = set(as_sequence(target)) if isinstance(target, list) else {target}
+    uses_project = "project" in target_ids
+    uses_api = "api" in target_ids
+    projects: tuple[E2eTarget | None, ...] = PROJECT_TARGETS if uses_project else (None,)
+    apis: tuple[E2eTarget | None, ...] = API_TARGETS if uses_api else (None,)
+    return tuple(
+        (
+            project.target_id if project is not None else None,
+            api.target_id if api is not None else None,
+        )
+        for project in projects
+        for api in apis
+    )
+
+
+def build_component_variants() -> tuple[E2eComponentVariant, ...]:
+    variants: list[E2eComponentVariant] = []
+    for component_id in COMPONENT_IDS:
+        actions_doc = load_component_yaml(component_id, "actions.manual.yaml")
+        states_doc = load_component_yaml(component_id, "states.manual.yaml")
+        data_doc = load_component_yaml(component_id, "data.manual.yaml")
+        actions = [as_mapping(action) for action in as_sequence(actions_doc.get("actions"))]
+        states = [as_mapping(state) for state in as_sequence(states_doc.get("states"))]
+        data_profiles = [
+            as_mapping(data_profile)
+            for data_profile in as_sequence(data_doc.get("data_profiles"))
+        ]
+        for action in actions:
+            action_id = scalar_text(action.get("id"))
+            for project_id, api_id in action_targets(action):
+                for state in states:
+                    state_id = scalar_text(state.get("id"))
+                    continue_flow = state.get("continue_flow")
+                    for data_profile in data_profiles:
+                        variants.append(
+                            E2eComponentVariant(
+                                component_id,
+                                action_id,
+                                project_id,
+                                api_id,
+                                state_id,
+                                scalar_text(data_profile.get("id")),
+                                continue_flow if isinstance(continue_flow, bool) else False,
+                            )
+                        )
+    return tuple(variants)
+
+
+def default_project_variant(project_id: str) -> str:
+    return (
+        "project_workspace.create_project."
+        f"{project_id}.provisioned@project_default"
+    )
+
+
+def default_api_variant(api_id: str) -> str:
+    return f"api_catalog.publish_api.{api_id}.published@api_default"
+
+
+def default_access_request_variant(project_id: str, api_id: str) -> str:
+    return (
+        "access_request_workflow.submit_request."
+        f"{project_id}.{api_id}.submitted@request_both_auth"
+    )
+
+
+def default_approve_variant(project_id: str, api_id: str) -> str:
+    return f"review_decision.approve_request.{project_id}.{api_id}.approved@approve_both"
+
+
+def default_reject_variant(project_id: str, api_id: str) -> str:
+    return f"review_decision.reject_request.{project_id}.{api_id}.rejected@reject_default"
+
+
+def default_entitlement_variant(project_id: str, api_id: str) -> str:
+    return (
+        "entitlement_provisioning.provision_entitlement."
+        f"{project_id}.{api_id}.provisioned@approved_both_entitlement"
+    )
+
+
+def prerequisites_for_component_variant(variant: E2eComponentVariant) -> tuple[str, ...]:
+    project_id = variant.project_id
+    api_id = variant.api_id
+    prerequisites: list[str] = []
+    if variant.component_id == "api_catalog":
+        if variant.action_id == "browse_api" and api_id is not None:
+            prerequisites.append(default_api_variant(api_id))
+    elif variant.component_id == "project_workspace":
+        if variant.action_id == "update_public_client" and project_id is not None:
+            prerequisites.append(default_project_variant(project_id))
+    elif variant.component_id == "access_request_workflow" and project_id and api_id:
+        prerequisites.extend((default_api_variant(api_id), default_project_variant(project_id)))
+    elif variant.component_id == "review_decision" and project_id and api_id:
+        prerequisites.extend(
+            (
+                default_api_variant(api_id),
+                default_project_variant(project_id),
+                default_access_request_variant(project_id, api_id),
+            )
+        )
+    elif variant.component_id == "entitlement_provisioning" and project_id and api_id:
+        prerequisites.extend(
+            (
+                default_api_variant(api_id),
+                default_project_variant(project_id),
+                default_access_request_variant(project_id, api_id),
+                (
+                    default_reject_variant(project_id, api_id)
+                    if variant.state_id == "not_provisioned"
+                    else default_approve_variant(project_id, api_id)
+                ),
+            )
+        )
+    elif variant.component_id == "runtime_authorization" and project_id and api_id:
+        prerequisites.extend(
+            (
+                default_api_variant(api_id),
+                default_project_variant(project_id),
+                default_access_request_variant(project_id, api_id),
+                default_approve_variant(project_id, api_id),
+                default_entitlement_variant(project_id, api_id),
+            )
+        )
+    elif variant.component_id == "audit_recovery":
+        if api_id is not None:
+            prerequisites.append(default_api_variant(api_id))
+        if project_id is not None:
+            prerequisites.append(default_project_variant(project_id))
+    return tuple(dict.fromkeys(item for item in prerequisites if item != variant.variant_id))
+
+
+def component_variant_title(variant: E2eComponentVariant) -> str:
+    targets = " / ".join(
+        target
+        for target in (variant.project_id, variant.api_id)
+        if target is not None
+    )
+    target_label = f"{targets} " if targets else ""
+    return (
+        f"{target_label}{variant.component_id}.{variant.action_id} "
+        f"{variant.state_id}@{variant.data_id} を主役にする"
+    )
+
+
 def target_case_runtime_assertions(
     project: E2eTarget,
     allowed_api: E2eTarget | None,
@@ -307,116 +508,37 @@ def target_case_runtime_assertions(
 
 
 def build_target_cases() -> tuple[E2eTargetCase, ...]:
-    project = PROJECT_TARGETS[0]
-    api = API_TARGETS[0]
-    api_published = target_component_variant_id(
-        "api_catalog", "publish_api", None, api, "published", "api_default"
-    )
-    project_create = target_component_variant_id(
-        "project_workspace",
-        "create_project",
-        project,
-        None,
-        "provisioned",
-        "project_default",
-    )
-    project_update = target_component_variant_id(
-        "project_workspace",
-        "update_public_client",
-        project,
-        None,
-        "public_client_updated",
-        "redirect_url_update",
-    )
-    access_success = target_component_variant_id(
-        "access_request_workflow",
-        "submit_request",
-        project,
-        api,
-        "submitted",
-        "request_both_auth",
-    )
-    approve_success = target_component_variant_id(
-        "review_decision", "approve_request", project, api, "approved", "approve_both"
-    )
-    reject_success = target_component_variant_id(
-        "review_decision", "reject_request", project, api, "rejected", "reject_default"
-    )
-    entitlement_success = target_component_variant_id(
-        "entitlement_provisioning",
-        "provision_entitlement",
-        project,
-        api,
-        "provisioned",
-        "approved_both_entitlement",
-    )
-    entitlement_absent = target_component_variant_id(
-        "entitlement_provisioning",
-        "list_subscriptions",
-        project,
-        api,
-        "not_provisioned",
-        "rejected_no_entitlement",
-    )
-    runtime_allowed = target_component_variant_id(
-        "runtime_authorization",
-        "invoke_runtime_api",
-        project,
-        api,
-        "allowed",
-        "approved_runtime_credential",
-    )
-    runtime_denied_by_api = {
-        target_api.target_id: target_component_variant_id(
-            "runtime_authorization",
-            "invoke_unapproved_api",
-            project,
-            target_api,
-            "denied",
-            "unapproved_runtime_credential",
+    cases: list[E2eTargetCase] = []
+    for index, variant in enumerate(build_component_variants(), start=1):
+        selected_variants = (
+            *prerequisites_for_component_variant(variant),
+            variant.variant_id,
         )
-        for target_api in API_TARGETS
-    }
-    return (
-        E2eTargetCase(
-            "TC_TARGET_001",
-            "project_AでAPI_A利用申請を作成し承認する",
-            runtime_allowed,
-            (
-                api_published,
-                project_create,
-                access_success,
-                approve_success,
-                entitlement_success,
-                runtime_allowed,
-                runtime_denied_by_api["API_B"],
-                runtime_denied_by_api["API_C"],
-            ),
-            target_case_runtime_assertions(project, api),
-        ),
-        E2eTargetCase(
-            "TC_TARGET_002",
-            "project_AでAPI_A利用申請を作成し却下する",
-            reject_success,
-            (
-                api_published,
-                project_create,
-                access_success,
-                reject_success,
-                entitlement_absent,
-                runtime_denied_by_api["API_A"],
-                runtime_denied_by_api["API_B"],
-                runtime_denied_by_api["API_C"],
-            ),
-            target_case_runtime_assertions(project, None),
-        ),
-        E2eTargetCase(
-            "TC_TARGET_003",
-            "project_Aのpublic client redirect URLを更新する",
-            project_update,
-            (project_create, project_update),
-        ),
-    )
+        runtime_assertions: tuple[E2eRuntimeAssertion, ...] = ()
+        if (
+            variant.component_id == "runtime_authorization"
+            and variant.project_id is not None
+            and variant.api_id is not None
+        ):
+            runtime_assertions = (
+                E2eRuntimeAssertion(
+                    variant.project_id,
+                    variant.api_id,
+                    "allowed" if variant.state_id == "allowed" else "denied",
+                ),
+            )
+        cases.append(
+            E2eTargetCase(
+                f"TC_TARGET_{index:03d}",
+                component_variant_title(variant),
+                "component_variant",
+                variant.component_id,
+                variant.variant_id,
+                selected_variants,
+                runtime_assertions,
+            )
+        )
+    return tuple(cases)
 
 
 TARGET_CASES = build_target_cases()

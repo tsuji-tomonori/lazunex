@@ -65,40 +65,62 @@ component_variant_generation:
       state: all
       data: representative
 
-case_generation:
-  goals:
-    - id: review_result_cases
-      goal_factor: review
-    - id: project_operation_cases
-      goal_factor: project
-    - id: access_request_cases
-      goal_factor: access_request
-
 component_case_generation:
-  goals:
-    - id: approved_api_runtime_access
-      goal_component: runtime_authorization
+  default_strategy: component_variant_coverage
+  strategies:
+    - id: smoke
+      enabled: true
+      strategy: curated_goals
+      description: 代表的な成功・失敗だけを出すsmoke向けケース。
+      output_group: smoke
+
+    - id: component_variant_coverage
+      enabled: true
+      strategy: additive
+      description: 各component variantを最低1ケースのゴールにする。
+      output_group: component_variant
       include:
-        action:
-          - invoke_runtime_api
-        state:
-          - allowed
+        components: all
         project: all
         api: all
-    - id: rejected_api_runtime_denied
-      goal_component: review_decision
-      include:
-        action:
-          - reject_request
-        state:
-          - rejected
-        project: all
-        api: all
-    - id: project_workspace_behaviors
-      goal_component: project_workspace
-      include:
-        action:
-          - create_project
-          - update_public_client
+        action: all
         state: all
-        project: all
+        data: compatible
+      one_case_per_variant: true
+
+    - id: interaction_coverage
+      enabled: true
+      strategy: pairwise
+      description: 認証モードとRuntime資格情報など、重要な組み合わせだけを追加する。
+      output_group: interaction
+      groups:
+        - id: auth_mode_runtime
+          dimensions:
+            - review_decision.data.approvedAuthMode
+            - runtime_authorization.data.credential_kind
+        - id: public_client_update_after_approval
+          dimensions:
+            - review_decision.data.approvedAuthMode
+            - project_workspace.action.update_public_client
+
+pruning:
+  stop_when_continue_flow_false: true
+  remove_unreachable_dependencies: true
+  dedupe_same_goal_and_same_evidence: true
+
+coverage_assertions:
+  - id: all_component_variants_are_covered
+    type: every_variant_has_case
+    components: all
+
+  - id: every_project_is_covered
+    type: every_target_has_case
+    target_type: project
+
+  - id: every_api_is_covered
+    type: every_target_has_case
+    target_type: api
+
+  - id: every_runtime_state_is_covered
+    type: every_state_has_case
+    component: runtime_authorization
