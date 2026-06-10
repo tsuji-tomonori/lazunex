@@ -40,8 +40,20 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
     content = rendered[tmp_path / "api_access_lifecycle/case-list_gen.md"]
 
     assert "## 0. 対象フロー" in content
-    assert "## 3. 生成ケース一覧" in content
-    assert "## 4. 対象別生成ケース一覧" in content
+    assert "## 1. コンポーネントごとの要素" in content
+    assert "## 2. 旧factor互換表" in content
+    assert "## 4. 生成ケース一覧" in content
+    assert "## 5. 対象別生成ケース一覧" in content
+    assert "### project_workspace Project Workspace" in content
+    assert (
+        "| action | `create_project` | Projectを作成する | "
+        "type=command, default=provisioned |"
+    ) in content
+    assert "| state | `provisioned` | Project作成成功 | continue_flow=true |" in content
+    assert (
+        "| data | `project_default` | 標準Project | "
+        "valid_project, has_public_client, has_confidential_client |"
+    ) in content
     assert "| 要素ID | 既定要素 | 終端要素 | 期待観点 |" in content
     assert "| ケースID | F000 | F001 | F002 | F010 |" in content
     assert (
