@@ -215,7 +215,12 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
     component_variants = build_component_variants()
     variant_ids = {variant.variant_id for variant in component_variants}
     covered_goal_variants = {target_case.goal_variant for target_case in TARGET_CASES}
-    missing_variants = sorted(variant_ids - covered_goal_variants)
+    covered_selected_variants = {
+        variant_id
+        for target_case in TARGET_CASES
+        for variant_id in target_case.selected_variants
+    }
+    missing_variants = sorted(variant_ids - covered_selected_variants)
     for variant_id in missing_variants:
         errors.append(f"component variant missing target case: {variant_id}")
     unknown_goal_variants = sorted(covered_goal_variants - variant_ids)

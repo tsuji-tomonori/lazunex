@@ -53,6 +53,7 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
     assert "case-variant-index_gen.md" in content
     assert "対象別生成ケース一覧" not in content
     assert "## 2. 旧factor互換表" not in content
+    assert "| `api_catalog` | 5 | 5 | 2 | 100.0% |" in content
     assert "| `runtime_authorization` | 20 | 20 | 20 | 100.0% |" in content
     assert "### project_workspace Project Workspace" in content
     assert (
@@ -70,7 +71,7 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
     assert "<summary>Smokeケースの要因選択</summary>" in content
     assert "Goal Variant | Component Variant | Runtime期待 |" not in content
     assert "Goal Variant | Selected Variants | Runtime期待 |" in variant_index
-    assert len(TARGET_CASES) == 87
+    assert len(TARGET_CASES) == 35
     pruned_csv = rendered[tmp_path / "api_access_lifecycle/pruned-cases_gen.csv"]
     assert pruned_csv.startswith(
         "case_id,api_catalog[データ],api_catalog[操作],"
@@ -79,17 +80,18 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
     )
     assert "runtime_authorization[データ]" in pruned_csv.splitlines()[0]
     assert pruned_csv.splitlines()[0].endswith("audit_recovery[状態]")
+    assert "TC_TARGET_001,API A / 標準API,APIを公開する,API公開失敗" in pruned_csv
     assert (
-        "TC_TARGET_007,"
+        "TC_TARGET_002,"
         "API A / 未登録API,公開APIを探索する,"
         "API探索失敗,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
         in pruned_csv
     )
-    assert "TC_TARGET_001,API A / 標準API,APIを公開する,API公開成功" in pruned_csv
-    assert "TC_TARGET_002,API B / 標準API,APIを公開する,API公開成功" in pruned_csv
-    assert "TC_TARGET_003,API C / 標準API,APIを公開する,API公開成功" in pruned_csv
+    assert "TC_TARGET_015,API A / 標準API,APIを公開する,API公開成功" in pruned_csv
+    assert "TC_TARGET_016,API B / 標準API,APIを公開する,API公開成功" in pruned_csv
+    assert "TC_TARGET_017,API C / 標準API,APIを公開する,API公開成功" in pruned_csv
     assert (
-        "TC_TARGET_076,API A / 標準API,APIを公開する,"
+        "TC_TARGET_024,API A / 標準API,APIを公開する,"
         "API公開成功,Project A / 標準Project,"
         "Projectを作成する,Project作成成功,"
         in pruned_csv
@@ -100,7 +102,7 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
         in pruned_csv
     )
     assert "Project A / API A / scopeなしRuntime認証情報" in pruned_csv
-    assert pruned_csv.count("\nTC_TARGET_") == 87
+    assert pruned_csv.count("\nTC_TARGET_") == 35
     assert "\nTC001," not in pruned_csv
     assert "cases/TC001_happy_approve_and_runtime_success.gen.md" not in pruned_csv
     assert "coverage_group" not in pruned_csv
@@ -120,12 +122,12 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
         assert f"cases/{target_case.filename}" in variant_index
     assert "| 管理API呼び出し主体 | reviewer以外 |" in content
     assert "`TC_TARGET_001`" in content
-    assert "`TC_TARGET_087`" in content
+    assert "`TC_TARGET_035`" in content
     assert "`component_variant`" not in content
     assert "`component_variant`" in variant_index
-    assert "API AでAPIを公開し、API公開成功を確認する" in content
+    assert "API AでAPIを公開し、API公開失敗を確認する" in content
     assert (
-        "| Project A | `TC_TARGET_016` | `TC_TARGET_017` | `TC_TARGET_018` |"
+        "| Project A | `TC_TARGET_008` | `TC_TARGET_016` | `TC_TARGET_017` |"
         in content
     )
     assert (
@@ -149,7 +151,13 @@ def test_e2e_scenarios_keep_secret_placeholders(tmp_path: Path) -> None:
     assert "TC001_happy_approve_and_runtime_success.gen.md" not in {
         path.name for path in rendered
     }
-    target_case = TARGET_CASES[0]
+    target_case = next(
+        case
+        for case in TARGET_CASES
+        if case.goal_variant
+        == "runtime_authorization.invoke_runtime_api.project_A.API_A."
+        "allowed@approved_runtime_credential"
+    )
     content = rendered[tmp_path / "api_access_lifecycle/cases" / target_case.filename]
 
     assert "${project_api_key}" in content

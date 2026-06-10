@@ -282,28 +282,27 @@ def render_project_api_matrices(
         "",
     ]
     for component_id in matrix_components:
-        component_cases = [
-            target_case
-            for target_case in TARGET_CASES
-            if target_case.goal_component == component_id
-        ]
         grouped: dict[str, dict[tuple[str, str], str]] = {}
-        for target_case in component_cases:
-            variant = parse_variant(target_case.goal_variant, variants=variants)
-            if variant.project_id is None or variant.api_id is None:
-                continue
-            state = title_only(
-                variant.state_id,
-                titles[component_id].get(f"state:{variant.state_id}"),
-            )
-            data = title_only(
-                variant.data_id,
-                titles[component_id].get(f"data:{variant.data_id}"),
-            )
-            key = f"{state} / {data}"
-            grouped.setdefault(key, {})[(variant.project_id, variant.api_id)] = (
-                target_case.case_id
-            )
+        for target_case in TARGET_CASES:
+            for variant_id in target_case.selected_variants:
+                variant = parse_variant(variant_id, variants=variants)
+                if variant.component_id != component_id:
+                    continue
+                if variant.project_id is None or variant.api_id is None:
+                    continue
+                state = title_only(
+                    variant.state_id,
+                    titles[component_id].get(f"state:{variant.state_id}"),
+                )
+                data = title_only(
+                    variant.data_id,
+                    titles[component_id].get(f"data:{variant.data_id}"),
+                )
+                key = f"{state} / {data}"
+                grouped.setdefault(key, {}).setdefault(
+                    (variant.project_id, variant.api_id),
+                    target_case.case_id,
+                )
         if not grouped:
             continue
         component_title = titles[component_id].get("component", component_id)
@@ -565,10 +564,14 @@ def render_coverage_summary(variants: Sequence[E2eComponentVariant]) -> list[str
     lines = [
         "## 2. Coverage summary",
         "",
-        "| Component | Variants | Covered variants | Cases | Coverage |",
+        "| Component | Variants | Covered variants | Goal cases | Coverage |",
         "|---|---:|---:|---:|---:|",
     ]
-    covered_variants = {target_case.goal_variant for target_case in TARGET_CASES}
+    covered_variants = {
+        variant_id
+        for target_case in TARGET_CASES
+        for variant_id in target_case.selected_variants
+    }
     for component in COMPONENT_IDS:
         component_variants = [
             variant.variant_id for variant in variants if variant.component_id == component
@@ -700,6 +703,11 @@ def render_case_list_markdown(root: Path = Path("docs/spec/50.e2e")) -> str:
             "| `P003` | approve失敗 | Runtime API呼び出しを除外 | subscription/scopeが存在しない |",
             "| `P004` | terminal step/status/reasonが同一 | 等価ケースを統合 | "
             "E2Eの重複実行を避ける |",
+            "| `P005` | `continue_flow=false` の失敗系 | Project/APIを代表targetへ集約 | "
+            "データ種別や対象差で期待結果が変わらない失敗系を重複実行しない |",
+            "| `P006` | 後続ケースの前提variantとして検証される正常系 | "
+            "単独goal caseを生成しない | "
+            "API公開、Project作成、利用申請、承認成功はRuntime等の後続ケースに内包する |",
             "",
         ]
     )

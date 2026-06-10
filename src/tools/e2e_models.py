@@ -375,7 +375,12 @@ def target_coverage_policy(
     state: Mapping[str, object],
     data_profile: Mapping[str, object],
 ) -> str:
-    for source in (data_profile, state, action):
+    state_value = state.get("target_coverage")
+    if isinstance(state_value, str):
+        return state_value
+    if state.get("continue_flow") is False:
+        return "canonical_pair"
+    for source in (data_profile, action):
         value = source.get("target_coverage")
         if isinstance(value, str):
             return value
@@ -630,9 +635,31 @@ def target_case_runtime_assertions(
     )
 
 
+def embedded_goal_variant(variant: E2eComponentVariant) -> bool:
+    embedded_goals = {
+        ("api_catalog", "publish_api", "published", "api_default"),
+        ("project_workspace", "create_project", "provisioned", "project_default"),
+        (
+            "access_request_workflow",
+            "submit_request",
+            "submitted",
+            "request_both_auth",
+        ),
+        ("review_decision", "approve_request", "approved", "approve_both"),
+    }
+    return (
+        variant.component_id,
+        variant.action_id,
+        variant.state_id,
+        variant.data_id,
+    ) in embedded_goals
+
+
 def build_target_cases() -> tuple[E2eTargetCase, ...]:
     cases: list[E2eTargetCase] = []
-    for index, variant in enumerate(build_component_variants(), start=1):
+    for variant in build_component_variants():
+        if embedded_goal_variant(variant):
+            continue
         selected_variants = (
             *prerequisites_for_component_variant(variant),
             variant.variant_id,
@@ -652,7 +679,7 @@ def build_target_cases() -> tuple[E2eTargetCase, ...]:
             )
         cases.append(
             E2eTargetCase(
-                f"TC_TARGET_{index:03d}",
+                f"TC_TARGET_{len(cases) + 1:03d}",
                 component_variant_title(variant),
                 "component_variant",
                 variant.component_id,

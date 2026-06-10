@@ -11,6 +11,10 @@ rules:
 component_pruning:
   - id: stop_when_continue_flow_false
     description: component state の continue_flow が false の場合、依存する後続componentを除外する。
+  - id: canonical_target_for_continue_flow_false
+    description: continue_flow が false の失敗系は、対象差で期待結果が変わらないため代表Project/APIだけを生成する。
+  - id: embed_success_prerequisite_goals
+    description: API公開成功、Project作成成功、利用申請成功、承認成功は後続ケースの前提variantとして確認し、単独goal caseを生成しない。
   - id: remove_unreachable_dependencies
     description: 前提component stateが成立しないgoal variantは生成対象から除外する。
   - id: dedupe_same_component_state_evidences
