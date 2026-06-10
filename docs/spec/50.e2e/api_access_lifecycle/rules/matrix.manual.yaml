@@ -20,6 +20,51 @@ variant_generation:
       results: all
       data: compatible
 
+component_variant_generation:
+  dimensions:
+    api_catalog:
+      api: all
+      action: all
+      state: all
+      data: compatible
+    project_workspace:
+      project: all
+      action: all
+      state: all
+      data: compatible
+    access_request_workflow:
+      project: all
+      api: all
+      action: all
+      state: all
+      data: compatible
+    review_decision:
+      project: all
+      api: all
+      action:
+        - approve_request
+        - reject_request
+      state: all
+      data: compatible
+    entitlement_provisioning:
+      project: all
+      api: all
+      action: all
+      state: all
+      data: compatible
+    runtime_authorization:
+      project: all
+      api: all
+      action: all
+      state: all
+      data: compatible
+    audit_recovery:
+      project: all
+      api: all
+      action: representative
+      state: all
+      data: representative
+
 case_generation:
   goals:
     - id: review_result_cases
@@ -28,3 +73,32 @@ case_generation:
       goal_factor: project
     - id: access_request_cases
       goal_factor: access_request
+
+component_case_generation:
+  goals:
+    - id: approved_api_runtime_access
+      goal_component: runtime_authorization
+      include:
+        action:
+          - invoke_runtime_api
+        state:
+          - allowed
+        project: all
+        api: all
+    - id: rejected_api_runtime_denied
+      goal_component: review_decision
+      include:
+        action:
+          - reject_request
+        state:
+          - rejected
+        project: all
+        api: all
+    - id: project_workspace_behaviors
+      goal_component: project_workspace
+      include:
+        action:
+          - create_project
+          - update_public_client
+        state: all
+        project: all

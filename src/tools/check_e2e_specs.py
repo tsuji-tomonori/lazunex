@@ -150,6 +150,53 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
         ):
             if dependency_id not in dependencies:
                 errors.append(f"flow missing dependency: {dependency_id}")
+        component_sequence = flow_mapping.get("component_sequence")
+        if not isinstance(component_sequence, list):
+            errors.append("flow missing component_sequence")
+        else:
+            for component_id in COMPONENT_IDS:
+                if component_id not in component_sequence:
+                    errors.append(f"flow component_sequence missing: {component_id}")
+        component_dependencies = {
+            dependency_mapping.get("id")
+            for dependency in as_list(flow_mapping.get("component_dependencies"))
+            if isinstance(dependency, Mapping)
+            for dependency_mapping in [cast(Mapping[str, object], dependency)]
+        }
+        for dependency_id in (
+            "request_requires_project_and_api",
+            "review_requires_pending_request",
+            "entitlement_requires_approved_review",
+            "runtime_allowed_requires_entitlement",
+        ):
+            if dependency_id not in component_dependencies:
+                errors.append(f"flow missing component dependency: {dependency_id}")
+
+    matrix_path = flow_root / "rules" / "matrix.manual.yaml"
+    if matrix_path.exists():
+        matrix = yaml.safe_load(matrix_path.read_text(encoding="utf-8"))
+        if isinstance(matrix, Mapping):
+            component_variant_generation = as_mapping(
+                matrix.get("component_variant_generation")
+            )
+            component_dimensions = as_mapping(component_variant_generation.get("dimensions"))
+            for component_id in COMPONENT_IDS:
+                if component_id not in component_dimensions:
+                    errors.append(f"matrix missing component dimension: {component_id}")
+            component_case_generation = as_mapping(matrix.get("component_case_generation"))
+            goal_ids = {
+                goal_mapping.get("id")
+                for goal in as_list(component_case_generation.get("goals"))
+                if isinstance(goal, Mapping)
+                for goal_mapping in [cast(Mapping[str, object], goal)]
+            }
+            for goal_id in (
+                "approved_api_runtime_access",
+                "rejected_api_runtime_denied",
+                "project_workspace_behaviors",
+            ):
+                if goal_id not in goal_ids:
+                    errors.append(f"matrix missing component case goal: {goal_id}")
 
     factor_ids = {factor.factor_id for factor in FACTORS}
     factor_elements = {
@@ -178,6 +225,14 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
                 if heading not in scenario:
                     errors.append(f"{case.case_id}: scenario missing heading {heading}")
     return errors
+
+
+def as_mapping(value: object) -> Mapping[str, object]:
+    return cast(Mapping[str, object], value) if isinstance(value, Mapping) else {}
+
+
+def as_list(value: object) -> list[object]:
+    return cast(list[object], value) if isinstance(value, list) else []
 
 
 def main(argv: Sequence[str] | None = None) -> int:

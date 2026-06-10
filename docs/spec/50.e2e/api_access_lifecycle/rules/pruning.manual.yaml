@@ -7,3 +7,38 @@ rules:
     description: access_request/review は同一Projectのcreate successを前提にする。
   - id: require_access_request_apply
     description: review は同一Project/APIのapply successを前提にする。
+
+component_pruning:
+  - id: stop_when_continue_flow_false
+    description: component state の continue_flow が false の場合、依存する後続componentを除外する。
+  - id: remove_unreachable_dependencies
+    description: 前提component stateが成立しないgoal variantは生成対象から除外する。
+  - id: dedupe_same_component_state_evidences
+    description: 同じcomponent stateを証明する同一evidenceはケース内で重複させない。
+
+state_rules:
+  - id: project_create_failure_stops_lifecycle
+    when:
+      component: project_workspace
+      state: provision_failed
+    skip_components:
+      - access_request_workflow
+      - review_decision
+      - entitlement_provisioning
+      - runtime_authorization
+  - id: rejected_request_skips_entitlement
+    when:
+      component: review_decision
+      state: rejected
+    expected_components:
+      - runtime_authorization
+    skip_components:
+      - entitlement_provisioning
+  - id: entitlement_partial_failure_stops_runtime_allowed
+    when:
+      component: entitlement_provisioning
+      state: partially_failed
+    skip_actions:
+      - component: runtime_authorization
+        action: invoke_runtime_api
+        state: allowed

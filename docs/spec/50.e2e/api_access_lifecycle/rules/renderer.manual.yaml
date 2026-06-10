@@ -14,6 +14,12 @@ case_markdown:
     - id: evidences
       title: エビデンス
 
+component_source_mapping:
+  targets: selected targets / evidence targets
+  overview: component action sequence
+  details: actionを実現するsteps
+  evidences: component invariant evidence
+
 evidence_numbering:
   prefix: E
   start: 1

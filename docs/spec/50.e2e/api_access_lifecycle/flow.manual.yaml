@@ -96,6 +96,15 @@ sequence:
   - factor: access_request
   - factor: review
 
+component_sequence:
+  - api_catalog
+  - project_workspace
+  - access_request_workflow
+  - review_decision
+  - entitlement_provisioning
+  - runtime_authorization
+  - audit_recovery
+
 dependencies:
   - id: access_request_requires_project
     from:
@@ -125,6 +134,48 @@ dependencies:
       same_project: true
       operation: create
       result: success
+
+component_dependencies:
+  - id: request_requires_project_and_api
+    from:
+      component: access_request_workflow
+      action: submit_request
+    requires:
+      - component: project_workspace
+        same_project: true
+        state: provisioned
+      - component: api_catalog
+        same_api: true
+        state: published
+
+  - id: review_requires_pending_request
+    from:
+      component: review_decision
+    requires:
+      - component: access_request_workflow
+        same_project: true
+        same_api: true
+        state: submitted
+
+  - id: entitlement_requires_approved_review
+    from:
+      component: entitlement_provisioning
+    requires:
+      - component: review_decision
+        same_project: true
+        same_api: true
+        action: approve_request
+        state: approved
+
+  - id: runtime_allowed_requires_entitlement
+    from:
+      component: runtime_authorization
+      action: invoke_runtime_api
+    requires:
+      - component: entitlement_provisioning
+        same_project: true
+        same_api: true
+        state: provisioned
 
 case_policy:
   generation_source: generated/effective factor YAML
