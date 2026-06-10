@@ -382,6 +382,132 @@ def render_target_runtime_assertions(target_case: E2eTargetCase) -> list[str]:
     return lines
 
 
+def component_yaml(component_id: str, filename: str) -> Mapping[str, object]:
+    return load_yaml(Path("docs/spec/50.e2e") / FLOW_ID / "components" / component_id / filename)
+
+
+def component_data_tags(component_id: str, data_id: str) -> set[str]:
+    content = component_yaml(component_id, "data.manual.yaml")
+    for item in as_sequence(content.get("data_profiles")):
+        data = as_mapping(item)
+        if data.get("id") == data_id:
+            return {tag for tag in as_sequence(data.get("tags")) if isinstance(tag, str)}
+    return set()
+
+
+def component_evidences(component_id: str) -> Mapping[str, Mapping[str, object]]:
+    content = component_yaml(component_id, "evidences.manual.yaml")
+    return {
+        evidence_id: evidence
+        for item in as_sequence(content.get("evidences"))
+        for evidence in [as_mapping(item)]
+        for evidence_id in [evidence.get("id")]
+        if isinstance(evidence_id, str)
+    }
+
+
+def component_bindings(component_id: str) -> Sequence[Mapping[str, object]]:
+    content = component_yaml(component_id, "bindings.manual.yaml")
+    return [as_mapping(item) for item in as_sequence(content.get("bindings"))]
+
+
+def target_binding_matches(
+    binding: Mapping[str, object],
+    *,
+    action_id: str,
+    state_id: str,
+    tags: set[str],
+) -> bool:
+    when = as_mapping(binding.get("when"))
+    if when.get("action") not in (None, action_id):
+        return False
+    if when.get("state") not in (None, state_id):
+        return False
+    required_tags = {
+        tag
+        for tag in as_sequence(as_mapping(when.get("data_tags")).get("include"))
+        if isinstance(tag, str)
+    }
+    return required_tags <= tags
+
+
+def expand_target_value(
+    value: str,
+    *,
+    target_case: E2eTargetCase,
+    project_id: str,
+    api_id: str,
+) -> str:
+    return (
+        value.replace("${case.id}", target_case.case_id)
+        .replace("${project.id}", project_id)
+        .replace("${api.id}", api_id)
+        .replace("${foreach.api.id}", api_id)
+    )
+
+
+def render_target_evidences(target_case: E2eTargetCase) -> list[str]:
+    lines = [
+        "| No | Component | Variant | エビデンス | 取得方法 | OK条件 | 保存名 |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    rows: list[tuple[str, str, str, str, str, str]] = []
+    for variant_id in target_case.selected_variants:
+        component_id, action_id, project_id, api_id, state_id, data_id = parse_component_variant(
+            variant_id
+        )
+        tags = component_data_tags(component_id, data_id)
+        matched_bindings = [
+            binding
+            for binding in component_bindings(component_id)
+            if target_binding_matches(
+                binding,
+                action_id=action_id,
+                state_id=state_id,
+                tags=tags,
+            )
+        ]
+        evidence_map = component_evidences(component_id)
+        for binding in matched_bindings:
+            for evidence_ref in as_sequence(binding.get("evidences")):
+                evidence_id = as_mapping(evidence_ref).get("ref")
+                if not isinstance(evidence_id, str) or evidence_id not in evidence_map:
+                    continue
+                evidence = evidence_map[evidence_id]
+                collector = as_mapping(evidence.get("collector"))
+                collector_step = scalar_text(collector.get("step"))
+                rows.append(
+                    (
+                        component_id,
+                        variant_id,
+                        scalar_text(evidence.get("title")),
+                        collector_step,
+                        expand_target_value(
+                            scalar_text(evidence.get("ok_condition")),
+                            target_case=target_case,
+                            project_id=project_id,
+                            api_id=api_id,
+                        ),
+                        expand_target_value(
+                            scalar_text(evidence.get("save_as")),
+                            target_case=target_case,
+                            project_id=project_id,
+                            api_id=api_id,
+                        ),
+                    )
+                )
+    for index, (component_id, variant_id, title, collector, ok_condition, save_as) in enumerate(
+        rows,
+        start=1,
+    ):
+        lines.append(
+            f"| E{index} | `{component_id}` | `{variant_id}` | "
+            f"{markdown_escape(title)} | `{collector}` | "
+            f"{markdown_escape(ok_condition)} | `{save_as}` |"
+        )
+    return lines
+
+
 def render_target_scenario_markdown(target_case: E2eTargetCase) -> str:
     lines = [
         GENERATED_COMMENT,
@@ -415,6 +541,10 @@ def render_target_scenario_markdown(target_case: E2eTargetCase) -> str:
         *render_target_variant_rows(target_case),
         "",
         "## 4. エビデンス",
+        "",
+        "### Component Evidence",
+        "",
+        *render_target_evidences(target_case),
         "",
         "### Runtime期待",
         "",

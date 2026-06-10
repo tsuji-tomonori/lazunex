@@ -26,3 +26,27 @@ bindings:
       - ref: steps/management_api/get_api.step.manual.yaml
     evidences:
       - ref: api_search_hit
+
+  - id: publish_api_failed
+    when:
+      action: publish_api
+      state: publish_failed
+      data_tags:
+        include:
+          - valid_api
+    steps:
+      - ref: steps/management_api/publish_api.step.manual.yaml
+    evidences:
+      - ref: api_publish_failed_response
+
+  - id: browse_api_not_found
+    when:
+      action: browse_api
+      state: not_found
+      data_tags:
+        include:
+          - unknown_api
+    steps:
+      - ref: steps/management_api/get_api.step.manual.yaml
+    evidences:
+      - ref: api_not_found_response

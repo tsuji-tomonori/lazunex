@@ -43,6 +43,16 @@ project_B / API_A access_request_workflow.submit_request submitted@request_both_
 
 ## 4. エビデンス
 
+### Component Evidence
+
+| No | Component | Variant | エビデンス | 取得方法 | OK条件 | 保存名 |
+|---|---|---|---|---|---|---|
+| E1 | `api_catalog` | `api_catalog.publish_api.API_A.published@api_default` | API一覧で公開済みAPIが表示される | `steps/management_api/list_apis.step.manual.yaml` | API_A が検索結果に表示され、stageとscopeを参照できる。 | `TC_TARGET_019_E_api_search_API_A.json` |
+| E2 | `api_catalog` | `api_catalog.publish_api.API_A.published@api_default` | API詳細が公開入力と一致する | `steps/management_api/get_api.step.manual.yaml` | API詳細にstage、scope、reviewerPrincipalIdsが含まれる。 | `TC_TARGET_019_E_api_detail_API_A.json` |
+| E3 | `project_workspace` | `project_workspace.create_project.project_B.provisioned@project_default` | プロジェクト検索でヒットする | `steps/management_api/list_projects.step.manual.yaml` | project_B が検索結果に表示され、derivedState=ACTIVEである。 | `TC_TARGET_019_E_project_search_project_B.json` |
+| E4 | `project_workspace` | `project_workspace.create_project.project_B.provisioned@project_default` | secret値が再表示されない | `steps/management_api/get_project.step.manual.yaml` | API key値とclient secret値がレスポンスに含まれない。 | `TC_TARGET_019_E_project_secret_mask_project_B.json` |
+| E5 | `access_request_workflow` | `access_request_workflow.submit_request.project_B.API_A.submitted@request_both_auth` | 利用申請一覧にPENDINGとして表示される | `steps/management_api/list_access_requests.step.manual.yaml` | project_B x API_A の申請がPENDINGで表示される。 | `TC_TARGET_019_E_access_request_pending_project_B_API_A.json` |
+
 ### Runtime期待
 
 | Project | API | 期待 |

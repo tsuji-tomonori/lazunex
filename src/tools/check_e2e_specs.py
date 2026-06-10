@@ -7,6 +7,7 @@ from typing import cast
 
 import yaml
 
+from tools.check_e2e_case_evidences import check_case_evidences
 from tools.e2e_models import (
     API_TARGETS,
     CASES,
@@ -277,6 +278,7 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
             ):
                 if heading not in scenario:
                     errors.append(f"{case.case_id}: scenario missing heading {heading}")
+    errors.extend(check_case_evidences(root))
     return errors
 
 

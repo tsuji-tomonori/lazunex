@@ -14,3 +14,10 @@ evidences:
       step: steps/management_api/create_access_request.step.manual.yaml
     ok_condition: HTTP 409で同一Project/API stageのPENDING申請が存在する理由を返す。
     save_as: ${case.id}_E_access_request_duplicate_${project.id}_${api.id}.json
+
+  - id: existing_subscription_request_rejected
+    title: 既存subscriptionありの申請が拒否される
+    collector:
+      step: steps/management_api/create_access_request.step.manual.yaml
+    ok_condition: HTTP 409で同一Project/API stageのACTIVE subscriptionが存在する理由を返す。
+    save_as: ${case.id}_E_access_request_existing_subscription_${project.id}_${api.id}.json

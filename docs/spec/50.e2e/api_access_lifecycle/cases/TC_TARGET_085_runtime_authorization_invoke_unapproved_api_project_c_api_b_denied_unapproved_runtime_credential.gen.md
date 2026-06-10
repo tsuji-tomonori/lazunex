@@ -49,6 +49,19 @@ project_C / API_B runtime_authorization.invoke_unapproved_api denied@unapproved_
 
 ## 4. エビデンス
 
+### Component Evidence
+
+| No | Component | Variant | エビデンス | 取得方法 | OK条件 | 保存名 |
+|---|---|---|---|---|---|---|
+| E1 | `api_catalog` | `api_catalog.publish_api.API_B.published@api_default` | API一覧で公開済みAPIが表示される | `steps/management_api/list_apis.step.manual.yaml` | API_B が検索結果に表示され、stageとscopeを参照できる。 | `TC_TARGET_085_E_api_search_API_B.json` |
+| E2 | `api_catalog` | `api_catalog.publish_api.API_B.published@api_default` | API詳細が公開入力と一致する | `steps/management_api/get_api.step.manual.yaml` | API詳細にstage、scope、reviewerPrincipalIdsが含まれる。 | `TC_TARGET_085_E_api_detail_API_B.json` |
+| E3 | `project_workspace` | `project_workspace.create_project.project_C.provisioned@project_default` | プロジェクト検索でヒットする | `steps/management_api/list_projects.step.manual.yaml` | project_C が検索結果に表示され、derivedState=ACTIVEである。 | `TC_TARGET_085_E_project_search_project_C.json` |
+| E4 | `project_workspace` | `project_workspace.create_project.project_C.provisioned@project_default` | secret値が再表示されない | `steps/management_api/get_project.step.manual.yaml` | API key値とclient secret値がレスポンスに含まれない。 | `TC_TARGET_085_E_project_secret_mask_project_C.json` |
+| E5 | `access_request_workflow` | `access_request_workflow.submit_request.project_C.API_B.submitted@request_both_auth` | 利用申請一覧にPENDINGとして表示される | `steps/management_api/list_access_requests.step.manual.yaml` | project_C x API_B の申請がPENDINGで表示される。 | `TC_TARGET_085_E_access_request_pending_project_C_API_B.json` |
+| E6 | `review_decision` | `review_decision.approve_request.project_C.API_B.approved@approve_both` | 利用申請がAPPROVEDとして表示される | `steps/management_api/list_access_requests.step.manual.yaml` | 対象申請のstatusがAPPROVEDで、reviewCommentとreviewedAtが記録されている。 | `TC_TARGET_085_E_access_request_approved_project_C_API_B.json` |
+| E7 | `entitlement_provisioning` | `entitlement_provisioning.provision_entitlement.project_C.API_B.provisioned@approved_both_entitlement` | subscriptionがACTIVEとして表示される | `steps/management_api/list_subscriptions.step.manual.yaml` | project_C x API_B のsubscriptionがACTIVEで表示される。 | `TC_TARGET_085_E_subscription_active_project_C_API_B.json` |
+| E8 | `runtime_authorization` | `runtime_authorization.invoke_unapproved_api.project_C.API_B.denied@unapproved_runtime_credential` | 未承認APIを呼び出せない | `steps/runtime_api/invoke_runtime_api.step.manual.yaml` | 未承認APIが403または401を返す。 | `TC_TARGET_085_E_runtime_project_C_API_B_denied.json` |
+
 ### Runtime期待
 
 | Project | API | 期待 |

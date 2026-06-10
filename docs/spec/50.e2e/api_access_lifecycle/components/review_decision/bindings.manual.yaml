@@ -24,3 +24,51 @@ bindings:
       - ref: steps/management_api/reject_access_request.step.manual.yaml
     evidences:
       - ref: access_request_rejected
+
+  - id: approve_request_forbidden
+    when:
+      action: approve_request
+      state: forbidden
+      data_tags:
+        include:
+          - approve
+    steps:
+      - ref: steps/management_api/approve_access_request.step.manual.yaml
+    evidences:
+      - ref: approve_review_forbidden_response
+
+  - id: approve_request_not_pending
+    when:
+      action: approve_request
+      state: not_pending
+      data_tags:
+        include:
+          - approve
+    steps:
+      - ref: steps/management_api/approve_access_request.step.manual.yaml
+    evidences:
+      - ref: approve_review_not_pending_response
+
+  - id: reject_request_forbidden
+    when:
+      action: reject_request
+      state: forbidden
+      data_tags:
+        include:
+          - reject
+    steps:
+      - ref: steps/management_api/reject_access_request.step.manual.yaml
+    evidences:
+      - ref: reject_review_forbidden_response
+
+  - id: reject_request_not_pending
+    when:
+      action: reject_request
+      state: not_pending
+      data_tags:
+        include:
+          - reject
+    steps:
+      - ref: steps/management_api/reject_access_request.step.manual.yaml
+    evidences:
+      - ref: reject_review_not_pending_response

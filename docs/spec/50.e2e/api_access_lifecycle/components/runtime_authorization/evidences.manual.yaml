@@ -14,3 +14,10 @@ evidences:
       step: steps/runtime_api/invoke_runtime_api.step.manual.yaml
     ok_condition: 未承認APIが403または401を返す。
     save_as: ${case.id}_E_runtime_${project.id}_${foreach.api.id}_denied.json
+
+  - id: runtime_credential_invalid
+    title: Runtime認証情報不正で呼び出せない
+    collector:
+      step: steps/runtime_api/invoke_runtime_api.step.manual.yaml
+    ok_condition: scope不足またはAPI key不足の認証情報でHTTP 401/403を返す。
+    save_as: ${case.id}_E_runtime_${project.id}_${api.id}_credential_invalid.json

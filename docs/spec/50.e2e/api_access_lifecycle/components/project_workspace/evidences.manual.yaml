@@ -23,3 +23,17 @@ evidences:
       step: steps/management_api/get_project.step.manual.yaml
     ok_condition: API key値とclient secret値がレスポンスに含まれない。
     save_as: ${case.id}_E_project_secret_mask_${project.id}.json
+
+  - id: project_provision_failed_response
+    title: Project作成失敗レスポンスを確認する
+    collector:
+      step: steps/management_api/create_project.step.manual.yaml
+    ok_condition: Project作成が失敗し、原因を示すHTTP status/bodyを返す。
+    save_as: ${case.id}_E_project_provision_failed_${project.id}.json
+
+  - id: public_client_update_failed_response
+    title: public app client更新失敗レスポンスを確認する
+    collector:
+      step: steps/management_api/update_project_public_client.step.manual.yaml
+    ok_condition: public app client更新が失敗し、原因を示すHTTP status/bodyを返す。
+    save_as: ${case.id}_E_project_public_client_update_failed_${project.id}.json

@@ -41,6 +41,14 @@ project_A project_workspace.update_public_client public_client_update_failed@red
 
 ## 4. エビデンス
 
+### Component Evidence
+
+| No | Component | Variant | エビデンス | 取得方法 | OK条件 | 保存名 |
+|---|---|---|---|---|---|---|
+| E1 | `project_workspace` | `project_workspace.create_project.project_A.provisioned@project_default` | プロジェクト検索でヒットする | `steps/management_api/list_projects.step.manual.yaml` | project_A が検索結果に表示され、derivedState=ACTIVEである。 | `TC_TARGET_015_E_project_search_project_A.json` |
+| E2 | `project_workspace` | `project_workspace.create_project.project_A.provisioned@project_default` | secret値が再表示されない | `steps/management_api/get_project.step.manual.yaml` | API key値とclient secret値がレスポンスに含まれない。 | `TC_TARGET_015_E_project_secret_mask_project_A.json` |
+| E3 | `project_workspace` | `project_workspace.update_public_client.project_A.public_client_update_failed@redirect_url_update` | public app client更新失敗レスポンスを確認する | `steps/management_api/update_project_public_client.step.manual.yaml` | public app client更新が失敗し、原因を示すHTTP status/bodyを返す。 | `TC_TARGET_015_E_project_public_client_update_failed_project_A.json` |
+
 ### Runtime期待
 
 | Project | API | 期待 |

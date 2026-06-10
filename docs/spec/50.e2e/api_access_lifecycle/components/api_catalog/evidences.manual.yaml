@@ -18,3 +18,19 @@ evidences:
         apiId: ${api.id}.apiId
     ok_condition: API詳細にstage、scope、reviewerPrincipalIdsが含まれる。
     save_as: ${case.id}_E_api_detail_${api.id}.json
+
+  - id: api_publish_failed_response
+    title: API公開失敗レスポンスを確認する
+    collector:
+      step: steps/management_api/publish_api.step.manual.yaml
+    ok_condition: API公開が失敗し、原因を示すHTTP status/bodyを返す。
+    save_as: ${case.id}_E_api_publish_failed_${api.id}.json
+
+  - id: api_not_found_response
+    title: 未登録APIが見つからないことを確認する
+    collector:
+      step: steps/management_api/get_api.step.manual.yaml
+      bind:
+        apiId: api_unknown
+    ok_condition: 未登録API参照がHTTP 404を返す。
+    save_as: ${case.id}_E_api_not_found_${api.id}.json

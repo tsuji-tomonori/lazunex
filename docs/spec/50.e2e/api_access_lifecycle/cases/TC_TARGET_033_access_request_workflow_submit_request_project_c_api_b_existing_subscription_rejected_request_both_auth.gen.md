@@ -43,6 +43,16 @@ project_C / API_B access_request_workflow.submit_request existing_subscription_r
 
 ## 4. エビデンス
 
+### Component Evidence
+
+| No | Component | Variant | エビデンス | 取得方法 | OK条件 | 保存名 |
+|---|---|---|---|---|---|---|
+| E1 | `api_catalog` | `api_catalog.publish_api.API_B.published@api_default` | API一覧で公開済みAPIが表示される | `steps/management_api/list_apis.step.manual.yaml` | API_B が検索結果に表示され、stageとscopeを参照できる。 | `TC_TARGET_033_E_api_search_API_B.json` |
+| E2 | `api_catalog` | `api_catalog.publish_api.API_B.published@api_default` | API詳細が公開入力と一致する | `steps/management_api/get_api.step.manual.yaml` | API詳細にstage、scope、reviewerPrincipalIdsが含まれる。 | `TC_TARGET_033_E_api_detail_API_B.json` |
+| E3 | `project_workspace` | `project_workspace.create_project.project_C.provisioned@project_default` | プロジェクト検索でヒットする | `steps/management_api/list_projects.step.manual.yaml` | project_C が検索結果に表示され、derivedState=ACTIVEである。 | `TC_TARGET_033_E_project_search_project_C.json` |
+| E4 | `project_workspace` | `project_workspace.create_project.project_C.provisioned@project_default` | secret値が再表示されない | `steps/management_api/get_project.step.manual.yaml` | API key値とclient secret値がレスポンスに含まれない。 | `TC_TARGET_033_E_project_secret_mask_project_C.json` |
+| E5 | `access_request_workflow` | `access_request_workflow.submit_request.project_C.API_B.existing_subscription_rejected@request_both_auth` | 既存subscriptionありの申請が拒否される | `steps/management_api/create_access_request.step.manual.yaml` | HTTP 409で同一Project/API stageのACTIVE subscriptionが存在する理由を返す。 | `TC_TARGET_033_E_access_request_existing_subscription_project_C_API_B.json` |
+
 ### Runtime期待
 
 | Project | API | 期待 |

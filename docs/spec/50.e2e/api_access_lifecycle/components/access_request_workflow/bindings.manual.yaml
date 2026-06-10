@@ -24,3 +24,15 @@ bindings:
       - ref: steps/management_api/create_access_request.step.manual.yaml
     evidences:
       - ref: duplicate_request_rejected
+
+  - id: submit_request_existing_subscription
+    when:
+      action: submit_request
+      state: existing_subscription_rejected
+      data_tags:
+        include:
+          - valid_access_request
+    steps:
+      - ref: steps/management_api/create_access_request.step.manual.yaml
+    evidences:
+      - ref: existing_subscription_request_rejected

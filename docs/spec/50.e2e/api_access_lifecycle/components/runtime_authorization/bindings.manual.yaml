@@ -24,3 +24,27 @@ bindings:
       - ref: steps/runtime_api/invoke_runtime_api.step.manual.yaml
     evidences:
       - ref: other_api_not_callable
+
+  - id: invoke_runtime_api_credential_invalid_scope_missing
+    when:
+      action: invoke_runtime_api
+      state: credential_invalid
+      data_tags:
+        include:
+          - scope_missing
+    steps:
+      - ref: steps/runtime_api/invoke_runtime_api.step.manual.yaml
+    evidences:
+      - ref: runtime_credential_invalid
+
+  - id: invoke_runtime_api_credential_invalid_api_key_missing
+    when:
+      action: invoke_runtime_api
+      state: credential_invalid
+      data_tags:
+        include:
+          - api_key_missing
+    steps:
+      - ref: steps/runtime_api/invoke_runtime_api.step.manual.yaml
+    evidences:
+      - ref: runtime_credential_invalid

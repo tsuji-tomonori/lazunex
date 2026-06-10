@@ -39,6 +39,12 @@ API_A api_catalog.publish_api publish_failed@api_default を主役にする。
 
 ## 4. エビデンス
 
+### Component Evidence
+
+| No | Component | Variant | エビデンス | 取得方法 | OK条件 | 保存名 |
+|---|---|---|---|---|---|---|
+| E1 | `api_catalog` | `api_catalog.publish_api.API_A.publish_failed@api_default` | API公開失敗レスポンスを確認する | `steps/management_api/publish_api.step.manual.yaml` | API公開が失敗し、原因を示すHTTP status/bodyを返す。 | `TC_TARGET_004_E_api_publish_failed_API_A.json` |
+
 ### Runtime期待
 
 | Project | API | 期待 |

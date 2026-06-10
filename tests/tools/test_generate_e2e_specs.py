@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import cast
 
+from tools.check_e2e_case_evidences import check_case_evidences
 from tools.check_e2e_specs import check_specs
 from tools.e2e_models import CASES, FACTORS, FLOW_STEPS, TARGET_CASES
 from tools.generate_e2e_case_list import rendered_outputs as case_list_outputs
@@ -138,6 +139,8 @@ def test_e2e_scenarios_keep_secret_placeholders(tmp_path: Path) -> None:
     assert target_case.case_id in content
     assert target_case.goal_variant in content
     assert "### Component Variant 手順" in content
+    assert "### Component Evidence" in content
+    assert "| E1 | `api_catalog` |" in content
     assert "### 選択要素" in content
     assert "| Coverage Group | `component_variant` |" in content
     catalog = load_scenario_catalog()
@@ -157,6 +160,7 @@ def test_e2e_scenarios_keep_secret_placeholders(tmp_path: Path) -> None:
         "`runtime_authorization.invoke_runtime_api.project_A.API_A.credential_invalid"
         "@scope_missing`"
     ) in runtime_content
+    assert "Runtime認証情報不正で呼び出せない" in runtime_content
     assert "| `project_A` | `API_A` | `denied` |" in runtime_content
 
 
@@ -234,3 +238,4 @@ def test_check_e2e_specs_detects_complete_rendered_tree(tmp_path: Path) -> None:
         target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
 
     assert check_specs(tmp_path) == []
+    assert check_case_evidences(tmp_path) == []

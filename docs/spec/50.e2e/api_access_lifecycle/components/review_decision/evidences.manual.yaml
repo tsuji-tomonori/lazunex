@@ -14,3 +14,31 @@ evidences:
       step: steps/management_api/list_access_requests.step.manual.yaml
     ok_condition: 対象申請のstatusがREJECTEDで、reviewCommentとreviewedAtが記録されている。
     save_as: ${case.id}_E_access_request_rejected_${project.id}_${api.id}.json
+
+  - id: approve_review_forbidden_response
+    title: reviewer以外の承認拒否レスポンスを確認する
+    collector:
+      step: steps/management_api/approve_access_request.step.manual.yaml
+    ok_condition: reviewer以外の承認操作がHTTP 403を返す。
+    save_as: ${case.id}_E_approve_forbidden_${project.id}_${api.id}.json
+
+  - id: approve_review_not_pending_response
+    title: PENDING以外の承認拒否レスポンスを確認する
+    collector:
+      step: steps/management_api/approve_access_request.step.manual.yaml
+    ok_condition: PENDING以外の申請に対する承認操作がHTTP 409を返す。
+    save_as: ${case.id}_E_approve_not_pending_${project.id}_${api.id}.json
+
+  - id: reject_review_forbidden_response
+    title: reviewer以外の却下拒否レスポンスを確認する
+    collector:
+      step: steps/management_api/reject_access_request.step.manual.yaml
+    ok_condition: reviewer以外の却下操作がHTTP 403を返す。
+    save_as: ${case.id}_E_reject_forbidden_${project.id}_${api.id}.json
+
+  - id: reject_review_not_pending_response
+    title: PENDING以外の却下拒否レスポンスを確認する
+    collector:
+      step: steps/management_api/reject_access_request.step.manual.yaml
+    ok_condition: PENDING以外の申請に対する却下操作がHTTP 409を返す。
+    save_as: ${case.id}_E_reject_not_pending_${project.id}_${api.id}.json

@@ -39,6 +39,13 @@ API_A api_catalog.publish_api published@api_default を主役にする。
 
 ## 4. エビデンス
 
+### Component Evidence
+
+| No | Component | Variant | エビデンス | 取得方法 | OK条件 | 保存名 |
+|---|---|---|---|---|---|---|
+| E1 | `api_catalog` | `api_catalog.publish_api.API_A.published@api_default` | API一覧で公開済みAPIが表示される | `steps/management_api/list_apis.step.manual.yaml` | API_A が検索結果に表示され、stageとscopeを参照できる。 | `TC_TARGET_001_E_api_search_API_A.json` |
+| E2 | `api_catalog` | `api_catalog.publish_api.API_A.published@api_default` | API詳細が公開入力と一致する | `steps/management_api/get_api.step.manual.yaml` | API詳細にstage、scope、reviewerPrincipalIdsが含まれる。 | `TC_TARGET_001_E_api_detail_API_A.json` |
+
 ### Runtime期待
 
 | Project | API | 期待 |
