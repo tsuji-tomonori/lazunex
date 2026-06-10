@@ -154,6 +154,20 @@ def label_with_title(element_id: str | None, title: str | None = None) -> str:
     return element_id
 
 
+def title_only(element_id: str | None, title: str | None = None) -> str:
+    if element_id is None:
+        return "-"
+    return title or element_id
+
+
+def target_label(target_id: str) -> str:
+    if target_id.startswith("project_"):
+        return target_id.replace("project_", "Project ")
+    if target_id.startswith("API_"):
+        return target_id.replace("API_", "API ")
+    return target_id.replace("_", " ")
+
+
 def yaml_titles(items: Sequence[object]) -> dict[str, str]:
     titles: dict[str, str] = {}
     for item in items:
@@ -197,13 +211,20 @@ def variant_labels(
     titles: Mapping[str, Mapping[str, str]],
 ) -> tuple[str, str, str]:
     component_titles = titles[variant.component_id]
+    targets = [
+        target_label(target)
+        for target in (variant.project_id, variant.api_id)
+        if target is not None
+    ]
+    data_title = title_only(variant.data_id, component_titles.get(f"data:{variant.data_id}"))
+    data_label = " / ".join((*targets, data_title)) if targets else data_title
     return (
-        label_with_title(
+        data_label,
+        title_only(
             variant.action_id,
             component_titles.get(f"action:{variant.action_id}"),
         ),
-        label_with_title(variant.data_id, component_titles.get(f"data:{variant.data_id}")),
-        label_with_title(variant.state_id, component_titles.get(f"state:{variant.state_id}")),
+        title_only(variant.state_id, component_titles.get(f"state:{variant.state_id}")),
     )
 
 
@@ -418,7 +439,7 @@ def render_pruned_cases_csv(root: Path = Path("docs/spec/50.e2e")) -> str:
             *[
                 f"{component_id}[{kind}]"
                 for component_id in COMPONENT_IDS
-                for kind in ("操作", "データ", "状態")
+                for kind in ("データ", "操作", "状態")
             ],
         ]
     )

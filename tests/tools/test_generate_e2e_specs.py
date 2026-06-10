@@ -69,37 +69,41 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
     assert len(TARGET_CASES) == 87
     pruned_csv = rendered[tmp_path / "api_access_lifecycle/pruned-cases_gen.csv"]
     assert pruned_csv.startswith(
-        "case_id,api_catalog[操作],api_catalog[データ],"
-        "api_catalog[状態],project_workspace[操作],project_workspace[データ],"
+        "case_id,api_catalog[データ],api_catalog[操作],"
+        "api_catalog[状態],project_workspace[データ],project_workspace[操作],"
         "project_workspace[状態],"
     )
-    assert "runtime_authorization[操作]" in pruned_csv.splitlines()[0]
+    assert "runtime_authorization[データ]" in pruned_csv.splitlines()[0]
     assert pruned_csv.splitlines()[0].endswith("audit_recovery[状態]")
     assert (
         "TC_TARGET_007,"
-        "browse_api: 公開APIを探索する,api_unknown: 未登録API,"
-        "not_found: API探索失敗,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+        "API A / 未登録API,公開APIを探索する,"
+        "API探索失敗,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
+        in pruned_csv
+    )
+    assert "TC_TARGET_001,API A / 標準API,APIを公開する,API公開成功" in pruned_csv
+    assert "TC_TARGET_002,API B / 標準API,APIを公開する,API公開成功" in pruned_csv
+    assert "TC_TARGET_003,API C / 標準API,APIを公開する,API公開成功" in pruned_csv
+    assert (
+        "TC_TARGET_076,API A / 標準API,APIを公開する,"
+        "API公開成功,Project A / 標準Project,"
+        "Projectを作成する,Project作成成功,"
         in pruned_csv
     )
     assert (
-        "TC_TARGET_076,publish_api: APIを公開する,"
-        "api_default: 標準API,published: API公開成功,"
-        "create_project: Projectを作成する,project_default: 標準Project,"
-        "provisioned: Project作成成功,"
+        "Runtime APIを呼び出す,"
+        "Runtime認証情報不正,-,-,-"
         in pruned_csv
     )
-    assert (
-        "invoke_runtime_api: Runtime APIを呼び出す,"
-        "scope_missing: scopeなしRuntime認証情報,"
-        "credential_invalid: Runtime認証情報不正,-,-,-"
-        in pruned_csv
-    )
+    assert "Project A / API A / scopeなしRuntime認証情報" in pruned_csv
     assert pruned_csv.count("\nTC_TARGET_") == 87
     assert "\nTC001," not in pruned_csv
     assert "cases/TC001_happy_approve_and_runtime_success.gen.md" not in pruned_csv
     assert "coverage_group" not in pruned_csv
     assert "goal_variant" not in pruned_csv
     assert "シナリオ" not in pruned_csv
+    assert "api_default:" not in pruned_csv
+    assert "publish_api:" not in pruned_csv
     assert "主な要因" not in content
     for step in FLOW_STEPS:
         assert f"`{step.operation}`" in content
