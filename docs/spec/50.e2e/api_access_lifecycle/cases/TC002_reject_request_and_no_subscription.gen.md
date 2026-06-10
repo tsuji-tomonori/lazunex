@@ -13,7 +13,7 @@
 
 ## 2. 処理概要
 
-project_Aを作成する → project_Aのpublic client redirect URLを更新する → project_AからAPI_Aへ利用申請する → API_Aの利用申請を却下する。
+project_Aを作成する → project_Aのpublic client redirect URLを更新する → project_AからAPI_Aへ利用申請する → API_Aの利用申請を却下する → project_AにAPI_Aの利用権が作成されないことを確認する。
 
 ## 3. 処理詳細
 

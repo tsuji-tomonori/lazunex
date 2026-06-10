@@ -333,9 +333,16 @@ def expand_label(template: str) -> str:
 
 def render_overview(case: ScenarioCase, catalog: ScenarioCatalog) -> str:
     labels: list[str] = []
+    selected = dict(case.selected)
     for step in case.scenario_steps:
         if step == "invoke_runtime_api":
             labels.append("API_Aは呼び出せる、API_B/API_Cは呼び出せないことを確認する")
+            continue
+        if step == "get_project_subscriptions":
+            if selected.get("F041") == "success":
+                labels.append("project_AにAPI_Aの利用権が作成されないことを確認する")
+            else:
+                labels.append("project_AにAPI_Aの利用権を反映する")
             continue
         operation_key = STEP_OPERATION_KEYS.get(step)
         if operation_key is None:

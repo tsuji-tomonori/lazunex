@@ -86,6 +86,7 @@ def test_e2e_scenarios_keep_secret_placeholders(tmp_path: Path) -> None:
         "project_Aを作成する → project_Aのpublic client redirect URLを更新する → "
         "project_AからAPI_Aへ利用申請する"
     ) in content
+    assert "project_AにAPI_Aの利用権を反映する" in content
     assert "GET /projects/{projectId}/api-access-requests" in content
     assert "API呼び出し手順" in content
     assert "| Step | API | Request | 目的 | 期待 | Capture |" in content
@@ -104,6 +105,7 @@ def test_e2e_scenarios_keep_secret_placeholders(tmp_path: Path) -> None:
     reject_content = rendered[
         tmp_path / "api_access_lifecycle/cases/TC002_reject_request_and_no_subscription.gen.md"
     ]
+    assert "project_AにAPI_Aの利用権が作成されないことを確認する" in reject_content
     assert "API_A Runtime APIレスポンス" in reject_content
     assert "TC002_E_runtime_project_A_API_C_denied.json" in reject_content
 
