@@ -80,7 +80,8 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
         "TC_TARGET_007,component_variant,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,"
         "api_catalog,-,API_A,browse_api,not_found,api_unknown,"
         "api_catalog.browse_api.API_A.not_found@api_unknown,"
-        "api_catalog.publish_api.API_A.published@api_default,-"
+        "api_catalog.publish_api.API_A.published@api_default,"
+        "cases/TC_TARGET_007_api_catalog_browse_api_api_a_not_found_api_unknown.gen.md"
         in pruned_csv
     )
     assert (
@@ -92,13 +93,15 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
         in pruned_csv
     )
     assert pruned_csv.count("\nTC_TARGET_") == 87
+    assert "cases/TC001_happy_approve_and_runtime_success.gen.md" not in pruned_csv
     assert "主な要因" not in content
     for step in FLOW_STEPS:
         assert f"`{step.operation}`" in content
         assert step.path in content
     for case in CASES:
-        assert f"cases/{case.filename}" in content
         assert case.case_id in rendered[tmp_path / "api_access_lifecycle/pruned-cases_gen.csv"]
+    for target_case in TARGET_CASES:
+        assert f"cases/{target_case.filename}" in content
     assert "| `TC003` | 成功: appが応答可能 | reviewer以外 |" in content
     assert "`TC_TARGET_001`" in content
     assert "`TC_TARGET_087`" in content
@@ -113,11 +116,12 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
 
 def test_e2e_scenarios_keep_secret_placeholders(tmp_path: Path) -> None:
     rendered = scenario_outputs(tmp_path)
-    assert {path.name for path in rendered} == {case.filename for case in CASES}
-    content = rendered[
-        tmp_path
-        / "api_access_lifecycle/cases/TC001_happy_approve_and_runtime_success.gen.md"
-    ]
+    assert {path.name for path in rendered} == {case.filename for case in TARGET_CASES}
+    assert "TC001_happy_approve_and_runtime_success.gen.md" not in {
+        path.name for path in rendered
+    }
+    target_case = TARGET_CASES[0]
+    content = rendered[tmp_path / "api_access_lifecycle/cases" / target_case.filename]
 
     assert "${project_api_key}" in content
     assert "${runtime_access_token}" in content
@@ -125,18 +129,11 @@ def test_e2e_scenarios_keep_secret_placeholders(tmp_path: Path) -> None:
     assert "## 2. 処理概要" in content
     assert "## 3. 処理詳細" in content
     assert "## 4. エビデンス" in content
-    assert "| Project | `project_A` | Project A | 利用申請元Project |" in content
-    assert (
-        "project_Aを作成する → project_Aのpublic client redirect URLを更新する → "
-        "project_AからAPI_Aへ利用申請する"
-    ) in content
-    assert "project_AにAPI_Aの利用権を反映する" in content
-    assert "GET /projects/{projectId}/api-access-requests" in content
-    assert "API呼び出し手順" in content
-    assert "| Step | API | Request | 目的 | 期待 | Capture |" in content
-    assert "標準データ (`default`)" in content
-    assert "requestedAuthMode=BOTH (`both_auth_mode`)" in content
-    assert "API_B Runtime APIレスポンス" in content
+    assert target_case.case_id in content
+    assert target_case.goal_variant in content
+    assert "### Component Variant 手順" in content
+    assert "### 選択要素" in content
+    assert "| Coverage Group | `component_variant` |" in content
     catalog = load_scenario_catalog()
     assert catalog.bindings[("review", "reject", "success")] == (
         "access_request_rejected",
@@ -146,12 +143,15 @@ def test_e2e_scenarios_keep_secret_placeholders(tmp_path: Path) -> None:
     target_section = cast(Mapping[str, object], project_a_md["target_section"])
     assert target_section["usage"] == "利用申請元Project"
 
-    reject_content = rendered[
-        tmp_path / "api_access_lifecycle/cases/TC002_reject_request_and_no_subscription.gen.md"
-    ]
-    assert "project_AにAPI_Aの利用権が作成されないことを確認する" in reject_content
-    assert "API_A Runtime APIレスポンス" in reject_content
-    assert "TC002_E_runtime_project_A_API_C_denied.json" in reject_content
+    runtime_case = next(
+        case for case in TARGET_CASES if "credential_invalid@scope_missing" in case.goal_variant
+    )
+    runtime_content = rendered[tmp_path / "api_access_lifecycle/cases" / runtime_case.filename]
+    assert (
+        "`runtime_authorization.invoke_runtime_api.project_A.API_A.credential_invalid"
+        "@scope_missing`"
+    ) in runtime_content
+    assert "| `project_A` | `API_A` | `denied` |" in runtime_content
 
 
 def test_check_e2e_specs_detects_complete_rendered_tree(tmp_path: Path) -> None:

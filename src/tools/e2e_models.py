@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -96,6 +97,11 @@ class E2eTargetCase:
     goal_variant: str
     selected_variants: tuple[str, ...]
     runtime_assertions: tuple[E2eRuntimeAssertion, ...] = ()
+
+    @property
+    def filename(self) -> str:
+        slug = re.sub(r"[^0-9A-Za-z]+", "_", self.goal_variant).strip("_").lower()
+        return f"{self.case_id}_{slug}.gen.md"
 
 
 @dataclass(frozen=True)

@@ -8,7 +8,14 @@ from typing import cast
 
 import yaml
 
-from tools.e2e_models import CASES, FLOW_ID, element_label, markdown_escape
+from tools.e2e_models import (
+    CASES,
+    FLOW_ID,
+    TARGET_CASES,
+    E2eTargetCase,
+    element_label,
+    markdown_escape,
+)
 from tools.generation_io import check_outputs, write_outputs
 
 GENERATED_COMMENT = (
@@ -300,6 +307,128 @@ def scalar_text(value: object, default: str = "-") -> str:
     return value if isinstance(value, str) else default
 
 
+def parse_component_variant(variant_id: str) -> tuple[str, str, str, str, str, str]:
+    raw, data_id = variant_id.split("@", maxsplit=1) if "@" in variant_id else (variant_id, "-")
+    parts = raw.split(".")
+    component = parts[0] if len(parts) > 0 else "-"
+    action = parts[1] if len(parts) > 1 else "-"
+    project = "-"
+    api = "-"
+    state = parts[-1] if parts else "-"
+    middle = parts[2:-1]
+    for value in middle:
+        if value.startswith("project_"):
+            project = value
+        elif value.startswith("API_"):
+            api = value
+    return component, action, project, api, state, data_id
+
+
+def render_target_variant_rows(target_case: E2eTargetCase) -> list[str]:
+    lines = [
+        "| No | Component | Action | Project | API | State | Data | Variant |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for index, variant_id in enumerate(target_case.selected_variants, start=1):
+        component, action, project, api, state, data_id = parse_component_variant(variant_id)
+        lines.append(
+            f"| V{index} | `{component}` | `{action}` | `{project}` | `{api}` | "
+            f"`{state}` | `{data_id}` | `{variant_id}` |"
+        )
+    return lines
+
+
+def render_target_prerequisites(target_case: E2eTargetCase) -> list[str]:
+    lines = ["| No | 前提 | 補足 |", "|---|---|---|"]
+    prerequisites = [
+        "Cognito管理API用tokenを取得できる。",
+        "case.id suffixでProject/APIなどのテストデータを一意に扱う。",
+        "secret値、API key値、client secret値の実値をMarkdownやログに出さない。",
+        "`${project_api_key}` と `${runtime_access_token}` はplaceholderとして扱う。",
+    ]
+    for index, text in enumerate(prerequisites, start=1):
+        lines.append(f"| P{index} | {text} | - |")
+    return lines
+
+
+def render_target_api_steps(target_case: E2eTargetCase) -> list[str]:
+    lines = [
+        "| Step | Component Variant | 目的 | 期待 |",
+        "|---|---|---|---|",
+    ]
+    for index, variant_id in enumerate(target_case.selected_variants, start=1):
+        component, action, project, api, state, data_id = parse_component_variant(variant_id)
+        target = " / ".join(value for value in (project, api) if value != "-") or "-"
+        lines.append(
+            f"| Step {index} | `{variant_id}` | `{component}.{action}` を {target} で実行 | "
+            f"`{state}` / `{data_id}` |"
+        )
+    return lines
+
+
+def render_target_runtime_assertions(target_case: E2eTargetCase) -> list[str]:
+    lines = [
+        "| Project | API | 期待 |",
+        "|---|---|---|",
+    ]
+    if not target_case.runtime_assertions:
+        lines.append("| - | - | - |")
+        return lines
+    for assertion in target_case.runtime_assertions:
+        lines.append(
+            f"| `{assertion.project_id}` | `{assertion.api_id}` | "
+            f"`{assertion.expected}` |"
+        )
+    return lines
+
+
+def render_target_scenario_markdown(target_case: E2eTargetCase) -> str:
+    lines = [
+        GENERATED_COMMENT,
+        "",
+        f"# {target_case.case_id} {target_case.goal_component}",
+        "",
+        "## 1. 対象",
+        "",
+        "| 項目 | 値 |",
+        "|---|---|",
+        f"| Coverage Group | `{target_case.coverage_group}` |",
+        f"| Goal Component | `{target_case.goal_component}` |",
+        f"| Goal Variant | `{target_case.goal_variant}` |",
+        "",
+        "## 2. 処理概要",
+        "",
+        f"{target_case.title}。",
+        "",
+        "## 3. 処理詳細",
+        "",
+        "### 前提条件",
+        "",
+        *render_target_prerequisites(target_case),
+        "",
+        "### Component Variant 手順",
+        "",
+        *render_target_api_steps(target_case),
+        "",
+        "### 選択要素",
+        "",
+        *render_target_variant_rows(target_case),
+        "",
+        "## 4. エビデンス",
+        "",
+        "### Runtime期待",
+        "",
+        *render_target_runtime_assertions(target_case),
+        "",
+        "### 後続確認",
+        "",
+        f"- `{target_case.goal_variant}` が生成ケース一覧のGoal Variantとして表現される。",
+        "- 実行時のsecret値、API key値、client secret値は記録しない。",
+        "",
+    ]
+    return "\n".join(lines)
+
+
 def target_row(catalog: ScenarioCatalog, target_id: str) -> tuple[str, str, str, str, str]:
     content = catalog.targets.get(target_id, {})
     target = as_mapping(content.get("target"))
@@ -558,10 +687,9 @@ def rendered_outputs(
     spec_root: Path = Path("docs/spec/50.e2e"),
 ) -> Mapping[Path, str]:
     cases_root = output_root / FLOW_ID / "cases"
-    catalog = load_scenario_catalog(spec_root)
     return {
-        cases_root / case.filename: render_scenario_markdown(case, catalog)
-        for case in catalog.cases
+        cases_root / target_case.filename: render_target_scenario_markdown(target_case)
+        for target_case in TARGET_CASES
     }
 
 

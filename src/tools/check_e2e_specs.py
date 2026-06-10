@@ -93,7 +93,7 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
         flow_root / "factors" / f"{factor.factor_id}_{factor.slug}.manual.yaml"
         for factor in FACTORS
     )
-    required_paths.extend(flow_root / "cases" / case.filename for case in CASES)
+    required_paths.extend(flow_root / "cases" / case.filename for case in TARGET_CASES)
     required_paths.extend(
         flow_root / "templates" / "steps" / f"{step.template}.manual.yaml"
         for step in FLOW_STEPS
@@ -124,7 +124,7 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
     case_list_path = flow_root / "case-list_gen.md"
     if case_list_path.exists():
         case_list = case_list_path.read_text(encoding="utf-8")
-        for case in CASES:
+        for case in TARGET_CASES:
             link = f"cases/{case.filename}"
             if link not in case_list:
                 errors.append(f"case-list missing link: {link}")
@@ -255,11 +255,18 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
                 continue
             if element_id not in factor_elements[factor_id]:
                 errors.append(f"{case.case_id}: unknown element {factor_id}.{element_id}")
+    for case in TARGET_CASES:
         scenario_path = flow_root / "cases" / case.filename
         if scenario_path.exists():
             scenario = scenario_path.read_text(encoding="utf-8")
-            if "post_projects" in case.scenario_steps and "${project_api_key}" not in scenario:
+            if "${project_api_key}" not in scenario:
                 errors.append(f"{case.case_id}: scenario does not keep project_api_key placeholder")
+            if "${runtime_access_token}" not in scenario:
+                errors.append(
+                    f"{case.case_id}: scenario does not keep runtime_access_token placeholder"
+                )
+            if case.goal_variant not in scenario:
+                errors.append(f"{case.case_id}: scenario does not include goal variant")
             if case.case_id not in scenario:
                 errors.append(f"{case.case_id}: scenario title does not include case id")
             for heading in (

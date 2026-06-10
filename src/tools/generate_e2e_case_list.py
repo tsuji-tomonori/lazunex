@@ -92,8 +92,8 @@ def render_generated_case_rows() -> list[str]:
         "## 5. 生成ケース一覧",
         "",
         "| ケースID | Coverage Group | Goal Component | 目的 | Project | API | "
-        "Goal Variant | Component Variant | Runtime期待 |",
-        "|---|---|---|---|---|---|---|---|---|",
+        "Goal Variant | Component Variant | Runtime期待 | シナリオ |",
+        "|---|---|---|---|---|---|---|---|---|---|",
     ]
     for target_case in TARGET_CASES:
         variants = "<br>".join(f"`{variant}`" for variant in target_case.selected_variants)
@@ -109,7 +109,8 @@ def render_generated_case_rows() -> list[str]:
             f"| `{target_case.case_id}` | `{target_case.coverage_group}` | "
             f"`{target_case.goal_component}` | {markdown_escape(target_case.title)} | "
             f"{target_case_projects(target_case)} | {target_case_apis(target_case)} | "
-            f"`{target_case.goal_variant}` | {variants} | {runtime_assertions} |"
+            f"`{target_case.goal_variant}` | {variants} | {runtime_assertions} | "
+            f"[`cases/{target_case.filename}`](cases/{target_case.filename}) |"
         )
     lines.append("")
     return lines
@@ -296,8 +297,7 @@ def render_case_list_markdown(root: Path = Path("docs/spec/50.e2e")) -> str:
         )
         lines.append(
             f"| `{case.case_id}` | {selected_columns} | `{case.kind}` | `{case.tier}` | "
-            f"{markdown_escape(case.terminal_step)} | "
-            f"[`cases/{case.filename}`](cases/{case.filename}) |"
+            f"{markdown_escape(case.terminal_step)} | - |"
         )
     lines.extend(["", *render_generated_case_rows()])
     return "\n".join(lines)
@@ -344,7 +344,7 @@ def render_pruned_cases_csv() -> str:
                 "-",
                 "-",
                 "-",
-                f"cases/{case.filename}",
+                "-",
             ]
         )
     variants = component_variants_by_id()
@@ -371,7 +371,7 @@ def render_pruned_cases_csv() -> str:
                 variant.data_id,
                 target_case.goal_variant,
                 ";".join(prerequisites) if prerequisites else "-",
-                "-",
+                f"cases/{target_case.filename}",
             ]
         )
     return output.getvalue()
