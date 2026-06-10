@@ -77,6 +77,7 @@ class E2eRuntimeAssertion:
 class E2eTargetCase:
     case_id: str
     title: str
+    goal_variant: str
     selected_variants: tuple[str, ...]
     runtime_assertions: tuple[E2eRuntimeAssertion, ...] = ()
 
@@ -274,6 +275,23 @@ def target_variant_id(
     return f"{'.'.join(parts)}@{data.data_id}"
 
 
+def target_component_variant_id(
+    component: str,
+    action: str,
+    project: E2eTarget | None,
+    api: E2eTarget | None,
+    state: str,
+    data_id: str,
+) -> str:
+    parts = [component, action]
+    if project is not None:
+        parts.append(project.target_id)
+    if api is not None:
+        parts.append(api.target_id)
+    parts.append(state)
+    return f"{'.'.join(parts)}@{data_id}"
+
+
 def target_case_runtime_assertions(
     project: E2eTarget,
     allowed_api: E2eTarget | None,
@@ -291,42 +309,111 @@ def target_case_runtime_assertions(
 def build_target_cases() -> tuple[E2eTargetCase, ...]:
     project = PROJECT_TARGETS[0]
     api = API_TARGETS[0]
-    create_data = PROJECT_OPERATION_DATA[0]
-    update_data = PROJECT_OPERATION_DATA[1]
-    access_data = data_for_factor("F030")[0]
-    approve_data = data_for_factor("F040")[0]
-    reject_data = data_for_factor("F041")[0]
-    project_create = target_variant_id(
-        "project", project, None, "create", "success", create_data
+    api_published = target_component_variant_id(
+        "api_catalog", "publish_api", None, api, "published", "api_default"
     )
-    project_update = target_variant_id(
-        "project", project, None, "update", "success", update_data
+    project_create = target_component_variant_id(
+        "project_workspace",
+        "create_project",
+        project,
+        None,
+        "provisioned",
+        "project_default",
     )
-    access_success = target_variant_id(
-        "access_request", project, api, "apply", "success", access_data
+    project_update = target_component_variant_id(
+        "project_workspace",
+        "update_public_client",
+        project,
+        None,
+        "public_client_updated",
+        "redirect_url_update",
     )
-    approve_success = target_variant_id(
-        "review", project, api, "approve", "success", approve_data
+    access_success = target_component_variant_id(
+        "access_request_workflow",
+        "submit_request",
+        project,
+        api,
+        "submitted",
+        "request_both_auth",
     )
-    reject_success = target_variant_id(
-        "review", project, api, "reject", "success", reject_data
+    approve_success = target_component_variant_id(
+        "review_decision", "approve_request", project, api, "approved", "approve_both"
     )
+    reject_success = target_component_variant_id(
+        "review_decision", "reject_request", project, api, "rejected", "reject_default"
+    )
+    entitlement_success = target_component_variant_id(
+        "entitlement_provisioning",
+        "provision_entitlement",
+        project,
+        api,
+        "provisioned",
+        "approved_both_entitlement",
+    )
+    entitlement_absent = target_component_variant_id(
+        "entitlement_provisioning",
+        "list_subscriptions",
+        project,
+        api,
+        "not_provisioned",
+        "rejected_no_entitlement",
+    )
+    runtime_allowed = target_component_variant_id(
+        "runtime_authorization",
+        "invoke_runtime_api",
+        project,
+        api,
+        "allowed",
+        "approved_runtime_credential",
+    )
+    runtime_denied_by_api = {
+        target_api.target_id: target_component_variant_id(
+            "runtime_authorization",
+            "invoke_unapproved_api",
+            project,
+            target_api,
+            "denied",
+            "unapproved_runtime_credential",
+        )
+        for target_api in API_TARGETS
+    }
     return (
         E2eTargetCase(
             "TC_TARGET_001",
             "project_AでAPI_A利用申請を作成し承認する",
-            (project_create, access_success, approve_success),
+            runtime_allowed,
+            (
+                api_published,
+                project_create,
+                access_success,
+                approve_success,
+                entitlement_success,
+                runtime_allowed,
+                runtime_denied_by_api["API_B"],
+                runtime_denied_by_api["API_C"],
+            ),
             target_case_runtime_assertions(project, api),
         ),
         E2eTargetCase(
             "TC_TARGET_002",
             "project_AでAPI_A利用申請を作成し却下する",
-            (project_create, access_success, reject_success),
+            reject_success,
+            (
+                api_published,
+                project_create,
+                access_success,
+                reject_success,
+                entitlement_absent,
+                runtime_denied_by_api["API_A"],
+                runtime_denied_by_api["API_B"],
+                runtime_denied_by_api["API_C"],
+            ),
             target_case_runtime_assertions(project, None),
         ),
         E2eTargetCase(
             "TC_TARGET_003",
             "project_Aのpublic client redirect URLを更新する",
+            project_update,
             (project_create, project_update),
         ),
     )

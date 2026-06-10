@@ -44,7 +44,10 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
     assert "## 4. 対象別生成ケース一覧" in content
     assert "| 要素ID | 既定要素 | 終端要素 | 期待観点 |" in content
     assert "| ケースID | F000 | F001 | F002 | F010 |" in content
-    assert "| ケースID | 目的 | Project | API | 選択Variant | Runtime期待 |" in content
+    assert (
+        "| ケースID | 目的 | Project | API | Goal Variant | Component Variant | Runtime期待 |"
+        in content
+    )
     assert "主な要因" not in content
     for step in FLOW_STEPS:
         assert f"`{step.operation}`" in content
@@ -56,7 +59,11 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
         assert case.case_id in rendered[tmp_path / "api_access_lifecycle/pruned-cases_gen.csv"]
     assert "| `TC003` | 成功: appが応答可能 | reviewer以外 |" in content
     assert "`TC_TARGET_001`" in content
-    assert "`review.project_A.API_A.approve.success@approve_both`" in content
+    assert (
+        "`runtime_authorization.invoke_runtime_api.project_A.API_A.allowed"
+        "@approved_runtime_credential`"
+    ) in content
+    assert "`review_decision.approve_request.project_A.API_A.approved@approve_both`" in content
     assert "`project_A` / `API_B`: `denied`" in content
 
 

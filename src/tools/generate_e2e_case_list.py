@@ -61,8 +61,8 @@ def render_target_case_rows() -> list[str]:
     lines = [
         "## 4. 対象別生成ケース一覧",
         "",
-        "| ケースID | 目的 | Project | API | 選択Variant | Runtime期待 |",
-        "|---|---|---|---|---|---|",
+        "| ケースID | 目的 | Project | API | Goal Variant | Component Variant | Runtime期待 |",
+        "|---|---|---|---|---|---|---|",
     ]
     for target_case in TARGET_CASES:
         variants = "<br>".join(f"`{variant}`" for variant in target_case.selected_variants)
@@ -77,7 +77,7 @@ def render_target_case_rows() -> list[str]:
         lines.append(
             f"| `{target_case.case_id}` | {markdown_escape(target_case.title)} | "
             f"{target_case_projects(target_case)} | {target_case_apis(target_case)} | "
-            f"{variants} | {runtime_assertions} |"
+            f"`{target_case.goal_variant}` | {variants} | {runtime_assertions} |"
         )
     lines.append("")
     return lines
