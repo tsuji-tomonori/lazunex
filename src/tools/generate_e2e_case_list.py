@@ -52,6 +52,9 @@ def target_case_apis(target_case: E2eTargetCase) -> str:
     )
     if apis:
         return "<br>".join(f"`{api}`" for api in apis)
+    for api in ("API_A", "API_B", "API_C"):
+        if f".{api}." in target_case.goal_variant:
+            return f"`{api}`"
     variants = " ".join(target_case.selected_variants)
     matched_apis = [api for api in ("API_A", "API_B", "API_C") if api in variants]
     return "<br>".join(f"`{api}`" for api in matched_apis) if matched_apis else "-"
