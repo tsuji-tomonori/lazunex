@@ -139,6 +139,115 @@ def load_yaml(path: Path) -> Mapping[str, object]:
     return as_mapping(loaded)
 
 
+def source_flow_root(root: Path) -> Path:
+    flow_root = root / FLOW_ID
+    if (flow_root / "components").exists():
+        return flow_root
+    return Path("docs/spec/50.e2e") / FLOW_ID
+
+
+def label_with_title(element_id: str | None, title: str | None = None) -> str:
+    if element_id is None:
+        return "-"
+    if title:
+        return f"{element_id}: {title}"
+    return element_id
+
+
+def yaml_titles(items: Sequence[object]) -> dict[str, str]:
+    titles: dict[str, str] = {}
+    for item in items:
+        item_map = as_mapping(item)
+        item_id = scalar_text(item_map.get("id"))
+        if item_id != "-":
+            titles[item_id] = scalar_text(item_map.get("title"))
+    return titles
+
+
+def component_element_titles(flow_root: Path) -> dict[str, dict[str, str]]:
+    titles: dict[str, dict[str, str]] = {}
+    for component_id in COMPONENT_IDS:
+        component_root = flow_root / "components" / component_id
+        component_doc = load_yaml(component_root / "component.manual.yaml")
+        component = as_mapping(component_doc.get("component"))
+        actions_doc = load_yaml(component_root / "actions.manual.yaml")
+        states_doc = load_yaml(component_root / "states.manual.yaml")
+        data_doc = load_yaml(component_root / "data.manual.yaml")
+        titles[component_id] = {
+            "component": scalar_text(component.get("title")),
+            **{
+                f"action:{item_id}": title
+                for item_id, title in yaml_titles(actions_doc.get("actions", [])).items()
+            },
+            **{
+                f"state:{item_id}": title
+                for item_id, title in yaml_titles(states_doc.get("states", [])).items()
+            },
+            **{
+                f"data:{item_id}": title
+                for item_id, title in yaml_titles(data_doc.get("data_profiles", [])).items()
+            },
+        }
+    return titles
+
+
+def variant_labels(
+    variant: E2eComponentVariant,
+    *,
+    titles: Mapping[str, Mapping[str, str]],
+) -> tuple[str, str, str]:
+    component_titles = titles[variant.component_id]
+    return (
+        label_with_title(
+            variant.action_id,
+            component_titles.get(f"action:{variant.action_id}"),
+        ),
+        label_with_title(variant.data_id, component_titles.get(f"data:{variant.data_id}")),
+        label_with_title(variant.state_id, component_titles.get(f"state:{variant.state_id}")),
+    )
+
+
+def parse_variant(
+    variant_id: str,
+    *,
+    variants: Mapping[str, E2eComponentVariant],
+) -> E2eComponentVariant:
+    if variant_id in variants:
+        return variants[variant_id]
+    prefix, data_id = variant_id.split("@", maxsplit=1)
+    parts = prefix.split(".")
+    component_id = parts[0]
+    action_id = parts[1]
+    target_ids = parts[2:-1]
+    state_id = parts[-1]
+    project_id = next(
+        (target_id for target_id in target_ids if target_id.startswith("project_")),
+        None,
+    )
+    api_id = next((target_id for target_id in target_ids if target_id.startswith("API_")), None)
+    return E2eComponentVariant(
+        component_id,
+        action_id,
+        project_id,
+        api_id,
+        state_id,
+        data_id,
+        True,
+    )
+
+
+def selected_variants_by_component(
+    target_case: E2eTargetCase,
+    *,
+    variants: Mapping[str, E2eComponentVariant],
+) -> dict[str, E2eComponentVariant]:
+    selected: dict[str, E2eComponentVariant] = {}
+    for variant_id in target_case.selected_variants:
+        variant = parse_variant(variant_id, variants=variants)
+        selected[variant.component_id] = variant
+    return selected
+
+
 def render_coverage_summary(variants: Sequence[E2eComponentVariant]) -> list[str]:
     lines = [
         "## 1. Coverage summary",
@@ -232,12 +341,7 @@ def render_component_sections(flow_root: Path) -> list[str]:
 
 
 def render_case_list_markdown(root: Path = Path("docs/spec/50.e2e")) -> str:
-    flow_root = root / FLOW_ID
-    source_flow_root = (
-        flow_root
-        if (flow_root / "components").exists()
-        else Path("docs/spec/50.e2e") / FLOW_ID
-    )
+    source_root = source_flow_root(root)
     lines = [
         GENERATED_COMMENT,
         "",
@@ -258,7 +362,7 @@ def render_case_list_markdown(root: Path = Path("docs/spec/50.e2e")) -> str:
         [
             "",
             *render_coverage_summary(build_component_variants()),
-            *render_component_sections(source_flow_root),
+            *render_component_sections(source_root),
         ]
     )
     lines.extend(
@@ -303,75 +407,34 @@ def render_case_list_markdown(root: Path = Path("docs/spec/50.e2e")) -> str:
     return "\n".join(lines)
 
 
-def render_pruned_cases_csv() -> str:
+def render_pruned_cases_csv(root: Path = Path("docs/spec/50.e2e")) -> str:
     output = io.StringIO()
     writer = csv.writer(output, lineterminator="\n")
-    factor_ids = [factor.factor_id for factor in FACTORS]
+    variants = component_variants_by_id()
+    titles = component_element_titles(source_flow_root(root))
     writer.writerow(
         [
             "case_id",
-            "case_group",
-            "kind",
-            "tier",
-            "terminal_step",
-            *factor_ids,
-            "goal_component",
-            "project",
-            "api",
-            "action",
-            "state",
-            "data",
-            "goal_variant",
-            "prerequisite_variants",
-            "scenario_path",
+            *[
+                f"{component_id}[{kind}]"
+                for component_id in COMPONENT_IDS
+                for kind in ("操作", "データ", "状態")
+            ],
         ]
     )
-    for case in CASES:
-        selected = selected_elements_by_factor(case.case_id)
-        writer.writerow(
-            [
-                case.case_id,
-                "smoke",
-                case.kind,
-                case.tier,
-                case.terminal_step,
-                *(selected.get(factor_id, "-") for factor_id in factor_ids),
-                "-",
-                "-",
-                "-",
-                "-",
-                "-",
-                "-",
-                "-",
-                "-",
-                "-",
-            ]
-        )
-    variants = component_variants_by_id()
     for target_case in TARGET_CASES:
-        variant = variants[target_case.goal_variant]
-        prerequisites = [
-            selected_variant
-            for selected_variant in target_case.selected_variants
-            if selected_variant != target_case.goal_variant
-        ]
+        selected = selected_variants_by_component(target_case, variants=variants)
+        component_columns: list[str] = []
+        for component_id in COMPONENT_IDS:
+            variant = selected.get(component_id)
+            if variant is None:
+                component_columns.extend(("-", "-", "-"))
+                continue
+            component_columns.extend(variant_labels(variant, titles=titles))
         writer.writerow(
             [
                 target_case.case_id,
-                target_case.coverage_group,
-                "-",
-                "-",
-                "-",
-                *("-" for _ in factor_ids),
-                variant.component_id,
-                variant.project_id or "-",
-                variant.api_id or "-",
-                variant.action_id,
-                variant.state_id,
-                variant.data_id,
-                target_case.goal_variant,
-                ";".join(prerequisites) if prerequisites else "-",
-                f"cases/{target_case.filename}",
+                *component_columns,
             ]
         )
     return output.getvalue()
@@ -381,7 +444,7 @@ def rendered_outputs(output_root: Path = Path("docs/spec/50.e2e")) -> Mapping[Pa
     flow_root = output_root / FLOW_ID
     return {
         flow_root / "case-list_gen.md": render_case_list_markdown(output_root),
-        flow_root / "pruned-cases_gen.csv": render_pruned_cases_csv(),
+        flow_root / "pruned-cases_gen.csv": render_pruned_cases_csv(output_root),
     }
 
 
