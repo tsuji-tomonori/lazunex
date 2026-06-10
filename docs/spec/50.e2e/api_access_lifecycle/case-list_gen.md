@@ -155,7 +155,7 @@
 | `P003` | approve失敗 | Runtime API呼び出しを除外 | subscription/scopeが存在しない |
 | `P004` | terminal step/status/reasonが同一 | 等価ケースを統合 | E2Eの重複実行を避ける |
 
-## 4. 生成ケース一覧
+## 4. Smoke生成ケース一覧
 
 | ケースID | F000 | F001 | F002 | F010 | F011 | F012 | F020 | F021 | F022 | F023 | F030 | F031 | F040 | F041 | F050 | F061 | F070 | 種別 | Tier | 終了Step | シナリオ |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -168,7 +168,7 @@
 | `TC007` | 成功: appが応答可能 | provider + project owner + reviewer | 有効なmanagement token | 成功: catalog + stage + scope | 成功: 一覧に公開APIが現れる | 成功: 公開API詳細を取得 | 成功: project + API key + clients | 成功: 作成Projectが一覧に現れる | 失敗: projectId不明 | - | - | - | - | - | - | - | - | `negative` | `local_fake` | get_project | [`cases/TC007_get_project_unknown_id_is_404.gen.md`](cases/TC007_get_project_unknown_id_is_404.gen.md) |
 | `TC008` | 成功: appが応答可能 | provider + project owner + reviewer | 有効なmanagement token | 成功: catalog + stage + scope | 成功: 一覧に公開APIが現れる | 成功: 公開API詳細を取得 | 成功: project + API key + clients | 成功: 作成Projectが一覧に現れる | 成功: Project詳細を取得 | 成功: public client設定更新 + 承認済みscope保持 | 成功: PENDING申請作成 | 成功: PENDING申請が一覧に現れる | 成功: APPROVED + subscription + 外部反映 | - | APIGW成功 + Cognito成功 | 成功: 承認済みsubscriptionが一覧に現れる | - | `branch` | `sandbox` | - | [`cases/TC008_public_client_update_keeps_approved_scope.gen.md`](cases/TC008_public_client_update_keeps_approved_scope.gen.md) |
 
-## 5. 対象別生成ケース一覧
+## 5. 生成ケース一覧
 
 | ケースID | Coverage Group | Goal Component | 目的 | Project | API | Goal Variant | Component Variant | Runtime期待 |
 |---|---|---|---|---|---|---|---|---|

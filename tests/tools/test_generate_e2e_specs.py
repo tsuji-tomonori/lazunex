@@ -43,8 +43,9 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
     assert "## 1. Coverage summary" in content
     assert "## 2. コンポーネントごとの要素" in content
     assert "## 3. 枝刈り規則" in content
-    assert "## 4. 生成ケース一覧" in content
-    assert "## 5. 対象別生成ケース一覧" in content
+    assert "## 4. Smoke生成ケース一覧" in content
+    assert "## 5. 生成ケース一覧" in content
+    assert "対象別生成ケース一覧" not in content
     assert "## 2. 旧factor互換表" not in content
     assert "| `runtime_authorization` | 108 | 108 | 108 | 100.0% |" in content
     assert "### project_workspace Project Workspace" in content
@@ -65,6 +66,23 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
         in content
     )
     assert len(TARGET_CASES) == 744
+    pruned_csv = rendered[tmp_path / "api_access_lifecycle/pruned-cases_gen.csv"]
+    assert (
+        "case_id,case_group,kind,tier,terminal_step,F000,F001,F002,F010"
+        in pruned_csv
+    )
+    assert (
+        "goal_component,project,api,action,state,data,goal_variant,"
+        "prerequisite_variants,scenario_path"
+        in pruned_csv
+    )
+    assert (
+        "TC_TARGET_001,component_variant,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,"
+        "api_catalog,-,API_A,publish_api,published,api_default,"
+        "api_catalog.publish_api.API_A.published@api_default,-,-"
+        in pruned_csv
+    )
+    assert pruned_csv.count("\nTC_TARGET_") == 744
     assert "主な要因" not in content
     for step in FLOW_STEPS:
         assert f"`{step.operation}`" in content

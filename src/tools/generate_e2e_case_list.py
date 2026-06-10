@@ -47,6 +47,10 @@ def component_id(variant_id: str) -> str:
     return variant_id.split(".", maxsplit=1)[0]
 
 
+def component_variants_by_id() -> dict[str, E2eComponentVariant]:
+    return {variant.variant_id: variant for variant in build_component_variants()}
+
+
 def selected_elements_by_factor(case_id: str) -> dict[str, str]:
     for case in CASES:
         if case.case_id == case_id:
@@ -83,9 +87,9 @@ def target_case_apis(target_case: E2eTargetCase) -> str:
     return "<br>".join(f"`{api}`" for api in matched_apis) if matched_apis else "-"
 
 
-def render_target_case_rows() -> list[str]:
+def render_generated_case_rows() -> list[str]:
     lines = [
-        "## 5. 対象別生成ケース一覧",
+        "## 5. 生成ケース一覧",
         "",
         "| ケースID | Coverage Group | Goal Component | 目的 | Project | API | "
         "Goal Variant | Component Variant | Runtime期待 |",
@@ -270,7 +274,7 @@ def render_case_list_markdown(root: Path = Path("docs/spec/50.e2e")) -> str:
             "| `P004` | terminal step/status/reasonが同一 | 等価ケースを統合 | "
             "E2Eの重複実行を避ける |",
             "",
-            "## 4. 生成ケース一覧",
+            "## 4. Smoke生成ケース一覧",
             "",
         ]
     )
@@ -295,25 +299,79 @@ def render_case_list_markdown(root: Path = Path("docs/spec/50.e2e")) -> str:
             f"{markdown_escape(case.terminal_step)} | "
             f"[`cases/{case.filename}`](cases/{case.filename}) |"
         )
-    lines.extend(["", *render_target_case_rows()])
+    lines.extend(["", *render_generated_case_rows()])
     return "\n".join(lines)
 
 
 def render_pruned_cases_csv() -> str:
     output = io.StringIO()
     writer = csv.writer(output, lineterminator="\n")
+    factor_ids = [factor.factor_id for factor in FACTORS]
     writer.writerow(
-        ["case_id", "kind", "tier", "terminal_step", "selected_factors", "scenario_path"]
+        [
+            "case_id",
+            "case_group",
+            "kind",
+            "tier",
+            "terminal_step",
+            *factor_ids,
+            "goal_component",
+            "project",
+            "api",
+            "action",
+            "state",
+            "data",
+            "goal_variant",
+            "prerequisite_variants",
+            "scenario_path",
+        ]
     )
     for case in CASES:
+        selected = selected_elements_by_factor(case.case_id)
         writer.writerow(
             [
                 case.case_id,
+                "smoke",
                 case.kind,
                 case.tier,
                 case.terminal_step,
-                ";".join(f"{factor}.{element}" for factor, element in case.selected),
+                *(selected.get(factor_id, "-") for factor_id in factor_ids),
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
                 f"cases/{case.filename}",
+            ]
+        )
+    variants = component_variants_by_id()
+    for target_case in TARGET_CASES:
+        variant = variants[target_case.goal_variant]
+        prerequisites = [
+            selected_variant
+            for selected_variant in target_case.selected_variants
+            if selected_variant != target_case.goal_variant
+        ]
+        writer.writerow(
+            [
+                target_case.case_id,
+                target_case.coverage_group,
+                "-",
+                "-",
+                "-",
+                *("-" for _ in factor_ids),
+                variant.component_id,
+                variant.project_id or "-",
+                variant.api_id or "-",
+                variant.action_id,
+                variant.state_id,
+                variant.data_id,
+                target_case.goal_variant,
+                ";".join(prerequisites) if prerequisites else "-",
+                "-",
             ]
         )
     return output.getvalue()
