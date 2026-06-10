@@ -5,14 +5,24 @@ actions:
     title: Runtime APIを呼び出す
     operation_type: query
     default_result: allowed
+    compatible_states:
+      - allowed
+      - credential_invalid
     target:
       - project
       - api
+    case_generation:
+      as_goal: true
 
   - id: invoke_unapproved_api
     title: 未承認Runtime APIを呼び出す
     operation_type: query
     default_result: denied
+    compatible_states:
+      - denied
+      - credential_invalid
     target:
       - project
       - api
+    case_generation:
+      as_goal: true

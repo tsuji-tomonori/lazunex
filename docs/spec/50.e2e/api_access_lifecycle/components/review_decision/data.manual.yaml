@@ -3,6 +3,14 @@ schema_version: 1
 data_profiles:
   - id: approve_both
     title: BOTHとして承認する
+    coverage_role: canonical_success
+    compatible_actions:
+      - approve_request
+    compatible_states:
+      - approved
+      - forbidden
+      - not_pending
+    target_coverage: all
     tags:
       - valid_review
       - approve
@@ -15,6 +23,14 @@ data_profiles:
 
   - id: reject_default
     title: 申請を却下する
+    coverage_role: canonical_success
+    compatible_actions:
+      - reject_request
+    compatible_states:
+      - rejected
+      - forbidden
+      - not_pending
+    target_coverage: canonical_pair
     tags:
       - valid_review
       - reject

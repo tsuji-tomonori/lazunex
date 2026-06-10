@@ -3,6 +3,13 @@ schema_version: 1
 data_profiles:
   - id: audit_default
     title: 標準監査確認
+    coverage_role: evidence_probe
+    compatible_actions:
+      - collect_audit
+    compatible_states:
+      - recorded
+      - trace_missing
+    target_coverage: canonical_pair
     tags:
       - audit_event
     expected:
@@ -14,6 +21,12 @@ data_profiles:
 
   - id: provisioning_retry
     title: provisioning失敗後の再試行
+    coverage_role: negative_cause
+    compatible_actions:
+      - retry_after_failure
+    compatible_states:
+      - retryable
+    target_coverage: canonical_pair
     tags:
       - recovery
       - retry

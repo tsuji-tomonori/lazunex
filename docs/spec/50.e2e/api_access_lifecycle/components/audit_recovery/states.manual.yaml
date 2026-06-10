@@ -4,11 +4,19 @@ states:
   - id: recorded
     title: 監査イベント記録済み
     continue_flow: true
+    compatible_actions:
+      - collect_audit
 
   - id: retryable
     title: 再試行可能
     continue_flow: true
+    compatible_actions:
+      - retry_after_failure
+    target_coverage: canonical_pair
 
   - id: trace_missing
     title: 追跡証跡不足
     continue_flow: false
+    compatible_actions:
+      - collect_audit
+    target_coverage: canonical_pair

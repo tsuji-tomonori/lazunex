@@ -5,6 +5,10 @@ actions:
     title: 利用申請を承認する
     operation_type: command
     default_result: approved
+    compatible_states:
+      - approved
+      - forbidden
+      - not_pending
     target:
       - project
       - api
@@ -17,6 +21,10 @@ actions:
     title: 利用申請を却下する
     operation_type: command
     default_result: rejected
+    compatible_states:
+      - rejected
+      - forbidden
+      - not_pending
     target:
       - project
       - api

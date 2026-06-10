@@ -6,12 +6,24 @@ actions:
     operation_type: command
     default_result: published
     target: api
+    compatible_states:
+      - published
+      - publish_failed
 
   - id: browse_api
     title: 公開APIを探索する
     operation_type: query
     default_result: found
     target: api
+    compatible_states:
+      - found
+      - not_found
+    case_generation:
+      as_goal: false
+      use_as_evidence: true
+      standalone_cases:
+        - state: not_found
+          data: api_unknown
     requires:
       state:
         api: published

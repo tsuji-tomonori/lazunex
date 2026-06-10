@@ -5,9 +5,21 @@ actions:
     title: 承認結果を利用権へ反映する
     operation_type: side_effect
     default_result: provisioned
+    compatible_states:
+      - provisioned
+      - partially_failed
     target:
       - project
       - api
+    case_generation:
+      as_goal:
+        states:
+          - partially_failed
+      use_as_evidence: true
+      as_evidence_for:
+        - component: review_decision
+          action: approve_request
+          state: approved
     triggered_by:
       component: review_decision
       action: approve_request
@@ -17,6 +29,15 @@ actions:
     title: Projectのsubscriptionを確認する
     operation_type: query
     default_result: listed
+    compatible_states:
+      - listed
+      - not_provisioned
     target:
       - project
       - api
+    case_generation:
+      as_goal: false
+      use_as_evidence: true
+      standalone_cases:
+        - state: not_provisioned
+          data: rejected_no_entitlement

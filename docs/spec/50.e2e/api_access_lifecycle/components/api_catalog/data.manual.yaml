@@ -3,6 +3,15 @@ schema_version: 1
 data_profiles:
   - id: api_default
     title: 標準API
+    coverage_role: canonical_success
+    compatible_actions:
+      - publish_api
+      - browse_api
+    compatible_states:
+      - published
+      - publish_failed
+      - found
+    target_coverage: all
     tags:
       - valid_api
       - has_stage
@@ -27,6 +36,12 @@ data_profiles:
 
   - id: api_unknown
     title: 未登録API
+    coverage_role: negative_cause
+    compatible_actions:
+      - browse_api
+    compatible_states:
+      - not_found
+    target_coverage: canonical_api
     tags:
       - unknown_api
     request:

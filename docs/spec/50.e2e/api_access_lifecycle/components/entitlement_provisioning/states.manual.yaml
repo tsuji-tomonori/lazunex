@@ -4,6 +4,8 @@ states:
   - id: provisioned
     title: 利用権反映成功
     continue_flow: true
+    compatible_actions:
+      - provision_entitlement
     provides:
       variables:
         - subscriptionId[${project.id},${api.id}]
@@ -11,11 +13,21 @@ states:
   - id: listed
     title: subscription一覧取得成功
     continue_flow: true
+    compatible_actions:
+      - list_subscriptions
 
   - id: partially_failed
     title: 利用権反映部分失敗
     continue_flow: false
+    compatible_actions:
+      - provision_entitlement
+    target_coverage: canonical_pair
 
   - id: not_provisioned
     title: 利用権未作成
     continue_flow: true
+    compatible_actions:
+      - list_subscriptions
+    requires_data_tags:
+      - no_entitlement
+    target_coverage: canonical_pair

@@ -8,6 +8,10 @@ actions:
       - project
       - api
     default_result: submitted
+    compatible_states:
+      - submitted
+      - duplicate_pending_rejected
+      - existing_subscription_rejected
     requires:
       component_states:
         project_workspace:
@@ -22,3 +26,8 @@ actions:
       - project
       - api
     default_result: listed
+    compatible_states:
+      - listed
+    case_generation:
+      as_goal: false
+      use_as_evidence: true

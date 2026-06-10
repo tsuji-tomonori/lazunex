@@ -3,6 +3,15 @@ schema_version: 1
 data_profiles:
   - id: request_both_auth
     title: public PKCEとclient credentialsの両方を申請する
+    coverage_role: canonical_success
+    compatible_actions:
+      - submit_request
+      - list_requests
+    compatible_states:
+      - submitted
+      - listed
+      - existing_subscription_rejected
+    target_coverage: all
     tags:
       - valid_access_request
       - both_auth_mode
@@ -17,6 +26,12 @@ data_profiles:
 
   - id: duplicate_pending_request
     title: 同一Project/API stageへの重複PENDING申請
+    coverage_role: negative_cause
+    compatible_actions:
+      - submit_request
+    compatible_states:
+      - duplicate_pending_rejected
+    target_coverage: canonical_pair
     tags:
       - duplicate_pending
     request:

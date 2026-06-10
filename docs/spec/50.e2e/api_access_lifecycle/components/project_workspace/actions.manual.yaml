@@ -6,12 +6,18 @@ actions:
     operation_type: command
     default_result: provisioned
     target: project
+    compatible_states:
+      - provisioned
+      - provision_failed
 
   - id: update_public_client
     title: public app client設定を更新する
     operation_type: command
     default_result: public_client_updated
     target: project
+    compatible_states:
+      - public_client_updated
+      - public_client_update_failed
     requires:
       state:
         project: provisioned

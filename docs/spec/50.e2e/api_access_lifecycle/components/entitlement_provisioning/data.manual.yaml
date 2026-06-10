@@ -3,6 +3,15 @@ schema_version: 1
 data_profiles:
   - id: approved_both_entitlement
     title: BOTH承認の利用権
+    coverage_role: evidence_success
+    compatible_actions:
+      - provision_entitlement
+      - list_subscriptions
+    compatible_states:
+      - provisioned
+      - listed
+      - partially_failed
+    target_coverage: canonical_pair
     tags:
       - approved
       - both_auth_mode
@@ -15,6 +24,12 @@ data_profiles:
 
   - id: rejected_no_entitlement
     title: 却下後の利用権なし
+    coverage_role: evidence_negative
+    compatible_actions:
+      - list_subscriptions
+    compatible_states:
+      - not_provisioned
+    target_coverage: canonical_pair
     tags:
       - rejected
       - no_entitlement

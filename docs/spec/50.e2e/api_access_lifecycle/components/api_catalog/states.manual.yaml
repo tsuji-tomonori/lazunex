@@ -4,6 +4,8 @@ states:
   - id: published
     title: API公開成功
     continue_flow: true
+    compatible_actions:
+      - publish_api
     provides:
       variables:
         - ${api.id}.apiId
@@ -13,11 +15,20 @@ states:
   - id: publish_failed
     title: API公開失敗
     continue_flow: false
+    compatible_actions:
+      - publish_api
 
   - id: found
     title: API探索成功
     continue_flow: true
+    compatible_actions:
+      - browse_api
 
   - id: not_found
     title: API探索失敗
     continue_flow: false
+    compatible_actions:
+      - browse_api
+    requires_data_tags:
+      - unknown_api
+    target_coverage: canonical_api

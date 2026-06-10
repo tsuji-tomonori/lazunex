@@ -1,6 +1,35 @@
 schema_version: 1
 
 variant_generation:
+  compatibility:
+    require_action_state_compatibility: true
+    require_data_action_compatibility: true
+    require_data_state_compatibility: true
+    require_tag_compatibility: true
+
+  data_policy:
+    success_variations_only_on_success_state: true
+    negative_data_only_on_matching_failure_state: true
+    evidence_data_not_standalone_goal: true
+
+  target_policy:
+    default: canonical_pair
+    canonical_project: project_A
+    canonical_api: API_A
+    all_targets_for:
+      - component: access_request_workflow
+        action: submit_request
+        state: submitted
+        data:
+          - request_both_auth
+      - component: review_decision
+        action: approve_request
+        state: approved
+      - component: runtime_authorization
+        state:
+          - allowed
+          - denied
+
   dimensions:
     project:
       targets: all
@@ -106,7 +135,20 @@ component_case_generation:
 pruning:
   stop_when_continue_flow_false: true
   remove_unreachable_dependencies: true
+  drop_query_goal_cases: true
+  drop_evidence_only_goal_cases: true
   dedupe_same_goal_and_same_evidence: true
+  dedupe_same_behavior_signature: true
+
+dedupe:
+  behavior_signature:
+    - component
+    - action
+    - state
+    - data.coverage_role
+    - expected_status
+    - expected_business_state
+    - evidence_ids
 
 coverage_assertions:
   - id: all_component_variants_are_covered

@@ -4,6 +4,8 @@ states:
   - id: submitted
     title: 申請成功
     continue_flow: true
+    compatible_actions:
+      - submit_request
     provides:
       variables:
         - accessRequestId[${project.id},${api.id}]
@@ -11,11 +13,21 @@ states:
   - id: listed
     title: 申請一覧取得成功
     continue_flow: true
+    compatible_actions:
+      - list_requests
 
   - id: duplicate_pending_rejected
     title: 重複PENDING申請で失敗
     continue_flow: false
+    compatible_actions:
+      - submit_request
+    requires_data_tags:
+      - duplicate_pending
+    target_coverage: canonical_pair
 
   - id: existing_subscription_rejected
     title: 既存subscriptionありで失敗
     continue_flow: false
+    compatible_actions:
+      - submit_request
+    target_coverage: canonical_pair

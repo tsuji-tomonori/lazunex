@@ -4,11 +4,19 @@ states:
   - id: allowed
     title: Runtime API呼び出し成功
     continue_flow: true
+    compatible_actions:
+      - invoke_runtime_api
 
   - id: denied
     title: Runtime API呼び出し拒否
     continue_flow: true
+    compatible_actions:
+      - invoke_unapproved_api
 
   - id: credential_invalid
     title: Runtime認証情報不正
     continue_flow: false
+    compatible_actions:
+      - invoke_runtime_api
+      - invoke_unapproved_api
+    target_coverage: canonical_pair

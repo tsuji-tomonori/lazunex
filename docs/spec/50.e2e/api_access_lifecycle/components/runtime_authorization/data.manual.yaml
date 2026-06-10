@@ -3,6 +3,12 @@ schema_version: 1
 data_profiles:
   - id: approved_runtime_credential
     title: 承認済みAPI用Runtime認証情報
+    coverage_role: evidence_success
+    compatible_actions:
+      - invoke_runtime_api
+    compatible_states:
+      - allowed
+    target_coverage: all
     tags:
       - approved_api
       - valid_runtime_credential
@@ -13,6 +19,12 @@ data_profiles:
 
   - id: unapproved_runtime_credential
     title: 未承認API用Runtime認証情報
+    coverage_role: evidence_negative
+    compatible_actions:
+      - invoke_unapproved_api
+    compatible_states:
+      - denied
+    target_coverage: all
     tags:
       - unapproved_api
       - valid_runtime_credential
@@ -20,3 +32,34 @@ data_profiles:
       headers:
         Authorization: Bearer ${runtime_access_token}
         x-api-key: ${project.id}.projectApiKey
+
+  - id: scope_missing
+    title: scopeなしRuntime認証情報
+    coverage_role: security_negative
+    compatible_actions:
+      - invoke_runtime_api
+    compatible_states:
+      - credential_invalid
+    target_coverage: canonical_pair
+    tags:
+      - approved_api
+      - scope_missing
+    request:
+      headers:
+        Authorization: Bearer ${runtime_access_token_without_scope}
+        x-api-key: ${project.id}.projectApiKey
+
+  - id: api_key_missing
+    title: API keyなしRuntime認証情報
+    coverage_role: security_negative
+    compatible_actions:
+      - invoke_runtime_api
+    compatible_states:
+      - credential_invalid
+    target_coverage: canonical_pair
+    tags:
+      - approved_api
+      - api_key_missing
+    request:
+      headers:
+        Authorization: Bearer ${runtime_access_token}

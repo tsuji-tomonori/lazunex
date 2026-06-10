@@ -4,6 +4,8 @@ states:
   - id: provisioned
     title: Project作成成功
     continue_flow: true
+    compatible_actions:
+      - create_project
     provides:
       variables:
         - ${project.id}.projectId
@@ -14,11 +16,21 @@ states:
   - id: provision_failed
     title: Project作成失敗
     continue_flow: false
+    compatible_actions:
+      - create_project
+    target_coverage: canonical_project
 
   - id: public_client_updated
     title: public app client更新成功
     continue_flow: true
+    compatible_actions:
+      - update_public_client
 
   - id: public_client_update_failed
     title: public app client更新失敗
     continue_flow: false
+    compatible_actions:
+      - update_public_client
+    requires_data_tags:
+      - valid_public_client_update
+    target_coverage: canonical_project

@@ -47,7 +47,7 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
     assert "## 5. 生成ケース一覧" in content
     assert "対象別生成ケース一覧" not in content
     assert "## 2. 旧factor互換表" not in content
-    assert "| `runtime_authorization` | 108 | 108 | 108 | 100.0% |" in content
+    assert "| `runtime_authorization` | 20 | 20 | 20 | 100.0% |" in content
     assert "### project_workspace Project Workspace" in content
     assert (
         "| 操作 | `create_project` | Projectを作成する | "
@@ -65,7 +65,7 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
         "Goal Variant | Component Variant | Runtime期待 |"
         in content
     )
-    assert len(TARGET_CASES) == 744
+    assert len(TARGET_CASES) == 87
     pruned_csv = rendered[tmp_path / "api_access_lifecycle/pruned-cases_gen.csv"]
     assert (
         "case_id,case_group,kind,tier,terminal_step,F000,F001,F002,F010"
@@ -77,12 +77,21 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
         in pruned_csv
     )
     assert (
-        "TC_TARGET_001,component_variant,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,"
-        "api_catalog,-,API_A,publish_api,published,api_default,"
-        "api_catalog.publish_api.API_A.published@api_default,-,-"
+        "TC_TARGET_007,component_variant,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,"
+        "api_catalog,-,API_A,browse_api,not_found,api_unknown,"
+        "api_catalog.browse_api.API_A.not_found@api_unknown,"
+        "api_catalog.publish_api.API_A.published@api_default,-"
         in pruned_csv
     )
-    assert pruned_csv.count("\nTC_TARGET_") == 744
+    assert (
+        "TC_TARGET_076,component_variant,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,"
+        "runtime_authorization,project_A,API_A,invoke_runtime_api,credential_invalid,"
+        "scope_missing,"
+        "runtime_authorization.invoke_runtime_api.project_A.API_A.credential_invalid"
+        "@scope_missing,"
+        in pruned_csv
+    )
+    assert pruned_csv.count("\nTC_TARGET_") == 87
     assert "主な要因" not in content
     for step in FLOW_STEPS:
         assert f"`{step.operation}`" in content
@@ -92,7 +101,7 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
         assert case.case_id in rendered[tmp_path / "api_access_lifecycle/pruned-cases_gen.csv"]
     assert "| `TC003` | 成功: appが応答可能 | reviewer以外 |" in content
     assert "`TC_TARGET_001`" in content
-    assert "`TC_TARGET_744`" in content
+    assert "`TC_TARGET_087`" in content
     assert "`component_variant`" in content
     assert (
         "`runtime_authorization.invoke_runtime_api.project_A.API_A.allowed"

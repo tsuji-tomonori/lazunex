@@ -341,12 +341,45 @@ def scalar_text(value: object, default: str = "-") -> str:
     return value if isinstance(value, str) else default
 
 
+def string_set(value: object) -> set[str]:
+    return {item for item in as_sequence(value) if isinstance(item, str)}
+
+
 def load_component_yaml(component_id: str, filename: str) -> Mapping[str, object]:
     path = E2E_SPEC_ROOT / "components" / component_id / filename
     return as_mapping(yaml.safe_load(path.read_text(encoding="utf-8")))
 
 
-def action_targets(action: Mapping[str, object]) -> tuple[tuple[str | None, str | None], ...]:
+def target_allowed(target_id: str | None, policy: str, target_type: str) -> bool:
+    if target_id is None:
+        return True
+    if policy == "all":
+        return True
+    if policy == "canonical_pair":
+        return target_id in {"project_A", "API_A"}
+    if policy == "canonical_project" and target_type == "project":
+        return target_id == "project_A"
+    if policy == "canonical_api" and target_type == "api":
+        return target_id == "API_A"
+    return True
+
+
+def target_coverage_policy(
+    action: Mapping[str, object],
+    state: Mapping[str, object],
+    data_profile: Mapping[str, object],
+) -> str:
+    for source in (data_profile, state, action):
+        value = source.get("target_coverage")
+        if isinstance(value, str):
+            return value
+    return "all"
+
+
+def action_targets(
+    action: Mapping[str, object],
+    policy: str = "all",
+) -> tuple[tuple[str | None, str | None], ...]:
     target = action.get("target")
     target_ids = set(as_sequence(target)) if isinstance(target, list) else {target}
     uses_project = "project" in target_ids
@@ -354,13 +387,90 @@ def action_targets(action: Mapping[str, object]) -> tuple[tuple[str | None, str 
     projects: tuple[E2eTarget | None, ...] = PROJECT_TARGETS if uses_project else (None,)
     apis: tuple[E2eTarget | None, ...] = API_TARGETS if uses_api else (None,)
     return tuple(
-        (
-            project.target_id if project is not None else None,
-            api.target_id if api is not None else None,
-        )
+        (project_id, api_id)
         for project in projects
         for api in apis
+        for project_id in [project.target_id if project is not None else None]
+        for api_id in [api.target_id if api is not None else None]
+        if target_allowed(project_id, policy, "project")
+        and target_allowed(api_id, policy, "api")
     )
+
+
+def compatible_with(value: str, allowed: object) -> bool:
+    allowed_values = string_set(allowed)
+    return not allowed_values or value in allowed_values
+
+
+def action_state_compatible(action: Mapping[str, object], state: Mapping[str, object]) -> bool:
+    action_id = scalar_text(action.get("id"))
+    state_id = scalar_text(state.get("id"))
+    return compatible_with(state_id, action.get("compatible_states")) and compatible_with(
+        action_id, state.get("compatible_actions")
+    )
+
+
+def data_compatible(
+    action: Mapping[str, object],
+    state: Mapping[str, object],
+    data_profile: Mapping[str, object],
+) -> bool:
+    action_id = scalar_text(action.get("id"))
+    state_id = scalar_text(state.get("id"))
+    data_tags = string_set(data_profile.get("tags"))
+    required_tags = string_set(state.get("requires_data_tags"))
+    return (
+        compatible_with(action_id, data_profile.get("compatible_actions"))
+        and compatible_with(state_id, data_profile.get("compatible_states"))
+        and required_tags <= data_tags
+    )
+
+
+def standalone_case_enabled(
+    action: Mapping[str, object],
+    state: Mapping[str, object],
+    data_profile: Mapping[str, object],
+) -> bool:
+    case_generation = as_mapping(action.get("case_generation"))
+    for case in as_sequence(case_generation.get("standalone_cases")):
+        case_mapping = as_mapping(case)
+        if (
+            scalar_text(case_mapping.get("state")) == scalar_text(state.get("id"))
+            and scalar_text(case_mapping.get("data")) == scalar_text(data_profile.get("id"))
+        ):
+            return True
+    return False
+
+
+def action_goal_enabled(
+    action: Mapping[str, object],
+    state: Mapping[str, object],
+    data_profile: Mapping[str, object],
+) -> bool:
+    case_generation = as_mapping(action.get("case_generation"))
+    as_goal = case_generation.get("as_goal")
+    if isinstance(as_goal, bool):
+        return as_goal or standalone_case_enabled(action, state, data_profile)
+    if isinstance(as_goal, Mapping):
+        states = string_set(as_mapping(as_goal).get("states"))
+        return scalar_text(state.get("id")) in states
+    operation_type = scalar_text(action.get("operation_type"))
+    if operation_type in {"query", "evidence"}:
+        return standalone_case_enabled(action, state, data_profile)
+    return True
+
+
+def should_generate_variant(
+    action: Mapping[str, object],
+    state: Mapping[str, object],
+    data_profile: Mapping[str, object],
+) -> bool:
+    coverage_role = scalar_text(data_profile.get("coverage_role"))
+    if coverage_role == "evidence_probe" and not standalone_case_enabled(
+        action, state, data_profile
+    ):
+        return False
+    return action_goal_enabled(action, state, data_profile)
 
 
 def build_component_variants() -> tuple[E2eComponentVariant, ...]:
@@ -377,11 +487,18 @@ def build_component_variants() -> tuple[E2eComponentVariant, ...]:
         ]
         for action in actions:
             action_id = scalar_text(action.get("id"))
-            for project_id, api_id in action_targets(action):
-                for state in states:
-                    state_id = scalar_text(state.get("id"))
-                    continue_flow = state.get("continue_flow")
-                    for data_profile in data_profiles:
+            for state in states:
+                if not action_state_compatible(action, state):
+                    continue
+                state_id = scalar_text(state.get("id"))
+                continue_flow = state.get("continue_flow")
+                for data_profile in data_profiles:
+                    if not data_compatible(action, state, data_profile):
+                        continue
+                    if not should_generate_variant(action, state, data_profile):
+                        continue
+                    policy = target_coverage_policy(action, state, data_profile)
+                    for project_id, api_id in action_targets(action, policy):
                         variants.append(
                             E2eComponentVariant(
                                 component_id,

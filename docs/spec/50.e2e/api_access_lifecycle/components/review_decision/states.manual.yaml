@@ -4,6 +4,8 @@ states:
   - id: approved
     title: 承認成功
     continue_flow: true
+    compatible_actions:
+      - approve_request
     provides:
       variables:
         - subscriptionId[${project.id},${api.id}]
@@ -12,11 +14,22 @@ states:
   - id: rejected
     title: 却下成功
     continue_flow: true
+    compatible_actions:
+      - reject_request
+    target_coverage: canonical_pair
 
   - id: forbidden
     title: reviewer以外の審査拒否
     continue_flow: false
+    compatible_actions:
+      - approve_request
+      - reject_request
+    target_coverage: canonical_pair
 
   - id: not_pending
     title: PENDING以外の申請審査拒否
     continue_flow: false
+    compatible_actions:
+      - approve_request
+      - reject_request
+    target_coverage: canonical_pair
