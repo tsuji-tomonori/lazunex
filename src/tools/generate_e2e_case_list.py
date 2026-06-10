@@ -87,16 +87,301 @@ def target_case_apis(target_case: E2eTargetCase) -> str:
     return "<br>".join(f"`{api}`" for api in matched_apis) if matched_apis else "-"
 
 
-def render_generated_case_rows() -> list[str]:
+def plain_target_case_projects(target_case: E2eTargetCase) -> str:
+    projects = sorted({assertion.project_id for assertion in target_case.runtime_assertions})
+    if projects:
+        return " / ".join(target_label(project) for project in projects)
+    variants = " ".join(target_case.selected_variants)
+    matched_projects = [
+        project for project in ("project_A", "project_B", "project_C") if project in variants
+    ]
+    if matched_projects:
+        return " / ".join(target_label(project) for project in matched_projects)
+    return "-"
+
+
+def plain_target_case_apis(target_case: E2eTargetCase) -> str:
+    apis = sorted(
+        {
+            assertion.api_id
+            for assertion in target_case.runtime_assertions
+            if assertion.expected == "allowed"
+        }
+    )
+    if not apis:
+        apis = [api for api in ("API_A", "API_B", "API_C") if api in target_case.goal_variant]
+    if not apis:
+        variants = " ".join(target_case.selected_variants)
+        apis = [api for api in ("API_A", "API_B", "API_C") if api in variants]
+    return " / ".join(target_label(api) for api in apis) if apis else "-"
+
+
+def case_target_label(target_case: E2eTargetCase) -> str:
+    project = plain_target_case_projects(target_case)
+    api = plain_target_case_apis(target_case)
+    if project != "-" and api != "-":
+        return f"{project} x {api}"
+    if project != "-":
+        return project
+    if api != "-":
+        return api
+    return "-"
+
+
+def scenario_link(target_case: E2eTargetCase) -> str:
+    return f"[詳細](cases/{target_case.filename})"
+
+
+def flow_summary_for_variants(
+    target_case: E2eTargetCase,
+    *,
+    variants: Mapping[str, E2eComponentVariant],
+    titles: Mapping[str, Mapping[str, str]],
+) -> str:
+    actions: list[str] = []
+    for variant_id in target_case.selected_variants:
+        variant = parse_variant(variant_id, variants=variants)
+        action_title = title_only(
+            variant.action_id,
+            titles[variant.component_id].get(f"action:{variant.action_id}"),
+        )
+        if not actions or actions[-1] != action_title:
+            actions.append(action_title)
+    return " -> ".join(markdown_escape(action) for action in actions) if actions else "-"
+
+
+def connective_action(action: str) -> str:
+    if action.endswith("する"):
+        return f"{action[:-2]}し"
+    if action.endswith("す"):
+        return f"{action[:-1]}し"
+    return action
+
+
+def target_case_view(
+    target_case: E2eTargetCase,
+    *,
+    variants: Mapping[str, E2eComponentVariant],
+    titles: Mapping[str, Mapping[str, str]],
+) -> tuple[str, str, str, str]:
+    goal = parse_variant(target_case.goal_variant, variants=variants)
+    component_titles = titles[goal.component_id]
+    action = title_only(goal.action_id, component_titles.get(f"action:{goal.action_id}"))
+    state = title_only(goal.state_id, component_titles.get(f"state:{goal.state_id}"))
+    data = title_only(goal.data_id, component_titles.get(f"data:{goal.data_id}"))
+    purpose = f"{case_target_label(target_case)}で{connective_action(action)}、{state}を確認する"
+    evidence = state
+    if target_case.runtime_assertions:
+        evidence = "<br>".join(
+            f"{target_label(assertion.api_id)} {assertion.expected}"
+            for assertion in target_case.runtime_assertions
+        )
+    return (
+        markdown_escape(purpose),
+        markdown_escape(data),
+        markdown_escape(state),
+        evidence,
+    )
+
+
+def render_smoke_case_summary() -> list[str]:
     lines = [
-        "## 5. 生成ケース一覧",
+        "## 5. Smoke生成ケース一覧",
         "",
-        "| ケースID | Coverage Group | Goal Component | 目的 | Project | API | "
-        "Goal Variant | Component Variant | Runtime期待 | シナリオ |",
-        "|---|---|---|---|---|---|---|---|---|---|",
+        "| ID | 種別 | Tier | 目的 | 処理概要 | 終了条件 | 主なエビデンス | Link |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for case in CASES:
+        flow = " -> ".join(f"`{step}`" for step in case.scenario_steps)
+        evidence = "<br>".join(markdown_escape(item) for item in case.expected)
+        terminal = "-" if case.terminal_step == "-" else f"`{case.terminal_step}`"
+        lines.append(
+            f"| `{case.case_id}` | `{case.kind}` | `{case.tier}` | "
+            f"{markdown_escape(case.purpose)} | {flow} | {terminal} | {evidence} | - |"
+        )
+    lines.append("")
+    lines.extend(render_smoke_factor_details())
+    return lines
+
+
+def render_smoke_factor_details() -> list[str]:
+    lines = [
+        "<details>",
+        "<summary>Smokeケースの要因選択</summary>",
+        "",
+    ]
+    for case in CASES:
+        selected = selected_elements_by_factor(case.case_id)
+        lines.extend(
+            [
+                f"### {case.case_id}",
+                "",
+                "| 要因 | 要素 |",
+                "|---|---|",
+            ]
+        )
+        for factor in FACTORS:
+            if factor.factor_id not in selected:
+                continue
+            value = element_label(factor.factor_id, selected[factor.factor_id])
+            lines.append(
+                f"| {markdown_escape(factor.title)} | {markdown_escape(value)} |"
+            )
+        lines.append("")
+    lines.extend(["</details>", ""])
+    return lines
+
+
+def render_component_case_summary(
+    *,
+    variants: Mapping[str, E2eComponentVariant],
+    titles: Mapping[str, Mapping[str, str]],
+) -> list[str]:
+    lines = [
+        "## 6. Component coverage summary",
+        "",
+        "| Component | 件数 | 代表ケース | 主な観点 |",
+        "|---|---:|---|---|",
+    ]
+    for component_id in COMPONENT_IDS:
+        component_cases = [
+            target_case
+            for target_case in TARGET_CASES
+            if target_case.goal_component == component_id
+        ]
+        states = []
+        for target_case in component_cases:
+            variant = parse_variant(target_case.goal_variant, variants=variants)
+            state = title_only(
+                variant.state_id,
+                titles[component_id].get(f"state:{variant.state_id}"),
+            )
+            if state not in states:
+                states.append(state)
+        representative = component_cases[0].case_id if component_cases else "-"
+        lines.append(
+            f"| `{component_id}` | {len(component_cases)} | `{representative}` | "
+            f"{markdown_escape(', '.join(states) if states else '-')} |"
+        )
+    lines.append("")
+    return lines
+
+
+def render_project_api_matrices(
+    *,
+    variants: Mapping[str, E2eComponentVariant],
+    titles: Mapping[str, Mapping[str, str]],
+) -> list[str]:
+    matrix_components = (
+        "access_request_workflow",
+        "review_decision",
+        "runtime_authorization",
+    )
+    lines = [
+        "## 7. Project x API matrix",
+        "",
+    ]
+    for component_id in matrix_components:
+        component_cases = [
+            target_case
+            for target_case in TARGET_CASES
+            if target_case.goal_component == component_id
+        ]
+        grouped: dict[str, dict[tuple[str, str], str]] = {}
+        for target_case in component_cases:
+            variant = parse_variant(target_case.goal_variant, variants=variants)
+            if variant.project_id is None or variant.api_id is None:
+                continue
+            state = title_only(
+                variant.state_id,
+                titles[component_id].get(f"state:{variant.state_id}"),
+            )
+            data = title_only(
+                variant.data_id,
+                titles[component_id].get(f"data:{variant.data_id}"),
+            )
+            key = f"{state} / {data}"
+            grouped.setdefault(key, {})[(variant.project_id, variant.api_id)] = (
+                target_case.case_id
+            )
+        if not grouped:
+            continue
+        component_title = titles[component_id].get("component", component_id)
+        lines.extend([f"### {component_id} {component_title}", ""])
+        for key, case_ids in grouped.items():
+            lines.extend(
+                [
+                    f"#### {markdown_escape(key)}",
+                    "",
+                    "| Project \\ API | API A | API B | API C |",
+                    "|---|---|---|---|",
+                ]
+            )
+            for project_id in ("project_A", "project_B", "project_C"):
+                row = [target_label(project_id)]
+                for api_id in ("API_A", "API_B", "API_C"):
+                    case_id = case_ids.get((project_id, api_id))
+                    row.append(f"`{case_id}`" if case_id else "-")
+                lines.append(f"| {' | '.join(row)} |")
+            lines.append("")
+    return lines
+
+
+def render_generated_case_rows(
+    *,
+    variants: Mapping[str, E2eComponentVariant],
+    titles: Mapping[str, Mapping[str, str]],
+) -> list[str]:
+    lines = [
+        "## 8. Cases by component",
+        "",
+    ]
+    for component_id in COMPONENT_IDS:
+        component_title = titles[component_id].get("component", component_id)
+        lines.extend(
+            [
+                f"### {component_id} {component_title}",
+                "",
+                "| ID | 観点 | 対象 | データ | 処理概要 | 主なエビデンス | Link |",
+                "|---|---|---|---|---|---|---|",
+            ]
+        )
+        for target_case in TARGET_CASES:
+            if target_case.goal_component != component_id:
+                continue
+            purpose, data, _state, evidence = target_case_view(
+                target_case,
+                variants=variants,
+                titles=titles,
+            )
+            lines.append(
+                f"| `{target_case.case_id}` | {purpose} | "
+                f"{markdown_escape(case_target_label(target_case))} | {data} | "
+                f"{flow_summary_for_variants(target_case, variants=variants, titles=titles)} | "
+                f"{evidence} | {scenario_link(target_case)} |"
+            )
+        lines.append("")
+    return lines
+
+
+def render_variant_index_markdown(root: Path = Path("docs/spec/50.e2e")) -> str:
+    source_root = source_flow_root(root)
+    variants = component_variants_by_id()
+    titles = component_element_titles(source_root)
+    lines = [
+        GENERATED_COMMENT,
+        "",
+        f"# {FLOW_ID} e2e variant index",
+        "",
+        "内部生成情報の確認用一覧。人間向けのケースレビューは "
+        "[case-list_gen.md](case-list_gen.md) を参照する。",
+        "",
+        "| ケースID | Coverage Group | Goal Component | Goal Variant | "
+        "Selected Variants | Runtime期待 | シナリオ |",
+        "|---|---|---|---|---|---|---|",
     ]
     for target_case in TARGET_CASES:
-        variants = "<br>".join(f"`{variant}`" for variant in target_case.selected_variants)
+        selected = "<br>".join(f"`{variant}`" for variant in target_case.selected_variants)
         runtime_assertions = (
             "<br>".join(
                 f"`{assertion.project_id}` / `{assertion.api_id}`: `{assertion.expected}`"
@@ -107,13 +392,20 @@ def render_generated_case_rows() -> list[str]:
         )
         lines.append(
             f"| `{target_case.case_id}` | `{target_case.coverage_group}` | "
-            f"`{target_case.goal_component}` | {markdown_escape(target_case.title)} | "
-            f"{target_case_projects(target_case)} | {target_case_apis(target_case)} | "
-            f"`{target_case.goal_variant}` | {variants} | {runtime_assertions} | "
-            f"[`cases/{target_case.filename}`](cases/{target_case.filename}) |"
+            f"`{target_case.goal_component}` | `{target_case.goal_variant}` | "
+            f"{selected} | {runtime_assertions} | {scenario_link(target_case)} |"
         )
-    lines.append("")
-    return lines
+    lines.extend(["", "## 表示ラベル", ""])
+    for component_id in COMPONENT_IDS:
+        component_title = titles[component_id].get("component", component_id)
+        lines.extend([f"### {component_id} {component_title}", ""])
+        for variant in variants.values():
+            if variant.component_id != component_id:
+                continue
+            data, action, state = variant_labels(variant, titles=titles)
+            lines.append(f"- `{variant.variant_id}`: {data} / {action} / {state}")
+        lines.append("")
+    return "\n".join(lines)
 
 
 def as_mapping(value: object) -> Mapping[str, object]:
@@ -271,7 +563,7 @@ def selected_variants_by_component(
 
 def render_coverage_summary(variants: Sequence[E2eComponentVariant]) -> list[str]:
     lines = [
-        "## 1. Coverage summary",
+        "## 2. Coverage summary",
         "",
         "| Component | Variants | Covered variants | Cases | Coverage |",
         "|---|---:|---:|---:|---:|",
@@ -301,7 +593,7 @@ def render_coverage_summary(variants: Sequence[E2eComponentVariant]) -> list[str
 
 
 def render_component_sections(flow_root: Path) -> list[str]:
-    lines = ["## 2. コンポーネントごとの要素", ""]
+    lines = ["## 3. コンポーネントごとの要素", ""]
     for component_id in COMPONENT_IDS:
         component_root = flow_root / "components" / component_id
         component_doc = load_yaml(component_root / "component.manual.yaml")
@@ -363,12 +655,21 @@ def render_component_sections(flow_root: Path) -> list[str]:
 
 def render_case_list_markdown(root: Path = Path("docs/spec/50.e2e")) -> str:
     source_root = source_flow_root(root)
+    variants = component_variants_by_id()
+    titles = component_element_titles(source_root)
     lines = [
         GENERATED_COMMENT,
         "",
-        f"# {FLOW_ID} e2e component variants",
+        f"# {FLOW_ID} e2e case list",
         "",
-        "## 0. 対象フロー",
+        "## 0. 読み方",
+        "",
+        "- Smoke: 主要な代表ケース。",
+        "- Component coverage: 各論理コンポーネントのvariant coverage。",
+        "- Matrix: Project x API の組み合わせ確認。",
+        "- 内部variant一覧は [case-variant-index_gen.md](case-variant-index_gen.md) を参照。",
+        "",
+        "## 1. 対象フロー",
         "",
         "| Step | Operation | Endpoint | Template |",
         "|---|---|---|---|",
@@ -382,13 +683,13 @@ def render_case_list_markdown(root: Path = Path("docs/spec/50.e2e")) -> str:
     lines.extend(
         [
             "",
-            *render_coverage_summary(build_component_variants()),
+            *render_coverage_summary(tuple(variants.values())),
             *render_component_sections(source_root),
         ]
     )
     lines.extend(
         [
-            "## 3. 枝刈り規則",
+            "## 4. 枝刈り規則",
             "",
             "| Rule ID | 条件 | 結果 | 理由 |",
             "|---|---|---|---|",
@@ -400,31 +701,21 @@ def render_case_list_markdown(root: Path = Path("docs/spec/50.e2e")) -> str:
             "| `P004` | terminal step/status/reasonが同一 | 等価ケースを統合 | "
             "E2Eの重複実行を避ける |",
             "",
-            "## 4. Smoke生成ケース一覧",
+        ]
+    )
+    lines.extend(
+        [
+            *render_smoke_case_summary(),
+            *render_component_case_summary(variants=variants, titles=titles),
+            *render_project_api_matrices(variants=variants, titles=titles),
+            *render_generated_case_rows(variants=variants, titles=titles),
+            "## 9. Appendix",
+            "",
+            "- 内部variant一覧: [case-variant-index_gen.md](case-variant-index_gen.md)",
+            "- CSV: [pruned-cases_gen.csv](pruned-cases_gen.csv)",
             "",
         ]
     )
-    factor_columns = " | ".join(factor.factor_id for factor in FACTORS)
-    factor_alignments = "|".join("---" for _ in FACTORS)
-    lines.extend(
-        [
-            f"| ケースID | {factor_columns} | 種別 | Tier | 終了Step | シナリオ |",
-            f"|---|{factor_alignments}|---|---|---|---|",
-        ]
-    )
-    for case in CASES:
-        selected = selected_elements_by_factor(case.case_id)
-        selected_columns = " | ".join(
-            markdown_escape(element_label(factor.factor_id, selected[factor.factor_id]))
-            if factor.factor_id in selected
-            else "-"
-            for factor in FACTORS
-        )
-        lines.append(
-            f"| `{case.case_id}` | {selected_columns} | `{case.kind}` | `{case.tier}` | "
-            f"{markdown_escape(case.terminal_step)} | - |"
-        )
-    lines.extend(["", *render_generated_case_rows()])
     return "\n".join(lines)
 
 
@@ -465,6 +756,7 @@ def rendered_outputs(output_root: Path = Path("docs/spec/50.e2e")) -> Mapping[Pa
     flow_root = output_root / FLOW_ID
     return {
         flow_root / "case-list_gen.md": render_case_list_markdown(output_root),
+        flow_root / "case-variant-index_gen.md": render_variant_index_markdown(output_root),
         flow_root / "pruned-cases_gen.csv": render_pruned_cases_csv(output_root),
     }
 

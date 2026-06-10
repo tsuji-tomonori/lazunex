@@ -51,6 +51,7 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
     required_paths = [
         flow_root / "flow.manual.yaml",
         flow_root / "case-list_gen.md",
+        flow_root / "case-variant-index_gen.md",
         flow_root / "pruned-cases_gen.csv",
         flow_root / "targets" / "projects" / "project_A.target.manual.yaml",
         flow_root / "targets" / "projects" / "project_B.target.manual.yaml",

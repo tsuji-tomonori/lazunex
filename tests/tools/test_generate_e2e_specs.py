@@ -39,13 +39,18 @@ def test_e2e_flow_steps_cover_generated_api_list() -> None:
 def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
     rendered = case_list_outputs(tmp_path)
     content = rendered[tmp_path / "api_access_lifecycle/case-list_gen.md"]
+    variant_index = rendered[tmp_path / "api_access_lifecycle/case-variant-index_gen.md"]
 
-    assert "## 0. 対象フロー" in content
-    assert "## 1. Coverage summary" in content
-    assert "## 2. コンポーネントごとの要素" in content
-    assert "## 3. 枝刈り規則" in content
-    assert "## 4. Smoke生成ケース一覧" in content
-    assert "## 5. 生成ケース一覧" in content
+    assert "## 0. 読み方" in content
+    assert "## 1. 対象フロー" in content
+    assert "## 2. Coverage summary" in content
+    assert "## 3. コンポーネントごとの要素" in content
+    assert "## 4. 枝刈り規則" in content
+    assert "## 5. Smoke生成ケース一覧" in content
+    assert "## 6. Component coverage summary" in content
+    assert "## 7. Project x API matrix" in content
+    assert "## 8. Cases by component" in content
+    assert "case-variant-index_gen.md" in content
     assert "対象別生成ケース一覧" not in content
     assert "## 2. 旧factor互換表" not in content
     assert "| `runtime_authorization` | 20 | 20 | 20 | 100.0% |" in content
@@ -60,12 +65,11 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
         "valid_project, has_public_client, has_confidential_client |"
     ) in content
     assert "| 要素ID | 既定要素 | 終端要素 | 期待観点 |" not in content
-    assert "| ケースID | F000 | F001 | F002 | F010 |" in content
-    assert (
-        "| ケースID | Coverage Group | Goal Component | 目的 | Project | API | "
-        "Goal Variant | Component Variant | Runtime期待 |"
-        in content
-    )
+    assert "| ケースID | F000 | F001 | F002 | F010 |" not in content
+    assert "| ID | 種別 | Tier | 目的 | 処理概要 | 終了条件 | 主なエビデンス | Link |" in content
+    assert "<summary>Smokeケースの要因選択</summary>" in content
+    assert "Goal Variant | Component Variant | Runtime期待 |" not in content
+    assert "Goal Variant | Selected Variants | Runtime期待 |" in variant_index
     assert len(TARGET_CASES) == 87
     pruned_csv = rendered[tmp_path / "api_access_lifecycle/pruned-cases_gen.csv"]
     assert pruned_csv.startswith(
@@ -113,16 +117,30 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
         assert case.case_id not in pruned_csv
     for target_case in TARGET_CASES:
         assert f"cases/{target_case.filename}" in content
-    assert "| `TC003` | 成功: appが応答可能 | reviewer以外 |" in content
+        assert f"cases/{target_case.filename}" in variant_index
+    assert "| 管理API呼び出し主体 | reviewer以外 |" in content
     assert "`TC_TARGET_001`" in content
     assert "`TC_TARGET_087`" in content
-    assert "`component_variant`" in content
+    assert "`component_variant`" not in content
+    assert "`component_variant`" in variant_index
+    assert "API AでAPIを公開し、API公開成功を確認する" in content
+    assert (
+        "| Project A | `TC_TARGET_016` | `TC_TARGET_017` | `TC_TARGET_018` |"
+        in content
+    )
     assert (
         "`runtime_authorization.invoke_runtime_api.project_A.API_A.allowed"
         "@approved_runtime_credential`"
-    ) in content
-    assert "`review_decision.approve_request.project_A.API_A.approved@approve_both`" in content
-    assert "`project_A` / `API_B`: `denied`" in content
+    ) not in content
+    assert (
+        "`runtime_authorization.invoke_runtime_api.project_A.API_A.allowed"
+        "@approved_runtime_credential`"
+    ) in variant_index
+    assert (
+        "`review_decision.approve_request.project_A.API_A.approved@approve_both`"
+        in variant_index
+    )
+    assert "`project_A` / `API_B`: `denied`" in variant_index
 
 
 def test_e2e_scenarios_keep_secret_placeholders(tmp_path: Path) -> None:
