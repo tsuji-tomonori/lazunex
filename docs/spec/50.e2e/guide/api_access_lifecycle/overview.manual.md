@@ -2,67 +2,59 @@
 
 ## 目的
 
-このドキュメントは `docs/spec/50.e2e/api_access_lifecycle/` 配下の E2E 仕様 YAML の全体像を示す。各フォルダの YAML schema と記載方針は、各フォルダの `schema-guide.manual.md` を参照する。
+このドキュメントは `docs/spec/50.e2e/api_access_lifecycle/` 配下の E2E 仕様 YAML の全体像を示す。各フォルダの YAML schema と記載方針は、`docs/spec/50.e2e/guide/api_access_lifecycle/` 配下の各 `schema-guide.manual.md` を参照する。
 
 E2E 仕様は JSON Schema ではなく、`src/tools/e2e_models.py`、`src/tools/generate_e2e_case_list.py`、`src/tools/generate_e2e_scenarios.py`、`src/tools/check_e2e_specs.py` が読む YAML shape として管理する。
 
 ## ディレクトリ構成
 
 ```text
-docs/spec/50.e2e/api_access_lifecycle/
-|-- flow.manual.yaml
-|-- overview.manual.md
-|-- case-list_gen.md
-|-- case-variant-index_gen.md
-|-- pruned-cases_gen.csv
-|-- targets/
-|   |-- schema-guide.manual.md
-|   |-- apis/*.target.manual.yaml
-|   `-- projects/*.target.manual.yaml
-|-- components/
-|   |-- schema-guide.manual.md
-|   `-- <component>/
-|       |-- component.manual.yaml
-|       |-- actions.manual.yaml
-|       |-- states.manual.yaml
-|       |-- data.manual.yaml
-|       |-- evidences.manual.yaml
-|       `-- bindings.manual.yaml
-|-- factors/
-|   |-- schema-guide.manual.md
-|   |-- F*_*.manual.yaml
-|   |-- *.factor.manual.yaml
-|   `-- effective_factors.manual.yaml
-|-- operations/
-|   |-- schema-guide.manual.md
-|   `-- <factor>/*.operation.manual.yaml
-|-- results/
-|   |-- schema-guide.manual.md
-|   `-- <group>/*.result.manual.yaml
-|-- data/
-|   |-- schema-guide.manual.md
-|   `-- <factor>/*.data.manual.yaml
-|-- evidences/
-|   |-- schema-guide.manual.md
-|   `-- <group>/*.evidence.manual.yaml
-|-- bindings/
-|   |-- schema-guide.manual.md
-|   `-- *.bindings.manual.yaml
-|-- steps/
-|   |-- schema-guide.manual.md
-|   `-- <group>/*.step.manual.yaml
-|-- templates/
-|   |-- schema-guide.manual.md
-|   `-- steps/*.manual.yaml
-|-- rules/
-|   |-- schema-guide.manual.md
-|   |-- matrix.manual.yaml
-|   |-- pruning.manual.yaml
-|   `-- renderer.manual.yaml
-|-- generated/
-|   |-- schema-guide.manual.md
-|   `-- *.manual.yaml
-`-- cases/*.gen.md
+docs/spec/50.e2e/
+|-- guide/
+|   `-- api_access_lifecycle/
+|       |-- overview.manual.md
+|       |-- targets/schema-guide.manual.md
+|       |-- components/schema-guide.manual.md
+|       |-- factors/schema-guide.manual.md
+|       |-- operations/schema-guide.manual.md
+|       |-- results/schema-guide.manual.md
+|       |-- data/schema-guide.manual.md
+|       |-- evidences/schema-guide.manual.md
+|       |-- bindings/schema-guide.manual.md
+|       |-- steps/schema-guide.manual.md
+|       |-- templates/schema-guide.manual.md
+|       |-- rules/schema-guide.manual.md
+|       `-- generated/schema-guide.manual.md
+`-- api_access_lifecycle/
+    |-- flow.manual.yaml
+    |-- case-list_gen.md
+    |-- case-variant-index_gen.md
+    |-- pruned-cases_gen.csv
+    |-- targets/
+    |   |-- apis/*.target.manual.yaml
+    |   `-- projects/*.target.manual.yaml
+    |-- components/
+    |   `-- <component>/
+    |       |-- component.manual.yaml
+    |       |-- actions.manual.yaml
+    |       |-- states.manual.yaml
+    |       |-- data.manual.yaml
+    |       |-- evidences.manual.yaml
+    |       `-- bindings.manual.yaml
+    |-- factors/
+    |   |-- F*_*.manual.yaml
+    |   |-- *.factor.manual.yaml
+    |   `-- effective_factors.manual.yaml
+    |-- operations/<factor>/*.operation.manual.yaml
+    |-- results/<group>/*.result.manual.yaml
+    |-- data/<factor>/*.data.manual.yaml
+    |-- evidences/<group>/*.evidence.manual.yaml
+    |-- bindings/*.bindings.manual.yaml
+    |-- steps/<group>/*.step.manual.yaml
+    |-- templates/steps/*.manual.yaml
+    |-- rules/*.manual.yaml
+    |-- generated/*.manual.yaml
+    `-- cases/*.gen.md
 ```
 
 ## 役割
