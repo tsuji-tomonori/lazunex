@@ -87,7 +87,7 @@ uv run python -m tools.generate_api_message_catalog
 
 ### `generate_e2e_case_list`
 
-手動管理のE2E要因YAMLから枝刈り済みケース一覧を生成する。
+E2E component YAMLから枝刈り済みケース一覧を生成する。
 
 ```bash
 uv run python -m tools.generate_e2e_case_list

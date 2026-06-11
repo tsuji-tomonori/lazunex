@@ -8,13 +8,13 @@
 
 ## 日本語の説明
 
-手動管理のE2E要因YAMLから枝刈り済みケース一覧を生成する。
+E2E component YAMLから枝刈り済みケース一覧を生成する。
 
 ## I/O
 
 | 種別 | 内容 |
 | :--- | :--- |
-| 入力 | `docs/spec/50.e2e/*/targets/**/*.manual.yaml`<br>`docs/spec/50.e2e/*/components/**/*.manual.yaml`<br>`docs/spec/50.e2e/*/factors/*.manual.yaml`<br>`docs/spec/50.e2e/*/operations/**/*.manual.yaml`<br>`docs/spec/50.e2e/*/results/**/*.manual.yaml`<br>`docs/spec/50.e2e/*/data/**/*.manual.yaml`<br>`docs/spec/50.e2e/*/generated/*.manual.yaml`<br>`docs/spec/50.e2e/*/overrides.manual.yaml` |
+| 入力 | `docs/spec/50.e2e/*/targets/**/*.manual.yaml`<br>`docs/spec/50.e2e/*/components/**/*.manual.yaml`<br>`docs/spec/50.e2e/*/rules/*.manual.yaml` |
 | 出力 | `docs/spec/50.e2e/*/case-list_gen.md`<br>`docs/spec/50.e2e/*/pruned-cases_gen.csv` |
 | check mode | 対応 |
 | CI実行 | 安全 |

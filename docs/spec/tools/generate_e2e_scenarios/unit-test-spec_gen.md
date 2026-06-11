@@ -11,7 +11,7 @@
 | Case | 観点 | 期待結果 |
 | :--- | :--- | :--- |
 | UT001 | 正常系 | `uv run python -m tools.generate_e2e_scenarios` 相当の実行で期待する成果物または検査結果が得られる。 |
-| UT002 | 入力 | 必須入力 `docs/spec/50.e2e/*/case-list_gen.md`<br>`docs/spec/50.e2e/*/targets/**/*.manual.yaml`<br>`docs/spec/50.e2e/*/components/**/*.manual.yaml`<br>`docs/spec/50.e2e/*/operations/**/*.manual.yaml`<br>`docs/spec/50.e2e/*/steps/**/*.manual.yaml`<br>`docs/spec/50.e2e/*/evidences/**/*.manual.yaml`<br>`docs/spec/50.e2e/*/bindings/*.manual.yaml`<br>`docs/spec/50.e2e/*/rules/renderer.manual.yaml`<br>`docs/spec/50.e2e/*/templates/**/*.manual.yaml` がテスト fixture から参照される。 |
+| UT002 | 入力 | 必須入力 `docs/spec/50.e2e/*/case-list_gen.md`<br>`docs/spec/50.e2e/*/targets/**/*.manual.yaml`<br>`docs/spec/50.e2e/*/components/**/*.manual.yaml`<br>`docs/spec/50.e2e/*/steps/management_api/*.manual.yaml`<br>`docs/spec/50.e2e/*/steps/runtime_api/*.manual.yaml`<br>`docs/spec/50.e2e/*/templates/**/*.manual.yaml` がテスト fixture から参照される。 |
 | UT003 | 出力 | 期待出力 `docs/spec/50.e2e/*/cases/*.gen.md` の内容または通知を検証する。 |
 | UT004 | check mode | `--check` 実行時に生成済み成果物との差分を検出する。 |
 | UT005 | 冪等性 | 同じ入力で再実行しても余分な差分を作らない。 |

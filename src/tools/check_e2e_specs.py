@@ -10,9 +10,7 @@ import yaml
 from tools.check_e2e_case_evidences import check_case_evidences
 from tools.e2e_models import (
     API_TARGETS,
-    CASES,
     COMPONENT_IDS,
-    FACTORS,
     FLOW_ID,
     FLOW_STEPS,
     PROJECT_TARGETS,
@@ -59,42 +57,10 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
         flow_root / "targets" / "apis" / "API_A.target.manual.yaml",
         flow_root / "targets" / "apis" / "API_B.target.manual.yaml",
         flow_root / "targets" / "apis" / "API_C.target.manual.yaml",
-        flow_root / "factors" / "project.factor.manual.yaml",
-        flow_root / "factors" / "access_request.factor.manual.yaml",
-        flow_root / "factors" / "review.factor.manual.yaml",
-        flow_root / "operations" / "project" / "create.operation.manual.yaml",
-        flow_root / "operations" / "project" / "update.operation.manual.yaml",
-        flow_root / "operations" / "access_request" / "apply.operation.manual.yaml",
-        flow_root / "operations" / "review" / "approve.operation.manual.yaml",
-        flow_root / "operations" / "review" / "reject.operation.manual.yaml",
-        flow_root / "steps" / "project" / "create_project.step.manual.yaml",
-        flow_root / "steps" / "access_request" / "create_access_request.step.manual.yaml",
-        flow_root / "steps" / "review" / "approve_access_request.step.manual.yaml",
-        flow_root / "steps" / "review" / "reject_access_request.step.manual.yaml",
-        flow_root / "steps" / "runtime" / "invoke_api.step.manual.yaml",
-        flow_root / "evidences" / "project" / "project_search_hit.evidence.manual.yaml",
-        flow_root / "evidences" / "access_request" / "access_request_listed.evidence.manual.yaml",
-        flow_root / "evidences" / "review" / "access_request_approved.evidence.manual.yaml",
-        flow_root / "evidences" / "review" / "access_request_rejected.evidence.manual.yaml",
-        flow_root / "evidences" / "runtime" / "current_api_callable.evidence.manual.yaml",
-        flow_root / "evidences" / "runtime" / "other_api_not_callable.evidence.manual.yaml",
-        flow_root / "bindings" / "project.bindings.manual.yaml",
-        flow_root / "bindings" / "access_request.bindings.manual.yaml",
-        flow_root / "bindings" / "review.bindings.manual.yaml",
-        flow_root / "bindings" / "runtime.bindings.manual.yaml",
         flow_root / "rules" / "renderer.manual.yaml",
         flow_root / "rules" / "matrix.manual.yaml",
         flow_root / "rules" / "pruning.manual.yaml",
-        flow_root / "factors" / "effective_factors.manual.yaml",
-        flow_root / "generated" / "effective_factor_matrix.manual.yaml",
-        flow_root / "generated" / "effective_variants.manual.yaml",
-        flow_root / "generated" / "effective_step_bindings.manual.yaml",
-        flow_root / "generated" / "effective_cases.manual.yaml",
     ]
-    required_paths.extend(
-        flow_root / "factors" / f"{factor.factor_id}_{factor.slug}.manual.yaml"
-        for factor in FACTORS
-    )
     required_paths.extend(flow_root / "cases" / case.filename for case in TARGET_CASES)
     required_paths.extend(
         flow_root / "templates" / "steps" / f"{step.template}.manual.yaml"
@@ -135,16 +101,15 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
     if flow_path.exists():
         flow = yaml.safe_load(flow_path.read_text(encoding="utf-8"))
         dependencies: set[str] = set()
-        if isinstance(flow, Mapping):
-            flow_mapping = cast(Mapping[str, object], flow)
-            raw_dependencies = flow_mapping.get("dependencies", [])
-            if isinstance(raw_dependencies, list):
-                for dependency in cast(list[object], raw_dependencies):
-                    if isinstance(dependency, Mapping):
-                        dependency_mapping = cast(Mapping[str, object], dependency)
-                        dependency_id = dependency_mapping.get("id")
-                        if isinstance(dependency_id, str):
-                            dependencies.add(dependency_id)
+        flow_mapping = as_mapping(flow)
+        raw_dependencies = flow_mapping.get("dependencies", [])
+        if isinstance(raw_dependencies, list):
+            for dependency in cast(list[object], raw_dependencies):
+                if isinstance(dependency, Mapping):
+                    dependency_mapping = cast(Mapping[str, object], dependency)
+                    dependency_id = dependency_mapping.get("id")
+                    if isinstance(dependency_id, str):
+                        dependencies.add(dependency_id)
         for dependency_id in (
             "access_request_requires_project",
             "review_requires_access_request",
@@ -178,14 +143,17 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
     if matrix_path.exists():
         matrix = yaml.safe_load(matrix_path.read_text(encoding="utf-8"))
         if isinstance(matrix, Mapping):
+            matrix_mapping = cast(Mapping[str, object], matrix)
             component_variant_generation = as_mapping(
-                matrix.get("component_variant_generation")
+                matrix_mapping.get("component_variant_generation")
             )
             component_dimensions = as_mapping(component_variant_generation.get("dimensions"))
             for component_id in COMPONENT_IDS:
                 if component_id not in component_dimensions:
                     errors.append(f"matrix missing component dimension: {component_id}")
-            component_case_generation = as_mapping(matrix.get("component_case_generation"))
+            component_case_generation = as_mapping(
+                matrix_mapping.get("component_case_generation")
+            )
             strategies = {
                 strategy_mapping.get("id")
                 for strategy in as_list(component_case_generation.get("strategies"))
@@ -193,7 +161,6 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
                 for strategy_mapping in [cast(Mapping[str, object], strategy)]
             }
             for strategy_id in (
-                "smoke",
                 "component_variant_coverage",
                 "interaction_coverage",
             ):
@@ -201,7 +168,7 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
                     errors.append(f"matrix missing component case strategy: {strategy_id}")
             assertion_types = {
                 assertion_mapping.get("type")
-                for assertion in as_list(matrix.get("coverage_assertions"))
+                for assertion in as_list(matrix_mapping.get("coverage_assertions"))
                 if isinstance(assertion, Mapping)
                 for assertion_mapping in [cast(Mapping[str, object], assertion)]
             }
@@ -251,17 +218,6 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
         if state_id not in runtime_states:
             errors.append(f"runtime_authorization state missing target case: {state_id}")
 
-    factor_ids = {factor.factor_id for factor in FACTORS}
-    factor_elements = {
-        factor.factor_id: {element.element_id for element in factor.elements} for factor in FACTORS
-    }
-    for case in CASES:
-        for factor_id, element_id in case.selected:
-            if factor_id not in factor_ids:
-                errors.append(f"{case.case_id}: unknown factor {factor_id}")
-                continue
-            if element_id not in factor_elements[factor_id]:
-                errors.append(f"{case.case_id}: unknown element {factor_id}.{element_id}")
     for case in TARGET_CASES:
         scenario_path = flow_root / "cases" / case.filename
         if scenario_path.exists():

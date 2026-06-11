@@ -1,13 +1,5 @@
 schema_version: 1
 
-rules:
-  - id: stop_after_failure
-    description: failure result の後続操作は生成ケースから除外する。
-  - id: require_project_create
-    description: access_request/review は同一Projectのcreate successを前提にする。
-  - id: require_access_request_apply
-    description: review は同一Project/APIのapply successを前提にする。
-
 component_pruning:
   - id: stop_when_continue_flow_false
     description: component state の continue_flow が false の場合、依存する後続componentを除外する。

@@ -4,14 +4,10 @@
 
 - `steps/management_api/*.step.manual.yaml`
 - `steps/runtime_api/*.step.manual.yaml`
-- `steps/project/*.step.manual.yaml`
-- `steps/access_request/*.step.manual.yaml`
-- `steps/review/*.step.manual.yaml`
-- `steps/runtime/*.step.manual.yaml`
 
 ## 役割
 
-scenario Markdown に出す実行手順と capture を定義する。`steps/management_api/` と `steps/runtime_api/` は実 API 呼び出し、domain 別 step は旧 scenario 表示や補助手順として使う。
+scenario Markdown に出す実行手順と capture を定義する。`steps/management_api/` は管理 API 呼び出し、`steps/runtime_api/` は Runtime API 呼び出しを表す。
 
 ## Schema
 

@@ -15,16 +15,9 @@ docs/spec/50.e2e/
 |       |-- overview.manual.md
 |       |-- targets/schema-guide.manual.md
 |       |-- components/schema-guide.manual.md
-|       |-- factors/schema-guide.manual.md
-|       |-- operations/schema-guide.manual.md
-|       |-- results/schema-guide.manual.md
-|       |-- data/schema-guide.manual.md
-|       |-- evidences/schema-guide.manual.md
-|       |-- bindings/schema-guide.manual.md
 |       |-- steps/schema-guide.manual.md
 |       |-- templates/schema-guide.manual.md
-|       |-- rules/schema-guide.manual.md
-|       `-- generated/schema-guide.manual.md
+|       `-- rules/schema-guide.manual.md
 `-- api_access_lifecycle/
     |-- flow.manual.yaml
     |-- case-list_gen.md
@@ -41,19 +34,9 @@ docs/spec/50.e2e/
     |       |-- data.manual.yaml
     |       |-- evidences.manual.yaml
     |       `-- bindings.manual.yaml
-    |-- factors/
-    |   |-- F*_*.manual.yaml
-    |   |-- *.factor.manual.yaml
-    |   `-- effective_factors.manual.yaml
-    |-- operations/<factor>/*.operation.manual.yaml
-    |-- results/<group>/*.result.manual.yaml
-    |-- data/<factor>/*.data.manual.yaml
-    |-- evidences/<group>/*.evidence.manual.yaml
-    |-- bindings/*.bindings.manual.yaml
     |-- steps/<group>/*.step.manual.yaml
     |-- templates/steps/*.manual.yaml
     |-- rules/*.manual.yaml
-    |-- generated/*.manual.yaml
     `-- cases/*.gen.md
 ```
 
@@ -64,16 +47,9 @@ docs/spec/50.e2e/
 | `flow.manual.yaml` | E2E フロー全体、API step、依存関係、case policy を定義する。 | `check_e2e_specs` |
 | `targets/` | E2E で使う Project/API の論理対象と既定値を定義する。 | `generate_e2e_scenarios` |
 | `components/` | component 単位の操作、状態、データ、エビデンス、binding を定義する。 | `e2e_models`, `generate_e2e_case_list`, `generate_e2e_scenarios`, `check_e2e_case_evidences` |
-| `factors/` | 旧 factor ベース smoke ケースの要因と要素を定義する。 | `generate_e2e_case_list`, `generate_e2e_scenarios` |
-| `operations/` | factor 操作の表示ラベルと見出しを定義する。 | `generate_e2e_scenarios` |
-| `results/` | factor 操作結果の共通 result を定義する。 | `generate_e2e_case_list` |
-| `data/` | 旧 factor scenario 用の request data を定義する。 | `generate_e2e_scenarios` |
-| `evidences/` | 旧 factor scenario 用のエビデンス表示行を定義する。 | `generate_e2e_scenarios` |
-| `bindings/` | 旧 factor の operation/result と evidence を対応づける。 | `generate_e2e_scenarios` |
 | `steps/` | シナリオに出す手動 step 仕様を定義する。 | `generate_e2e_scenarios`, `check_e2e_specs` |
 | `templates/` | API 呼び出し template を定義する。 | `check_e2e_specs` |
 | `rules/` | variant/case 生成、枝刈り、Markdown レンダリング方針を定義する。 | `check_e2e_specs`, reviewer |
-| `generated/` | 有効化済み factor/case/variant の入力・確認用 YAML を保持する。 | `generate_e2e_scenarios`, reviewer |
 | `case-list_gen.md`, `case-variant-index_gen.md`, `cases/*.gen.md`, `pruned-cases_gen.csv` | 生成物。手編集しない。 | reviewer |
 
 ## 共通ルール

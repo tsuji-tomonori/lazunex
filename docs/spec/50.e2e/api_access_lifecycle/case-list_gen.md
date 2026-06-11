@@ -4,7 +4,6 @@
 
 ## 0. 読み方
 
-- Smoke: 主要な代表ケース。
 - Component coverage: 各論理コンポーネントのvariant coverage。
 - Matrix: Project x API の組み合わせ確認。
 - 内部variant一覧は [case-variant-index_gen.md](case-variant-index_gen.md) を参照。
@@ -159,170 +158,12 @@
 
 | Rule ID | 条件 | 結果 | 理由 |
 |---|---|---|---|
-| `P001` | `terminal=true` | 後続要因をN/A化 | unit-testと同じprefix terminal方式 |
-| `P002` | `reject_api_access_request_result=success` | approve provisioningとRuntime成功を除外 | rejectはAWS変更しない |
-| `P003` | approve失敗 | Runtime API呼び出しを除外 | subscription/scopeが存在しない |
-| `P004` | terminal step/status/reasonが同一 | 等価ケースを統合 | E2Eの重複実行を避ける |
-| `P005` | `continue_flow=false` の失敗系 | Project/APIを代表targetへ集約 | データ種別や対象差で期待結果が変わらない失敗系を重複実行しない |
-| `P006` | 後続ケースの前提variantとして検証される正常系 | 単独goal caseを生成しない | API公開、Project作成、利用申請、承認成功はRuntime等の後続ケースに内包する |
+| `P001` | `continue_flow=false` の失敗系 | Project/APIを代表targetへ集約 | データ種別や対象差で期待結果が変わらない失敗系を重複実行しない |
+| `P002` | 後続ケースの前提variantとして検証される正常系 | 単独goal caseを生成しない | API公開、Project作成、利用申請、承認成功はRuntime等の後続ケースに内包する |
+| `P003` | 前提component stateが成立しないgoal variant | ケース生成対象から除外 | 到達不能な手順をE2Eケースに含めない |
+| `P004` | 同じcomponent stateを証明する同一evidence | ケース内で重複排除 | レビュー対象のエビデンス表を簡潔に保つ |
 
-## 5. Smoke生成ケース一覧
-
-| ID | 種別 | Tier | 目的 | 処理概要 | 終了条件 | 主なエビデンス | Link |
-|---|---|---|---|---|---|---|---|
-| `TC001` | `happy` | `smoke_sandbox` | API公開から承認、subscriptions確認、Runtime API呼び出し成功までを通す。 | `get_health` -> `post_apis` -> `get_apis` -> `get_api` -> `post_projects` -> `get_projects` -> `get_project` -> `patch_project_public_client` -> `post_api_access_requests` -> `get_project_api_access_requests` -> `approve_api_access_request` -> `get_project_subscriptions` -> `invoke_runtime_api` | - | API catalog、project、request、subscription、scope、Usage Planが一貫して作成される。<br>Runtime APIが期待する2xxを返す。 | - |
-| `TC002` | `branch` | `smoke_sandbox` | 利用申請を却下し、subscriptionとAWS反映が作成されないことを確認する。 | `get_health` -> `post_apis` -> `get_apis` -> `get_api` -> `post_projects` -> `get_projects` -> `get_project` -> `patch_project_public_client` -> `post_api_access_requests` -> `get_project_api_access_requests` -> `reject_api_access_request` -> `get_project_subscriptions` | `reject_api_access_request` | reviewがREJECTEDになる。<br>subscriptionが作成されずRuntime API呼び出しを実行しない。 | - |
-| `TC003` | `negative` | `sandbox` | reviewer以外の主体によるapproveが拒否されることを確認する。 | `get_health` -> `post_apis` -> `get_apis` -> `get_api` -> `post_projects` -> `get_projects` -> `get_project` -> `patch_project_public_client` -> `post_api_access_requests` -> `get_project_api_access_requests` -> `approve_api_access_request` | `approve_api_access_request` | approveがHTTP 403を返す。<br>subscriptionが作成されず後続Runtime API呼び出しを実行しない。 | - |
-| `TC004` | `negative` | `sandbox` | 重複する利用申請が409となり既存pending requestが保持されることを確認する。 | `get_health` -> `post_apis` -> `get_apis` -> `get_api` -> `post_projects` -> `get_projects` -> `get_project` -> `patch_project_public_client` -> `post_api_access_requests` | `post_api_access_requests` | 2回目の申請がHTTP 409を返す。<br>既存pending requestが上書きされない。 | - |
-| `TC005` | `negative` | `sandbox` | 承認時にCognito更新が失敗した場合の部分失敗とretry可能性を確認する。 | `get_health` -> `post_apis` -> `get_apis` -> `get_api` -> `post_projects` -> `get_projects` -> `get_project` -> `patch_project_public_client` -> `post_api_access_requests` -> `get_project_api_access_requests` -> `approve_api_access_request` | `approve_api_access_request` | approveがHTTP 502または503を返す。<br>operation failedとretry可能なprovisioning stepを観測できる。 | - |
-| `TC006` | `negative` | `local_fake` | 公開API詳細取得で不明apiIdが404となり後続状態遷移を止める。 | `get_health` -> `post_apis` -> `get_apis` -> `get_api` | `get_api` | GET /apis/{apiId}がHTTP 404を返す。<br>Project作成以降を実行しない。 | - |
-| `TC007` | `negative` | `local_fake` | Project詳細取得で不明projectIdが404となり利用申請以降を止める。 | `get_health` -> `post_apis` -> `get_apis` -> `get_api` -> `post_projects` -> `get_projects` -> `get_project` | `get_project` | GET /projects/{projectId}がHTTP 404を返す。<br>public client更新以降を実行しない。 | - |
-| `TC008` | `branch` | `sandbox` | public client更新後も承認済みscopeを保持する。 | `get_health` -> `post_apis` -> `get_apis` -> `get_api` -> `post_projects` -> `get_projects` -> `get_project` -> `patch_project_public_client` -> `post_api_access_requests` -> `get_project_api_access_requests` -> `approve_api_access_request` -> `get_project_subscriptions` -> `patch_project_public_client` -> `get_project` | - | public client設定更新後も承認済みscopeが残る。<br>subscriptionsのACTIVE状態が維持される。 | - |
-
-<details>
-<summary>Smokeケースの要因選択</summary>
-
-### TC001
-
-| 要因 | 要素 |
-|---|---|
-| GET /health ヘルスチェック結果 | 成功: appが応答可能 |
-| 管理API呼び出し主体 | provider + project owner + reviewer |
-| 管理API認証 | 有効なmanagement token |
-| POST /apis API公開結果 | 成功: catalog + stage + scope |
-| GET /apis API一覧取得結果 | 成功: 一覧に公開APIが現れる |
-| GET /apis/{apiId} API詳細取得結果 | 成功: 公開API詳細を取得 |
-| POST /projects Project作成結果 | 成功: project + API key + clients |
-| GET /projects Project一覧取得結果 | 成功: 作成Projectが一覧に現れる |
-| GET /projects/{projectId} Project詳細取得結果 | 成功: Project詳細を取得 |
-| PATCH /projects/{projectId}/public-client 更新結果 | 成功: public client設定更新 + 承認済みscope保持 |
-| POST /projects/{projectId}/api-access-requests 利用申請作成結果 | 成功: PENDING申請作成 |
-| GET /projects/{projectId}/api-access-requests 利用申請一覧取得結果 | 成功: PENDING申請が一覧に現れる |
-| POST /api-access-requests/{accessRequestId}/approve 承認結果 | 成功: APPROVED + subscription + 外部反映 |
-| 承認時provisioning | APIGW成功 + Cognito成功 |
-| GET /projects/{projectId}/subscriptions Subscription一覧取得結果 | 成功: 承認済みsubscriptionが一覧に現れる |
-| Runtime credentials | 正常token + API key |
-
-### TC002
-
-| 要因 | 要素 |
-|---|---|
-| GET /health ヘルスチェック結果 | 成功: appが応答可能 |
-| 管理API呼び出し主体 | provider + project owner + reviewer |
-| 管理API認証 | 有効なmanagement token |
-| POST /apis API公開結果 | 成功: catalog + stage + scope |
-| GET /apis API一覧取得結果 | 成功: 一覧に公開APIが現れる |
-| GET /apis/{apiId} API詳細取得結果 | 成功: 公開API詳細を取得 |
-| POST /projects Project作成結果 | 成功: project + API key + clients |
-| GET /projects Project一覧取得結果 | 成功: 作成Projectが一覧に現れる |
-| GET /projects/{projectId} Project詳細取得結果 | 成功: Project詳細を取得 |
-| PATCH /projects/{projectId}/public-client 更新結果 | 成功: public client設定更新 + 承認済みscope保持 |
-| POST /projects/{projectId}/api-access-requests 利用申請作成結果 | 成功: PENDING申請作成 |
-| GET /projects/{projectId}/api-access-requests 利用申請一覧取得結果 | 成功: PENDING申請が一覧に現れる |
-| POST /api-access-requests/{accessRequestId}/reject 却下結果 | 成功: REJECTED + 外部反映なし |
-| GET /projects/{projectId}/subscriptions Subscription一覧取得結果 | 失敗相当: 却下後subscriptionなし |
-
-### TC003
-
-| 要因 | 要素 |
-|---|---|
-| GET /health ヘルスチェック結果 | 成功: appが応答可能 |
-| 管理API呼び出し主体 | reviewer以外 |
-| 管理API認証 | 有効なmanagement token |
-| POST /apis API公開結果 | 成功: catalog + stage + scope |
-| GET /apis API一覧取得結果 | 成功: 一覧に公開APIが現れる |
-| GET /apis/{apiId} API詳細取得結果 | 成功: 公開API詳細を取得 |
-| POST /projects Project作成結果 | 成功: project + API key + clients |
-| GET /projects Project一覧取得結果 | 成功: 作成Projectが一覧に現れる |
-| GET /projects/{projectId} Project詳細取得結果 | 成功: Project詳細を取得 |
-| PATCH /projects/{projectId}/public-client 更新結果 | 成功: public client設定更新 + 承認済みscope保持 |
-| POST /projects/{projectId}/api-access-requests 利用申請作成結果 | 成功: PENDING申請作成 |
-| GET /projects/{projectId}/api-access-requests 利用申請一覧取得結果 | 成功: PENDING申請が一覧に現れる |
-| POST /api-access-requests/{accessRequestId}/approve 承認結果 | 失敗: reviewer以外 |
-
-### TC004
-
-| 要因 | 要素 |
-|---|---|
-| GET /health ヘルスチェック結果 | 成功: appが応答可能 |
-| 管理API呼び出し主体 | provider + project owner + reviewer |
-| 管理API認証 | 有効なmanagement token |
-| POST /apis API公開結果 | 成功: catalog + stage + scope |
-| GET /apis API一覧取得結果 | 成功: 一覧に公開APIが現れる |
-| GET /apis/{apiId} API詳細取得結果 | 成功: 公開API詳細を取得 |
-| POST /projects Project作成結果 | 成功: project + API key + clients |
-| GET /projects Project一覧取得結果 | 成功: 作成Projectが一覧に現れる |
-| GET /projects/{projectId} Project詳細取得結果 | 成功: Project詳細を取得 |
-| PATCH /projects/{projectId}/public-client 更新結果 | 成功: public client設定更新 + 承認済みscope保持 |
-| POST /projects/{projectId}/api-access-requests 利用申請作成結果 | 重複pending |
-
-### TC005
-
-| 要因 | 要素 |
-|---|---|
-| GET /health ヘルスチェック結果 | 成功: appが応答可能 |
-| 管理API呼び出し主体 | provider + project owner + reviewer |
-| 管理API認証 | 有効なmanagement token |
-| POST /apis API公開結果 | 成功: catalog + stage + scope |
-| GET /apis API一覧取得結果 | 成功: 一覧に公開APIが現れる |
-| GET /apis/{apiId} API詳細取得結果 | 成功: 公開API詳細を取得 |
-| POST /projects Project作成結果 | 成功: project + API key + clients |
-| GET /projects Project一覧取得結果 | 成功: 作成Projectが一覧に現れる |
-| GET /projects/{projectId} Project詳細取得結果 | 成功: Project詳細を取得 |
-| PATCH /projects/{projectId}/public-client 更新結果 | 成功: public client設定更新 + 承認済みscope保持 |
-| POST /projects/{projectId}/api-access-requests 利用申請作成結果 | 成功: PENDING申請作成 |
-| GET /projects/{projectId}/api-access-requests 利用申請一覧取得結果 | 成功: PENDING申請が一覧に現れる |
-| POST /api-access-requests/{accessRequestId}/approve 承認結果 | 成功: APPROVED + subscription + 外部反映 |
-| 承認時provisioning | APIGW成功 + Cognito失敗 |
-
-### TC006
-
-| 要因 | 要素 |
-|---|---|
-| GET /health ヘルスチェック結果 | 成功: appが応答可能 |
-| 管理API呼び出し主体 | provider + project owner + reviewer |
-| 管理API認証 | 有効なmanagement token |
-| POST /apis API公開結果 | 成功: catalog + stage + scope |
-| GET /apis API一覧取得結果 | 成功: 一覧に公開APIが現れる |
-| GET /apis/{apiId} API詳細取得結果 | 失敗: apiId不明 |
-
-### TC007
-
-| 要因 | 要素 |
-|---|---|
-| GET /health ヘルスチェック結果 | 成功: appが応答可能 |
-| 管理API呼び出し主体 | provider + project owner + reviewer |
-| 管理API認証 | 有効なmanagement token |
-| POST /apis API公開結果 | 成功: catalog + stage + scope |
-| GET /apis API一覧取得結果 | 成功: 一覧に公開APIが現れる |
-| GET /apis/{apiId} API詳細取得結果 | 成功: 公開API詳細を取得 |
-| POST /projects Project作成結果 | 成功: project + API key + clients |
-| GET /projects Project一覧取得結果 | 成功: 作成Projectが一覧に現れる |
-| GET /projects/{projectId} Project詳細取得結果 | 失敗: projectId不明 |
-
-### TC008
-
-| 要因 | 要素 |
-|---|---|
-| GET /health ヘルスチェック結果 | 成功: appが応答可能 |
-| 管理API呼び出し主体 | provider + project owner + reviewer |
-| 管理API認証 | 有効なmanagement token |
-| POST /apis API公開結果 | 成功: catalog + stage + scope |
-| GET /apis API一覧取得結果 | 成功: 一覧に公開APIが現れる |
-| GET /apis/{apiId} API詳細取得結果 | 成功: 公開API詳細を取得 |
-| POST /projects Project作成結果 | 成功: project + API key + clients |
-| GET /projects Project一覧取得結果 | 成功: 作成Projectが一覧に現れる |
-| GET /projects/{projectId} Project詳細取得結果 | 成功: Project詳細を取得 |
-| PATCH /projects/{projectId}/public-client 更新結果 | 成功: public client設定更新 + 承認済みscope保持 |
-| POST /projects/{projectId}/api-access-requests 利用申請作成結果 | 成功: PENDING申請作成 |
-| GET /projects/{projectId}/api-access-requests 利用申請一覧取得結果 | 成功: PENDING申請が一覧に現れる |
-| POST /api-access-requests/{accessRequestId}/approve 承認結果 | 成功: APPROVED + subscription + 外部反映 |
-| 承認時provisioning | APIGW成功 + Cognito成功 |
-| GET /projects/{projectId}/subscriptions Subscription一覧取得結果 | 成功: 承認済みsubscriptionが一覧に現れる |
-
-</details>
-
-## 6. Component coverage summary
+## 5. Component coverage summary
 
 | Component | 件数 | 代表ケース | 主な観点 |
 |---|---:|---|---|
@@ -334,7 +175,7 @@
 | `runtime_authorization` | 20 | `TC_TARGET_015` | Runtime API呼び出し成功, Runtime認証情報不正, Runtime API呼び出し拒否 |
 | `audit_recovery` | 1 | `TC_TARGET_035` | 再試行可能 |
 
-## 7. Project x API matrix
+## 6. Project x API matrix
 
 ### access_request_workflow Access Request Workflow
 
@@ -446,7 +287,7 @@
 | Project B | `TC_TARGET_029` | `TC_TARGET_030` | `TC_TARGET_031` |
 | Project C | `TC_TARGET_032` | `TC_TARGET_033` | `TC_TARGET_034` |
 
-## 8. Cases by component
+## 7. Cases by component
 
 ### api_catalog API Catalog
 
@@ -518,7 +359,7 @@
 |---|---|---|---|---|---|---|
 | `TC_TARGET_035` | Project A x API Aで失敗後に再試行し、再試行可能を確認する | Project A x API A | provisioning失敗後の再試行 | APIを公開する -> Projectを作成する -> 失敗後に再試行する | 再試行可能 | [詳細](cases/TC_TARGET_035_audit_recovery_retry_after_failure_project_a_api_a_retryable_provisioning_retry.gen.md) |
 
-## 9. Appendix
+## 8. Appendix
 
 - 内部variant一覧: [case-variant-index_gen.md](case-variant-index_gen.md)
 - CSV: [pruned-cases_gen.csv](pruned-cases_gen.csv)

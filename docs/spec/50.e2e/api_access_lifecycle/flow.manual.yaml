@@ -178,12 +178,11 @@ component_dependencies:
         state: provisioned
 
 case_policy:
-  generation_source: generated/effective factor YAML
+  generation_source: component YAML
   pruning:
-    terminal_elements_skip_later_steps: true
-    dedupe_by_terminal_step_status_reason: true
+    stop_when_continue_flow_false: true
+    dedupe_same_component_state_evidences: true
   tiers:
-    - smoke_sandbox
     - sandbox
     - local_fake
     - doc_only

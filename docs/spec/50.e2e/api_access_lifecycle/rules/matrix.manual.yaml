@@ -30,25 +30,6 @@ variant_generation:
           - allowed
           - denied
 
-  dimensions:
-    project:
-      targets: all
-      operations: all
-      results: all
-      data: compatible
-    access_request:
-      projects: all
-      apis: all
-      operations: all
-      results: all
-      data: compatible
-    review:
-      projects: all
-      apis: all
-      operations: all
-      results: all
-      data: compatible
-
 component_variant_generation:
   dimensions:
     api_catalog:
@@ -97,12 +78,6 @@ component_variant_generation:
 component_case_generation:
   default_strategy: component_variant_coverage
   strategies:
-    - id: smoke
-      enabled: true
-      strategy: curated_goals
-      description: 代表的な成功・失敗だけを出すsmoke向けケース。
-      output_group: smoke
-
     - id: component_variant_coverage
       enabled: true
       strategy: additive

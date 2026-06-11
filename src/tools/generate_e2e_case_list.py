@@ -5,20 +5,18 @@ import csv
 import io
 from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import cast
 
 import yaml
 
 from tools.e2e_models import (
-    CASES,
     COMPONENT_IDS,
-    FACTORS,
     FLOW_ID,
     FLOW_STEPS,
     TARGET_CASES,
     E2eComponentVariant,
     E2eTargetCase,
     build_component_variants,
-    element_label,
     markdown_escape,
 )
 from tools.generation_io import check_outputs, write_outputs
@@ -49,13 +47,6 @@ def component_id(variant_id: str) -> str:
 
 def component_variants_by_id() -> dict[str, E2eComponentVariant]:
     return {variant.variant_id: variant for variant in build_component_variants()}
-
-
-def selected_elements_by_factor(case_id: str) -> dict[str, str]:
-    for case in CASES:
-        if case.case_id == case_id:
-            return dict(case.selected)
-    raise KeyError(case_id)
 
 
 def target_case_projects(target_case: E2eTargetCase) -> str:
@@ -184,61 +175,13 @@ def target_case_view(
     )
 
 
-def render_smoke_case_summary() -> list[str]:
-    lines = [
-        "## 5. Smoke生成ケース一覧",
-        "",
-        "| ID | 種別 | Tier | 目的 | 処理概要 | 終了条件 | 主なエビデンス | Link |",
-        "|---|---|---|---|---|---|---|---|",
-    ]
-    for case in CASES:
-        flow = " -> ".join(f"`{step}`" for step in case.scenario_steps)
-        evidence = "<br>".join(markdown_escape(item) for item in case.expected)
-        terminal = "-" if case.terminal_step == "-" else f"`{case.terminal_step}`"
-        lines.append(
-            f"| `{case.case_id}` | `{case.kind}` | `{case.tier}` | "
-            f"{markdown_escape(case.purpose)} | {flow} | {terminal} | {evidence} | - |"
-        )
-    lines.append("")
-    lines.extend(render_smoke_factor_details())
-    return lines
-
-
-def render_smoke_factor_details() -> list[str]:
-    lines = [
-        "<details>",
-        "<summary>Smokeケースの要因選択</summary>",
-        "",
-    ]
-    for case in CASES:
-        selected = selected_elements_by_factor(case.case_id)
-        lines.extend(
-            [
-                f"### {case.case_id}",
-                "",
-                "| 要因 | 要素 |",
-                "|---|---|",
-            ]
-        )
-        for factor in FACTORS:
-            if factor.factor_id not in selected:
-                continue
-            value = element_label(factor.factor_id, selected[factor.factor_id])
-            lines.append(
-                f"| {markdown_escape(factor.title)} | {markdown_escape(value)} |"
-            )
-        lines.append("")
-    lines.extend(["</details>", ""])
-    return lines
-
-
 def render_component_case_summary(
     *,
     variants: Mapping[str, E2eComponentVariant],
     titles: Mapping[str, Mapping[str, str]],
 ) -> list[str]:
     lines = [
-        "## 6. Component coverage summary",
+        "## 5. Component coverage summary",
         "",
         "| Component | 件数 | 代表ケース | 主な観点 |",
         "|---|---:|---|---|",
@@ -249,7 +192,7 @@ def render_component_case_summary(
             for target_case in TARGET_CASES
             if target_case.goal_component == component_id
         ]
-        states = []
+        states: list[str] = []
         for target_case in component_cases:
             variant = parse_variant(target_case.goal_variant, variants=variants)
             state = title_only(
@@ -278,7 +221,7 @@ def render_project_api_matrices(
         "runtime_authorization",
     )
     lines = [
-        "## 7. Project x API matrix",
+        "## 6. Project x API matrix",
         "",
     ]
     for component_id in matrix_components:
@@ -332,7 +275,7 @@ def render_generated_case_rows(
     titles: Mapping[str, Mapping[str, str]],
 ) -> list[str]:
     lines = [
-        "## 8. Cases by component",
+        "## 7. Cases by component",
         "",
     ]
     for component_id in COMPONENT_IDS:
@@ -408,11 +351,11 @@ def render_variant_index_markdown(root: Path = Path("docs/spec/50.e2e")) -> str:
 
 
 def as_mapping(value: object) -> Mapping[str, object]:
-    return value if isinstance(value, dict) else {}
+    return cast(Mapping[str, object], value) if isinstance(value, dict) else {}
 
 
 def as_sequence(value: object) -> Sequence[object]:
-    return value if isinstance(value, list | tuple) else ()
+    return cast(Sequence[object], value) if isinstance(value, list | tuple) else ()
 
 
 def scalar_text(value: object, default: str = "-") -> str:
@@ -482,15 +425,17 @@ def component_element_titles(flow_root: Path) -> dict[str, dict[str, str]]:
             "component": scalar_text(component.get("title")),
             **{
                 f"action:{item_id}": title
-                for item_id, title in yaml_titles(actions_doc.get("actions", [])).items()
+                for item_id, title in yaml_titles(as_sequence(actions_doc.get("actions"))).items()
             },
             **{
                 f"state:{item_id}": title
-                for item_id, title in yaml_titles(states_doc.get("states", [])).items()
+                for item_id, title in yaml_titles(as_sequence(states_doc.get("states"))).items()
             },
             **{
                 f"data:{item_id}": title
-                for item_id, title in yaml_titles(data_doc.get("data_profiles", [])).items()
+                for item_id, title in yaml_titles(
+                    as_sequence(data_doc.get("data_profiles"))
+                ).items()
             },
         }
     return titles
@@ -667,7 +612,6 @@ def render_case_list_markdown(root: Path = Path("docs/spec/50.e2e")) -> str:
         "",
         "## 0. 読み方",
         "",
-        "- Smoke: 主要な代表ケース。",
         "- Component coverage: 各論理コンポーネントのvariant coverage。",
         "- Matrix: Project x API の組み合わせ確認。",
         "- 内部variant一覧は [case-variant-index_gen.md](case-variant-index_gen.md) を参照。",
@@ -696,28 +640,24 @@ def render_case_list_markdown(root: Path = Path("docs/spec/50.e2e")) -> str:
             "",
             "| Rule ID | 条件 | 結果 | 理由 |",
             "|---|---|---|---|",
-            "| `P001` | `terminal=true` | 後続要因をN/A化 | unit-testと同じprefix terminal方式 |",
-            "| `P002` | `reject_api_access_request_result=success` | "
-            "approve provisioningとRuntime成功を除外 | "
-            "rejectはAWS変更しない |",
-            "| `P003` | approve失敗 | Runtime API呼び出しを除外 | subscription/scopeが存在しない |",
-            "| `P004` | terminal step/status/reasonが同一 | 等価ケースを統合 | "
-            "E2Eの重複実行を避ける |",
-            "| `P005` | `continue_flow=false` の失敗系 | Project/APIを代表targetへ集約 | "
+            "| `P001` | `continue_flow=false` の失敗系 | Project/APIを代表targetへ集約 | "
             "データ種別や対象差で期待結果が変わらない失敗系を重複実行しない |",
-            "| `P006` | 後続ケースの前提variantとして検証される正常系 | "
+            "| `P002` | 後続ケースの前提variantとして検証される正常系 | "
             "単独goal caseを生成しない | "
             "API公開、Project作成、利用申請、承認成功はRuntime等の後続ケースに内包する |",
+            "| `P003` | 前提component stateが成立しないgoal variant | ケース生成対象から除外 | "
+            "到達不能な手順をE2Eケースに含めない |",
+            "| `P004` | 同じcomponent stateを証明する同一evidence | ケース内で重複排除 | "
+            "レビュー対象のエビデンス表を簡潔に保つ |",
             "",
         ]
     )
     lines.extend(
         [
-            *render_smoke_case_summary(),
             *render_component_case_summary(variants=variants, titles=titles),
             *render_project_api_matrices(variants=variants, titles=titles),
             *render_generated_case_rows(variants=variants, titles=titles),
-            "## 9. Appendix",
+            "## 8. Appendix",
             "",
             "- 内部variant一覧: [case-variant-index_gen.md](case-variant-index_gen.md)",
             "- CSV: [pruned-cases_gen.csv](pruned-cases_gen.csv)",
