@@ -155,7 +155,7 @@ bindings:
       - ref: project_search_hit
 ```
 
-`when.action`、`when.state`、`when.data_tags.include` が variant に一致した binding が scenario の Component Evidence に使われる。各 component variant には少なくとも 1 つの evidence binding を用意する。
+`when.action`、`when.state`、`when.data_tags.include` が variant に一致した binding は、scenario の各 Step 内にある「エビデンス」説明に使われる。各 component variant には少なくとも 1 つの evidence binding を用意する。
 
 ## 書くべきこと
 

@@ -125,16 +125,10 @@ def check_case_evidences(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
         scenario_path = root / FLOW_ID / "cases" / target_case.filename
         if scenario_path.exists():
             scenario = scenario_path.read_text(encoding="utf-8")
-            marker = "### Component Evidence"
-            next_marker = "### Runtime期待"
-            if marker not in scenario:
-                errors.append(f"{target_case.case_id}: missing Component Evidence section")
-            else:
-                evidence_section = scenario.split(marker, maxsplit=1)[1]
-                if next_marker in evidence_section:
-                    evidence_section = evidence_section.split(next_marker, maxsplit=1)[0]
-                if "\n| E" not in evidence_section:
-                    errors.append(f"{target_case.case_id}: empty Component Evidence section")
+            if "#### エビデンス" not in scenario:
+                errors.append(f"{target_case.case_id}: missing step evidence section")
+            if "保存名は `" not in scenario:
+                errors.append(f"{target_case.case_id}: empty step evidence section")
     return errors
 
 

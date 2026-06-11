@@ -154,25 +154,28 @@ def test_e2e_scenarios_keep_secret_placeholders(tmp_path: Path) -> None:
     assert "## 1. 対象" in content
     assert "## 2. 処理概要" in content
     assert "## 3. 処理詳細" in content
-    assert "## 4. エビデンス" in content
+    assert "## 4. 後続確認" in content
     assert target_case.case_id in content
-    assert target_case.goal_variant in content
-    assert "### Component Variant 手順" in content
-    assert "### Component Evidence" in content
-    assert "| E1 | `api_catalog` |" in content
-    assert "### 選択要素" in content
-    assert "| Coverage Group | `component_variant` |" in content
+    assert target_case.goal_variant not in content
+    assert "\n|" not in content
+    assert "### Step 1: APIを公開する" in content
+    assert "#### 目的" in content
+    assert "#### 操作" in content
+    assert "#### 確認観点" in content
+    assert "#### エビデンス" in content
+    assert "保存名は `TC_TARGET_015_E_api_search_API_A.json`" in content
+    assert "### Component Variant 手順" not in content
+    assert "### Component Evidence" not in content
+    assert "### 選択要素" not in content
+    assert "Project A と API A に対して Runtime Authorization" in content
 
     runtime_case = next(
         case for case in TARGET_CASES if "credential_invalid@scope_missing" in case.goal_variant
     )
     runtime_content = rendered[tmp_path / "api_access_lifecycle/cases" / runtime_case.filename]
-    assert (
-        "`runtime_authorization.invoke_runtime_api.project_A.API_A.credential_invalid"
-        "@scope_missing`"
-    ) in runtime_content
+    assert "credential_invalid@scope_missing" not in runtime_content
     assert "Runtime認証情報不正で呼び出せない" in runtime_content
-    assert "| `project_A` | `API_A` | `denied` |" in runtime_content
+    assert "Project A から API A への呼び出しは「拒否される」として扱う。" in runtime_content
 
 
 def test_check_e2e_specs_detects_complete_rendered_tree(tmp_path: Path) -> None:

@@ -228,15 +228,19 @@ def check_specs(root: Path = Path("docs/spec/50.e2e")) -> list[str]:
                 errors.append(
                     f"{case.case_id}: scenario does not keep runtime_access_token placeholder"
                 )
-            if case.goal_variant not in scenario:
-                errors.append(f"{case.case_id}: scenario does not include goal variant")
             if case.case_id not in scenario:
                 errors.append(f"{case.case_id}: scenario title does not include case id")
             for heading in (
                 "## 1. 対象",
                 "## 2. 処理概要",
                 "## 3. 処理詳細",
-                "## 4. エビデンス",
+                "### 前提条件",
+                "### Step 1:",
+                "#### 目的",
+                "#### 操作",
+                "#### 確認観点",
+                "#### エビデンス",
+                "## 4. 後続確認",
             ):
                 if heading not in scenario:
                     errors.append(f"{case.case_id}: scenario missing heading {heading}")

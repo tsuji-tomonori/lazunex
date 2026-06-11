@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
 
@@ -21,6 +22,25 @@ GENERATED_COMMENT = (
 )
 
 
+@dataclass(frozen=True)
+class EvidenceDetail:
+    title: str
+    collector: str
+    ok_condition: str
+    save_as: str
+
+
+@dataclass(frozen=True)
+class ScenarioStepDetail:
+    component_title: str
+    action_title: str
+    state_title: str
+    data_title: str
+    target_label: str
+    operation_steps: tuple[str, ...]
+    evidences: tuple[EvidenceDetail, ...]
+
+
 def as_mapping(value: object) -> Mapping[str, object]:
     return cast(Mapping[str, object], value) if isinstance(value, dict) else {}
 
@@ -36,6 +56,21 @@ def load_yaml(path: Path) -> Mapping[str, object]:
 
 def scalar_text(value: object, default: str = "-") -> str:
     return value if isinstance(value, str) else default
+
+
+def sentence_body(value: str) -> str:
+    return value.rstrip("。.")
+
+
+def unique_texts(values: Sequence[str]) -> tuple[str, ...]:
+    seen: set[str] = set()
+    unique: list[str] = []
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        unique.append(value)
+    return tuple(unique)
 
 
 def parse_component_variant(variant_id: str) -> tuple[str, str, str, str, str, str]:
@@ -55,66 +90,80 @@ def parse_component_variant(variant_id: str) -> tuple[str, str, str, str, str, s
     return component, action, project, api, state, data_id
 
 
-def render_target_variant_rows(target_case: E2eTargetCase) -> list[str]:
-    lines = [
-        "| No | Component | Action | Project | API | State | Data | Variant |",
-        "|---|---|---|---|---|---|---|---|",
-    ]
-    for index, variant_id in enumerate(target_case.selected_variants, start=1):
-        component, action, project, api, state, data_id = parse_component_variant(variant_id)
-        lines.append(
-            f"| V{index} | `{component}` | `{action}` | `{project}` | `{api}` | "
-            f"`{state}` | `{data_id}` | `{variant_id}` |"
-        )
-    return lines
-
-
 def render_target_prerequisites(target_case: E2eTargetCase) -> list[str]:
-    lines = ["| No | 前提 | 補足 |", "|---|---|---|"]
     prerequisites = [
         "Cognito管理API用tokenを取得できる。",
         "case.id suffixでProject/APIなどのテストデータを一意に扱う。",
         "secret値、API key値、client secret値の実値をMarkdownやログに出さない。",
         "`${project_api_key}` と `${runtime_access_token}` はplaceholderとして扱う。",
     ]
-    for index, text in enumerate(prerequisites, start=1):
-        lines.append(f"| P{index} | {text} | - |")
-    return lines
-
-
-def render_target_api_steps(target_case: E2eTargetCase) -> list[str]:
-    lines = [
-        "| Step | Component Variant | 目的 | 期待 |",
-        "|---|---|---|---|",
-    ]
-    for index, variant_id in enumerate(target_case.selected_variants, start=1):
-        component, action, project, api, state, data_id = parse_component_variant(variant_id)
-        target = " / ".join(value for value in (project, api) if value != "-") or "-"
-        lines.append(
-            f"| Step {index} | `{variant_id}` | `{component}.{action}` を {target} で実行 | "
-            f"`{state}` / `{data_id}` |"
-        )
-    return lines
+    return [f"{index}. {text}" for index, text in enumerate(prerequisites, start=1)]
 
 
 def render_target_runtime_assertions(target_case: E2eTargetCase) -> list[str]:
-    lines = [
-        "| Project | API | 期待 |",
-        "|---|---|---|",
-    ]
     if not target_case.runtime_assertions:
-        lines.append("| - | - | - |")
-        return lines
+        return ["このケースでは Runtime API の呼び出し期待は設定しない。"]
+    lines = ["Runtime API について、次の期待を確認する。"]
     for assertion in target_case.runtime_assertions:
         lines.append(
-            f"| `{assertion.project_id}` | `{assertion.api_id}` | "
-            f"`{assertion.expected}` |"
+            f"- {target_title('project', assertion.project_id)} から "
+            f"{target_title('api', assertion.api_id)} への呼び出しは"
+            f"「{runtime_expectation_label(assertion.expected)}」として扱う。"
         )
     return lines
 
 
 def component_yaml(component_id: str, filename: str) -> Mapping[str, object]:
     return load_yaml(Path("docs/spec/50.e2e") / FLOW_ID / "components" / component_id / filename)
+
+
+def target_yaml(target_type: str, target_id: str) -> Mapping[str, object]:
+    directory = "projects" if target_type == "project" else "apis"
+    return load_yaml(
+        Path("docs/spec/50.e2e")
+        / FLOW_ID
+        / "targets"
+        / directory
+        / f"{target_id}.target.manual.yaml"
+    )
+
+
+def target_title(target_type: str, target_id: str) -> str:
+    if target_id == "-":
+        return "-"
+    target = as_mapping(target_yaml(target_type, target_id).get("target"))
+    return scalar_text(target.get("title"), target_id)
+
+
+def component_title(component_id: str) -> str:
+    component = as_mapping(component_yaml(component_id, "component.manual.yaml").get("component"))
+    return scalar_text(component.get("title"), component_id)
+
+
+def component_item(
+    component_id: str,
+    filename: str,
+    collection_key: str,
+    item_id: str,
+) -> Mapping[str, object]:
+    content = component_yaml(component_id, filename)
+    for item in as_sequence(content.get(collection_key)):
+        item_mapping = as_mapping(item)
+        if item_mapping.get("id") == item_id:
+            return item_mapping
+    return {}
+
+
+def component_item_title(
+    component_id: str,
+    filename: str,
+    collection_key: str,
+    item_id: str,
+) -> str:
+    return scalar_text(
+        component_item(component_id, filename, collection_key, item_id).get("title"),
+        item_id,
+    )
 
 
 def component_data_tags(component_id: str, data_id: str) -> set[str]:
@@ -142,6 +191,20 @@ def component_bindings(component_id: str) -> Sequence[Mapping[str, object]]:
     return [as_mapping(item) for item in as_sequence(content.get("bindings"))]
 
 
+def step_description(step_ref: str) -> str:
+    if step_ref == "manual_log_query":
+        return "監査ログまたは運用ログを確認する"
+    if not step_ref.startswith("steps/"):
+        return step_ref
+    content = load_yaml(Path("docs/spec/50.e2e") / FLOW_ID / step_ref)
+    step = as_mapping(content.get("step"))
+    title = scalar_text(step.get("title"), step_ref)
+    endpoint = scalar_text(step.get("endpoint"), "")
+    if endpoint:
+        return f"{title} ({endpoint})"
+    return title
+
+
 def target_binding_matches(
     binding: Mapping[str, object],
     *,
@@ -162,6 +225,25 @@ def target_binding_matches(
     return required_tags <= tags
 
 
+def matching_bindings_for_variant(
+    *,
+    component_id: str,
+    action_id: str,
+    state_id: str,
+    tags: set[str],
+) -> tuple[Mapping[str, object], ...]:
+    return tuple(
+        binding
+        for binding in component_bindings(component_id)
+        if target_binding_matches(
+            binding,
+            action_id=action_id,
+            state_id=state_id,
+            tags=tags,
+        )
+    )
+
+
 def expand_target_value(
     value: str,
     *,
@@ -177,85 +259,228 @@ def expand_target_value(
     )
 
 
-def render_target_evidences(target_case: E2eTargetCase) -> list[str]:
-    lines = [
-        "| No | Component | Variant | エビデンス | 取得方法 | OK条件 | 保存名 |",
-        "|---|---|---|---|---|---|---|",
+def target_label(project_id: str, api_id: str) -> str:
+    labels = [
+        label
+        for label in (
+            target_title("project", project_id) if project_id != "-" else "",
+            target_title("api", api_id) if api_id != "-" else "",
+        )
+        if label
     ]
-    rows: list[tuple[str, str, str, str, str, str]] = []
+    return " と ".join(labels) if labels else "フロー全体"
+
+
+def runtime_expectation_label(expected: str) -> str:
+    return {
+        "allowed": "許可される",
+        "denied": "拒否される",
+    }.get(expected, expected)
+
+
+def evidence_details_for_variant(
+    *,
+    target_case: E2eTargetCase,
+    component_id: str,
+    action_id: str,
+    state_id: str,
+    data_id: str,
+    project_id: str,
+    api_id: str,
+) -> tuple[EvidenceDetail, ...]:
+    tags = component_data_tags(component_id, data_id)
+    evidence_map = component_evidences(component_id)
+    details: list[EvidenceDetail] = []
+    for binding in matching_bindings_for_variant(
+        component_id=component_id,
+        action_id=action_id,
+        state_id=state_id,
+        tags=tags,
+    ):
+        for evidence_ref in as_sequence(binding.get("evidences")):
+            evidence_id = as_mapping(evidence_ref).get("ref")
+            if not isinstance(evidence_id, str) or evidence_id not in evidence_map:
+                continue
+            evidence = evidence_map[evidence_id]
+            collector = as_mapping(evidence.get("collector"))
+            details.append(
+                EvidenceDetail(
+                    title=scalar_text(evidence.get("title")),
+                    collector=step_description(scalar_text(collector.get("step"))),
+                    ok_condition=expand_target_value(
+                        scalar_text(evidence.get("ok_condition")),
+                        target_case=target_case,
+                        project_id=project_id,
+                        api_id=api_id,
+                    ),
+                    save_as=expand_target_value(
+                        scalar_text(evidence.get("save_as")),
+                        target_case=target_case,
+                        project_id=project_id,
+                        api_id=api_id,
+                    ),
+                )
+            )
+    return tuple(details)
+
+
+def operation_steps_for_variant(
+    *,
+    component_id: str,
+    action_id: str,
+    state_id: str,
+    data_id: str,
+) -> tuple[str, ...]:
+    tags = component_data_tags(component_id, data_id)
+    refs = [
+        ref
+        for binding in matching_bindings_for_variant(
+            component_id=component_id,
+            action_id=action_id,
+            state_id=state_id,
+            tags=tags,
+        )
+        for step_ref in as_sequence(binding.get("steps"))
+        for ref in [as_mapping(step_ref).get("ref")]
+        if isinstance(ref, str)
+    ]
+    return unique_texts(tuple(step_description(ref) for ref in refs))
+
+
+def build_scenario_steps(target_case: E2eTargetCase) -> tuple[ScenarioStepDetail, ...]:
+    steps: list[ScenarioStepDetail] = []
     for variant_id in target_case.selected_variants:
         component_id, action_id, project_id, api_id, state_id, data_id = parse_component_variant(
             variant_id
         )
-        tags = component_data_tags(component_id, data_id)
-        matched_bindings = [
-            binding
-            for binding in component_bindings(component_id)
-            if target_binding_matches(
-                binding,
-                action_id=action_id,
-                state_id=state_id,
-                tags=tags,
+        steps.append(
+            ScenarioStepDetail(
+                component_title=component_title(component_id),
+                action_title=component_item_title(
+                    component_id, "actions.manual.yaml", "actions", action_id
+                ),
+                state_title=component_item_title(
+                    component_id, "states.manual.yaml", "states", state_id
+                ),
+                data_title=component_item_title(
+                    component_id,
+                    "data.manual.yaml",
+                    "data_profiles",
+                    data_id,
+                ),
+                target_label=target_label(project_id, api_id),
+                operation_steps=operation_steps_for_variant(
+                    component_id=component_id,
+                    action_id=action_id,
+                    state_id=state_id,
+                    data_id=data_id,
+                ),
+                evidences=evidence_details_for_variant(
+                    target_case=target_case,
+                    component_id=component_id,
+                    action_id=action_id,
+                    state_id=state_id,
+                    data_id=data_id,
+                    project_id=project_id,
+                    api_id=api_id,
+                ),
             )
-        ]
-        evidence_map = component_evidences(component_id)
-        for binding in matched_bindings:
-            for evidence_ref in as_sequence(binding.get("evidences")):
-                evidence_id = as_mapping(evidence_ref).get("ref")
-                if not isinstance(evidence_id, str) or evidence_id not in evidence_map:
-                    continue
-                evidence = evidence_map[evidence_id]
-                collector = as_mapping(evidence.get("collector"))
-                collector_step = scalar_text(collector.get("step"))
-                rows.append(
-                    (
-                        component_id,
-                        variant_id,
-                        scalar_text(evidence.get("title")),
-                        collector_step,
-                        expand_target_value(
-                            scalar_text(evidence.get("ok_condition")),
-                            target_case=target_case,
-                            project_id=project_id,
-                            api_id=api_id,
-                        ),
-                        expand_target_value(
-                            scalar_text(evidence.get("save_as")),
-                            target_case=target_case,
-                            project_id=project_id,
-                            api_id=api_id,
-                        ),
-                    )
-                )
-    for index, (component_id, variant_id, title, collector, ok_condition, save_as) in enumerate(
-        rows,
-        start=1,
-    ):
-        lines.append(
-            f"| E{index} | `{component_id}` | `{variant_id}` | "
-            f"{markdown_escape(title)} | `{collector}` | "
-            f"{markdown_escape(ok_condition)} | `{save_as}` |"
         )
+    return tuple(steps)
+
+
+def render_step_detail(index: int, step: ScenarioStepDetail) -> list[str]:
+    operation_text = "、".join(step.operation_steps) if step.operation_steps else step.action_title
+    evidence_lines = [
+        (
+            f"- {markdown_escape(evidence.title)}。取得方法は"
+            f"{markdown_escape(evidence.collector)}。"
+            f"確認条件は{markdown_escape(sentence_body(evidence.ok_condition))}。"
+            f"保存名は `{evidence.save_as}`。"
+        )
+        for evidence in step.evidences
+    ]
+    if not evidence_lines:
+        evidence_lines = ["- この Step で保存するエビデンスは定義されていない。"]
+    return [
+        f"### Step {index}: {markdown_escape(step.action_title)}",
+        "",
+        "#### 目的",
+        "",
+        (
+            f"{step.target_label} に対して {step.component_title} の"
+            f"「{markdown_escape(step.action_title)}」を実行し、"
+            f"「{markdown_escape(step.state_title)}」を確認する。"
+        ),
+        "",
+        "#### 操作",
+        "",
+        (
+            f"{markdown_escape(operation_text)} を実行する。"
+            f"入力データは「{markdown_escape(step.data_title)}」を使う。"
+        ),
+        "",
+        "#### 確認観点",
+        "",
+        (
+            f"この Step では、操作結果が「{markdown_escape(step.state_title)}」として"
+            "観測できることを確認する。"
+        ),
+        "",
+        "#### エビデンス",
+        "",
+        *evidence_lines,
+        "",
+    ]
+
+
+def render_target_steps(target_case: E2eTargetCase) -> list[str]:
+    lines: list[str] = []
+    for index, step in enumerate(build_scenario_steps(target_case), start=1):
+        lines.extend(render_step_detail(index, step))
     return lines
 
 
+def goal_description(target_case: E2eTargetCase) -> str:
+    component_id, action_id, project_id, api_id, state_id, data_id = parse_component_variant(
+        target_case.goal_variant
+    )
+    action_title = component_item_title(
+        component_id, "actions.manual.yaml", "actions", action_id
+    )
+    state_title = component_item_title(component_id, "states.manual.yaml", "states", state_id)
+    data_title = component_item_title(
+        component_id,
+        "data.manual.yaml",
+        "data_profiles",
+        data_id,
+    )
+    return (
+        f"{target_label(project_id, api_id)} に対して "
+        f"{component_title(component_id)} の「{action_title}」を実行し、"
+        f"「{state_title}」を「{data_title}」で確認する。"
+    )
+
+
+def goal_component_title(target_case: E2eTargetCase) -> str:
+    component_id, *_ = parse_component_variant(target_case.goal_variant)
+    return component_title(component_id)
+
+
 def render_target_scenario_markdown(target_case: E2eTargetCase) -> str:
+    description = goal_description(target_case)
     lines = [
         GENERATED_COMMENT,
         "",
-        f"# {target_case.case_id} {target_case.goal_component}",
+        f"# {target_case.case_id} {goal_component_title(target_case)}",
         "",
         "## 1. 対象",
         "",
-        "| 項目 | 値 |",
-        "|---|---|",
-        f"| Coverage Group | `{target_case.coverage_group}` |",
-        f"| Goal Component | `{target_case.goal_component}` |",
-        f"| Goal Variant | `{target_case.goal_variant}` |",
+        description,
         "",
         "## 2. 処理概要",
         "",
-        f"{target_case.title}。",
+        f"このケースでは、{sentence_body(description)}までを一連の E2E 手順として確認する。",
         "",
         "## 3. 処理詳細",
         "",
@@ -263,27 +488,12 @@ def render_target_scenario_markdown(target_case: E2eTargetCase) -> str:
         "",
         *render_target_prerequisites(target_case),
         "",
-        "### Component Variant 手順",
-        "",
-        *render_target_api_steps(target_case),
-        "",
-        "### 選択要素",
-        "",
-        *render_target_variant_rows(target_case),
-        "",
-        "## 4. エビデンス",
-        "",
-        "### Component Evidence",
-        "",
-        *render_target_evidences(target_case),
-        "",
-        "### Runtime期待",
+        *render_target_steps(target_case),
+        "## 4. 後続確認",
         "",
         *render_target_runtime_assertions(target_case),
         "",
-        "### 後続確認",
-        "",
-        f"- `{target_case.goal_variant}` が生成ケース一覧のGoal Variantとして表現される。",
+        f"- {target_case.case_id} が生成ケース一覧のシナリオリンクから参照できる。",
         "- 実行時のsecret値、API key値、client secret値は記録しない。",
         "",
     ]
