@@ -46,80 +46,80 @@
 
 ### api_catalog API Catalog
 
-- `api_catalog.publish_api.API_A.published@api_default`: API A / 標準API / APIを公開する / API公開成功
-- `api_catalog.publish_api.API_B.published@api_default`: API B / 標準API / APIを公開する / API公開成功
-- `api_catalog.publish_api.API_C.published@api_default`: API C / 標準API / APIを公開する / API公開成功
-- `api_catalog.publish_api.API_A.publish_failed@api_default`: API A / 標準API / APIを公開する / API公開失敗
-- `api_catalog.browse_api.API_A.not_found@api_unknown`: API A / 未登録API / 公開APIを探索する / API探索失敗
+- `api_catalog.publish_api.API_A.published@api_default`: API A / APIを公開する / API公開成功
+- `api_catalog.publish_api.API_B.published@api_default`: API B / APIを公開する / API公開成功
+- `api_catalog.publish_api.API_C.published@api_default`: API C / APIを公開する / API公開成功
+- `api_catalog.publish_api.API_A.publish_failed@api_default`: API A / APIを公開する / API公開失敗
+- `api_catalog.browse_api.API_A.not_found@api_unknown`: API A / 公開APIを探索する / API探索失敗
 
 ### project_workspace Project Workspace
 
-- `project_workspace.create_project.project_A.provisioned@project_default`: Project A / 標準Project / Projectを作成する / Project作成成功
-- `project_workspace.create_project.project_B.provisioned@project_default`: Project B / 標準Project / Projectを作成する / Project作成成功
-- `project_workspace.create_project.project_C.provisioned@project_default`: Project C / 標準Project / Projectを作成する / Project作成成功
-- `project_workspace.create_project.project_A.provision_failed@project_default`: Project A / 標準Project / Projectを作成する / Project作成失敗
-- `project_workspace.update_public_client.project_A.public_client_updated@redirect_url_update`: Project A / callback URL更新 / public app client設定を更新する / public app client更新成功
-- `project_workspace.update_public_client.project_A.public_client_update_failed@redirect_url_update`: Project A / callback URL更新 / public app client設定を更新する / public app client更新失敗
+- `project_workspace.create_project.project_A.provisioned@project_default`: Project A / Projectを作成する / Project作成成功
+- `project_workspace.create_project.project_B.provisioned@project_default`: Project B / Projectを作成する / Project作成成功
+- `project_workspace.create_project.project_C.provisioned@project_default`: Project C / Projectを作成する / Project作成成功
+- `project_workspace.create_project.project_A.provision_failed@project_default`: Project A / Projectを作成する / Project作成失敗
+- `project_workspace.update_public_client.project_A.public_client_updated@redirect_url_update`: Project A / public app client設定を更新する / public app client更新成功
+- `project_workspace.update_public_client.project_A.public_client_update_failed@redirect_url_update`: Project A / public app client設定を更新する / public app client更新失敗
 
 ### access_request_workflow Access Request Workflow
 
-- `access_request_workflow.submit_request.project_A.API_A.submitted@request_both_auth`: Project A / API A / public PKCEとclient credentialsの両方を申請する / 利用申請する / 申請成功
-- `access_request_workflow.submit_request.project_A.API_B.submitted@request_both_auth`: Project A / API B / public PKCEとclient credentialsの両方を申請する / 利用申請する / 申請成功
-- `access_request_workflow.submit_request.project_A.API_C.submitted@request_both_auth`: Project A / API C / public PKCEとclient credentialsの両方を申請する / 利用申請する / 申請成功
-- `access_request_workflow.submit_request.project_B.API_A.submitted@request_both_auth`: Project B / API A / public PKCEとclient credentialsの両方を申請する / 利用申請する / 申請成功
-- `access_request_workflow.submit_request.project_B.API_B.submitted@request_both_auth`: Project B / API B / public PKCEとclient credentialsの両方を申請する / 利用申請する / 申請成功
-- `access_request_workflow.submit_request.project_B.API_C.submitted@request_both_auth`: Project B / API C / public PKCEとclient credentialsの両方を申請する / 利用申請する / 申請成功
-- `access_request_workflow.submit_request.project_C.API_A.submitted@request_both_auth`: Project C / API A / public PKCEとclient credentialsの両方を申請する / 利用申請する / 申請成功
-- `access_request_workflow.submit_request.project_C.API_B.submitted@request_both_auth`: Project C / API B / public PKCEとclient credentialsの両方を申請する / 利用申請する / 申請成功
-- `access_request_workflow.submit_request.project_C.API_C.submitted@request_both_auth`: Project C / API C / public PKCEとclient credentialsの両方を申請する / 利用申請する / 申請成功
-- `access_request_workflow.submit_request.project_A.API_A.duplicate_pending_rejected@duplicate_pending_request`: Project A / API A / 同一Project/API stageへの重複PENDING申請 / 利用申請する / 重複PENDING申請で失敗
-- `access_request_workflow.submit_request.project_A.API_A.existing_subscription_rejected@request_both_auth`: Project A / API A / public PKCEとclient credentialsの両方を申請する / 利用申請する / 既存subscriptionありで失敗
+- `access_request_workflow.submit_request.project_A.API_A.submitted@request_both_auth`: Project A x API A の利用申請 / 利用申請する / 申請成功
+- `access_request_workflow.submit_request.project_A.API_B.submitted@request_both_auth`: Project A x API B の利用申請 / 利用申請する / 申請成功
+- `access_request_workflow.submit_request.project_A.API_C.submitted@request_both_auth`: Project A x API C の利用申請 / 利用申請する / 申請成功
+- `access_request_workflow.submit_request.project_B.API_A.submitted@request_both_auth`: Project B x API A の利用申請 / 利用申請する / 申請成功
+- `access_request_workflow.submit_request.project_B.API_B.submitted@request_both_auth`: Project B x API B の利用申請 / 利用申請する / 申請成功
+- `access_request_workflow.submit_request.project_B.API_C.submitted@request_both_auth`: Project B x API C の利用申請 / 利用申請する / 申請成功
+- `access_request_workflow.submit_request.project_C.API_A.submitted@request_both_auth`: Project C x API A の利用申請 / 利用申請する / 申請成功
+- `access_request_workflow.submit_request.project_C.API_B.submitted@request_both_auth`: Project C x API B の利用申請 / 利用申請する / 申請成功
+- `access_request_workflow.submit_request.project_C.API_C.submitted@request_both_auth`: Project C x API C の利用申請 / 利用申請する / 申請成功
+- `access_request_workflow.submit_request.project_A.API_A.duplicate_pending_rejected@duplicate_pending_request`: Project A x API A の重複PENDING申請 / 利用申請する / 重複PENDING申請で失敗
+- `access_request_workflow.submit_request.project_A.API_A.existing_subscription_rejected@request_both_auth`: Project A x API A の利用申請 / 利用申請する / 既存subscriptionありで失敗
 
 ### review_decision Review Decision
 
-- `review_decision.approve_request.project_A.API_A.approved@approve_both`: Project A / API A / BOTHとして承認する / 利用申請を承認する / 承認成功
-- `review_decision.approve_request.project_A.API_B.approved@approve_both`: Project A / API B / BOTHとして承認する / 利用申請を承認する / 承認成功
-- `review_decision.approve_request.project_A.API_C.approved@approve_both`: Project A / API C / BOTHとして承認する / 利用申請を承認する / 承認成功
-- `review_decision.approve_request.project_B.API_A.approved@approve_both`: Project B / API A / BOTHとして承認する / 利用申請を承認する / 承認成功
-- `review_decision.approve_request.project_B.API_B.approved@approve_both`: Project B / API B / BOTHとして承認する / 利用申請を承認する / 承認成功
-- `review_decision.approve_request.project_B.API_C.approved@approve_both`: Project B / API C / BOTHとして承認する / 利用申請を承認する / 承認成功
-- `review_decision.approve_request.project_C.API_A.approved@approve_both`: Project C / API A / BOTHとして承認する / 利用申請を承認する / 承認成功
-- `review_decision.approve_request.project_C.API_B.approved@approve_both`: Project C / API B / BOTHとして承認する / 利用申請を承認する / 承認成功
-- `review_decision.approve_request.project_C.API_C.approved@approve_both`: Project C / API C / BOTHとして承認する / 利用申請を承認する / 承認成功
-- `review_decision.approve_request.project_A.API_A.forbidden@approve_both`: Project A / API A / BOTHとして承認する / 利用申請を承認する / reviewer以外の審査拒否
-- `review_decision.approve_request.project_A.API_A.not_pending@approve_both`: Project A / API A / BOTHとして承認する / 利用申請を承認する / PENDING以外の申請審査拒否
-- `review_decision.reject_request.project_A.API_A.rejected@reject_default`: Project A / API A / 申請を却下する / 利用申請を却下する / 却下成功
-- `review_decision.reject_request.project_A.API_A.forbidden@reject_default`: Project A / API A / 申請を却下する / 利用申請を却下する / reviewer以外の審査拒否
-- `review_decision.reject_request.project_A.API_A.not_pending@reject_default`: Project A / API A / 申請を却下する / 利用申請を却下する / PENDING以外の申請審査拒否
+- `review_decision.approve_request.project_A.API_A.approved@approve_both`: Project A x API A の承認 / 利用申請を承認する / 承認成功
+- `review_decision.approve_request.project_A.API_B.approved@approve_both`: Project A x API B の承認 / 利用申請を承認する / 承認成功
+- `review_decision.approve_request.project_A.API_C.approved@approve_both`: Project A x API C の承認 / 利用申請を承認する / 承認成功
+- `review_decision.approve_request.project_B.API_A.approved@approve_both`: Project B x API A の承認 / 利用申請を承認する / 承認成功
+- `review_decision.approve_request.project_B.API_B.approved@approve_both`: Project B x API B の承認 / 利用申請を承認する / 承認成功
+- `review_decision.approve_request.project_B.API_C.approved@approve_both`: Project B x API C の承認 / 利用申請を承認する / 承認成功
+- `review_decision.approve_request.project_C.API_A.approved@approve_both`: Project C x API A の承認 / 利用申請を承認する / 承認成功
+- `review_decision.approve_request.project_C.API_B.approved@approve_both`: Project C x API B の承認 / 利用申請を承認する / 承認成功
+- `review_decision.approve_request.project_C.API_C.approved@approve_both`: Project C x API C の承認 / 利用申請を承認する / 承認成功
+- `review_decision.approve_request.project_A.API_A.forbidden@approve_both`: Project A x API A の承認 / 利用申請を承認する / reviewer以外の審査拒否
+- `review_decision.approve_request.project_A.API_A.not_pending@approve_both`: Project A x API A の承認 / 利用申請を承認する / PENDING以外の申請審査拒否
+- `review_decision.reject_request.project_A.API_A.rejected@reject_default`: Project A x API A の却下 / 利用申請を却下する / 却下成功
+- `review_decision.reject_request.project_A.API_A.forbidden@reject_default`: Project A x API A の却下 / 利用申請を却下する / reviewer以外の審査拒否
+- `review_decision.reject_request.project_A.API_A.not_pending@reject_default`: Project A x API A の却下 / 利用申請を却下する / PENDING以外の申請審査拒否
 
 ### entitlement_provisioning Entitlement Provisioning
 
-- `entitlement_provisioning.provision_entitlement.project_A.API_A.partially_failed@approved_both_entitlement`: Project A / API A / BOTH承認の利用権 / 承認結果を利用権へ反映する / 利用権反映部分失敗
-- `entitlement_provisioning.list_subscriptions.project_A.API_A.not_provisioned@rejected_no_entitlement`: Project A / API A / 却下後の利用権なし / Projectのsubscriptionを確認する / 利用権未作成
+- `entitlement_provisioning.provision_entitlement.project_A.API_A.partially_failed@approved_both_entitlement`: Project A x API A の利用権 / 承認結果を利用権へ反映する / 利用権反映部分失敗
+- `entitlement_provisioning.list_subscriptions.project_A.API_A.not_provisioned@rejected_no_entitlement`: Project A x API A の却下後の利用権なし / Projectのsubscriptionを確認する / 利用権未作成
 
 ### runtime_authorization Runtime Authorization
 
-- `runtime_authorization.invoke_runtime_api.project_A.API_A.allowed@approved_runtime_credential`: Project A / API A / 承認済みAPI用Runtime認証情報 / Runtime APIを呼び出す / Runtime API呼び出し成功
-- `runtime_authorization.invoke_runtime_api.project_A.API_B.allowed@approved_runtime_credential`: Project A / API B / 承認済みAPI用Runtime認証情報 / Runtime APIを呼び出す / Runtime API呼び出し成功
-- `runtime_authorization.invoke_runtime_api.project_A.API_C.allowed@approved_runtime_credential`: Project A / API C / 承認済みAPI用Runtime認証情報 / Runtime APIを呼び出す / Runtime API呼び出し成功
-- `runtime_authorization.invoke_runtime_api.project_B.API_A.allowed@approved_runtime_credential`: Project B / API A / 承認済みAPI用Runtime認証情報 / Runtime APIを呼び出す / Runtime API呼び出し成功
-- `runtime_authorization.invoke_runtime_api.project_B.API_B.allowed@approved_runtime_credential`: Project B / API B / 承認済みAPI用Runtime認証情報 / Runtime APIを呼び出す / Runtime API呼び出し成功
-- `runtime_authorization.invoke_runtime_api.project_B.API_C.allowed@approved_runtime_credential`: Project B / API C / 承認済みAPI用Runtime認証情報 / Runtime APIを呼び出す / Runtime API呼び出し成功
-- `runtime_authorization.invoke_runtime_api.project_C.API_A.allowed@approved_runtime_credential`: Project C / API A / 承認済みAPI用Runtime認証情報 / Runtime APIを呼び出す / Runtime API呼び出し成功
-- `runtime_authorization.invoke_runtime_api.project_C.API_B.allowed@approved_runtime_credential`: Project C / API B / 承認済みAPI用Runtime認証情報 / Runtime APIを呼び出す / Runtime API呼び出し成功
-- `runtime_authorization.invoke_runtime_api.project_C.API_C.allowed@approved_runtime_credential`: Project C / API C / 承認済みAPI用Runtime認証情報 / Runtime APIを呼び出す / Runtime API呼び出し成功
-- `runtime_authorization.invoke_runtime_api.project_A.API_A.credential_invalid@scope_missing`: Project A / API A / scopeなしRuntime認証情報 / Runtime APIを呼び出す / Runtime認証情報不正
-- `runtime_authorization.invoke_runtime_api.project_A.API_A.credential_invalid@api_key_missing`: Project A / API A / API keyなしRuntime認証情報 / Runtime APIを呼び出す / Runtime認証情報不正
-- `runtime_authorization.invoke_unapproved_api.project_A.API_A.denied@unapproved_runtime_credential`: Project A / API A / 未承認API用Runtime認証情報 / 未承認Runtime APIを呼び出す / Runtime API呼び出し拒否
-- `runtime_authorization.invoke_unapproved_api.project_A.API_B.denied@unapproved_runtime_credential`: Project A / API B / 未承認API用Runtime認証情報 / 未承認Runtime APIを呼び出す / Runtime API呼び出し拒否
-- `runtime_authorization.invoke_unapproved_api.project_A.API_C.denied@unapproved_runtime_credential`: Project A / API C / 未承認API用Runtime認証情報 / 未承認Runtime APIを呼び出す / Runtime API呼び出し拒否
-- `runtime_authorization.invoke_unapproved_api.project_B.API_A.denied@unapproved_runtime_credential`: Project B / API A / 未承認API用Runtime認証情報 / 未承認Runtime APIを呼び出す / Runtime API呼び出し拒否
-- `runtime_authorization.invoke_unapproved_api.project_B.API_B.denied@unapproved_runtime_credential`: Project B / API B / 未承認API用Runtime認証情報 / 未承認Runtime APIを呼び出す / Runtime API呼び出し拒否
-- `runtime_authorization.invoke_unapproved_api.project_B.API_C.denied@unapproved_runtime_credential`: Project B / API C / 未承認API用Runtime認証情報 / 未承認Runtime APIを呼び出す / Runtime API呼び出し拒否
-- `runtime_authorization.invoke_unapproved_api.project_C.API_A.denied@unapproved_runtime_credential`: Project C / API A / 未承認API用Runtime認証情報 / 未承認Runtime APIを呼び出す / Runtime API呼び出し拒否
-- `runtime_authorization.invoke_unapproved_api.project_C.API_B.denied@unapproved_runtime_credential`: Project C / API B / 未承認API用Runtime認証情報 / 未承認Runtime APIを呼び出す / Runtime API呼び出し拒否
-- `runtime_authorization.invoke_unapproved_api.project_C.API_C.denied@unapproved_runtime_credential`: Project C / API C / 未承認API用Runtime認証情報 / 未承認Runtime APIを呼び出す / Runtime API呼び出し拒否
+- `runtime_authorization.invoke_runtime_api.project_A.API_A.allowed@approved_runtime_credential`: Project A x API A / 承認済みAPI用Runtime認証情報 / Runtime APIを呼び出す / Runtime API呼び出し成功
+- `runtime_authorization.invoke_runtime_api.project_A.API_B.allowed@approved_runtime_credential`: Project A x API B / 承認済みAPI用Runtime認証情報 / Runtime APIを呼び出す / Runtime API呼び出し成功
+- `runtime_authorization.invoke_runtime_api.project_A.API_C.allowed@approved_runtime_credential`: Project A x API C / 承認済みAPI用Runtime認証情報 / Runtime APIを呼び出す / Runtime API呼び出し成功
+- `runtime_authorization.invoke_runtime_api.project_B.API_A.allowed@approved_runtime_credential`: Project B x API A / 承認済みAPI用Runtime認証情報 / Runtime APIを呼び出す / Runtime API呼び出し成功
+- `runtime_authorization.invoke_runtime_api.project_B.API_B.allowed@approved_runtime_credential`: Project B x API B / 承認済みAPI用Runtime認証情報 / Runtime APIを呼び出す / Runtime API呼び出し成功
+- `runtime_authorization.invoke_runtime_api.project_B.API_C.allowed@approved_runtime_credential`: Project B x API C / 承認済みAPI用Runtime認証情報 / Runtime APIを呼び出す / Runtime API呼び出し成功
+- `runtime_authorization.invoke_runtime_api.project_C.API_A.allowed@approved_runtime_credential`: Project C x API A / 承認済みAPI用Runtime認証情報 / Runtime APIを呼び出す / Runtime API呼び出し成功
+- `runtime_authorization.invoke_runtime_api.project_C.API_B.allowed@approved_runtime_credential`: Project C x API B / 承認済みAPI用Runtime認証情報 / Runtime APIを呼び出す / Runtime API呼び出し成功
+- `runtime_authorization.invoke_runtime_api.project_C.API_C.allowed@approved_runtime_credential`: Project C x API C / 承認済みAPI用Runtime認証情報 / Runtime APIを呼び出す / Runtime API呼び出し成功
+- `runtime_authorization.invoke_runtime_api.project_A.API_A.credential_invalid@scope_missing`: Project A x API A / scopeなしRuntime認証情報 / Runtime APIを呼び出す / Runtime認証情報不正
+- `runtime_authorization.invoke_runtime_api.project_A.API_A.credential_invalid@api_key_missing`: Project A x API A / API keyなしRuntime認証情報 / Runtime APIを呼び出す / Runtime認証情報不正
+- `runtime_authorization.invoke_unapproved_api.project_A.API_A.denied@unapproved_runtime_credential`: Project A x API A / 未承認API用Runtime認証情報 / 未承認Runtime APIを呼び出す / Runtime API呼び出し拒否
+- `runtime_authorization.invoke_unapproved_api.project_A.API_B.denied@unapproved_runtime_credential`: Project A x API B / 未承認API用Runtime認証情報 / 未承認Runtime APIを呼び出す / Runtime API呼び出し拒否
+- `runtime_authorization.invoke_unapproved_api.project_A.API_C.denied@unapproved_runtime_credential`: Project A x API C / 未承認API用Runtime認証情報 / 未承認Runtime APIを呼び出す / Runtime API呼び出し拒否
+- `runtime_authorization.invoke_unapproved_api.project_B.API_A.denied@unapproved_runtime_credential`: Project B x API A / 未承認API用Runtime認証情報 / 未承認Runtime APIを呼び出す / Runtime API呼び出し拒否
+- `runtime_authorization.invoke_unapproved_api.project_B.API_B.denied@unapproved_runtime_credential`: Project B x API B / 未承認API用Runtime認証情報 / 未承認Runtime APIを呼び出す / Runtime API呼び出し拒否
+- `runtime_authorization.invoke_unapproved_api.project_B.API_C.denied@unapproved_runtime_credential`: Project B x API C / 未承認API用Runtime認証情報 / 未承認Runtime APIを呼び出す / Runtime API呼び出し拒否
+- `runtime_authorization.invoke_unapproved_api.project_C.API_A.denied@unapproved_runtime_credential`: Project C x API A / 未承認API用Runtime認証情報 / 未承認Runtime APIを呼び出す / Runtime API呼び出し拒否
+- `runtime_authorization.invoke_unapproved_api.project_C.API_B.denied@unapproved_runtime_credential`: Project C x API B / 未承認API用Runtime認証情報 / 未承認Runtime APIを呼び出す / Runtime API呼び出し拒否
+- `runtime_authorization.invoke_unapproved_api.project_C.API_C.denied@unapproved_runtime_credential`: Project C x API C / 未承認API用Runtime認証情報 / 未承認Runtime APIを呼び出す / Runtime API呼び出し拒否
 
 ### audit_recovery Audit / Idempotency / Recovery
 
-- `audit_recovery.retry_after_failure.project_A.API_A.retryable@provisioning_retry`: Project A / API A / provisioning失敗後の再試行 / 失敗後に再試行する / 再試行可能
+- `audit_recovery.retry_after_failure.project_A.API_A.retryable@provisioning_retry`: Project A x API A のprovisioning再試行 / 失敗後に再試行する / 再試行可能

@@ -35,9 +35,11 @@ class ScenarioStepDetail:
     component_title: str
     action_title: str
     state_title: str
-    data_title: str
+    data_label: str
     target_label: str
     operation_steps: tuple[str, ...]
+    setting_rows: tuple[tuple[str, str], ...]
+    failure_trigger: str
     evidences: tuple[EvidenceDetail, ...]
 
 
@@ -135,6 +137,12 @@ def target_title(target_type: str, target_id: str) -> str:
     return scalar_text(target.get("title"), target_id)
 
 
+def target_defaults(target_type: str, target_id: str) -> Mapping[str, object]:
+    if target_id == "-":
+        return {}
+    return as_mapping(target_yaml(target_type, target_id).get("defaults"))
+
+
 def component_title(component_id: str) -> str:
     component = as_mapping(component_yaml(component_id, "component.manual.yaml").get("component"))
     return scalar_text(component.get("title"), component_id)
@@ -173,6 +181,10 @@ def component_data_tags(component_id: str, data_id: str) -> set[str]:
         if data.get("id") == data_id:
             return {tag for tag in as_sequence(data.get("tags")) if isinstance(tag, str)}
     return set()
+
+
+def component_data_profile(component_id: str, data_id: str) -> Mapping[str, object]:
+    return component_item(component_id, "data.manual.yaml", "data_profiles", data_id)
 
 
 def component_evidences(component_id: str) -> Mapping[str, Mapping[str, object]]:
@@ -259,6 +271,149 @@ def expand_target_value(
     )
 
 
+def expand_step_value(
+    value: str,
+    *,
+    target_case: E2eTargetCase,
+    project_id: str,
+    api_id: str,
+) -> str:
+    expanded = expand_target_value(
+        value,
+        target_case=target_case,
+        project_id=project_id,
+        api_id=api_id,
+    )
+    replacements: dict[str, str] = {}
+    for key, raw_value in target_defaults("project", project_id).items():
+        if isinstance(raw_value, str):
+            replacements[f"${{project.defaults.{key}}}"] = expand_target_value(
+                raw_value,
+                target_case=target_case,
+                project_id=project_id,
+                api_id=api_id,
+            )
+    for key, raw_value in target_defaults("api", api_id).items():
+        if isinstance(raw_value, str):
+            replacements[f"${{api.defaults.{key}}}"] = expand_target_value(
+                raw_value,
+                target_case=target_case,
+                project_id=project_id,
+                api_id=api_id,
+            )
+    for placeholder, concrete in replacements.items():
+        expanded = expanded.replace(placeholder, concrete)
+    return expanded
+
+
+def format_setting_value(value: object) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if value is None:
+        return "null"
+    return str(value)
+
+
+def flatten_settings(
+    value: object,
+    *,
+    prefix: str,
+    target_case: E2eTargetCase,
+    project_id: str,
+    api_id: str,
+) -> list[tuple[str, str]]:
+    if isinstance(value, Mapping):
+        rows: list[tuple[str, str]] = []
+        mapping = cast(Mapping[object, object], value)
+        for key, child in mapping.items():
+            key_text = str(key)
+            child_prefix = f"{prefix}.{key_text}" if prefix else key_text
+            rows.extend(
+                flatten_settings(
+                    child,
+                    prefix=child_prefix,
+                    target_case=target_case,
+                    project_id=project_id,
+                    api_id=api_id,
+                )
+            )
+        return rows
+    if isinstance(value, Sequence) and not isinstance(value, str):
+        rows: list[tuple[str, str]] = []
+        sequence = cast(Sequence[object], value)
+        for index, child in enumerate(sequence):
+            rows.extend(
+                flatten_settings(
+                    child,
+                    prefix=f"{prefix}[{index}]",
+                    target_case=target_case,
+                    project_id=project_id,
+                    api_id=api_id,
+                )
+            )
+        return rows
+    raw_value = format_setting_value(value)
+    return [
+        (
+            prefix,
+            expand_step_value(
+                raw_value,
+                target_case=target_case,
+                project_id=project_id,
+                api_id=api_id,
+            ),
+        )
+    ]
+
+
+def setting_rows_for_variant(
+    *,
+    target_case: E2eTargetCase,
+    component_id: str,
+    action_id: str,
+    state_id: str,
+    data_id: str,
+    project_id: str,
+    api_id: str,
+) -> tuple[tuple[str, str], ...]:
+    data_profile = component_data_profile(component_id, data_id)
+    rows: list[tuple[str, str]] = []
+    request = as_mapping(data_profile.get("request"))
+    expected = as_mapping(data_profile.get("expected"))
+    if request:
+        rows.extend(
+            flatten_settings(
+                request,
+                prefix="request",
+                target_case=target_case,
+                project_id=project_id,
+                api_id=api_id,
+            )
+        )
+    if expected:
+        rows.extend(
+            flatten_settings(
+                expected,
+                prefix="expected",
+                target_case=target_case,
+                project_id=project_id,
+                api_id=api_id,
+            )
+        )
+    rows.extend(
+        error_setting_rows(
+            component_id=component_id,
+            action_id=action_id,
+            state_id=state_id,
+            data_id=data_id,
+            project_id=project_id,
+            api_id=api_id,
+            target_case=target_case,
+        )
+    )
+    return tuple(rows)
+
+
 def target_label(project_id: str, api_id: str) -> str:
     labels = [
         label
@@ -269,6 +424,263 @@ def target_label(project_id: str, api_id: str) -> str:
         if label
     ]
     return " と ".join(labels) if labels else "フロー全体"
+
+
+def concrete_data_label(
+    *,
+    component_id: str,
+    data_id: str,
+    project_id: str,
+    api_id: str,
+) -> str:
+    data_title = component_item_title(
+        component_id,
+        "data.manual.yaml",
+        "data_profiles",
+        data_id,
+    )
+    target = target_label(project_id, api_id)
+    if data_id in {
+        "api_default",
+        "api_unknown",
+    }:
+        return target_title("api", api_id)
+    if data_id in {
+        "project_default",
+        "redirect_url_update",
+    }:
+        return target_title("project", project_id)
+    concrete_labels = {
+        "request_both_auth": "利用申請",
+        "duplicate_pending_request": "重複PENDING申請",
+        "approve_both": "承認",
+        "reject_default": "却下",
+        "approved_both_entitlement": "利用権",
+        "rejected_no_entitlement": "却下後の利用権なし",
+        "provisioning_retry": "provisioning再試行",
+    }
+    if data_id in concrete_labels and target != "フロー全体":
+        return f"{target} の{concrete_labels[data_id]}"
+    if target != "フロー全体":
+        return f"{target} の{data_title}"
+    return data_title
+
+
+def error_setting_rows(
+    *,
+    component_id: str,
+    action_id: str,
+    state_id: str,
+    data_id: str,
+    project_id: str,
+    api_id: str,
+    target_case: E2eTargetCase,
+) -> tuple[tuple[str, str], ...]:
+    api = target_title("api", api_id)
+    project = target_title("project", project_id)
+    api_code = expand_step_value(
+        "${api.defaults.apiCode}",
+        target_case=target_case,
+        project_id=project_id,
+        api_id=api_id,
+    )
+    project_code = expand_step_value(
+        "${project.defaults.projectCode}",
+        target_case=target_case,
+        project_id=project_id,
+        api_id=api_id,
+    )
+    rows = {
+        ("api_catalog", "publish_api", "publish_failed", "api_default"): (
+            ("error.precondition", f"{api} is already published with apiCode={api_code}"),
+        ),
+        ("api_catalog", "browse_api", "not_found", "api_unknown"): (
+            ("request.path.apiId", "api_unknown"),
+            ("error.reason", "指定した apiId が API catalog に存在しない"),
+        ),
+        ("project_workspace", "create_project", "provision_failed", "project_default"): (
+            (
+                "error.precondition",
+                f"{project} is already created with projectCode={project_code}",
+            ),
+        ),
+        (
+            "project_workspace",
+            "update_public_client",
+            "public_client_update_failed",
+            "redirect_url_update",
+        ): (
+            (
+                "error.override.callbackUrls[0]",
+                "https://malformed.example.invalid/callback",
+            ),
+            ("error.reason", "許可されない redirect URI を含める"),
+        ),
+        (
+            "access_request_workflow",
+            "submit_request",
+            "duplicate_pending_rejected",
+            "duplicate_pending_request",
+        ): (
+            ("error.precondition", f"{project} x {api} のPENDING申請が存在する"),
+        ),
+        (
+            "access_request_workflow",
+            "submit_request",
+            "existing_subscription_rejected",
+            "request_both_auth",
+        ): (
+            ("error.precondition", f"{project} x {api} のACTIVE subscriptionが存在する"),
+        ),
+        ("review_decision", "approve_request", "forbidden", "approve_both"): (
+            ("error.actor", "reviewer ではない管理主体"),
+        ),
+        ("review_decision", "approve_request", "not_pending", "approve_both"): (
+            ("error.notPendingState", "APPROVED または REJECTED"),
+        ),
+        ("review_decision", "reject_request", "forbidden", "reject_default"): (
+            ("error.actor", "reviewer ではない管理主体"),
+        ),
+        ("review_decision", "reject_request", "not_pending", "reject_default"): (
+            ("error.notPendingState", "APPROVED または REJECTED"),
+        ),
+        (
+            "entitlement_provisioning",
+            "provision_entitlement",
+            "partially_failed",
+            "approved_both_entitlement",
+        ): (
+            ("error.injectedFailure", "Usage Plan stage または Cognito scope の片方を失敗させる"),
+        ),
+        (
+            "runtime_authorization",
+            "invoke_runtime_api",
+            "credential_invalid",
+            "scope_missing",
+        ): (
+            ("error.token", "custom scope を含まない access token"),
+        ),
+        (
+            "runtime_authorization",
+            "invoke_runtime_api",
+            "credential_invalid",
+            "api_key_missing",
+        ): (
+            ("error.header.x-api-key", "送信しない"),
+        ),
+    }
+    return rows.get((component_id, action_id, state_id, data_id), ())
+
+
+def failure_trigger_for_variant(
+    *,
+    component_id: str,
+    action_id: str,
+    state_id: str,
+    data_id: str,
+    project_id: str,
+    api_id: str,
+    target_case: E2eTargetCase,
+) -> str:
+    api = target_title("api", api_id)
+    project = target_title("project", project_id)
+    api_code = expand_step_value(
+        "${api.defaults.apiCode}",
+        target_case=target_case,
+        project_id=project_id,
+        api_id=api_id,
+    )
+    project_code = expand_step_value(
+        "${project.defaults.projectCode}",
+        target_case=target_case,
+        project_id=project_id,
+        api_id=api_id,
+    )
+    triggers = {
+        ("api_catalog", "publish_api", "publish_failed", "api_default"): (
+            f"{api} を同じ `apiCode={api_code}` で事前に公開済みにし、"
+            "同じ API code で再度 API 公開を実行して重複エラーを発生させる。"
+        ),
+        ("api_catalog", "browse_api", "not_found", "api_unknown"): (
+            "存在しない `apiId=api_unknown` を指定して API 詳細を取得し、"
+            "未登録 API の 404 を発生させる。"
+        ),
+        ("project_workspace", "create_project", "provision_failed", "project_default"): (
+            f"{project} を同じ `projectCode={project_code}` で事前に作成済みにし、"
+            "同じ Project code で再度 Project 作成を実行して重複エラーを発生させる。"
+        ),
+        (
+            "project_workspace",
+            "update_public_client",
+            "public_client_update_failed",
+            "redirect_url_update",
+        ): (
+            f"{project} の public app client 更新で、許可されない redirect URI "
+            "または既存設定と矛盾する callback/logout URL を含めて検証エラーを発生させる。"
+        ),
+        (
+            "access_request_workflow",
+            "submit_request",
+            "duplicate_pending_rejected",
+            "duplicate_pending_request",
+        ): (
+            f"{project} から {api} への PENDING 申請を事前に作成し、"
+            "同じ Project/API stage へ再申請して重複 PENDING エラーを発生させる。"
+        ),
+        (
+            "access_request_workflow",
+            "submit_request",
+            "existing_subscription_rejected",
+            "request_both_auth",
+        ): (
+            f"{project} と {api} の ACTIVE subscription を事前に作成し、"
+            "既に利用権がある API へ再申請して 409 を発生させる。"
+        ),
+        ("review_decision", "approve_request", "forbidden", "approve_both"): (
+            "対象 API の reviewer ではない管理主体の token で承認 API を呼び出し、"
+            "403 を発生させる。"
+        ),
+        ("review_decision", "reject_request", "forbidden", "reject_default"): (
+            "対象 API の reviewer ではない管理主体の token で却下 API を呼び出し、"
+            "403 を発生させる。"
+        ),
+        ("review_decision", "approve_request", "not_pending", "approve_both"): (
+            "対象の利用申請を事前に APPROVED または REJECTED にしてから承認 API を呼び出し、"
+            "PENDING 以外の審査エラーを発生させる。"
+        ),
+        ("review_decision", "reject_request", "not_pending", "reject_default"): (
+            "対象の利用申請を事前に APPROVED または REJECTED にしてから却下 API を呼び出し、"
+            "PENDING 以外の審査エラーを発生させる。"
+        ),
+        (
+            "entitlement_provisioning",
+            "provision_entitlement",
+            "partially_failed",
+            "approved_both_entitlement",
+        ): (
+            "Usage Plan stage 反映または Cognito scope 反映の片方だけが失敗する状態を用意し、"
+            "承認処理で部分失敗と retry 可能な provisioning operation を発生させる。"
+        ),
+        (
+            "runtime_authorization",
+            "invoke_runtime_api",
+            "credential_invalid",
+            "scope_missing",
+        ): (
+            f"{project} と {api} の subscription は有効にしたまま、"
+            "必要な custom scope を含まない access token で Runtime API を呼び出す。"
+        ),
+        (
+            "runtime_authorization",
+            "invoke_runtime_api",
+            "credential_invalid",
+            "api_key_missing",
+        ): (
+            f"{project} と {api} の subscription は有効にしたまま、"
+            "`x-api-key` ヘッダーを送らずに Runtime API を呼び出す。"
+        ),
+    }
+    return triggers.get((component_id, action_id, state_id, data_id), "")
 
 
 def runtime_expectation_label(expected: str) -> str:
@@ -362,11 +774,11 @@ def build_scenario_steps(target_case: E2eTargetCase) -> tuple[ScenarioStepDetail
                 state_title=component_item_title(
                     component_id, "states.manual.yaml", "states", state_id
                 ),
-                data_title=component_item_title(
-                    component_id,
-                    "data.manual.yaml",
-                    "data_profiles",
-                    data_id,
+                data_label=concrete_data_label(
+                    component_id=component_id,
+                    data_id=data_id,
+                    project_id=project_id,
+                    api_id=api_id,
                 ),
                 target_label=target_label(project_id, api_id),
                 operation_steps=operation_steps_for_variant(
@@ -374,6 +786,24 @@ def build_scenario_steps(target_case: E2eTargetCase) -> tuple[ScenarioStepDetail
                     action_id=action_id,
                     state_id=state_id,
                     data_id=data_id,
+                ),
+                setting_rows=setting_rows_for_variant(
+                    target_case=target_case,
+                    component_id=component_id,
+                    action_id=action_id,
+                    state_id=state_id,
+                    data_id=data_id,
+                    project_id=project_id,
+                    api_id=api_id,
+                ),
+                failure_trigger=failure_trigger_for_variant(
+                    component_id=component_id,
+                    action_id=action_id,
+                    state_id=state_id,
+                    data_id=data_id,
+                    project_id=project_id,
+                    api_id=api_id,
+                    target_case=target_case,
                 ),
                 evidences=evidence_details_for_variant(
                     target_case=target_case,
@@ -391,6 +821,14 @@ def build_scenario_steps(target_case: E2eTargetCase) -> tuple[ScenarioStepDetail
 
 def render_step_detail(index: int, step: ScenarioStepDetail) -> list[str]:
     operation_text = "、".join(step.operation_steps) if step.operation_steps else step.action_title
+    setting_lines = ["| 項目 | 値 |", "|---|---|"]
+    if step.setting_rows:
+        setting_lines.extend(
+            f"| `{markdown_escape(key)}` | `{markdown_escape(value)}` |"
+            for key, value in step.setting_rows
+        )
+    else:
+        setting_lines.append("| - | 設定値なし |")
     evidence_lines = [
         (
             f"- {markdown_escape(evidence.title)}。取得方法は"
@@ -417,8 +855,21 @@ def render_step_detail(index: int, step: ScenarioStepDetail) -> list[str]:
         "",
         (
             f"{markdown_escape(operation_text)} を実行する。"
-            f"入力データは「{markdown_escape(step.data_title)}」を使う。"
+            f"対象データは「{markdown_escape(step.data_label)}」を使う。"
         ),
+        *(
+            [
+                "",
+                "失敗を発生させるため、"
+                f"{markdown_escape(step.failure_trigger)}",
+            ]
+            if step.failure_trigger
+            else []
+        ),
+        "",
+        "#### 設定値",
+        "",
+        *setting_lines,
         "",
         "#### 確認観点",
         "",
@@ -449,16 +900,16 @@ def goal_description(target_case: E2eTargetCase) -> str:
         component_id, "actions.manual.yaml", "actions", action_id
     )
     state_title = component_item_title(component_id, "states.manual.yaml", "states", state_id)
-    data_title = component_item_title(
-        component_id,
-        "data.manual.yaml",
-        "data_profiles",
-        data_id,
+    data_label = concrete_data_label(
+        component_id=component_id,
+        data_id=data_id,
+        project_id=project_id,
+        api_id=api_id,
     )
     return (
         f"{target_label(project_id, api_id)} に対して "
         f"{component_title(component_id)} の「{action_title}」を実行し、"
-        f"「{state_title}」を「{data_title}」で確認する。"
+        f"「{state_title}」を「{data_label}」で確認する。"
     )
 
 

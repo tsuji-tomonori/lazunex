@@ -58,7 +58,11 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
     ) in content
     assert "| 状態 | `provisioned` | Project作成成功 | 後続継続=はい |" in content
     assert (
-        "| データ | `project_default` | 標準Project | "
+        "| データ | `api_default` | API A / API B / API C | "
+        "valid_api, has_stage, has_scope, has_reviewer |"
+    ) in content
+    assert (
+        "| データ | `project_default` | Project A / Project B / Project C | "
         "valid_project, has_public_client, has_confidential_client |"
     ) in content
     assert "| 要素ID | 既定要素 | 終端要素 | 期待観点 |" not in content
@@ -74,19 +78,19 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
     )
     assert "runtime_authorization[データ]" in pruned_csv.splitlines()[0]
     assert pruned_csv.splitlines()[0].endswith("audit_recovery[状態]")
-    assert "TC_TARGET_001,API A / 標準API,APIを公開する,API公開失敗" in pruned_csv
+    assert "TC_TARGET_001,API A,APIを公開する,API公開失敗" in pruned_csv
     assert (
         "TC_TARGET_002,"
-        "API A / 未登録API,公開APIを探索する,"
+        "API A,公開APIを探索する,"
         "API探索失敗,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-"
         in pruned_csv
     )
-    assert "TC_TARGET_015,API A / 標準API,APIを公開する,API公開成功" in pruned_csv
-    assert "TC_TARGET_016,API B / 標準API,APIを公開する,API公開成功" in pruned_csv
-    assert "TC_TARGET_017,API C / 標準API,APIを公開する,API公開成功" in pruned_csv
+    assert "TC_TARGET_015,API A,APIを公開する,API公開成功" in pruned_csv
+    assert "TC_TARGET_016,API B,APIを公開する,API公開成功" in pruned_csv
+    assert "TC_TARGET_017,API C,APIを公開する,API公開成功" in pruned_csv
     assert (
-        "TC_TARGET_024,API A / 標準API,APIを公開する,"
-        "API公開成功,Project A / 標準Project,"
+        "TC_TARGET_024,API A,APIを公開する,"
+        "API公開成功,Project A,"
         "Projectを作成する,Project作成成功,"
         in pruned_csv
     )
@@ -95,7 +99,7 @@ def test_e2e_case_list_links_scenarios(tmp_path: Path) -> None:
         "Runtime認証情報不正,-,-,-"
         in pruned_csv
     )
-    assert "Project A / API A / scopeなしRuntime認証情報" in pruned_csv
+    assert "Project A x API A / scopeなしRuntime認証情報" in pruned_csv
     assert pruned_csv.count("\nTC_TARGET_") == 35
     assert "coverage_group" not in pruned_csv
     assert "goal_variant" not in pruned_csv
@@ -157,12 +161,16 @@ def test_e2e_scenarios_keep_secret_placeholders(tmp_path: Path) -> None:
     assert "## 4. 後続確認" in content
     assert target_case.case_id in content
     assert target_case.goal_variant not in content
-    assert "\n|" not in content
+    assert "| 項目 | 値 |" in content
+    assert "| Coverage Group |" not in content
     assert "### Step 1: APIを公開する" in content
     assert "#### 目的" in content
     assert "#### 操作" in content
+    assert "#### 設定値" in content
     assert "#### 確認観点" in content
     assert "#### エビデンス" in content
+    assert "| `request.body.apiCode` | `e2e-api-a` |" in content
+    assert "| `request.body.name` | `E2E API A` |" in content
     assert "保存名は `TC_TARGET_015_E_api_search_API_A.json`" in content
     assert "### Component Variant 手順" not in content
     assert "### Component Evidence" not in content
@@ -175,7 +183,24 @@ def test_e2e_scenarios_keep_secret_placeholders(tmp_path: Path) -> None:
     runtime_content = rendered[tmp_path / "api_access_lifecycle/cases" / runtime_case.filename]
     assert "credential_invalid@scope_missing" not in runtime_content
     assert "Runtime認証情報不正で呼び出せない" in runtime_content
+    assert "必要な custom scope を含まない access token" in runtime_content
+    assert "| `error.token` | `custom scope を含まない access token` |" in runtime_content
     assert "Project A から API A への呼び出しは「拒否される」として扱う。" in runtime_content
+
+    publish_failed_case = next(
+        case for case in TARGET_CASES if case.goal_variant.endswith("publish_failed@api_default")
+    )
+    publish_failed_content = rendered[
+        tmp_path / "api_access_lifecycle/cases" / publish_failed_case.filename
+    ]
+    assert "API A」を使う" in publish_failed_content
+    assert "標準API" not in publish_failed_content
+    assert "同じ `apiCode=e2e-api-a` で事前に公開済み" in publish_failed_content
+    assert (
+        "| `error.precondition` | "
+        "`API A is already published with apiCode=e2e-api-a` |"
+        in publish_failed_content
+    )
 
 
 def test_check_e2e_specs_detects_complete_rendered_tree(tmp_path: Path) -> None:

@@ -54,8 +54,8 @@
 | 状態 | `publish_failed` | API公開失敗 | 後続継続=いいえ |
 | 状態 | `found` | API探索成功 | 後続継続=はい |
 | 状態 | `not_found` | API探索失敗 | 後続継続=いいえ |
-| データ | `api_default` | 標準API | valid_api, has_stage, has_scope, has_reviewer |
-| データ | `api_unknown` | 未登録API | unknown_api |
+| データ | `api_default` | API A / API B / API C | valid_api, has_stage, has_scope, has_reviewer |
+| データ | `api_unknown` | API A (apiId=api_unknown) | unknown_api |
 
 ### project_workspace Project Workspace
 
@@ -70,8 +70,8 @@
 | 状態 | `provision_failed` | Project作成失敗 | 後続継続=いいえ |
 | 状態 | `public_client_updated` | public app client更新成功 | 後続継続=はい |
 | 状態 | `public_client_update_failed` | public app client更新失敗 | 後続継続=いいえ |
-| データ | `project_default` | 標準Project | valid_project, has_public_client, has_confidential_client |
-| データ | `redirect_url_update` | callback URL更新 | valid_public_client_update |
+| データ | `project_default` | Project A / Project B / Project C | valid_project, has_public_client, has_confidential_client |
+| データ | `redirect_url_update` | Project A のcallback URL更新 | valid_public_client_update |
 
 ### access_request_workflow Access Request Workflow
 
@@ -86,8 +86,8 @@
 | 状態 | `listed` | 申請一覧取得成功 | 後続継続=はい |
 | 状態 | `duplicate_pending_rejected` | 重複PENDING申請で失敗 | 後続継続=いいえ |
 | 状態 | `existing_subscription_rejected` | 既存subscriptionありで失敗 | 後続継続=いいえ |
-| データ | `request_both_auth` | public PKCEとclient credentialsの両方を申請する | valid_access_request, both_auth_mode |
-| データ | `duplicate_pending_request` | 同一Project/API stageへの重複PENDING申請 | duplicate_pending |
+| データ | `request_both_auth` | Project A x API A の利用申請 | valid_access_request, both_auth_mode |
+| データ | `duplicate_pending_request` | Project A x API A の重複PENDING申請 | duplicate_pending |
 
 ### review_decision Review Decision
 
@@ -102,8 +102,8 @@
 | 状態 | `rejected` | 却下成功 | 後続継続=はい |
 | 状態 | `forbidden` | reviewer以外の審査拒否 | 後続継続=いいえ |
 | 状態 | `not_pending` | PENDING以外の申請審査拒否 | 後続継続=いいえ |
-| データ | `approve_both` | BOTHとして承認する | valid_review, approve |
-| データ | `reject_default` | 申請を却下する | valid_review, reject |
+| データ | `approve_both` | Project A x API A の承認 | valid_review, approve |
+| データ | `reject_default` | Project A x API A の却下 | valid_review, reject |
 
 ### entitlement_provisioning Entitlement Provisioning
 
@@ -119,8 +119,8 @@
 | 状態 | `listed` | subscription一覧取得成功 | 後続継続=はい |
 | 状態 | `partially_failed` | 利用権反映部分失敗 | 後続継続=いいえ |
 | 状態 | `not_provisioned` | 利用権未作成 | 後続継続=はい |
-| データ | `approved_both_entitlement` | BOTH承認の利用権 | approved, both_auth_mode |
-| データ | `rejected_no_entitlement` | 却下後の利用権なし | rejected, no_entitlement |
+| データ | `approved_both_entitlement` | Project A x API A の利用権 | approved, both_auth_mode |
+| データ | `rejected_no_entitlement` | Project A x API A の却下後の利用権なし | rejected, no_entitlement |
 
 ### runtime_authorization Runtime Authorization
 
@@ -134,10 +134,10 @@
 | 状態 | `allowed` | Runtime API呼び出し成功 | 後続継続=はい |
 | 状態 | `denied` | Runtime API呼び出し拒否 | 後続継続=はい |
 | 状態 | `credential_invalid` | Runtime認証情報不正 | 後続継続=いいえ |
-| データ | `approved_runtime_credential` | 承認済みAPI用Runtime認証情報 | approved_api, valid_runtime_credential |
-| データ | `unapproved_runtime_credential` | 未承認API用Runtime認証情報 | unapproved_api, valid_runtime_credential |
-| データ | `scope_missing` | scopeなしRuntime認証情報 | approved_api, scope_missing |
-| データ | `api_key_missing` | API keyなしRuntime認証情報 | approved_api, api_key_missing |
+| データ | `approved_runtime_credential` | Project A x API A の承認済みRuntime認証情報 | approved_api, valid_runtime_credential |
+| データ | `unapproved_runtime_credential` | Project A x API A の未承認Runtime認証情報 | unapproved_api, valid_runtime_credential |
+| データ | `scope_missing` | Project A x API A のscopeなしRuntime認証情報 | approved_api, scope_missing |
+| データ | `api_key_missing` | Project A x API A のAPI keyなしRuntime認証情報 | approved_api, api_key_missing |
 
 ### audit_recovery Audit / Idempotency / Recovery
 
@@ -293,71 +293,71 @@
 
 | ID | 観点 | 対象 | データ | 処理概要 | 主なエビデンス | Link |
 |---|---|---|---|---|---|---|
-| `TC_TARGET_001` | API AでAPIを公開し、API公開失敗を確認する | API A | 標準API | APIを公開する | API公開失敗 | [詳細](cases/TC_TARGET_001_api_catalog_publish_api_api_a_publish_failed_api_default.gen.md) |
-| `TC_TARGET_002` | API Aで公開APIを探索し、API探索失敗を確認する | API A | 未登録API | APIを公開する -> 公開APIを探索する | API探索失敗 | [詳細](cases/TC_TARGET_002_api_catalog_browse_api_api_a_not_found_api_unknown.gen.md) |
+| `TC_TARGET_001` | API AでAPIを公開し、API公開失敗を確認する | API A | API A | APIを公開する | API公開失敗 | [詳細](cases/TC_TARGET_001_api_catalog_publish_api_api_a_publish_failed_api_default.gen.md) |
+| `TC_TARGET_002` | API Aで公開APIを探索し、API探索失敗を確認する | API A | API A | APIを公開する -> 公開APIを探索する | API探索失敗 | [詳細](cases/TC_TARGET_002_api_catalog_browse_api_api_a_not_found_api_unknown.gen.md) |
 
 ### project_workspace Project Workspace
 
 | ID | 観点 | 対象 | データ | 処理概要 | 主なエビデンス | Link |
 |---|---|---|---|---|---|---|
-| `TC_TARGET_003` | Project AでProjectを作成し、Project作成失敗を確認する | Project A | 標準Project | Projectを作成する | Project作成失敗 | [詳細](cases/TC_TARGET_003_project_workspace_create_project_project_a_provision_failed_project_default.gen.md) |
-| `TC_TARGET_004` | Project Aでpublic app client設定を更新し、public app client更新成功を確認する | Project A | callback URL更新 | Projectを作成する -> public app client設定を更新する | public app client更新成功 | [詳細](cases/TC_TARGET_004_project_workspace_update_public_client_project_a_public_client_updated_redirect_url_update.gen.md) |
-| `TC_TARGET_005` | Project Aでpublic app client設定を更新し、public app client更新失敗を確認する | Project A | callback URL更新 | Projectを作成する -> public app client設定を更新する | public app client更新失敗 | [詳細](cases/TC_TARGET_005_project_workspace_update_public_client_project_a_public_client_update_failed_redirect_url_update.gen.md) |
+| `TC_TARGET_003` | Project AでProjectを作成し、Project作成失敗を確認する | Project A | Project A | Projectを作成する | Project作成失敗 | [詳細](cases/TC_TARGET_003_project_workspace_create_project_project_a_provision_failed_project_default.gen.md) |
+| `TC_TARGET_004` | Project Aでpublic app client設定を更新し、public app client更新成功を確認する | Project A | Project A | Projectを作成する -> public app client設定を更新する | public app client更新成功 | [詳細](cases/TC_TARGET_004_project_workspace_update_public_client_project_a_public_client_updated_redirect_url_update.gen.md) |
+| `TC_TARGET_005` | Project Aでpublic app client設定を更新し、public app client更新失敗を確認する | Project A | Project A | Projectを作成する -> public app client設定を更新する | public app client更新失敗 | [詳細](cases/TC_TARGET_005_project_workspace_update_public_client_project_a_public_client_update_failed_redirect_url_update.gen.md) |
 
 ### access_request_workflow Access Request Workflow
 
 | ID | 観点 | 対象 | データ | 処理概要 | 主なエビデンス | Link |
 |---|---|---|---|---|---|---|
-| `TC_TARGET_006` | Project A x API Aで利用申請し、重複PENDING申請で失敗を確認する | Project A x API A | 同一Project/API stageへの重複PENDING申請 | APIを公開する -> Projectを作成する -> 利用申請する | 重複PENDING申請で失敗 | [詳細](cases/TC_TARGET_006_access_request_workflow_submit_request_project_a_api_a_duplicate_pending_rejected_duplicate_pending_request.gen.md) |
-| `TC_TARGET_007` | Project A x API Aで利用申請し、既存subscriptionありで失敗を確認する | Project A x API A | public PKCEとclient credentialsの両方を申請する | APIを公開する -> Projectを作成する -> 利用申請する | 既存subscriptionありで失敗 | [詳細](cases/TC_TARGET_007_access_request_workflow_submit_request_project_a_api_a_existing_subscription_rejected_request_both_auth.gen.md) |
+| `TC_TARGET_006` | Project A x API Aで利用申請し、重複PENDING申請で失敗を確認する | Project A x API A | Project A x API A の重複PENDING申請 | APIを公開する -> Projectを作成する -> 利用申請する | 重複PENDING申請で失敗 | [詳細](cases/TC_TARGET_006_access_request_workflow_submit_request_project_a_api_a_duplicate_pending_rejected_duplicate_pending_request.gen.md) |
+| `TC_TARGET_007` | Project A x API Aで利用申請し、既存subscriptionありで失敗を確認する | Project A x API A | Project A x API A の利用申請 | APIを公開する -> Projectを作成する -> 利用申請する | 既存subscriptionありで失敗 | [詳細](cases/TC_TARGET_007_access_request_workflow_submit_request_project_a_api_a_existing_subscription_rejected_request_both_auth.gen.md) |
 
 ### review_decision Review Decision
 
 | ID | 観点 | 対象 | データ | 処理概要 | 主なエビデンス | Link |
 |---|---|---|---|---|---|---|
-| `TC_TARGET_008` | Project A x API Aで利用申請を承認し、reviewer以外の審査拒否を確認する | Project A x API A | BOTHとして承認する | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する | reviewer以外の審査拒否 | [詳細](cases/TC_TARGET_008_review_decision_approve_request_project_a_api_a_forbidden_approve_both.gen.md) |
-| `TC_TARGET_009` | Project A x API Aで利用申請を承認し、PENDING以外の申請審査拒否を確認する | Project A x API A | BOTHとして承認する | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する | PENDING以外の申請審査拒否 | [詳細](cases/TC_TARGET_009_review_decision_approve_request_project_a_api_a_not_pending_approve_both.gen.md) |
-| `TC_TARGET_010` | Project A x API Aで利用申請を却下し、却下成功を確認する | Project A x API A | 申請を却下する | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を却下する | 却下成功 | [詳細](cases/TC_TARGET_010_review_decision_reject_request_project_a_api_a_rejected_reject_default.gen.md) |
-| `TC_TARGET_011` | Project A x API Aで利用申請を却下し、reviewer以外の審査拒否を確認する | Project A x API A | 申請を却下する | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を却下する | reviewer以外の審査拒否 | [詳細](cases/TC_TARGET_011_review_decision_reject_request_project_a_api_a_forbidden_reject_default.gen.md) |
-| `TC_TARGET_012` | Project A x API Aで利用申請を却下し、PENDING以外の申請審査拒否を確認する | Project A x API A | 申請を却下する | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を却下する | PENDING以外の申請審査拒否 | [詳細](cases/TC_TARGET_012_review_decision_reject_request_project_a_api_a_not_pending_reject_default.gen.md) |
+| `TC_TARGET_008` | Project A x API Aで利用申請を承認し、reviewer以外の審査拒否を確認する | Project A x API A | Project A x API A の承認 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する | reviewer以外の審査拒否 | [詳細](cases/TC_TARGET_008_review_decision_approve_request_project_a_api_a_forbidden_approve_both.gen.md) |
+| `TC_TARGET_009` | Project A x API Aで利用申請を承認し、PENDING以外の申請審査拒否を確認する | Project A x API A | Project A x API A の承認 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する | PENDING以外の申請審査拒否 | [詳細](cases/TC_TARGET_009_review_decision_approve_request_project_a_api_a_not_pending_approve_both.gen.md) |
+| `TC_TARGET_010` | Project A x API Aで利用申請を却下し、却下成功を確認する | Project A x API A | Project A x API A の却下 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を却下する | 却下成功 | [詳細](cases/TC_TARGET_010_review_decision_reject_request_project_a_api_a_rejected_reject_default.gen.md) |
+| `TC_TARGET_011` | Project A x API Aで利用申請を却下し、reviewer以外の審査拒否を確認する | Project A x API A | Project A x API A の却下 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を却下する | reviewer以外の審査拒否 | [詳細](cases/TC_TARGET_011_review_decision_reject_request_project_a_api_a_forbidden_reject_default.gen.md) |
+| `TC_TARGET_012` | Project A x API Aで利用申請を却下し、PENDING以外の申請審査拒否を確認する | Project A x API A | Project A x API A の却下 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を却下する | PENDING以外の申請審査拒否 | [詳細](cases/TC_TARGET_012_review_decision_reject_request_project_a_api_a_not_pending_reject_default.gen.md) |
 
 ### entitlement_provisioning Entitlement Provisioning
 
 | ID | 観点 | 対象 | データ | 処理概要 | 主なエビデンス | Link |
 |---|---|---|---|---|---|---|
-| `TC_TARGET_013` | Project A x API Aで承認結果を利用権へ反映し、利用権反映部分失敗を確認する | Project A x API A | BOTH承認の利用権 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する | 利用権反映部分失敗 | [詳細](cases/TC_TARGET_013_entitlement_provisioning_provision_entitlement_project_a_api_a_partially_failed_approved_both_entitlement.gen.md) |
-| `TC_TARGET_014` | Project A x API AでProjectのsubscriptionを確認し、利用権未作成を確認する | Project A x API A | 却下後の利用権なし | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を却下する -> Projectのsubscriptionを確認する | 利用権未作成 | [詳細](cases/TC_TARGET_014_entitlement_provisioning_list_subscriptions_project_a_api_a_not_provisioned_rejected_no_entitlement.gen.md) |
+| `TC_TARGET_013` | Project A x API Aで承認結果を利用権へ反映し、利用権反映部分失敗を確認する | Project A x API A | Project A x API A の利用権 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する | 利用権反映部分失敗 | [詳細](cases/TC_TARGET_013_entitlement_provisioning_provision_entitlement_project_a_api_a_partially_failed_approved_both_entitlement.gen.md) |
+| `TC_TARGET_014` | Project A x API AでProjectのsubscriptionを確認し、利用権未作成を確認する | Project A x API A | Project A x API A の却下後の利用権なし | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を却下する -> Projectのsubscriptionを確認する | 利用権未作成 | [詳細](cases/TC_TARGET_014_entitlement_provisioning_list_subscriptions_project_a_api_a_not_provisioned_rejected_no_entitlement.gen.md) |
 
 ### runtime_authorization Runtime Authorization
 
 | ID | 観点 | 対象 | データ | 処理概要 | 主なエビデンス | Link |
 |---|---|---|---|---|---|---|
-| `TC_TARGET_015` | Project A x API AでRuntime APIを呼び出し、Runtime API呼び出し成功を確認する | Project A x API A | 承認済みAPI用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> Runtime APIを呼び出す | API A allowed | [詳細](cases/TC_TARGET_015_runtime_authorization_invoke_runtime_api_project_a_api_a_allowed_approved_runtime_credential.gen.md) |
-| `TC_TARGET_016` | Project A x API BでRuntime APIを呼び出し、Runtime API呼び出し成功を確認する | Project A x API B | 承認済みAPI用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> Runtime APIを呼び出す | API B allowed | [詳細](cases/TC_TARGET_016_runtime_authorization_invoke_runtime_api_project_a_api_b_allowed_approved_runtime_credential.gen.md) |
-| `TC_TARGET_017` | Project A x API CでRuntime APIを呼び出し、Runtime API呼び出し成功を確認する | Project A x API C | 承認済みAPI用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> Runtime APIを呼び出す | API C allowed | [詳細](cases/TC_TARGET_017_runtime_authorization_invoke_runtime_api_project_a_api_c_allowed_approved_runtime_credential.gen.md) |
-| `TC_TARGET_018` | Project B x API AでRuntime APIを呼び出し、Runtime API呼び出し成功を確認する | Project B x API A | 承認済みAPI用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> Runtime APIを呼び出す | API A allowed | [詳細](cases/TC_TARGET_018_runtime_authorization_invoke_runtime_api_project_b_api_a_allowed_approved_runtime_credential.gen.md) |
-| `TC_TARGET_019` | Project B x API BでRuntime APIを呼び出し、Runtime API呼び出し成功を確認する | Project B x API B | 承認済みAPI用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> Runtime APIを呼び出す | API B allowed | [詳細](cases/TC_TARGET_019_runtime_authorization_invoke_runtime_api_project_b_api_b_allowed_approved_runtime_credential.gen.md) |
-| `TC_TARGET_020` | Project B x API CでRuntime APIを呼び出し、Runtime API呼び出し成功を確認する | Project B x API C | 承認済みAPI用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> Runtime APIを呼び出す | API C allowed | [詳細](cases/TC_TARGET_020_runtime_authorization_invoke_runtime_api_project_b_api_c_allowed_approved_runtime_credential.gen.md) |
-| `TC_TARGET_021` | Project C x API AでRuntime APIを呼び出し、Runtime API呼び出し成功を確認する | Project C x API A | 承認済みAPI用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> Runtime APIを呼び出す | API A allowed | [詳細](cases/TC_TARGET_021_runtime_authorization_invoke_runtime_api_project_c_api_a_allowed_approved_runtime_credential.gen.md) |
-| `TC_TARGET_022` | Project C x API BでRuntime APIを呼び出し、Runtime API呼び出し成功を確認する | Project C x API B | 承認済みAPI用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> Runtime APIを呼び出す | API B allowed | [詳細](cases/TC_TARGET_022_runtime_authorization_invoke_runtime_api_project_c_api_b_allowed_approved_runtime_credential.gen.md) |
-| `TC_TARGET_023` | Project C x API CでRuntime APIを呼び出し、Runtime API呼び出し成功を確認する | Project C x API C | 承認済みAPI用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> Runtime APIを呼び出す | API C allowed | [詳細](cases/TC_TARGET_023_runtime_authorization_invoke_runtime_api_project_c_api_c_allowed_approved_runtime_credential.gen.md) |
-| `TC_TARGET_024` | Project A x API AでRuntime APIを呼び出し、Runtime認証情報不正を確認する | Project A x API A | scopeなしRuntime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> Runtime APIを呼び出す | API A denied | [詳細](cases/TC_TARGET_024_runtime_authorization_invoke_runtime_api_project_a_api_a_credential_invalid_scope_missing.gen.md) |
-| `TC_TARGET_025` | Project A x API AでRuntime APIを呼び出し、Runtime認証情報不正を確認する | Project A x API A | API keyなしRuntime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> Runtime APIを呼び出す | API A denied | [詳細](cases/TC_TARGET_025_runtime_authorization_invoke_runtime_api_project_a_api_a_credential_invalid_api_key_missing.gen.md) |
-| `TC_TARGET_026` | Project A x API Aで未承認Runtime APIを呼び出し、Runtime API呼び出し拒否を確認する | Project A x API A | 未承認API用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> 未承認Runtime APIを呼び出す | API A denied | [詳細](cases/TC_TARGET_026_runtime_authorization_invoke_unapproved_api_project_a_api_a_denied_unapproved_runtime_credential.gen.md) |
-| `TC_TARGET_027` | Project A x API Bで未承認Runtime APIを呼び出し、Runtime API呼び出し拒否を確認する | Project A x API B | 未承認API用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> 未承認Runtime APIを呼び出す | API B denied | [詳細](cases/TC_TARGET_027_runtime_authorization_invoke_unapproved_api_project_a_api_b_denied_unapproved_runtime_credential.gen.md) |
-| `TC_TARGET_028` | Project A x API Cで未承認Runtime APIを呼び出し、Runtime API呼び出し拒否を確認する | Project A x API C | 未承認API用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> 未承認Runtime APIを呼び出す | API C denied | [詳細](cases/TC_TARGET_028_runtime_authorization_invoke_unapproved_api_project_a_api_c_denied_unapproved_runtime_credential.gen.md) |
-| `TC_TARGET_029` | Project B x API Aで未承認Runtime APIを呼び出し、Runtime API呼び出し拒否を確認する | Project B x API A | 未承認API用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> 未承認Runtime APIを呼び出す | API A denied | [詳細](cases/TC_TARGET_029_runtime_authorization_invoke_unapproved_api_project_b_api_a_denied_unapproved_runtime_credential.gen.md) |
-| `TC_TARGET_030` | Project B x API Bで未承認Runtime APIを呼び出し、Runtime API呼び出し拒否を確認する | Project B x API B | 未承認API用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> 未承認Runtime APIを呼び出す | API B denied | [詳細](cases/TC_TARGET_030_runtime_authorization_invoke_unapproved_api_project_b_api_b_denied_unapproved_runtime_credential.gen.md) |
-| `TC_TARGET_031` | Project B x API Cで未承認Runtime APIを呼び出し、Runtime API呼び出し拒否を確認する | Project B x API C | 未承認API用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> 未承認Runtime APIを呼び出す | API C denied | [詳細](cases/TC_TARGET_031_runtime_authorization_invoke_unapproved_api_project_b_api_c_denied_unapproved_runtime_credential.gen.md) |
-| `TC_TARGET_032` | Project C x API Aで未承認Runtime APIを呼び出し、Runtime API呼び出し拒否を確認する | Project C x API A | 未承認API用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> 未承認Runtime APIを呼び出す | API A denied | [詳細](cases/TC_TARGET_032_runtime_authorization_invoke_unapproved_api_project_c_api_a_denied_unapproved_runtime_credential.gen.md) |
-| `TC_TARGET_033` | Project C x API Bで未承認Runtime APIを呼び出し、Runtime API呼び出し拒否を確認する | Project C x API B | 未承認API用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> 未承認Runtime APIを呼び出す | API B denied | [詳細](cases/TC_TARGET_033_runtime_authorization_invoke_unapproved_api_project_c_api_b_denied_unapproved_runtime_credential.gen.md) |
-| `TC_TARGET_034` | Project C x API Cで未承認Runtime APIを呼び出し、Runtime API呼び出し拒否を確認する | Project C x API C | 未承認API用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> 未承認Runtime APIを呼び出す | API C denied | [詳細](cases/TC_TARGET_034_runtime_authorization_invoke_unapproved_api_project_c_api_c_denied_unapproved_runtime_credential.gen.md) |
+| `TC_TARGET_015` | Project A x API AでRuntime APIを呼び出し、Runtime API呼び出し成功を確認する | Project A x API A | Project A x API A / 承認済みAPI用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> Runtime APIを呼び出す | API A allowed | [詳細](cases/TC_TARGET_015_runtime_authorization_invoke_runtime_api_project_a_api_a_allowed_approved_runtime_credential.gen.md) |
+| `TC_TARGET_016` | Project A x API BでRuntime APIを呼び出し、Runtime API呼び出し成功を確認する | Project A x API B | Project A x API B / 承認済みAPI用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> Runtime APIを呼び出す | API B allowed | [詳細](cases/TC_TARGET_016_runtime_authorization_invoke_runtime_api_project_a_api_b_allowed_approved_runtime_credential.gen.md) |
+| `TC_TARGET_017` | Project A x API CでRuntime APIを呼び出し、Runtime API呼び出し成功を確認する | Project A x API C | Project A x API C / 承認済みAPI用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> Runtime APIを呼び出す | API C allowed | [詳細](cases/TC_TARGET_017_runtime_authorization_invoke_runtime_api_project_a_api_c_allowed_approved_runtime_credential.gen.md) |
+| `TC_TARGET_018` | Project B x API AでRuntime APIを呼び出し、Runtime API呼び出し成功を確認する | Project B x API A | Project B x API A / 承認済みAPI用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> Runtime APIを呼び出す | API A allowed | [詳細](cases/TC_TARGET_018_runtime_authorization_invoke_runtime_api_project_b_api_a_allowed_approved_runtime_credential.gen.md) |
+| `TC_TARGET_019` | Project B x API BでRuntime APIを呼び出し、Runtime API呼び出し成功を確認する | Project B x API B | Project B x API B / 承認済みAPI用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> Runtime APIを呼び出す | API B allowed | [詳細](cases/TC_TARGET_019_runtime_authorization_invoke_runtime_api_project_b_api_b_allowed_approved_runtime_credential.gen.md) |
+| `TC_TARGET_020` | Project B x API CでRuntime APIを呼び出し、Runtime API呼び出し成功を確認する | Project B x API C | Project B x API C / 承認済みAPI用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> Runtime APIを呼び出す | API C allowed | [詳細](cases/TC_TARGET_020_runtime_authorization_invoke_runtime_api_project_b_api_c_allowed_approved_runtime_credential.gen.md) |
+| `TC_TARGET_021` | Project C x API AでRuntime APIを呼び出し、Runtime API呼び出し成功を確認する | Project C x API A | Project C x API A / 承認済みAPI用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> Runtime APIを呼び出す | API A allowed | [詳細](cases/TC_TARGET_021_runtime_authorization_invoke_runtime_api_project_c_api_a_allowed_approved_runtime_credential.gen.md) |
+| `TC_TARGET_022` | Project C x API BでRuntime APIを呼び出し、Runtime API呼び出し成功を確認する | Project C x API B | Project C x API B / 承認済みAPI用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> Runtime APIを呼び出す | API B allowed | [詳細](cases/TC_TARGET_022_runtime_authorization_invoke_runtime_api_project_c_api_b_allowed_approved_runtime_credential.gen.md) |
+| `TC_TARGET_023` | Project C x API CでRuntime APIを呼び出し、Runtime API呼び出し成功を確認する | Project C x API C | Project C x API C / 承認済みAPI用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> Runtime APIを呼び出す | API C allowed | [詳細](cases/TC_TARGET_023_runtime_authorization_invoke_runtime_api_project_c_api_c_allowed_approved_runtime_credential.gen.md) |
+| `TC_TARGET_024` | Project A x API AでRuntime APIを呼び出し、Runtime認証情報不正を確認する | Project A x API A | Project A x API A / scopeなしRuntime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> Runtime APIを呼び出す | API A denied | [詳細](cases/TC_TARGET_024_runtime_authorization_invoke_runtime_api_project_a_api_a_credential_invalid_scope_missing.gen.md) |
+| `TC_TARGET_025` | Project A x API AでRuntime APIを呼び出し、Runtime認証情報不正を確認する | Project A x API A | Project A x API A / API keyなしRuntime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> Runtime APIを呼び出す | API A denied | [詳細](cases/TC_TARGET_025_runtime_authorization_invoke_runtime_api_project_a_api_a_credential_invalid_api_key_missing.gen.md) |
+| `TC_TARGET_026` | Project A x API Aで未承認Runtime APIを呼び出し、Runtime API呼び出し拒否を確認する | Project A x API A | Project A x API A / 未承認API用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> 未承認Runtime APIを呼び出す | API A denied | [詳細](cases/TC_TARGET_026_runtime_authorization_invoke_unapproved_api_project_a_api_a_denied_unapproved_runtime_credential.gen.md) |
+| `TC_TARGET_027` | Project A x API Bで未承認Runtime APIを呼び出し、Runtime API呼び出し拒否を確認する | Project A x API B | Project A x API B / 未承認API用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> 未承認Runtime APIを呼び出す | API B denied | [詳細](cases/TC_TARGET_027_runtime_authorization_invoke_unapproved_api_project_a_api_b_denied_unapproved_runtime_credential.gen.md) |
+| `TC_TARGET_028` | Project A x API Cで未承認Runtime APIを呼び出し、Runtime API呼び出し拒否を確認する | Project A x API C | Project A x API C / 未承認API用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> 未承認Runtime APIを呼び出す | API C denied | [詳細](cases/TC_TARGET_028_runtime_authorization_invoke_unapproved_api_project_a_api_c_denied_unapproved_runtime_credential.gen.md) |
+| `TC_TARGET_029` | Project B x API Aで未承認Runtime APIを呼び出し、Runtime API呼び出し拒否を確認する | Project B x API A | Project B x API A / 未承認API用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> 未承認Runtime APIを呼び出す | API A denied | [詳細](cases/TC_TARGET_029_runtime_authorization_invoke_unapproved_api_project_b_api_a_denied_unapproved_runtime_credential.gen.md) |
+| `TC_TARGET_030` | Project B x API Bで未承認Runtime APIを呼び出し、Runtime API呼び出し拒否を確認する | Project B x API B | Project B x API B / 未承認API用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> 未承認Runtime APIを呼び出す | API B denied | [詳細](cases/TC_TARGET_030_runtime_authorization_invoke_unapproved_api_project_b_api_b_denied_unapproved_runtime_credential.gen.md) |
+| `TC_TARGET_031` | Project B x API Cで未承認Runtime APIを呼び出し、Runtime API呼び出し拒否を確認する | Project B x API C | Project B x API C / 未承認API用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> 未承認Runtime APIを呼び出す | API C denied | [詳細](cases/TC_TARGET_031_runtime_authorization_invoke_unapproved_api_project_b_api_c_denied_unapproved_runtime_credential.gen.md) |
+| `TC_TARGET_032` | Project C x API Aで未承認Runtime APIを呼び出し、Runtime API呼び出し拒否を確認する | Project C x API A | Project C x API A / 未承認API用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> 未承認Runtime APIを呼び出す | API A denied | [詳細](cases/TC_TARGET_032_runtime_authorization_invoke_unapproved_api_project_c_api_a_denied_unapproved_runtime_credential.gen.md) |
+| `TC_TARGET_033` | Project C x API Bで未承認Runtime APIを呼び出し、Runtime API呼び出し拒否を確認する | Project C x API B | Project C x API B / 未承認API用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> 未承認Runtime APIを呼び出す | API B denied | [詳細](cases/TC_TARGET_033_runtime_authorization_invoke_unapproved_api_project_c_api_b_denied_unapproved_runtime_credential.gen.md) |
+| `TC_TARGET_034` | Project C x API Cで未承認Runtime APIを呼び出し、Runtime API呼び出し拒否を確認する | Project C x API C | Project C x API C / 未承認API用Runtime認証情報 | APIを公開する -> Projectを作成する -> 利用申請する -> 利用申請を承認する -> 承認結果を利用権へ反映する -> 未承認Runtime APIを呼び出す | API C denied | [詳細](cases/TC_TARGET_034_runtime_authorization_invoke_unapproved_api_project_c_api_c_denied_unapproved_runtime_credential.gen.md) |
 
 ### audit_recovery Audit / Idempotency / Recovery
 
 | ID | 観点 | 対象 | データ | 処理概要 | 主なエビデンス | Link |
 |---|---|---|---|---|---|---|
-| `TC_TARGET_035` | Project A x API Aで失敗後に再試行し、再試行可能を確認する | Project A x API A | provisioning失敗後の再試行 | APIを公開する -> Projectを作成する -> 失敗後に再試行する | 再試行可能 | [詳細](cases/TC_TARGET_035_audit_recovery_retry_after_failure_project_a_api_a_retryable_provisioning_retry.gen.md) |
+| `TC_TARGET_035` | Project A x API Aで失敗後に再試行し、再試行可能を確認する | Project A x API A | Project A x API A のprovisioning再試行 | APIを公開する -> Projectを作成する -> 失敗後に再試行する | 再試行可能 | [詳細](cases/TC_TARGET_035_audit_recovery_retry_after_failure_project_a_api_a_retryable_provisioning_retry.gen.md) |
 
 ## 8. Appendix
 

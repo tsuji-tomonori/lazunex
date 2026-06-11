@@ -19,5 +19,11 @@ md:
 defaults:
   apiCode: e2e-api-c
   name: E2E API C
+  description: E2E API C for access lifecycle tests
   stageName: prod
+  apiGatewayRestApiId: ${env.API_C_rest_api_id}
+  apiGatewayStageName: prod
   invokeUrl: ${env.API_C_invoke_url}
+  scopeName: invoke
+  scopeDisplayName: Invoke API C
+  scopeDescription: Invoke permission for API C

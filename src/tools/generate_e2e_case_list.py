@@ -159,7 +159,8 @@ def target_case_view(
     component_titles = titles[goal.component_id]
     action = title_only(goal.action_id, component_titles.get(f"action:{goal.action_id}"))
     state = title_only(goal.state_id, component_titles.get(f"state:{goal.state_id}"))
-    data = title_only(goal.data_id, component_titles.get(f"data:{goal.data_id}"))
+    data_title = title_only(goal.data_id, component_titles.get(f"data:{goal.data_id}"))
+    data = concrete_data_label(goal, data_title)
     purpose = f"{case_target_label(target_case)}で{connective_action(action)}、{state}を確認する"
     evidence = state
     if target_case.runtime_assertions:
@@ -402,6 +403,75 @@ def target_label(target_id: str) -> str:
     return target_id.replace("_", " ")
 
 
+def concrete_data_label(variant: E2eComponentVariant, data_title: str) -> str:
+    targets = [
+        target_label(target)
+        for target in (variant.project_id, variant.api_id)
+        if target is not None
+    ]
+    target = " x ".join(targets)
+    if variant.data_id in {
+        "api_default",
+        "api_unknown",
+    }:
+        return target_label(variant.api_id or variant.data_id)
+    if variant.data_id in {
+        "project_default",
+        "redirect_url_update",
+    }:
+        return target_label(variant.project_id or variant.data_id)
+    concrete_labels = {
+        "request_both_auth": "利用申請",
+        "duplicate_pending_request": "重複PENDING申請",
+        "approve_both": "承認",
+        "reject_default": "却下",
+        "approved_both_entitlement": "利用権",
+        "rejected_no_entitlement": "却下後の利用権なし",
+        "provisioning_retry": "provisioning再試行",
+    }
+    if variant.data_id in concrete_labels and target:
+        return f"{target} の{concrete_labels[variant.data_id]}"
+    return f"{target} / {data_title}" if target else data_title
+
+
+def component_data_title(component_id: str, data_id: str, data_title: str) -> str:
+    titles = {
+        ("api_catalog", "api_default"): "API A / API B / API C",
+        ("api_catalog", "api_unknown"): "API A (apiId=api_unknown)",
+        ("project_workspace", "project_default"): "Project A / Project B / Project C",
+        ("project_workspace", "redirect_url_update"): "Project A のcallback URL更新",
+        ("access_request_workflow", "request_both_auth"): "Project A x API A の利用申請",
+        (
+            "access_request_workflow",
+            "duplicate_pending_request",
+        ): "Project A x API A の重複PENDING申請",
+        ("review_decision", "approve_both"): "Project A x API A の承認",
+        ("review_decision", "reject_default"): "Project A x API A の却下",
+        (
+            "entitlement_provisioning",
+            "approved_both_entitlement",
+        ): "Project A x API A の利用権",
+        (
+            "entitlement_provisioning",
+            "rejected_no_entitlement",
+        ): "Project A x API A の却下後の利用権なし",
+        (
+            "runtime_authorization",
+            "approved_runtime_credential",
+        ): "Project A x API A の承認済みRuntime認証情報",
+        (
+            "runtime_authorization",
+            "unapproved_runtime_credential",
+        ): "Project A x API A の未承認Runtime認証情報",
+        ("runtime_authorization", "scope_missing"): "Project A x API A のscopeなしRuntime認証情報",
+        (
+            "runtime_authorization",
+            "api_key_missing",
+        ): "Project A x API A のAPI keyなしRuntime認証情報",
+    }
+    return titles.get((component_id, data_id), data_title)
+
+
 def yaml_titles(items: Sequence[object]) -> dict[str, str]:
     titles: dict[str, str] = {}
     for item in items:
@@ -447,13 +517,8 @@ def variant_labels(
     titles: Mapping[str, Mapping[str, str]],
 ) -> tuple[str, str, str]:
     component_titles = titles[variant.component_id]
-    targets = [
-        target_label(target)
-        for target in (variant.project_id, variant.api_id)
-        if target is not None
-    ]
     data_title = title_only(variant.data_id, component_titles.get(f"data:{variant.data_id}"))
-    data_label = " / ".join((*targets, data_title)) if targets else data_title
+    data_label = concrete_data_label(variant, data_title)
     return (
         data_label,
         title_only(
@@ -588,13 +653,19 @@ def render_component_sections(flow_root: Path) -> list[str]:
         data_doc = load_yaml(component_root / "data.manual.yaml")
         for data_profile in as_sequence(data_doc.get("data_profiles")):
             data_map = as_mapping(data_profile)
+            data_id = scalar_text(data_map.get("id"))
+            display_title = component_data_title(
+                component_id,
+                data_id,
+                scalar_text(data_map.get("title")),
+            )
             tags = ", ".join(
                 str(tag) for tag in as_sequence(data_map.get("tags")) if isinstance(tag, str)
             )
             lines.append(
                 f"| {ELEMENT_KIND_LABELS['data']} | "
-                f"`{scalar_text(data_map.get('id'))}` | "
-                f"{markdown_escape(scalar_text(data_map.get('title')))} | "
+                f"`{data_id}` | "
+                f"{markdown_escape(display_title)} | "
                 f"{markdown_escape(tags or '-')} |"
             )
         lines.append("")

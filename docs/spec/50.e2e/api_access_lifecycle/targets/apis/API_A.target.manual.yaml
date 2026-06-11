@@ -20,5 +20,11 @@ md:
 defaults:
   apiCode: e2e-api-a
   name: E2E API A
+  description: E2E API A for access lifecycle tests
   stageName: prod
+  apiGatewayRestApiId: ${env.API_A_rest_api_id}
+  apiGatewayStageName: prod
   invokeUrl: ${env.API_A_invoke_url}
+  scopeName: invoke
+  scopeDisplayName: Invoke API A
+  scopeDescription: Invoke permission for API A
